@@ -37,7 +37,7 @@ var p interface {
 }
 
 var (
-	tto Tto
+	//tto Tto
 	tti Tti
 	bus Devices
 	mtb Mtb
@@ -82,20 +82,20 @@ func main() {
 		memInit()
 		bus.busInit()
 		bus.busAddDevice(DEV_SCP, "SCP", SCP_PMB, true, false, false)
-		tto = Tto{conn}
+		ttoInit(conn)
 		tti = Tti{conn}
 		instructionsInit()
 		cpu.cpuInit()
 		mtb.mtbInit()
 
 		// say hello...
-		tto.ttoPutChar(ASCII_FF)
-		tto.ttoPutStringNL(" *** Welcome to the MV/Emulator - Type HE for help ***")
+		ttoPutChar(ASCII_FF)
+		ttoPutStringNL(" *** Welcome to the MV/Emulator - Type HE for help ***")
 
 		// the main SCP/console interaction loop
 		for {
-			tto.ttoPutNLString("SCP-CLI> ")
-			command := scpGetLine(&tti, &tto)
+			ttoPutNLString("SCP-CLI> ")
+			command := scpGetLine(&tti)
 			log.Println("Got SCP command: " + command)
 			doCommand(command)
 		}
@@ -103,17 +103,17 @@ func main() {
 }
 
 // Get one line from the console - handle DASHER DELete key as corrector
-func scpGetLine(ti *Tti, to *Tto) string {
+func scpGetLine(ti *Tti) string {
 	line := []byte{}
 	var cc byte
 	for cc != ASCII_CR {
 		cc = ti.ttiGetChar()
 		// handle the DASHER Delete key
 		if cc == DASHER_DELETE && len(line) > 0 {
-			to.ttoPutChar(DASHER_CURSOR_LEFT)
+			ttoPutChar(DASHER_CURSOR_LEFT)
 			line = line[:len(line)-1]
 		} else {
-			to.ttoPutChar(cc)
+			ttoPutChar(cc)
 			line = append(line, cc)
 		}
 	}
@@ -125,7 +125,7 @@ func scpGetLine(ti *Tti, to *Tto) string {
 
 // Exit cleanly, tidying up as much as we can
 func cleanExit() {
-	tto.ttoPutNLString(" *** MV/Emulator stopping at user request ***")
+	ttoPutNLString(" *** MV/Emulator stopping at user request ***")
 	p.Stop()
 	os.Exit(0)
 }
@@ -137,84 +137,84 @@ func doCommand(cmd string) {
 	switch words[0] {
 	// SCP-like commands
 	case ".":
-		tto.ttoPutString(cpu.cpuPrintableStatus())
+		ttoPutString(cpu.cpuPrintableStatus())
 	case "B":
 		boot(words)
 	case "CO":
-		tto.ttoPutNLString(CMD_NYI)
+		ttoPutNLString(CMD_NYI)
 	case "E":
-		tto.ttoPutNLString(CMD_NYI)
+		ttoPutNLString(CMD_NYI)
 	case "HE":
 		showHelp()
 	case "SS":
 		singleStep()
 	case "ST":
-		tto.ttoPutNLString(CMD_NYI)
+		ttoPutNLString(CMD_NYI)
 
 	// emulator commands
 	case "ATT":
 		attach(words)
 	case "BREAK":
-		tto.ttoPutNLString(CMD_NYI)
+		ttoPutNLString(CMD_NYI)
 	case "CHECK":
-		tto.ttoPutStringNL(mtb.mtbScanImage(0))
+		ttoPutStringNL(mtb.mtbScanImage(0))
 	case "CREATE":
-		tto.ttoPutNLString(CMD_NYI)
+		ttoPutNLString(CMD_NYI)
 	case "DIS":
 		disassemble(words)
 	case "DO":
-		tto.ttoPutNLString(CMD_NYI)
+		ttoPutNLString(CMD_NYI)
 	case "EXIT":
 		cleanExit()
 	case "NOBREAK":
-		tto.ttoPutNLString(CMD_NYI)
+		ttoPutNLString(CMD_NYI)
 	case "SAVE":
-		tto.ttoPutNLString(CMD_NYI)
+		ttoPutNLString(CMD_NYI)
 	case "SHOW":
 		show(words)
 	default:
-		tto.ttoPutNLString(CMD_UNKNOWN)
+		ttoPutNLString(CMD_UNKNOWN)
 	}
 }
 
 // Attach an image file to an emulated device
 func attach(cmd []string) {
 	if len(cmd) < 3 {
-		tto.ttoPutNLString(" *** ATT command requires arguments: <dev> and <image> ***")
+		ttoPutNLString(" *** ATT command requires arguments: <dev> and <image> ***")
 		return
 	}
 	log.Printf("INFO: Attach called  with parms <%s> <%s>\n", cmd[1], cmd[2])
 	switch cmd[1] {
 	case "MTB":
 		if mtb.mtbAttach(0, cmd[2]) {
-			tto.ttoPutNLString(" *** Tape Image Attached ***")
+			ttoPutNLString(" *** Tape Image Attached ***")
 		} else {
-			tto.ttoPutNLString(" *** Could not ATTach Tape Image ***")
+			ttoPutNLString(" *** Could not ATTach Tape Image ***")
 		}
 
 	default:
-		tto.ttoPutNLString(" *** Unknown or unimplemented Device for ATT command ***")
+		ttoPutNLString(" *** Unknown or unimplemented Device for ATT command ***")
 	}
 }
 
 func boot(cmd []string) {
 	if len(cmd) != 2 {
-		tto.ttoPutNLString(" *** B command requires <devicenumber> ***")
+		ttoPutNLString(" *** B command requires <devicenumber> ***")
 		return
 	}
 	log.Printf("INFO: Boot called  with parm <%s>\n", cmd[1])
 	dev, err := strconv.ParseInt(cmd[1], 8, 16) // FIXME Input Radix used here
 	devNum := int(dev)
 	if err != nil {
-		tto.ttoPutNLString(" *** Expecting <devicenumber> after B ***")
+		ttoPutNLString(" *** Expecting <devicenumber> after B ***")
 		return
 	}
 	if !bus.busIsAttached(devNum) {
-		tto.ttoPutNLString(" *** Device is not ATTached ***")
+		ttoPutNLString(" *** Device is not ATTached ***")
 		return
 	}
 	if !bus.busIsBootable(devNum) {
-		tto.ttoPutNLString(" *** Device is not bootable ***")
+		ttoPutNLString(" *** Device is not bootable ***")
 		return
 	}
 	switch devNum {
@@ -223,7 +223,7 @@ func boot(cmd []string) {
 		cpu.ac[0] = DEV_MTB
 		cpu.pc = 10
 	default:
-		tto.ttoPutNLString(" *** Booting from that device not yet implemented ***")
+		ttoPutNLString(" *** Booting from that device not yet implemented ***")
 	}
 }
 
@@ -237,7 +237,7 @@ func disassemble(cmd []string) {
 	)
 	intVal1, err := strconv.Atoi(cmd[1])
 	if err != nil {
-		tto.ttoPutNLString(" *** Invalid address ***")
+		ttoPutNLString(" *** Invalid address ***")
 		return
 	}
 	if cmd[1][:0] == "+" {
@@ -250,14 +250,14 @@ func disassemble(cmd []string) {
 		} else {
 			intVal2, err := strconv.Atoi(cmd[2])
 			if err != nil {
-				tto.ttoPutNLString(" *** Invalid address ***")
+				ttoPutNLString(" *** Invalid address ***")
 				return
 			}
 			highAddr = dg_phys_addr(intVal2)
 		}
 	}
 	if highAddr < lowAddr {
-		tto.ttoPutNLString(" *** Invalid address range ***")
+		ttoPutNLString(" *** Invalid address range ***")
 		return
 	}
 	for addr := lowAddr; addr <= highAddr; addr++ {
@@ -285,13 +285,13 @@ func disassemble(cmd []string) {
 		} else {
 			skipDecode--
 		}
-		tto.ttoPutNLString(display)
+		ttoPutNLString(display)
 	}
 }
 
 // Display SCP and Emulator help on the DASHER-compatible console
 func showHelp() {
-	tto.ttoPutString("\014                          \024SCP-CLI Commands\025" +
+	ttoPutString("\014                          \024SCP-CLI Commands\025" +
 		"                          \034MV/Emulator\035\012" +
 		" .                      - Display state of CPU\012" +
 		" B #                    - Boot from device #\012" +
@@ -301,7 +301,7 @@ func showHelp() {
 		" RE                     - REset the system\012" +
 		" SS                     - Single Step one instruction\012" +
 		" ST <addr>              - STart processing at specified address\012")
-	tto.ttoPutString("\012                          \024Emulator Commands\025\012" +
+	ttoPutString("\012                          \024Emulator Commands\025\012" +
 		" ATT <dev> <file> [RW]  - ATTach the image file to named device (RO)\012" +
 		" BREAK/NOBREAK <addr>   - Set or clear a BREAKpoint\012" +
 		" CHECK                  - CHECK validity of attached TAPE image\012" +
@@ -317,29 +317,29 @@ func showHelp() {
 // Show various emulator states to the user
 func show(cmd []string) {
 	if len(cmd) == 1 {
-		tto.ttoPutNLString(" *** SHOW requires argument ***")
+		ttoPutNLString(" *** SHOW requires argument ***")
 		return
 	}
 	switch cmd[1] {
 	case "DEV":
-		tto.ttoPutNLString(bus.busGetPrintableDevList())
+		ttoPutNLString(bus.busGetPrintableDevList())
 	default:
-		tto.ttoPutNLString(" *** Invalid SHOW type ***")
+		ttoPutNLString(" *** Invalid SHOW type ***")
 	}
 }
 
 // Attempt to execute the opcode at PC
 func singleStep() {
-	tto.ttoPutString(cpu.cpuPrintableStatus())
+	ttoPutString(cpu.cpuPrintableStatus())
 	thisOp := memReadWord(cpu.pc)
 	if iPtr, ok := instructionDecode(thisOp, cpu.pc, cpu.sbr[cpu.pc>>29].lef, cpu.sbr[cpu.pc>>29].io, cpu.atu); ok {
-		tto.ttoPutNLString(iPtr.disassembly)
+		ttoPutNLString(iPtr.disassembly)
 		if cpu.cpuExecute(iPtr) {
-			tto.ttoPutString(cpu.cpuPrintableStatus())
+			ttoPutString(cpu.cpuPrintableStatus())
 		} else {
-			tto.ttoPutNLString(" *** Error: could not execute instruction")
+			ttoPutNLString(" *** Error: could not execute instruction")
 		}
 	} else {
-		tto.ttoPutNLString(" *** Error: could not decode opcode")
+		ttoPutNLString(" *** Error: could not decode opcode")
 	}
 }

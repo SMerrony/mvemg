@@ -23,6 +23,31 @@ func novaIO(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 	}
 
 	switch iPtr.mnemonic {
+
+	case "DIA", "DIB", "DIC", "DOA", "DOB", "DOC":
+		if bus.busIsAttached(iPtr.ioDev) && bus.busIsIODevice(iPtr.ioDev) {
+			var abc byte
+			switch iPtr.mnemonic {
+			case "DOA", "DIA":
+				abc = 'A'
+			case "DOB", "DIB":
+				abc = 'B'
+			case "DOC", "DIC":
+				abc = 'C'
+			}
+			switch iPtr.mnemonic {
+			case "DIA", "DIB", "DIC":
+				bus.busDataIn(cpuPtr, iPtr, abc)
+			case "DOA", "DOB", "DOC":
+				bus.busDataOut(cpuPtr, iPtr, abc)
+			}
+		} else {
+			log.Printf("WARN: I/O attempted to unattached or non-I/O capable device 0#%o\n", iPtr.ioDev)
+			if iPtr.ioDev != 2 {
+				return false // TODO Exception for ?MMU?
+			}
+		}
+
 	case "IORST":
 		bus.busResetAllIODevices()
 		cpuPtr.ion = false

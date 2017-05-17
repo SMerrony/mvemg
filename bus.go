@@ -8,8 +8,8 @@ import (
 )
 
 type ResetFunc func()
-type DataOutFunc func() // TODO expand when parm types defined in CPU/Instruction
-type DataInFunc func()
+type DataOutFunc func(*Cpu, *DecodedInstr, byte)
+type DataInFunc func(*Cpu, *DecodedInstr, byte)
 
 type device struct {
 	mnemonic        string
@@ -50,16 +50,34 @@ func (d *Devices) busAddDevice(devNum int, mnem string, pmb int, att bool, io bo
 	log.Printf("INFO: Device %o added to bus\n", devNum)
 }
 
+func (d *Devices) busSetDataInFunc(devNum int, fn DataInFunc) {
+	d[devNum].dataInFunc = fn
+	log.Printf("INFO: Bus Data In function set for dev #%d\n", devNum)
+}
+
+func (d *Devices) busDataIn(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
+	d[iPtr.ioDev].dataInFunc(cpuPtr, iPtr, abc)
+}
+
+func (d *Devices) busSetDataOutFunc(devNum int, fn DataOutFunc) {
+	d[devNum].dataOutFunc = fn
+	log.Printf("INFO: Bus Data Out function set for dev #%d\n", devNum)
+}
+
+func (d *Devices) busDataOut(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
+	d[iPtr.ioDev].dataOutFunc(cpuPtr, iPtr, abc)
+}
+
 func (d *Devices) busSetResetFunc(devNum int, resetFn ResetFunc) {
 	d[devNum].resetFunc = resetFn
-	log.Printf("Bus reset function set for dev #%d\n", devNum)
+	log.Printf("INFO: Bus reset function set for dev #%d\n", devNum)
 }
 
 func (d *Devices) busResetDevice(devNum int) {
 	if d[devNum].ioDevice {
 		d[devNum].resetFunc()
 	} else {
-		log.Fatalf("ERROR - Attepmt to reset non-I/O device #%o\n", devNum)
+		log.Fatalf("ERROR: Attepmt to reset non-I/O device #%o\n", devNum)
 	}
 }
 
@@ -81,8 +99,28 @@ func (d *Devices) busIsAttached(devNum int) bool {
 	return d[devNum].simAttached
 }
 
+func (d *Devices) busSetBusy(devNum int, f bool) {
+	d[devNum].busy = f
+}
+
+func (d *Devices) busSetDone(devNum int, f bool) {
+	d[devNum].done = f
+}
+
+func (d *Devices) busGetBusy(devNum int) bool {
+	return d[devNum].busy
+}
+
+func (d *Devices) busGetDone(devNum int) bool {
+	return d[devNum].done
+}
+
 func (d *Devices) busIsBootable(devNum int) bool {
 	return d[devNum].bootable
+}
+
+func (d *Devices) busIsIODevice(devNum int) bool {
+	return d[devNum].ioDevice
 }
 
 func boolToInt(b bool) int {
