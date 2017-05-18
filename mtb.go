@@ -39,30 +39,32 @@ type Mtb struct {
 var (
 	simht SimhTapes
 
+	mtb Mtb
+
 	mtbLog *log.Logger
 )
 
-func (mtb *Mtb) mtbInit() bool {
+func mtbInit() bool {
 	lf, err := os.OpenFile(MTB_LOG_FILE, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		log.Fatalln("Failed to open MTB log file ", err.Error())
 	}
 	mtbLog = log.New(lf, "", log.Ldate|log.Ltime)
 	simht.simhTapeInit()
-	bus.busAddDevice(DEV_MTB, "MTB", MTB_PMB, false, true, true)
+	busAddDevice(DEV_MTB, "MTB", MTB_PMB, false, true, true)
 	mtb.imageAttached = false
 
 	mtb.statusReg1 = SR1_HI_DENSITY | SR1_9TRACK | SR1_UNIT_READY
 	mtb.statusReg2 = SR2_PE_MODE
 
-	bus.busSetResetFunc(DEV_MTB, mtb.mtbReset)
+	busSetResetFunc(DEV_MTB, mtbReset)
 
 	mtbLog.Println("MTB Initialised")
 	return true
 }
 
 // Reset the MTB to startup state
-func (mtb *Mtb) mtbReset() {
+func mtbReset() {
 	simht.simhTapeRewind(0)
 	mtb.statusReg1 = SR1_HI_DENSITY | SR1_9TRACK | SR1_BOT | SR1_UNIT_READY
 	mtb.statusReg2 = SR2_PE_MODE
@@ -70,14 +72,14 @@ func (mtb *Mtb) mtbReset() {
 }
 
 // Attach a SimH tape image file to the emulated tape drive
-func (mtb *Mtb) mtbAttach(tNum int, imgName string) bool {
+func mtbAttach(tNum int, imgName string) bool {
 	mtbLog.Printf("mtbAttach called on unit #%d with image file: %s\n", tNum, imgName)
 	if simht.simhTapeAttach(tNum, imgName) {
 		mtb.simhTapeNum = tNum
 		mtb.imageAttached = true
 		mtb.statusReg1 = SR1_HI_DENSITY | SR1_9TRACK | SR1_BOT | SR1_UNIT_READY
 		mtb.statusReg2 = SR2_PE_MODE
-		bus.busSetAttached(DEV_MTB)
+		busSetAttached(DEV_MTB)
 		return true
 	}
 	return false
@@ -85,7 +87,7 @@ func (mtb *Mtb) mtbAttach(tNum int, imgName string) bool {
 
 // Scan the attached SimH tape image to ensure it makes sense
 // (This is just a pass-through to the equivalent function in simhTape)
-func (mtb *Mtb) mtbScanImage(tNum int) string {
+func mtbScanImage(tNum int) string {
 	return simht.simhTapeScanImage(0)
 }
 
@@ -95,7 +97,7 @@ Rather than copying a ROM and executing that, we simply mimic its basic actions.
 * Put the loaded code at physical location 0
 * ...
 */
-func (mtb *Mtb) mtbLoadTBoot(mem Memory) {
+func mtbLoadTBoot(mem Memory) {
 	const (
 		TBTSIZ_B = 2048
 		TBTSIZ_W = 1024

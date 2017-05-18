@@ -25,57 +25,61 @@ type Cpu struct {
 	consoleEsc bool
 }
 
-func (c *Cpu) cpuInit() {
-	bus.busAddDevice(DEV_CPU, "CPU", CPU_PMB, true, false, false)
+var (
+	cpu Cpu
+)
+
+func cpuInit() {
+	busAddDevice(DEV_CPU, "CPU", CPU_PMB, true, false, false)
 }
 
-func (c *Cpu) cpuPrintableStatus() string {
+func cpuPrintableStatus() string {
 	res := fmt.Sprintf("%c      AC0       AC1       AC2       AC3        PC CRY ATU%c", ASCII_NL, ASCII_NL)
-	res += fmt.Sprintf("%9d %9d %9d %9d %9d", c.ac[0], c.ac[1], c.ac[2], c.ac[3], c.pc)
-	res += fmt.Sprintf("  %d   %d", boolToInt(c.carry), boolToInt(c.atu))
+	res += fmt.Sprintf("%9d %9d %9d %9d %9d", cpu.ac[0], cpu.ac[1], cpu.ac[2], cpu.ac[3], cpu.pc)
+	res += fmt.Sprintf("  %d   %d", boolToInt(cpu.carry), boolToInt(cpu.atu))
 	return res
 }
 
-func (c *Cpu) cpuCompactPrintableStatus() string {
+func cpuCompactPrintableStatus() string {
 	res := fmt.Sprintf("AC0: %d AC1: %d AC2: %d AC3: %d CRY: %d PC: %d",
-		c.ac[0], c.ac[1], c.ac[2], c.ac[3], boolToInt(c.carry), c.pc)
+		cpu.ac[0], cpu.ac[1], cpu.ac[2], cpu.ac[3], boolToInt(cpu.carry), cpu.pc)
 	return res
 }
 
 // Execute a single instruction
 // A false return means failure, the VM should stop
-func (cpuPtr *Cpu) cpuExecute(iPtr *DecodedInstr) bool {
+func cpuExecute(iPtr *DecodedInstr) bool {
 	rc := false
 	switch iPtr.instrType {
 	case NOVA_MEMREF:
-		rc = novaMemRef(cpuPtr, iPtr)
+		rc = novaMemRef(&cpu, iPtr)
 	case NOVA_OP:
-		rc = novaOp(cpuPtr, iPtr)
+		rc = novaOp(&cpu, iPtr)
 	case NOVA_IO:
-		rc = novaIO(cpuPtr, iPtr)
+		rc = novaIO(&cpu, iPtr)
 		//	case NOVA_PC:
-		//		rc = novaPC(cpuPtr, iPtr)
+		//		rc = novaPC(&cpu, iPtr)
 		//	case ECLIPSE_MEMREF:
-		//		rc = eclipseMemRef(cpuPtr, iPtr)
+		//		rc = eclipseMemRef(&cpu, iPtr)
 		//	case ECLIPSE_OP:
-		//		rc = eclipseOp(cpuPtr, iPtr)
+		//		rc = eclipseOp(&cpu, iPtr)
 		//	case ECLIPSE_PC:
-		//		rc = eclipsePC(cpuPtr, iPtr)
+		//		rc = eclipsePC(&cpu, iPtr)
 		//	case ECLIPSE_STACK:
-		//		rc = eclipseStack(cpuPtr, iPtr)
+		//		rc = eclipseStack(&cpu, iPtr)
 	case EAGLE_OP:
-		rc = eagleOp(cpuPtr, iPtr)
+		rc = eagleOp(&cpu, iPtr)
 	case EAGLE_MEMREF:
-		rc = eagleMemRef(cpuPtr, iPtr)
+		rc = eagleMemRef(&cpu, iPtr)
 	case EAGLE_PC:
-		rc = eaglePC(cpuPtr, iPtr)
+		rc = eaglePC(&cpu, iPtr)
 		//	case EAGLE_IO:
-		//		rc = eagleIO(cpuPtr, iPtr)
+		//		rc = eagleIO(&cpu, iPtr)
 		//	case EAGLE_STACK:
-		//		rc = eagleStack(cpuPtr, iPtr)
+		//		rc = eagleStack(&cpu, iPtr)
 	default:
 		log.Fatalln("ERROR: Unimplemented instruction type in cpuExecute()")
 	}
-	cpuPtr.instrCount++
+	cpu.instrCount++
 	return rc
 }

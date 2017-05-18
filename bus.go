@@ -7,8 +7,13 @@ import (
 	//"os"
 )
 
+// I/O reset func
 type ResetFunc func()
+
+// DOx func
 type DataOutFunc func(*Cpu, *DecodedInstr, byte)
+
+// DIx func
 type DataInFunc func(*Cpu, *DecodedInstr, byte)
 
 type device struct {
@@ -24,9 +29,11 @@ type device struct {
 	done            bool
 }
 
-type Devices [MAX_DEVICES]device
+type devices [MAX_DEVICES]device
 
-func (d *Devices) busInit() {
+var d devices
+
+func busInit() {
 	for dev := range d {
 		d[dev].mnemonic = ""
 		d[dev].priorityMaskBit = 0
@@ -38,100 +45,100 @@ func (d *Devices) busInit() {
 	}
 }
 
-func (d *Devices) busAddDevice(devNum int, mnem string, pmb int, att bool, io bool, boot bool) {
+func busAddDevice(devNum int, mnem string, pmb int, att bool, io bool, boot bool) {
 	if devNum >= MAX_DEVICES {
-		log.Fatalf("ERROR: Attempt to add device with too-high device number: %o", devNum)
+		log.Fatalf("ERROR: Attempt to add device with too-high device number: 0%o", devNum)
 	}
 	d[devNum].mnemonic = mnem
 	d[devNum].priorityMaskBit = pmb
 	d[devNum].simAttached = att
 	d[devNum].ioDevice = io
 	d[devNum].bootable = boot
-	log.Printf("INFO: Device %o added to bus\n", devNum)
+	log.Printf("INFO: Device 0%o added to bus\n", devNum)
 }
 
-func (d *Devices) busSetDataInFunc(devNum int, fn DataInFunc) {
+func busSetDataInFunc(devNum int, fn DataInFunc) {
 	d[devNum].dataInFunc = fn
-	log.Printf("INFO: Bus Data In function set for dev #%d\n", devNum)
+	log.Printf("INFO: Bus Data In function set for dev #0%o\n", devNum)
 }
 
-func (d *Devices) busDataIn(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
+func busDataIn(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
+	log.Printf("DEBUG: Bus Data In function called for dev #0%o\n", iPtr.ioDev)
 	d[iPtr.ioDev].dataInFunc(cpuPtr, iPtr, abc)
 }
 
-func (d *Devices) busSetDataOutFunc(devNum int, fn DataOutFunc) {
+func busSetDataOutFunc(devNum int, fn DataOutFunc) {
 	d[devNum].dataOutFunc = fn
-	log.Printf("INFO: Bus Data Out function set for dev #%d\n", devNum)
+	log.Printf("INFO: Bus Data Out function set for dev #0%o\n", devNum)
 }
 
-func (d *Devices) busDataOut(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
+func busDataOut(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
 	d[iPtr.ioDev].dataOutFunc(cpuPtr, iPtr, abc)
 }
 
-func (d *Devices) busSetResetFunc(devNum int, resetFn ResetFunc) {
+func busSetResetFunc(devNum int, resetFn ResetFunc) {
 	d[devNum].resetFunc = resetFn
-	log.Printf("INFO: Bus reset function set for dev #%d\n", devNum)
+	log.Printf("INFO: Bus reset function set for dev #0%o\n", devNum)
 }
 
-func (d *Devices) busResetDevice(devNum int) {
+func busResetDevice(devNum int) {
 	if d[devNum].ioDevice {
 		d[devNum].resetFunc()
 	} else {
-		log.Fatalf("ERROR: Attepmt to reset non-I/O device #%o\n", devNum)
+		log.Fatalf("ERROR: Attepmt to reset non-I/O device #0%o\n", devNum)
 	}
 }
 
-func (d *Devices) busResetAllIODevices() {
+func busResetAllIODevices() {
 	for dev := range d {
 		if d[dev].ioDevice {
-			d.busResetDevice(dev)
+			busResetDevice(dev)
 		}
 	}
 }
 
-func (d *Devices) busSetAttached(devNum int) {
+func busSetAttached(devNum int) {
 	d[devNum].simAttached = true
 }
-func (d *Devices) busSetDetached(devNum int) {
+func busSetDetached(devNum int) {
 	d[devNum].simAttached = false
 }
-func (d *Devices) busIsAttached(devNum int) bool {
+func busIsAttached(devNum int) bool {
 	return d[devNum].simAttached
 }
 
-func (d *Devices) busSetBusy(devNum int, f bool) {
+func busSetBusy(devNum int, f bool) {
 	d[devNum].busy = f
 }
 
-func (d *Devices) busSetDone(devNum int, f bool) {
+func busSetDone(devNum int, f bool) {
 	d[devNum].done = f
 }
 
-func (d *Devices) busGetBusy(devNum int) bool {
+func busGetBusy(devNum int) bool {
 	return d[devNum].busy
 }
 
-func (d *Devices) busGetDone(devNum int) bool {
+func busGetDone(devNum int) bool {
 	return d[devNum].done
 }
 
-func (d *Devices) busIsBootable(devNum int) bool {
+func busIsBootable(devNum int) bool {
 	return d[devNum].bootable
 }
 
-func (d *Devices) busIsIODevice(devNum int) bool {
+func busIsIODevice(devNum int) bool {
 	return d[devNum].ioDevice
 }
 
 func boolToInt(b bool) int {
 	if b {
 		return 1
-	} else {
-		return 0
 	}
+	return 0
 }
 
-func (d *Devices) busGetPrintableDevList() string {
+func busGetPrintableDevList() string {
 	lst := fmt.Sprintf(" #  Mnem   PMB  I/O Busy Done Status%c", ASCII_NL)
 	var line string
 	for dev := range d {

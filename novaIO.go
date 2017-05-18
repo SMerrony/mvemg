@@ -11,7 +11,7 @@ func novaIO(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 	// First: DICC 0,077 => I/O Reset
 	if iPtr.mnemonic == "DIC" && iPtr.f == 'C' && iPtr.acd == 0 && iPtr.ioDev == DEV_CPU {
 		log.Printf("INFO: I/O Reset due to DICC 0,CPU instruction\n")
-		bus.busResetAllIODevices()
+		busResetAllIODevices()
 		cpuPtr.pc++
 		return true
 	}
@@ -25,7 +25,7 @@ func novaIO(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 	switch iPtr.mnemonic {
 
 	case "DIA", "DIB", "DIC", "DOA", "DOB", "DOC":
-		if bus.busIsAttached(iPtr.ioDev) && bus.busIsIODevice(iPtr.ioDev) {
+		if busIsAttached(iPtr.ioDev) && busIsIODevice(iPtr.ioDev) {
 			var abc byte
 			switch iPtr.mnemonic {
 			case "DOA", "DIA":
@@ -37,9 +37,9 @@ func novaIO(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 			}
 			switch iPtr.mnemonic {
 			case "DIA", "DIB", "DIC":
-				bus.busDataIn(cpuPtr, iPtr, abc)
+				busDataIn(cpuPtr, iPtr, abc)
 			case "DOA", "DOB", "DOC":
-				bus.busDataOut(cpuPtr, iPtr, abc)
+				busDataOut(cpuPtr, iPtr, abc)
 			}
 		} else {
 			log.Printf("WARN: I/O attempted to unattached or non-I/O capable device 0#%o\n", iPtr.ioDev)
@@ -49,7 +49,7 @@ func novaIO(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		}
 
 	case "IORST":
-		bus.busResetAllIODevices()
+		busResetAllIODevices()
 		cpuPtr.ion = false
 		// TODO More to do for SMP support - HaHa!
 

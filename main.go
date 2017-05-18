@@ -36,14 +36,6 @@ var p interface {
 	Stop()
 }
 
-var (
-	//tto Tto
-	tti Tti
-	bus Devices
-	mtb Mtb
-	cpu Cpu
-)
-
 func main() {
 	p = profile.Start(profile.ProfilePath("."))
 	defer p.Stop()
@@ -80,13 +72,13 @@ func main() {
 		 ***/
 
 		memInit()
-		bus.busInit()
-		bus.busAddDevice(DEV_SCP, "SCP", SCP_PMB, true, false, false)
+		busInit()
+		busAddDevice(DEV_SCP, "SCP", SCP_PMB, true, false, false)
 		ttoInit(conn)
-		tti = Tti{conn}
+		ttiInit(conn)
 		instructionsInit()
-		cpu.cpuInit()
-		mtb.mtbInit()
+		cpuInit()
+		mtbInit()
 
 		// say hello...
 		ttoPutChar(ASCII_FF)
@@ -95,19 +87,19 @@ func main() {
 		// the main SCP/console interaction loop
 		for {
 			ttoPutNLString("SCP-CLI> ")
-			command := scpGetLine(&tti)
-			log.Println("Got SCP command: " + command)
+			command := scpGetLine()
+			log.Println("INFO: Got SCP command: " + command)
 			doCommand(command)
 		}
 	}
 }
 
 // Get one line from the console - handle DASHER DELete key as corrector
-func scpGetLine(ti *Tti) string {
+func scpGetLine() string {
 	line := []byte{}
 	var cc byte
 	for cc != ASCII_CR {
-		cc = ti.ttiGetChar()
+		cc = ttiGetChar()
 		// handle the DASHER Delete key
 		if cc == DASHER_DELETE && len(line) > 0 {
 			ttoPutChar(DASHER_CURSOR_LEFT)
@@ -132,16 +124,16 @@ func cleanExit() {
 
 func doCommand(cmd string) {
 	words := strings.Split(strings.TrimSpace(cmd), " ")
-	log.Printf("doCommand parsed command as <%s>\n", words[0])
+	log.Printf("INFO: doCommand parsed command as <%s>\n", words[0])
 
 	switch words[0] {
 	// SCP-like commands
 	case ".":
-		ttoPutString(cpu.cpuPrintableStatus())
+		ttoPutString(cpuPrintableStatus())
 	case "B":
 		boot(words)
 	case "CO":
-		ttoPutNLString(CMD_NYI)
+		run()
 	case "E":
 		ttoPutNLString(CMD_NYI)
 	case "HE":
@@ -157,7 +149,7 @@ func doCommand(cmd string) {
 	case "BREAK":
 		ttoPutNLString(CMD_NYI)
 	case "CHECK":
-		ttoPutStringNL(mtb.mtbScanImage(0))
+		ttoPutStringNL(mtbScanImage(0))
 	case "CREATE":
 		ttoPutNLString(CMD_NYI)
 	case "DIS":
@@ -186,7 +178,7 @@ func attach(cmd []string) {
 	log.Printf("INFO: Attach called  with parms <%s> <%s>\n", cmd[1], cmd[2])
 	switch cmd[1] {
 	case "MTB":
-		if mtb.mtbAttach(0, cmd[2]) {
+		if mtbAttach(0, cmd[2]) {
 			ttoPutNLString(" *** Tape Image Attached ***")
 		} else {
 			ttoPutNLString(" *** Could not ATTach Tape Image ***")
@@ -209,17 +201,17 @@ func boot(cmd []string) {
 		ttoPutNLString(" *** Expecting <devicenumber> after B ***")
 		return
 	}
-	if !bus.busIsAttached(devNum) {
+	if !busIsAttached(devNum) {
 		ttoPutNLString(" *** Device is not ATTached ***")
 		return
 	}
-	if !bus.busIsBootable(devNum) {
+	if !busIsBootable(devNum) {
 		ttoPutNLString(" *** Device is not bootable ***")
 		return
 	}
 	switch devNum {
 	case DEV_MTB:
-		mtb.mtbLoadTBoot(memory)
+		mtbLoadTBoot(memory)
 		cpu.ac[0] = DEV_MTB
 		cpu.pc = 10
 	default:
@@ -229,18 +221,19 @@ func boot(cmd []string) {
 
 func disassemble(cmd []string) {
 	var (
+		cmd1              = cmd[1]
 		lowAddr, highAddr dg_phys_addr
 		word              dg_word
 		byte1, byte2      dg_byte
 		display           string
 		skipDecode        int
 	)
-	intVal1, err := strconv.Atoi(cmd[1])
+	intVal1, err := strconv.Atoi(cmd1)
 	if err != nil {
 		ttoPutNLString(" *** Invalid address ***")
 		return
 	}
-	if cmd[1][:0] == "+" {
+	if cmd1[0] == '+' {
 		lowAddr = cpu.pc
 		highAddr = lowAddr + dg_phys_addr(intVal1)
 	} else {
@@ -322,7 +315,7 @@ func show(cmd []string) {
 	}
 	switch cmd[1] {
 	case "DEV":
-		ttoPutNLString(bus.busGetPrintableDevList())
+		ttoPutNLString(busGetPrintableDevList())
 	default:
 		ttoPutNLString(" *** Invalid SHOW type ***")
 	}
@@ -330,16 +323,75 @@ func show(cmd []string) {
 
 // Attempt to execute the opcode at PC
 func singleStep() {
-	ttoPutString(cpu.cpuPrintableStatus())
+	ttoPutString(cpuPrintableStatus())
+	// FETCH
 	thisOp := memReadWord(cpu.pc)
+	// DECODE
 	if iPtr, ok := instructionDecode(thisOp, cpu.pc, cpu.sbr[cpu.pc>>29].lef, cpu.sbr[cpu.pc>>29].io, cpu.atu); ok {
 		ttoPutNLString(iPtr.disassembly)
-		if cpu.cpuExecute(iPtr) {
-			ttoPutString(cpu.cpuPrintableStatus())
+		// EXECUTE
+		if cpuExecute(iPtr) {
+			ttoPutString(cpuPrintableStatus())
 		} else {
 			ttoPutNLString(" *** Error: could not execute instruction")
 		}
 	} else {
 		ttoPutNLString(" *** Error: could not decode opcode")
 	}
+}
+
+// The main Emulator running loop...
+func run() {
+	var (
+		thisOp    dg_word
+		iPtr      *DecodedInstr
+		ok        bool
+		errDetail string
+	)
+
+	// direct console input to the VM
+	ttiStartTask(&cpu)
+
+	for {
+		// FETCH
+		thisOp = memReadWord(cpu.pc)
+
+		// DECODE
+		iPtr, ok = instructionDecode(thisOp, cpu.pc, cpu.sbr[cpu.pc>>29].lef, cpu.sbr[cpu.pc>>29].io, cpu.atu)
+		if !ok {
+			errDetail = " *** Error: could not execute instruction ***"
+			break
+		}
+		log.Printf("%s\t\t%s\n", iPtr.disassembly, cpuCompactPrintableStatus())
+
+		// EXECUTE
+		if !cpuExecute(iPtr) {
+			errDetail = " *** Error: could not execute instruction"
+			break
+		}
+
+		// BREAKPOINT?
+
+		// Console ESCape?
+		if cpu.consoleEsc {
+			errDetail = " *** Console ESCape ***"
+			break
+		}
+	}
+
+	// run halted due to either error or console escape
+	log.Println(errDetail)
+	ttoPutNLString(errDetail)
+	log.Printf("%s\n", cpuPrintableStatus())
+	ttoPutNLString(cpuPrintableStatus())
+
+	errDetail = " *** CPU halting ***"
+	log.Println(errDetail)
+	ttoPutNLString(errDetail)
+
+	errDetail = fmt.Sprintf(" *** MV/Em executed %d	 instructions ***", cpu.instrCount)
+	log.Println(errDetail)
+	ttoPutNLString(errDetail)
+
+	ttiStopThread(&cpu)
 }

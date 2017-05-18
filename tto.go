@@ -10,31 +10,31 @@ type Tto struct {
 	conn net.Conn
 }
 
-var t Tto
+var tto Tto
 
 func ttoInit(c net.Conn) {
-	t.conn = c
-	bus.busAddDevice(DEV_TTO, "TTO", TTO_PMB, true, true, false)
-	bus.busSetResetFunc(DEV_TTO, ttoReset)
-	bus.busSetDataOutFunc(DEV_TTO, ttoDataOut)
+	tto.conn = c
+	busAddDevice(DEV_TTO, "TTO", TTO_PMB, true, true, false)
+	busSetResetFunc(DEV_TTO, ttoReset)
+	busSetDataOutFunc(DEV_TTO, ttoDataOut)
 }
 
 func ttoPutChar(c byte) {
-	t.conn.Write([]byte{c})
+	tto.conn.Write([]byte{c})
 }
 
 func ttoPutString(s string) {
-	t.conn.Write([]byte(s))
+	tto.conn.Write([]byte(s))
 }
 
 func ttoPutStringNL(s string) {
-	t.conn.Write([]byte(s))
-	t.conn.Write([]byte{ASCII_NL})
+	tto.conn.Write([]byte(s))
+	tto.conn.Write([]byte{ASCII_NL})
 }
 
 func ttoPutNLString(s string) {
-	t.conn.Write([]byte{ASCII_NL})
-	t.conn.Write([]byte(s))
+	tto.conn.Write([]byte{ASCII_NL})
+	tto.conn.Write([]byte(s))
 }
 
 func ttoReset() {
@@ -42,6 +42,7 @@ func ttoReset() {
 	log.Println("INFO: TTO Reset")
 }
 
+// This is called from Bus to implement DOA to the TTO device
 func ttoDataOut(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
 	var ascii byte
 	switch abc {
@@ -50,12 +51,12 @@ func ttoDataOut(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
 		log.Printf("ttoDataOut: AC# %d contains %d                                 yielding ASCII char<%c>\n",
 			iPtr.acd, cpuPtr.ac[iPtr.acd], ascii)
 		if iPtr.f == 'S' {
-			bus.busSetBusy(DEV_TTO, true)
-			bus.busSetDone(DEV_TTO, false)
+			busSetBusy(DEV_TTO, true)
+			busSetDone(DEV_TTO, false)
 		}
 		ttoPutChar(ascii)
-		bus.busSetBusy(DEV_TTO, false)
-		bus.busSetDone(DEV_TTO, true)
+		busSetBusy(DEV_TTO, false)
+		busSetDone(DEV_TTO, true)
 	default:
 		log.Fatalf("ERROR: unexpected source buffer <%c> for DOx ac,TTO instruction\n", abc)
 	}
