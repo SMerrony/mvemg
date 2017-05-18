@@ -10,6 +10,7 @@ import (
 const (
 	MTB_MAX_RECORD_SIZE = 16384
 	MTB_LOG_FILE        = "mtb_debug.log"
+	MTB_CMD_COUNT       = 11
 
 	SR1_ERROR      = 0100000
 	SR1_HI_DENSITY = 04000
@@ -58,6 +59,8 @@ func mtbInit() bool {
 	mtb.statusReg2 = SR2_PE_MODE
 
 	busSetResetFunc(DEV_MTB, mtbReset)
+	busSetDataInFunc(DEV_MTB, mtbDataIn)
+	busSetDataOutFunc(DEV_MTB, mtbDataOut)
 
 	mtbLog.Println("MTB Initialised")
 	return true
@@ -121,5 +124,81 @@ func mtbLoadTBoot(mem Memory) {
 	trailer, ok := simht.simhTapeReadRecordHeader(0)
 	if hdr != trailer {
 		log.Printf("WARN: mtbLoadTBoot found mismatched trailer in TBOOT file\n")
+	}
+}
+
+// This is called from Bus to implement DIx from the MTB device
+func mtbDataIn(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
+
+	switch iPtr.f {
+	case 'S':
+		busSetBusy(DEV_TTO, true)
+		busSetDone(DEV_TTO, false)
+	case 'C':
+		busSetBusy(DEV_TTO, false)
+		busSetDone(DEV_TTO, false)
+	}
+
+	switch abc {
+	case 'A': /* Read status register 1 - see p.IV-18 of Peripherals guide */
+		cpuPtr.ac[iPtr.acd] = dg_dword(mtb.statusReg1)
+		mtbLog.Printf("DIA - Read Status Reg 1 %s to AC%d, PC: %d\n",
+			wordToBinStr(mtb.statusReg1), iPtr.acd, cpuPtr.pc)
+
+	case 'B': /* Read memory addr register 1 - see p.IV-19 of Peripherals guide */
+		cpuPtr.ac[iPtr.acd] = dg_dword(mtb.memAddrReg)
+		mtbLog.Printf("DIB - Read Mem Addr Reg 1 <%d> to AC%d, PC: %dn",
+			mtb.memAddrReg, iPtr.acd, cpuPtr.pc)
+
+	case 'C': /* Read status register 2 - see p.IV-18 of Peripherals guide */
+		cpuPtr.ac[iPtr.acd] = dg_dword(mtb.statusReg2)
+		mtbLog.Printf("DIC - Read Status Reg 2 %s to AC%d, PC: %d\n",
+			wordToBinStr(mtb.statusReg2), iPtr.acd, cpuPtr.pc)
+	}
+
+	if iPtr.f == 'S' {
+		mtbDoCommand() // TODO Can this be a goroutine?
+	}
+}
+
+// This is called from Bus to implement DOx from the MTB device
+func mtbDataOut(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
+
+	switch iPtr.f {
+	case 'S':
+		busSetBusy(DEV_TTO, true)
+		busSetDone(DEV_TTO, false)
+	case 'C':
+		busSetBusy(DEV_TTO, false)
+		busSetDone(DEV_TTO, false)
+	}
+
+	ac16 := dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
+
+	switch abc {
+	case 'A': // Specify Command and Drive - p.IV-17
+		// which command?
+		for c := 0; c < MTB_CMD_COUNT; c++ {
+			if (ac16 & COMMAND_MASK) == commandSet[c] {
+				mtb.currentCmd = c
+				break
+			}
+		}
+		mtbLog.Printf("DOA - Specify Command and Drive - internal cmd #: %d, PC: %d\n",
+			mtb.currentCmd, cpuPtr.pc)
+
+	case 'B':
+		mtb.memAddrReg = ac16
+		mtbLog.Printf("DOB - Write Memory Address Register from AC%d, Value: %d, PC: %d\n",
+			iPtr.acd, ac16, cpuPtr.pc)
+
+	case 'C':
+		mtb.negWordCntReg = ac16
+		mtbLog.Printf("DOC - Set (neg) Word Count to %d, PC: %d\n",
+			mtb.negWordCntReg, cpuPtr.pc)
+	}
+
+	if iPtr.f == 'S' {
+		mtbDoCommand() // TODO Can this be a goroutine?
 	}
 }

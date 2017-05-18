@@ -37,7 +37,7 @@ func ttiReset() {
 	log.Println("INFO: TTI Reset")
 }
 
-// This is called from Bus to implement DIA from the TTIdevice
+// This is called from Bus to implement DIA from the TTI device
 func ttiDataIn(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
 
 	cpuPtr.ac[iPtr.acd] = dg_dword(oneCharBuf) // grab the char from the buffer

@@ -37,6 +37,8 @@ func busInit() {
 	for dev := range d {
 		d[dev].mnemonic = ""
 		d[dev].priorityMaskBit = 0
+		d[dev].dataInFunc = nil
+		d[dev].dataOutFunc = nil
 		d[dev].simAttached = false
 		d[dev].ioDevice = false
 		d[dev].bootable = false
@@ -64,6 +66,9 @@ func busSetDataInFunc(devNum int, fn DataInFunc) {
 
 func busDataIn(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
 	log.Printf("DEBUG: Bus Data In function called for dev #0%o\n", iPtr.ioDev)
+	if d[iPtr.ioDev].dataInFunc == nil {
+		log.Fatal("ERROR: busDataIn called with no function set")
+	}
 	d[iPtr.ioDev].dataInFunc(cpuPtr, iPtr, abc)
 }
 
@@ -73,6 +78,9 @@ func busSetDataOutFunc(devNum int, fn DataOutFunc) {
 }
 
 func busDataOut(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
+	if d[iPtr.ioDev].dataOutFunc == nil {
+		log.Fatal("ERROR: busDataOut called with no function set")
+	}
 	d[iPtr.ioDev].dataOutFunc(cpuPtr, iPtr, abc)
 }
 
