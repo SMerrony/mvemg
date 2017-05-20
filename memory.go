@@ -19,6 +19,7 @@ var memory Memory
 func memInit() {
 	// zero ram?
 	memory.atuEnabled = false
+	bmcdchInit()
 	log.Printf("INFO: Initialised %d words of main memory\n", MEM_SIZE_WORDS)
 }
 
@@ -64,6 +65,17 @@ func memWriteWord(wordAddr dg_phys_addr, datum dg_word) {
 		os.Exit(1)
 	}
 	memory.ram[wordAddr] = datum
+}
+
+func memWriteWordChan(addr dg_phys_addr, data dg_word) dg_phys_addr {
+	pAddr := addr
+
+	if getDchMode() {
+		pAddr = getBmcDchMapAddr(addr)
+	}
+	memWriteWord(pAddr, data)
+
+	return pAddr
 }
 
 func memReadDWord(wordAddr dg_phys_addr) dg_dword {

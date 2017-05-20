@@ -9,8 +9,34 @@ import (
 
 const (
 	MTB_MAX_RECORD_SIZE = 16384
+	MTB_EOF             = 0
 	MTB_LOG_FILE        = "mtb_debug.log"
 	MTB_CMD_COUNT       = 11
+	MTB_CMD_MASK        = 0x00b8
+
+	CMD_READ_BITS         = 0x0000
+	CMD_REWIND_BITS       = 0x0008
+	CMD_CTRL_MODE_BITS    = 0x0010
+	CMD_SPACE_FWD_BITS    = 0x0018
+	CMD_SPACE_REV_BITS    = 0x0020
+	CMD_WRITE_BITS        = 0x0028
+	CMD_WRITE_EOF_BITS    = 0x0030
+	CMD_ERASE_BITS        = 0x0038
+	CMD_READ_NONSTOP_BITS = 0x0080
+	CMD_UNLOAD_BITS       = 0x0088
+	CMD_DRIVE_MODE_BITS   = 0x0090
+
+	CMD_READ         = 0
+	CMD_REWIND       = 1
+	CMD_CTRL_MODE    = 2
+	CMD_SPACE_FWD    = 3
+	CMD_SPACE_REV    = 4
+	CMD_WRITE        = 5
+	CMD_WRITE_EOF    = 6
+	CMD_ERASE        = 7
+	CMD_READ_NONSTOP = 8
+	CMD_UNLOAD       = 9
+	CMD_DRIVE_MODE   = 10
 
 	SR1_ERROR      = 0100000
 	SR1_HI_DENSITY = 04000
@@ -40,12 +66,25 @@ type Mtb struct {
 var (
 	simht SimhTapes
 
-	mtb Mtb
+	mtb        Mtb
+	commandSet [MTB_CMD_COUNT]dg_word
 
 	mtbLog *log.Logger
 )
 
 func mtbInit() bool {
+	commandSet[CMD_READ] = CMD_READ_BITS
+	commandSet[CMD_REWIND] = CMD_REWIND_BITS
+	commandSet[CMD_CTRL_MODE] = CMD_CTRL_MODE_BITS
+	commandSet[CMD_SPACE_FWD] = CMD_SPACE_FWD_BITS
+	commandSet[CMD_SPACE_REV] = CMD_SPACE_REV_BITS
+	commandSet[CMD_WRITE] = CMD_WRITE_BITS
+	commandSet[CMD_WRITE_EOF] = CMD_WRITE_EOF_BITS
+	commandSet[CMD_ERASE] = CMD_ERASE_BITS
+	commandSet[CMD_READ_NONSTOP] = CMD_READ_NONSTOP_BITS
+	commandSet[CMD_UNLOAD] = CMD_UNLOAD_BITS
+	commandSet[CMD_DRIVE_MODE] = CMD_DRIVE_MODE_BITS
+
 	lf, err := os.OpenFile(MTB_LOG_FILE, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		log.Fatalln("Failed to open MTB log file ", err.Error())
@@ -179,7 +218,7 @@ func mtbDataOut(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
 	case 'A': // Specify Command and Drive - p.IV-17
 		// which command?
 		for c := 0; c < MTB_CMD_COUNT; c++ {
-			if (ac16 & COMMAND_MASK) == commandSet[c] {
+			if (ac16 & MTB_CMD_MASK) == commandSet[c] {
 				mtb.currentCmd = c
 				break
 			}
@@ -188,17 +227,71 @@ func mtbDataOut(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
 			mtb.currentCmd, cpuPtr.pc)
 
 	case 'B':
-		mtb.memAddrReg = ac16
+		mtb.memAddrReg = dg_phys_addr(ac16)
 		mtbLog.Printf("DOB - Write Memory Address Register from AC%d, Value: %d, PC: %d\n",
 			iPtr.acd, ac16, cpuPtr.pc)
 
 	case 'C':
-		mtb.negWordCntReg = ac16
+		mtb.negWordCntReg = int(int16(ac16))
 		mtbLog.Printf("DOC - Set (neg) Word Count to %d, PC: %d\n",
 			mtb.negWordCntReg, cpuPtr.pc)
 	}
 
 	if iPtr.f == 'S' {
 		mtbDoCommand() // TODO Can this be a goroutine?
+	}
+}
+
+func mtbDoCommand() {
+
+	switch mtb.currentCmd {
+	case CMD_READ:
+		mtbLog.Printf("*READ* command\n ==== Word Count: %d Location: %d\n", mtb.negWordCntReg, mtb.memAddrReg)
+		hdrLen, _ := simht.simhTapeReadRecordHeader(0)
+		mtbLog.Printf(" ----  Header read giving lengthL %d\n", hdrLen)
+		if hdrLen == MTB_EOF {
+			mtbLog.Printf(" ----  Header is EOF indicator\n")
+			mtb.statusReg1 = SR1_HI_DENSITY | SR1_9TRACK | SR1_UNIT_READY | SR1_EOF | SR1_ERROR
+		} else {
+			mtbLog.Printf(" ----  Calling simhTapeReadRecord with length: %d\n", hdrLen)
+			var w dg_dword
+			var wd dg_word
+			var pAddr dg_phys_addr
+			rec, _ := simht.simhTapeReadRecord(0, int(hdrLen))
+			for w = 0; w < hdrLen; w += 2 {
+				wd = dg_word((rec[w] << 8) | rec[w+1])
+				pAddr = memWriteWordChan(mtb.memAddrReg, wd)
+				mtbLog.Printf(" ----  Written word (%02X | %02X := %04X) to logical address: %d, physical: %d\n", rec[w], rec[w+1], wd, mtb.memAddrReg, pAddr)
+				mtb.memAddrReg++
+				mtb.negWordCntReg++
+				if mtb.negWordCntReg == 0 {
+					break
+				}
+			}
+			trailer, _ := simht.simhTapeReadRecordHeader(0)
+			mtbLog.Printf(" ----  %d bytes loaded\n", w)
+			mtbLog.Printf(" ----  Read SimH Trailer: %d\n", trailer)
+			// TODO Need to verify how status should be set here...
+			mtb.statusReg1 = SR1_HI_DENSITY | SR1_9TRACK | SR1_UNIT_READY
+		}
+		busSetBusy(DEV_MTB, false)
+		busSetDone(DEV_MTB, true)
+
+	case CMD_REWIND:
+		mtbLog.Printf("*REWIND* command\n")
+		simht.simhTapeRewind(0)
+		mtb.statusReg1 = SR1_HI_DENSITY | SR1_9TRACK | SR1_UNIT_READY | SR1_BOT
+		mtb.statusReg2 = SR2_PE_MODE
+		// FIXME set flags here?
+
+	case CMD_SPACE_FWD:
+		mtbLog.Printf("*SPAVE FORWARD* command\n")
+		simht.simhTapeSpaceFwd(0, 0)
+		mtb.statusReg1 = SR1_HI_DENSITY | SR1_9TRACK | SR1_UNIT_READY | SR1_EOF | SR1_ERROR
+		busSetBusy(DEV_MTB, false)
+		busSetDone(DEV_MTB, true)
+
+	default:
+		log.Fatalln("ERROR: mtbDoCommand - Command Not Yet Implemented")
 	}
 }

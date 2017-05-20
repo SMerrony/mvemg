@@ -57,8 +57,8 @@ func cpuExecute(iPtr *DecodedInstr) bool {
 		rc = novaOp(&cpu, iPtr)
 	case NOVA_IO:
 		rc = novaIO(&cpu, iPtr)
-		//	case NOVA_PC:
-		//		rc = novaPC(&cpu, iPtr)
+	case NOVA_PC:
+		rc = novaPC(&cpu, iPtr)
 		//	case ECLIPSE_MEMREF:
 		//		rc = eclipseMemRef(&cpu, iPtr)
 		//	case ECLIPSE_OP:

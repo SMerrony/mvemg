@@ -44,7 +44,7 @@ func (st *SimhTapes) simhTapeAttach(tNum int, imgName string) bool {
 	return true
 }
 
-// simulate a tape rewind by seeking to start of SimH tape immage file
+// simulate a tape rewind by seeking to start of SimH tape image file
 func (st *SimhTapes) simhTapeRewind(tNum int) bool {
 	log.Printf("INFO: simhTapeRewind called for tape #%d\n", tNum)
 	_, err := st[tNum].simhFile.Seek(0, 0)
@@ -89,6 +89,35 @@ func (st *SimhTapes) simhTapeReadRecord(tNum int, byteLen int) ([]byte, bool) {
 		return nil, false
 	}
 	return rec, true
+}
+
+func (st *SimhTapes) simhTapeSpaceFwd(tNum int, recCnt int) bool {
+
+	var hdr, trailer dg_dword
+	done := false
+	log.Printf("DEBUG: simhTapeSpaceFwd called for %d records\n", recCnt)
+
+	// special case when recCnt == 0 which means space forward one file...
+	if recCnt == 0 {
+		for !done {
+			hdr, _ = st.simhTapeReadRecordHeader(tNum)
+			if hdr == MTR_TMK {
+				done = true
+			} else {
+				// read record and throw it away
+				st.simhTapeReadRecord(tNum, int(hdr))
+				// read trailer
+				trailer, _ = st.simhTapeReadRecordHeader(tNum)
+				if hdr != trailer {
+					log.Fatal("ERROR: simhTapeSpaceFwd found non-matching header/trailer")
+				}
+			}
+		}
+	} else {
+		log.Fatal("ERROR: simhTapeSpaceFwd called with record count != 0 - Not Yet Implemented")
+	}
+
+	return true
 }
 
 /* This function is available to the SCP emulator so that the user may determine if an
