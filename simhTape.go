@@ -20,6 +20,7 @@ const (
 	MAX_SIMH_REC_LEN = 32768
 )
 
+// SimhTapes contians
 type SimhTapes [MAX_SIMH_TAPES]struct {
 	fileName string
 	simhFile *os.File

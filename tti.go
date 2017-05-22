@@ -7,17 +7,13 @@ import (
 	"os"
 )
 
-type Tti struct {
-	conn net.Conn
-}
-
 var (
-	tti        Tti
+	tti        net.Conn
 	oneCharBuf byte
 )
 
 func ttiInit(c net.Conn) {
-	tti.conn = c
+	tti = c
 	busAddDevice(DEV_TTI, "TTI", TTI_PMB, true, true, false)
 	busSetResetFunc(DEV_TTI, ttiReset)
 	busSetDataInFunc(DEV_TTI, ttiDataIn)
@@ -25,7 +21,7 @@ func ttiInit(c net.Conn) {
 
 func ttiGetChar() byte {
 	b := make([]byte, 80)
-	n, err := tti.conn.Read(b)
+	n, err := tti.Read(b)
 	if err != nil || n == 0 {
 		log.Println("ERROR: could not read from console port: ", err.Error())
 		os.Exit(1)
@@ -37,7 +33,7 @@ func ttiReset() {
 	log.Println("INFO: TTI Reset")
 }
 
-// This is called from Bus to implement DIA from the TTI device
+// This is called from Bus to implement DIA from the TTI DEV_TTIice
 func ttiDataIn(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
 
 	cpuPtr.ac[iPtr.acd] = dg_dword(oneCharBuf) // grab the char from the buffer
@@ -46,11 +42,11 @@ func ttiDataIn(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
 	case 'A':
 		switch iPtr.f {
 		case 'S':
-			busSetBusy(DEV_TTO, true)
-			busSetDone(DEV_TTO, false)
+			busSetBusy(DEV_TTI, true)
+			busSetDone(DEV_TTI, false)
 		case 'C':
-			busSetBusy(DEV_TTO, false)
-			busSetDone(DEV_TTO, false)
+			busSetBusy(DEV_TTI, false)
+			busSetDone(DEV_TTI, false)
 		}
 
 	default:

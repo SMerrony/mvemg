@@ -61,12 +61,33 @@ func novaIO(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 			cpuPtr.ac[0] = 0
 		}
 
+	case "SKP":
+		busy := busGetBusy(iPtr.ioDev)
+		done := busGetDone(iPtr.ioDev)
+		switch iPtr.t {
+		case "BN":
+			if busy {
+				cpuPtr.pc++
+			}
+		case "BZ":
+			if !busy {
+				cpuPtr.pc++
+			}
+		case "DN":
+			if done {
+				cpuPtr.pc++
+			}
+		case "DZ":
+			if !done {
+				cpuPtr.pc++
+			}
+		}
+
 	default:
 		log.Printf("ERROR: NOVA_IO instruction <%s> not yet implemented\n", iPtr.mnemonic)
 		return false
 	}
 
 	cpuPtr.pc++
-
 	return true
 }

@@ -20,6 +20,15 @@ func eagleOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		wd = dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
 		cpuPtr.ac[iPtr.acd] = dg_dword(wd&iPtr.imm16b) & 0x0000ffff
 
+	case "CRYTC":
+		cpuPtr.carry = !cpuPtr.carry
+
+	case "CRYTO":
+		cpuPtr.carry = true
+
+	case "CRYTZ":
+		cpuPtr.carry = false
+
 	case "NLDAI":
 		cpuPtr.ac[iPtr.acd] = sexWordToDWord(iPtr.imm16b)
 
@@ -35,6 +44,12 @@ func eagleOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 
 	case "WAND":
 		cpuPtr.ac[iPtr.acd] &= cpuPtr.ac[iPtr.acs]
+
+	case "WCOM":
+		cpuPtr.ac[iPtr.acd] ^= cpuPtr.ac[iPtr.acs]
+
+	case "WINC":
+		cpuPtr.ac[iPtr.acd] = cpuPtr.ac[iPtr.acs] + 1
 
 	case "WMOV":
 		cpuPtr.ac[iPtr.acd] = cpuPtr.ac[iPtr.acs]

@@ -14,6 +14,9 @@ func eagleMemRef(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 
 	switch iPtr.mnemonic {
 
+	case "XLDB":
+		cpuPtr.ac[iPtr.acd] = dg_dword(memReadByte(resolve16bitEagleAddr(cpuPtr, ' ', iPtr.mode, iPtr.disp), iPtr.loHiBit)) & 0x00ff
+
 	case "XNLDA":
 		addr = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
 		wd = memReadWord(addr)

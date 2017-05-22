@@ -12,11 +12,12 @@ func eaglePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 	switch iPtr.mnemonic {
 
 	case "WBR":
-		if iPtr.disp > 0 {
-			cpuPtr.pc += dg_phys_addr(iPtr.disp)
-		} else {
-			cpuPtr.pc -= dg_phys_addr(iPtr.disp)
-		}
+		//		if iPtr.disp > 0 {
+		//			cpuPtr.pc += dg_phys_addr(iPtr.disp)
+		//		} else {
+		//			cpuPtr.pc -= dg_phys_addr(iPtr.disp)
+		//		}
+		cpuPtr.pc += dg_phys_addr(iPtr.disp)
 
 	case "WSEQ":
 		if iPtr.acd == iPtr.acs {

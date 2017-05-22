@@ -678,7 +678,7 @@ func decode15bitDisp(d15 dg_word, mode string) int32 {
 			disp++ // see p.1-12 of PoP
 		}
 	}
-	log.Printf("DEBUG: decode15bitDisp got: %d, returning: %d\n", d15, disp)
+	log.Printf("... decode15bitDisp got: %d, returning: %d\n", d15, disp)
 	return disp
 }
 
@@ -696,7 +696,7 @@ func decode15bitEclipseDisp(d15 dg_word, mode string) int32 {
 			disp++ // see p.1-12 of PoP
 		}
 	}
-	log.Printf("DEBUG: decode15bitEclispeDisp got: %d, returning: %d\n", d15, disp)
+	log.Printf("... decode15bitEclispeDisp got: %d, returning: %d\n", d15, disp)
 	return disp
 }
 
@@ -704,7 +704,7 @@ func decode16bitByteDisp(d16 dg_word) (int32, bool) {
 	var disp int32
 	loHi := testWbit(d16, 15)
 	disp = int32(d16 >> 1)
-	log.Printf("decode16bitByteDisp got: %d, returning %d\n", d16, disp)
+	log.Printf("... decode16bitByteDisp got: %d, returning %d\n", d16, disp)
 	return disp, loHi
 }
 
@@ -720,7 +720,7 @@ func decode31bitDisp(d1, d2 dg_word, mode string) int32 {
 	if mode == "PC" {
 		disp++ // see p.1-12 of PoP
 	}
-	log.Printf("DEBUG: decode31bitDisp got: %d %d, returning: %d\n", d1, d2, disp)
+	log.Printf("... decode31bitDisp got: %d %d, returning: %d\n", d1, d2, disp)
 	return disp
 }
 

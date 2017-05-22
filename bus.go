@@ -121,6 +121,7 @@ func busSetBusy(devNum int, f bool) {
 
 func busSetDone(devNum int, f bool) {
 	d[devNum].done = f
+	log.Printf("... DoNe flag set to %d for device #0%o\n", boolToInt(f), devNum)
 }
 
 func busGetBusy(devNum int) bool {

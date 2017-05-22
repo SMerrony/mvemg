@@ -6,35 +6,33 @@ import (
 	"net"
 )
 
-type Tto struct {
-	conn net.Conn
-}
-
-var tto Tto
+var (
+	tto net.Conn
+)
 
 func ttoInit(c net.Conn) {
-	tto.conn = c
+	tto = c
 	busAddDevice(DEV_TTO, "TTO", TTO_PMB, true, true, false)
 	busSetResetFunc(DEV_TTO, ttoReset)
 	busSetDataOutFunc(DEV_TTO, ttoDataOut)
 }
 
 func ttoPutChar(c byte) {
-	tto.conn.Write([]byte{c})
+	tto.Write([]byte{c})
 }
 
 func ttoPutString(s string) {
-	tto.conn.Write([]byte(s))
+	tto.Write([]byte(s))
 }
 
 func ttoPutStringNL(s string) {
-	tto.conn.Write([]byte(s))
-	tto.conn.Write([]byte{ASCII_NL})
+	tto.Write([]byte(s))
+	tto.Write([]byte{ASCII_NL})
 }
 
 func ttoPutNLString(s string) {
-	tto.conn.Write([]byte{ASCII_NL})
-	tto.conn.Write([]byte(s))
+	tto.Write([]byte{ASCII_NL})
+	tto.Write([]byte(s))
 }
 
 func ttoReset() {
