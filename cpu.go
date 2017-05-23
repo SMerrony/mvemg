@@ -67,14 +67,14 @@ func cpuExecute(iPtr *DecodedInstr) bool {
 		//		rc = eclipsePC(&cpu, iPtr)
 		//	case ECLIPSE_STACK:
 		//		rc = eclipseStack(&cpu, iPtr)
+	case EAGLE_IO:
+		rc = eagleIO(&cpu, iPtr)
 	case EAGLE_OP:
 		rc = eagleOp(&cpu, iPtr)
 	case EAGLE_MEMREF:
 		rc = eagleMemRef(&cpu, iPtr)
 	case EAGLE_PC:
 		rc = eaglePC(&cpu, iPtr)
-		//	case EAGLE_IO:
-		//		rc = eagleIO(&cpu, iPtr)
 		//	case EAGLE_STACK:
 		//		rc = eagleStack(&cpu, iPtr)
 	default:

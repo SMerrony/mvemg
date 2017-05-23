@@ -39,6 +39,30 @@ func eaglePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 			cpuPtr.pc += 2
 		}
 
+	case "WSGE":
+		if iPtr.acd == iPtr.acs {
+			tmp32b = 0
+		} else {
+			tmp32b = cpuPtr.ac[iPtr.acd]
+		}
+		if cpuPtr.ac[iPtr.acs] >= tmp32b {
+			cpuPtr.pc += 2
+		} else {
+			cpuPtr.pc += 1
+		}
+
+	case "WSGT":
+		if iPtr.acd == iPtr.acs {
+			tmp32b = 0
+		} else {
+			tmp32b = cpuPtr.ac[iPtr.acd]
+		}
+		if cpuPtr.ac[iPtr.acs] > tmp32b {
+			cpuPtr.pc += 2
+		} else {
+			cpuPtr.pc += 1
+		}
+
 	case "WSKBO":
 		if testDWbit(cpuPtr.ac[0], iPtr.bitNum) {
 			cpuPtr.pc += 2
@@ -48,6 +72,18 @@ func eaglePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 
 	case "WSKBZ":
 		if !testDWbit(cpuPtr.ac[0], iPtr.bitNum) {
+			cpuPtr.pc += 2
+		} else {
+			cpuPtr.pc += 1
+		}
+
+	case "WSLE":
+		if iPtr.acd == iPtr.acs {
+			tmp32b = 0
+		} else {
+			tmp32b = cpuPtr.ac[iPtr.acd]
+		}
+		if cpuPtr.ac[iPtr.acs] <= tmp32b {
 			cpuPtr.pc += 2
 		} else {
 			cpuPtr.pc += 1

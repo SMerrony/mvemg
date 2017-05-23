@@ -285,7 +285,7 @@ func mtbDoCommand() {
 		// FIXME set flags here?
 
 	case CMD_SPACE_FWD:
-		mtbLog.Printf("*SPAVE FORWARD* command\n")
+		mtbLog.Printf("*SPACE FORWARD* command\n")
 		simht.simhTapeSpaceFwd(0, 0)
 		mtb.statusReg1 = SR1_HI_DENSITY | SR1_9TRACK | SR1_UNIT_READY | SR1_EOF | SR1_ERROR
 		busSetBusy(DEV_MTB, false)

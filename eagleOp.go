@@ -45,6 +45,9 @@ func eagleOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 	case "WAND":
 		cpuPtr.ac[iPtr.acd] &= cpuPtr.ac[iPtr.acs]
 
+	case "WANDI":
+		cpuPtr.ac[iPtr.acd] &= iPtr.imm32b
+
 	case "WCOM":
 		cpuPtr.ac[iPtr.acd] ^= cpuPtr.ac[iPtr.acs]
 
@@ -58,6 +61,12 @@ func eagleOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		res = int32(cpuPtr.ac[iPtr.acd]) - int32(cpuPtr.ac[iPtr.acs])
 		cpuPtr.ac[iPtr.acd] = dg_dword(res)
 		// FIXME - handle overflow and carry
+
+	case "WSBI":
+		res = int32(cpuPtr.ac[iPtr.acd]) - iPtr.immVal
+		cpuPtr.ac[iPtr.acd] = dg_dword(res)
+		// FIXME - handle overflow and carry
+
 	default:
 		log.Printf("ERROR: EAGLE_OP instruction <%s> not yet implemented\n", iPtr.mnemonic)
 		return false
