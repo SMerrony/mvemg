@@ -68,18 +68,22 @@ func novaIO(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		case "BN":
 			if busy {
 				cpuPtr.pc++
+				log.Println("... skipping")
 			}
 		case "BZ":
 			if !busy {
 				cpuPtr.pc++
+				log.Println("... skipping")
 			}
 		case "DN":
 			if done {
 				cpuPtr.pc++
+				log.Println("... skipping")
 			}
 		case "DZ":
 			if !done {
 				cpuPtr.pc++
+				log.Println("... skipping")
 			}
 		}
 

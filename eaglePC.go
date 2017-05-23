@@ -31,6 +31,28 @@ func eaglePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 			cpuPtr.pc += 1
 		}
 
+	case "WSEQI":
+		tmp32b = sexWordToDWord(iPtr.imm16b)
+		if cpuPtr.ac[iPtr.acd] == tmp32b {
+			cpuPtr.pc += 3
+		} else {
+			cpuPtr.pc += 2
+		}
+
+	case "WSKBO":
+		if testDWbit(cpuPtr.ac[0], iPtr.bitNum) {
+			cpuPtr.pc += 2
+		} else {
+			cpuPtr.pc += 1
+		}
+
+	case "WSKBZ":
+		if !testDWbit(cpuPtr.ac[0], iPtr.bitNum) {
+			cpuPtr.pc += 2
+		} else {
+			cpuPtr.pc += 1
+		}
+
 	case "XJMP":
 		cpuPtr.pc = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
 

@@ -70,6 +70,7 @@ func busDataIn(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
 		log.Fatal("ERROR: busDataIn called with no function set")
 	}
 	d[iPtr.ioDev].dataInFunc(cpuPtr, iPtr, abc)
+	log.Printf("INFO: Bus Data In function called for dev #0%o\n", iPtr.ioDev)
 }
 
 func busSetDataOutFunc(devNum int, fn DataOutFunc) {
@@ -82,6 +83,7 @@ func busDataOut(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
 		log.Fatal("ERROR: busDataOut called with no function set")
 	}
 	d[iPtr.ioDev].dataOutFunc(cpuPtr, iPtr, abc)
+	log.Printf("INFO: Bus Data Out function called for dev #0%o\n", iPtr.ioDev)
 }
 
 func busSetResetFunc(devNum int, resetFn ResetFunc) {
@@ -117,11 +119,12 @@ func busIsAttached(devNum int) bool {
 
 func busSetBusy(devNum int, f bool) {
 	d[devNum].busy = f
+	log.Printf("... Busy flag set to %d for device #0%o\n", boolToInt(f), devNum)
 }
 
 func busSetDone(devNum int, f bool) {
 	d[devNum].done = f
-	log.Printf("... DoNe flag set to %d for device #0%o\n", boolToInt(f), devNum)
+	log.Printf("... Done flag set to %d for device #0%o\n", boolToInt(f), devNum)
 }
 
 func busGetBusy(devNum int) bool {

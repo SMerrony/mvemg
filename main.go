@@ -36,6 +36,10 @@ var p interface {
 	Stop()
 }
 
+var (
+	breakpoints []dg_phys_addr
+)
+
 func main() {
 	p = profile.Start(profile.ProfilePath("."))
 	defer p.Stop()
@@ -147,7 +151,7 @@ func doCommand(cmd string) {
 	case "ATT":
 		attach(words)
 	case "BREAK":
-		ttoPutNLString(CMD_NYI)
+		breakSet(words)
 	case "CHECK":
 		ttoPutStringNL(mtbScanImage(0))
 	case "CREATE":
@@ -168,6 +172,8 @@ func doCommand(cmd string) {
 		ttoPutNLString(CMD_UNKNOWN)
 	}
 }
+
+/* Commands are below here... */
 
 // Attach an image file to an emulated device
 func attach(cmd []string) {
@@ -217,6 +223,20 @@ func boot(cmd []string) {
 	default:
 		ttoPutNLString(" *** Booting from that device not yet implemented ***")
 	}
+}
+
+func breakSet(cmd []string) {
+	if len(cmd) != 2 {
+		ttoPutNLString(" *** BREAK command requires a single physical <address> argument ***")
+		return
+	}
+	pAddr, err := strconv.Atoi(cmd[1])
+	if err != nil {
+		ttoPutNLString(" *** BREAK command could not parse <address> argument ***")
+		return
+	}
+	breakpoints = append(breakpoints, dg_phys_addr(pAddr))
+	ttoPutNLString(" *** BREAKpoint set ***")
 }
 
 func disassemble(cmd []string) {
@@ -282,6 +302,17 @@ func disassemble(cmd []string) {
 	}
 }
 
+func printableBreakpointList() string {
+	if len(breakpoints) == 0 {
+		return " *** No BREAKpoints are set ***"
+	}
+	res := "BREAKpoints at: "
+	for _, b := range breakpoints {
+		res += fmt.Sprintf("%d. ", b)
+	}
+	return res
+}
+
 // Display SCP and Emulator help on the DASHER-compatible console
 func showHelp() {
 	ttoPutString("\014                          \024SCP-CLI Commands\025" +
@@ -316,6 +347,8 @@ func show(cmd []string) {
 	switch cmd[1] {
 	case "DEV":
 		ttoPutNLString(busGetPrintableDevList())
+	case "BREAK":
+		ttoPutNLString(printableBreakpointList())
 	default:
 		ttoPutNLString(" *** Invalid SHOW type ***")
 	}
@@ -371,9 +404,21 @@ func run() {
 		}
 
 		// BREAKPOINT?
+		if len(breakpoints) > 0 {
+			for _, bAddr := range breakpoints {
+				if bAddr == cpu.pc {
+					ttiStopThread(&cpu)
+					msg := fmt.Sprintf(" *** BREAKpoint hit at physical address %d.", cpu.pc)
+					ttoPutNLString(msg)
+					log.Println(msg)
+					return
+				}
+			}
+		}
 
 		// Console ESCape?
 		if cpu.consoleEsc {
+			cpu.consoleEsc = false
 			errDetail = " *** Console ESCape ***"
 			break
 		}

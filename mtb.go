@@ -171,11 +171,11 @@ func mtbDataIn(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
 
 	switch iPtr.f {
 	case 'S':
-		busSetBusy(DEV_TTO, true)
-		busSetDone(DEV_TTO, false)
+		busSetBusy(DEV_MTB, true)
+		busSetDone(DEV_MTB, false)
 	case 'C':
-		busSetBusy(DEV_TTO, false)
-		busSetDone(DEV_TTO, false)
+		busSetBusy(DEV_MTB, false)
+		busSetDone(DEV_MTB, false)
 	}
 
 	switch abc {
@@ -205,11 +205,11 @@ func mtbDataOut(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
 
 	switch iPtr.f {
 	case 'S':
-		busSetBusy(DEV_TTO, true)
-		busSetDone(DEV_TTO, false)
+		busSetBusy(DEV_MTB, true)
+		busSetDone(DEV_MTB, false)
 	case 'C':
-		busSetBusy(DEV_TTO, false)
-		busSetDone(DEV_TTO, false)
+		busSetBusy(DEV_MTB, false)
+		busSetDone(DEV_MTB, false)
 	}
 
 	ac16 := dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
