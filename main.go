@@ -53,6 +53,7 @@ func main() {
 
 	// close the port once we are done
 	defer l.Close()
+	//defer debugLogsDump()
 
 	for {
 		conn, err := l.Accept()
@@ -123,6 +124,7 @@ func scpGetLine() string {
 func cleanExit() {
 	ttoPutNLString(" *** MV/Emulator stopping at user request ***")
 	p.Stop()
+	debugLogsDump()
 	os.Exit(0)
 }
 

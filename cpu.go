@@ -61,8 +61,8 @@ func cpuExecute(iPtr *DecodedInstr) bool {
 		rc = novaPC(&cpu, iPtr)
 		//	case ECLIPSE_MEMREF:
 		//		rc = eclipseMemRef(&cpu, iPtr)
-		//	case ECLIPSE_OP:
-		//		rc = eclipseOp(&cpu, iPtr)
+	case ECLIPSE_OP:
+		rc = eclipseOp(&cpu, iPtr)
 		//	case ECLIPSE_PC:
 		//		rc = eclipsePC(&cpu, iPtr)
 		//	case ECLIPSE_STACK:

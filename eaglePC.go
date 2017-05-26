@@ -7,9 +7,24 @@ import (
 
 func eaglePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 	//var addr dg_phys_addr
-	var tmp32b dg_dword
+	var (
+		//wd      dg_word
+		tmp32b  dg_dword
+		tmpAddr dg_phys_addr
+	)
 
 	switch iPtr.mnemonic {
+
+	case "LWDSZ":
+		// unsigned wide decrement and skip if zero
+		tmpAddr = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
+		tmp32b = memReadDWord(tmpAddr) - 1
+		memWriteDWord(tmpAddr, tmp32b)
+		if tmp32b == 0 {
+			cpuPtr.pc += 4
+		} else {
+			cpuPtr.pc += 3
+		}
 
 	case "WBR":
 		//		if iPtr.disp > 0 {
@@ -84,6 +99,30 @@ func eaglePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 			tmp32b = cpuPtr.ac[iPtr.acd]
 		}
 		if cpuPtr.ac[iPtr.acs] <= tmp32b {
+			cpuPtr.pc += 2
+		} else {
+			cpuPtr.pc += 1
+		}
+
+	case "WSLT":
+		if iPtr.acd == iPtr.acs {
+			tmp32b = 0
+		} else {
+			tmp32b = cpuPtr.ac[iPtr.acd]
+		}
+		if cpuPtr.ac[iPtr.acs] < tmp32b {
+			cpuPtr.pc += 2
+		} else {
+			cpuPtr.pc += 1
+		}
+
+	case "WSNE":
+		if iPtr.acd == iPtr.acs {
+			tmp32b = 0
+		} else {
+			tmp32b = cpuPtr.ac[iPtr.acd]
+		}
+		if cpuPtr.ac[iPtr.acs] != tmp32b {
 			cpuPtr.pc += 2
 		} else {
 			cpuPtr.pc += 1

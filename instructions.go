@@ -712,7 +712,7 @@ func decode31bitDisp(d1, d2 dg_word, mode string) int32 {
 	// FIXME Test this!
 	var disp int32
 	if testWbit(d1, 1) {
-		disp = int32(int16(d1)) // sign extend
+		disp = int32(int16(d1 | 0x8000)) // sign extend
 	} else {
 		disp = int32(int16(d1)) & 0x00007fff // zero extend
 	}

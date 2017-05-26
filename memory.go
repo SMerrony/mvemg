@@ -71,10 +71,10 @@ func memWriteWordChan(addr dg_phys_addr, data dg_word) dg_phys_addr {
 	pAddr := addr
 
 	if getDchMode() {
-		pAddr = getBmcDchMapAddr(addr)
+		pAddr, _ = getBmcDchMapAddr(addr)
 	}
 	memWriteWord(pAddr, data)
-
+	debugPrint(MAP_LOG, fmt.Sprintf("memWriteWordChan got addr: %d, wrote to addr: %d\n", addr, pAddr))
 	return pAddr
 }
 
@@ -99,7 +99,7 @@ func memWriteDWord(wordAddr dg_phys_addr, dwd dg_dword) {
 }
 
 func dwordGetLowerWord(dwd dg_dword) dg_word {
-	return dg_word(dwd & 0x0000ffff)
+	return dg_word(dwd) & 0x0000ffff
 }
 
 func dwordGetUpperWord(dwd dg_dword) dg_word {
@@ -125,7 +125,7 @@ func sexWordToDWord(wd dg_word) dg_dword {
 	if testWbit(wd, 0) {
 		dwd = dg_dword(wd) | 0xffff0000
 	} else {
-		dwd = dg_dword(wd)
+		dwd = dg_dword(wd) & 0x0000ffff
 	}
 	return dwd
 }

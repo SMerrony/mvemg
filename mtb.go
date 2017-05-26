@@ -248,7 +248,7 @@ func mtbDoCommand() {
 	case CMD_READ:
 		mtbLog.Printf("*READ* command\n ==== Word Count: %d Location: %d\n", mtb.negWordCntReg, mtb.memAddrReg)
 		hdrLen, _ := simht.simhTapeReadRecordHeader(0)
-		mtbLog.Printf(" ----  Header read giving lengthL %d\n", hdrLen)
+		mtbLog.Printf(" ----  Header read giving length: %d\n", hdrLen)
 		if hdrLen == MTB_EOF {
 			mtbLog.Printf(" ----  Header is EOF indicator\n")
 			mtb.statusReg1 = SR1_HI_DENSITY | SR1_9TRACK | SR1_UNIT_READY | SR1_EOF | SR1_ERROR
@@ -259,7 +259,7 @@ func mtbDoCommand() {
 			var pAddr dg_phys_addr
 			rec, _ := simht.simhTapeReadRecord(0, int(hdrLen))
 			for w = 0; w < hdrLen; w += 2 {
-				wd = dg_word((rec[w] << 8) | rec[w+1])
+				wd = (dg_word(rec[w]) << 8) | dg_word(rec[w+1])
 				pAddr = memWriteWordChan(mtb.memAddrReg, wd)
 				mtbLog.Printf(" ----  Written word (%02X | %02X := %04X) to logical address: %d, physical: %d\n", rec[w], rec[w+1], wd, mtb.memAddrReg, pAddr)
 				mtb.memAddrReg++

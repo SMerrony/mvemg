@@ -45,6 +45,7 @@ func busInit() {
 		d[dev].busy = false
 		d[dev].done = false
 	}
+	bmcdchInit()
 }
 
 func busAddDevice(devNum int, mnem string, pmb int, att bool, io bool, boot bool) {
