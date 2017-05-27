@@ -29,9 +29,6 @@ const (
 
 	CPU_MODEL_NO = 0x224C
 	UCODE_REV    = 0x04
-
-	MEM_SIZE_WORDS = 8388608
-	MEM_SIZE_LCPID = 0x3F
 )
 
 func deviceToString(devNum int) string {

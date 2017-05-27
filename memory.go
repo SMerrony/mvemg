@@ -8,6 +8,25 @@ import (
 	//"strconv"
 )
 
+const (
+	MEM_SIZE_WORDS = 8388608
+	MEM_SIZE_LCPID = 0x3F
+
+	// Some Page Zero special locations...
+
+	WFP_LOC  = 020
+	WSP_LOC  = 022
+	WSL_LOC  = 024
+	WSB_LOC  = 026
+	WPFH_LOC = 030
+	CBP_LOC  = 032
+
+	NSP_LOC  = 040 // 32. Narrow Stack Pointer
+	NFP_LOC  = 041
+	NSL_LOC  = 042
+	NSFA_LOC = 043
+)
+
 type Memory struct {
 	ram                 [MEM_SIZE_WORDS]dg_word
 	atuEnabled          bool
