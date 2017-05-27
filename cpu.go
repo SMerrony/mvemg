@@ -65,8 +65,8 @@ func cpuExecute(iPtr *DecodedInstr) bool {
 		rc = eclipseOp(&cpu, iPtr)
 	case ECLIPSE_PC:
 		rc = eclipsePC(&cpu, iPtr)
-		//	case ECLIPSE_STACK:
-		//		rc = eclipseStack(&cpu, iPtr)
+	case ECLIPSE_STACK:
+		rc = eclipseStack(&cpu, iPtr)
 	case EAGLE_IO:
 		rc = eagleIO(&cpu, iPtr)
 	case EAGLE_OP:

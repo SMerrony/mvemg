@@ -58,6 +58,16 @@ func memReadByte(wordAddr dg_phys_addr, loByte bool) dg_byte {
 	return res
 }
 
+func memReadByteEclipseBA(byteAddr16 dg_word) dg_byte {
+	var (
+		hiLo bool
+		addr dg_phys_addr
+	)
+	hiLo = testWbit(byteAddr16, 15) // determine which byte to get
+	addr = dg_phys_addr(byteAddr16) >> 1
+	return memReadByte(addr, hiLo)
+}
+
 func memWriteByte(wordAddr dg_phys_addr, loByte bool, b dg_byte) {
 	wd := memory.ram[wordAddr]
 	if loByte {
@@ -115,6 +125,27 @@ func memWriteDWord(wordAddr dg_phys_addr, dwd dg_dword) {
 	}
 	memWriteWord(wordAddr, dwordGetUpperWord(dwd))
 	memWriteWord(wordAddr+1, dwordGetLowerWord(dwd))
+}
+
+// PUSH a word onto the Narrow Stack
+func nsPush(seg dg_phys_addr, data dg_word) {
+	// TODO segment handling
+	// TODO overflow/underflow handling - either here or in instruction?
+	memory.ram[NSP_LOC]++ // we allow this directr write to a fixed location for performance
+	addr := dg_phys_addr(memory.ram[NSP_LOC])
+	memWriteWord(addr, data)
+	debugPrint(SYSTEM_LOG, fmt.Sprintf("nsPush pushed %8d onto the Narrow Stack at location: %d\n", data, addr))
+}
+
+// POP a word off the Narrow Stack
+func nsPop(seg dg_phys_addr) dg_word {
+	// TODO segment handling
+	// TODO overflow/underflow handling - either here or in instruction?
+	addr := dg_phys_addr(memory.ram[NSP_LOC])
+	data := memReadWord(addr)
+	debugPrint(SYSTEM_LOG, fmt.Sprintf("nsPop  popped %8d off  the Narrow Stack at location: %d\n", data, addr))
+	memory.ram[NSP_LOC]-- // we allow this directr write to a fixed location for performance
+	return data
 }
 
 func dwordGetLowerWord(dwd dg_dword) dg_word {

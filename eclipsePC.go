@@ -52,6 +52,5 @@ func eclipsePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		return false
 	}
 
-	cpuPtr.pc += dg_phys_addr(iPtr.instrLength)
 	return true
 }

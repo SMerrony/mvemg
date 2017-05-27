@@ -8,6 +8,7 @@ import (
 func eclipseOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 	var (
 		addr dg_phys_addr
+		byt  dg_byte
 		wd   dg_word
 		dwd  dg_dword
 	)
@@ -28,6 +29,10 @@ func eclipseOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 	case "HXR":
 		dwd = cpuPtr.ac[iPtr.acd] >> (uint32(iPtr.immVal) * 4)
 		cpuPtr.ac[iPtr.acd] = dwd & 0x0ffff
+
+	case "LDB":
+		byt = memReadByteEclipseBA(dwordGetLowerWord(cpuPtr.ac[iPtr.acs]))
+		cpuPtr.ac[iPtr.acd] = dg_dword(byt)
 
 	case "SBI": // unsigned
 		wd = dwordGetLowerWord(cpuPtr.ac[iPtr.acd])

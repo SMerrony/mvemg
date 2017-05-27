@@ -2,7 +2,8 @@
 package main
 
 import (
-	"log"
+	"fmt"
+	//"log"
 )
 
 func resolve16bitEclipseAddr(cpuPtr *Cpu, ind byte, mode string, disp int32) dg_phys_addr {
@@ -33,7 +34,7 @@ func resolve16bitEclipseAddr(cpuPtr *Cpu, ind byte, mode string, disp int32) dg_
 	// mask off to Eclipse range
 	eff &= 0x7fff
 
-	log.Printf("... resolve16bitEclipseAddr got: %d., returning %d.\n", disp, eff)
+	debugPrint(SYSTEM_LOG, fmt.Sprintf("... resolve16bitEclipseAddr got: %d., returning %d.\n", disp, eff))
 	return eff
 }
 
@@ -62,7 +63,7 @@ func resolve16bitEagleAddr(cpuPtr *Cpu, ind byte, mode string, disp int32) dg_ph
 		eff = dg_phys_addr(indAddr)
 	}
 
-	log.Printf("... resolve16bitEclipseAddr got: %d., returning %d.\n", disp, eff)
+	debugPrint(SYSTEM_LOG, fmt.Sprintf("... resolve16bitEclipseAddr got: %d., returning %d.\n", disp, eff))
 	return eff
 }
 
@@ -91,7 +92,6 @@ func resolve32bitEffAddr(cpuPtr *Cpu, ind byte, mode string, disp int32) dg_phys
 		eff = dg_phys_addr(indAddr)
 	}
 
-	log.Printf("... resolve32bitEffAddr got: %d., returning %d.\n", disp, eff)
-
+	debugPrint(SYSTEM_LOG, fmt.Sprintf("... resolve32bitEffAddr got: %d., returning %d.\n", disp, eff))
 	return eff
 }
