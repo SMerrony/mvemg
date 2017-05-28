@@ -35,7 +35,7 @@ func eclipseMemRef(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 
 	case "ELDA":
 		addr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
-		cpuPtr.ac[iPtr.acd] = dg_dword(addr) & 0x0ffff
+		cpuPtr.ac[iPtr.acd] = dg_dword(memReadWord(addr)) & 0x0ffff
 
 	default:
 		log.Printf("ERROR: EAGLE_MEMREF instruction <%s> not yet implemented\n", iPtr.mnemonic)

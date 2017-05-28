@@ -31,7 +31,7 @@ func eclipseStack(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 	case "POPJ":
 		addr = dg_phys_addr(nsPop(0))
 		cpuPtr.pc = addr
-		return true
+		return true // because PC set
 
 	case "PSH":
 		first = iPtr.acs
@@ -48,7 +48,21 @@ func eclipseStack(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		nsPush(0, dg_word(cpuPtr.pc)+2)
 		addr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
 		cpuPtr.pc = addr
-		return true
+		return true // because PC set
+
+	case "RTN":
+		// complement of SAVE
+		memWriteWord(NSP_LOC, memReadWord(NFP_LOC)) // ???
+		word := nsPop(0)
+		cpuPtr.carry = testWbit(word, 0)
+		cpuPtr.pc = dg_phys_addr(word) & 0x7fff
+		nfpSave := nsPop(0)               // 1
+		cpuPtr.ac[3] = dg_dword(nfpSave)  // 2
+		cpuPtr.ac[2] = dg_dword(nsPop(0)) // 3
+		cpuPtr.ac[1] = dg_dword(nsPop(0)) // 4
+		cpuPtr.ac[0] = dg_dword(nsPop(0)) // 5
+		memWriteWord(NFP_LOC, nfpSave)
+		return true // because PC set
 
 	case "SAVE":
 		nfpSav := memReadWord(NFP_LOC)
