@@ -50,6 +50,28 @@ func eclipseStack(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		cpuPtr.pc = addr
 		return true
 
+	case "SAVE":
+		nfpSav := memReadWord(NFP_LOC)
+		nsPush(0, dwordGetLowerWord(cpuPtr.ac[0])) // 1
+		nsPush(0, dwordGetLowerWord(cpuPtr.ac[1])) // 2
+		nsPush(0, dwordGetLowerWord(cpuPtr.ac[2])) // 3
+		nsPush(0, nfpSav)                          // 4
+		word := dwordGetLowerWord(cpuPtr.ac[3])
+		if cpuPtr.carry {
+			word |= 0x8000
+		} else {
+			word &= 0x7fff
+		}
+		nsPush(0, word) // 5
+		wdCnt := int(iPtr.imm16b)
+		if wdCnt > 0 {
+			for wd := 0; wd < wdCnt; wd++ {
+				nsPush(0, 0) // ...
+			}
+		}
+		cpuPtr.ac[3] = dg_dword(memReadWord(NSP_LOC)) // ???
+		memWriteWord(NFP_LOC, dg_word(cpuPtr.ac[3]))
+
 	default:
 		log.Printf("ERROR: ECLIPSE_STACK instruction <%s> not yet implemented\n", iPtr.mnemonic)
 		return false

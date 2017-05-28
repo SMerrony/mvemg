@@ -15,6 +15,11 @@ func eclipseOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 
 	switch iPtr.mnemonic {
 
+	case "ADI": // unsigned
+		wd = dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
+		wd += dg_word(iPtr.immVal) // TODO this is a signed int, is this OK?
+		cpuPtr.ac[iPtr.acd] = dg_dword(wd)
+
 	case "ELEF":
 		cpuPtr.ac[iPtr.acd] = dg_dword(resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp))
 
