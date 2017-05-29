@@ -85,6 +85,7 @@ func main() {
 		instructionsInit()
 		cpuInit()
 		mtbInit()
+		dpfInit()
 
 		// say hello...
 		ttoPutChar(ASCII_FF)
@@ -158,7 +159,7 @@ func doCommand(cmd string) {
 	case "CHECK":
 		ttoPutStringNL(mtbScanImage(0))
 	case "CREATE":
-		ttoPutNLString(CMD_NYI)
+		createBlank(words)
 	case "DIS":
 		disassemble(words)
 	case "DO":
@@ -239,7 +240,25 @@ func breakSet(cmd []string) {
 		return
 	}
 	breakpoints = append(breakpoints, dg_phys_addr(pAddr))
-	ttoPutNLString(" *** BREAKpoint set ***")
+	ttoPutNLString("BREAKpoint set")
+}
+
+func createBlank(cmd []string) {
+	if len(cmd) < 3 {
+		ttoPutNLString(" *** Expecting DPF|DSKP <filename> args for CREATE command ***")
+		return
+	}
+	switch cmd[1] {
+	case "DPF":
+		ttoPutNLString("Attempting to CREATE new empty DPF-type disk image, please wait...")
+		if dpfCreateBlank(cmd[2]) {
+			ttoPutNLString("Empty MV/Em DPF-type disk image created")
+		} else {
+			ttoPutNLString("Error: could not create empty disk image")
+		}
+	default:
+		ttoPutNLString(" *** CREATE not yet supported for that device type ***")
+	}
 }
 
 func disassemble(cmd []string) {
