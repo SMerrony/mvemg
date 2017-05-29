@@ -35,7 +35,7 @@ func eclipsePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 				inc = 2
 			}
 		}
-		debugPrint(SYSTEM_LOG, fmt.Sprintf("CLM compared %d with limits %d and %d, moving PC by %d\n", acs, l, h, inc))
+		debugPrint(DEBUG_LOG, fmt.Sprintf("CLM compared %d with limits %d and %d, moving PC by %d\n", acs, l, h, inc))
 		cpuPtr.pc += inc
 
 	case "DSPA":
@@ -43,7 +43,7 @@ func eclipsePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		offset := dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
 		lowLimit := memReadWord(tableStart - 2)
 		hiLimit := memReadWord(tableStart - 1)
-		debugPrint(SYSTEM_LOG, fmt.Sprintf("DSPA called with table at %d, offset %d, lo %d hi %d\n",
+		debugPrint(DEBUG_LOG, fmt.Sprintf("DSPA called with table at %d, offset %d, lo %d hi %d\n",
 			tableStart, offset, lowLimit, hiLimit))
 		if offset < lowLimit || offset > hiLimit {
 			log.Fatalf("ERROR: DPSA called with out of bounds offset %d", offset)
@@ -85,7 +85,7 @@ func eclipsePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		} else {
 			cpuPtr.pc += 1
 		}
-		debugPrint(SYSTEM_LOG, fmt.Sprintf("SNB: Wd Addr: %d., word: %0X, bit #: %d\n", addr, wd, bit))
+		debugPrint(DEBUG_LOG, fmt.Sprintf("SNB: Wd Addr: %d., word: %0X, bit #: %d\n", addr, wd, bit))
 
 	default:
 		log.Printf("ERROR: ECLIPSE_PC instruction <%s> not yet implemented\n", iPtr.mnemonic)

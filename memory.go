@@ -134,7 +134,7 @@ func nsPush(seg dg_phys_addr, data dg_word) {
 	memory.ram[NSP_LOC]++ // we allow this directr write to a fixed location for performance
 	addr := dg_phys_addr(memory.ram[NSP_LOC])
 	memWriteWord(addr, data)
-	debugPrint(SYSTEM_LOG, fmt.Sprintf("nsPush pushed %8d onto the Narrow Stack at location: %d\n", data, addr))
+	debugPrint(DEBUG_LOG, fmt.Sprintf("nsPush pushed %8d onto the Narrow Stack at location: %d\n", data, addr))
 }
 
 // POP a word off the Narrow Stack
@@ -143,7 +143,7 @@ func nsPop(seg dg_phys_addr) dg_word {
 	// TODO overflow/underflow handling - either here or in instruction?
 	addr := dg_phys_addr(memory.ram[NSP_LOC])
 	data := memReadWord(addr)
-	debugPrint(SYSTEM_LOG, fmt.Sprintf("nsPop  popped %8d off  the Narrow Stack at location: %d\n", data, addr))
+	debugPrint(DEBUG_LOG, fmt.Sprintf("nsPop  popped %8d off  the Narrow Stack at location: %d\n", data, addr))
 	memory.ram[NSP_LOC]-- // we allow this directr write to a fixed location for performance
 	return data
 }

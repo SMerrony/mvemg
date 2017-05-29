@@ -2,6 +2,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"log"
 	"net"
@@ -161,7 +162,7 @@ func doCommand(cmd string) {
 	case "DIS":
 		disassemble(words)
 	case "DO":
-		ttoPutNLString(CMD_NYI)
+		doScript(words)
 	case "EXIT":
 		cleanExit()
 	case "NOBREAK":
@@ -302,6 +303,25 @@ func disassemble(cmd []string) {
 		}
 		ttoPutNLString(display)
 	}
+}
+
+func doScript(cmd []string) {
+	scriptFile, err := os.Open(cmd[1])
+	if err != nil {
+		ttoPutNLString(" *** Could not open MV/Em command script ***")
+		log.Printf("WARN: Could not open MV/Em command script <%s>\n", cmd[1])
+		return
+	}
+	defer scriptFile.Close()
+
+	scanner := bufio.NewScanner(scriptFile)
+	for scanner.Scan() {
+		doCmd := scanner.Text()
+		debugPrint(DEBUG_LOG, fmt.Sprintf("doScript read command <%s> from file\n", doCmd))
+		ttoPutNLString(doCmd)
+		doCommand(doCmd)
+	}
+
 }
 
 func printableBreakpointList() string {

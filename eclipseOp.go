@@ -32,6 +32,15 @@ func eclipseOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 			cpuPtr.ac[1] = dwd / dg_dword(quot)
 		}
 
+	case "DLSH":
+		dplus1 := iPtr.acd + 1
+		if dplus1 == 4 {
+			dplus1 = 0
+		}
+		dwd = dlsh(cpuPtr.ac[iPtr.acs], cpuPtr.ac[iPtr.acd], cpuPtr.ac[dplus1])
+		cpuPtr.ac[iPtr.acd] = dg_dword(dwordGetUpperWord(dwd))
+		cpuPtr.ac[dplus1] = dg_dword(dwordGetLowerWord(dwd))
+
 	case "ELEF":
 		cpuPtr.ac[iPtr.acd] = dg_dword(resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp))
 
@@ -50,6 +59,9 @@ func eclipseOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 	case "LDB":
 		byt = memReadByteEclipseBA(dwordGetLowerWord(cpuPtr.ac[iPtr.acs]))
 		cpuPtr.ac[iPtr.acd] = dg_dword(byt)
+
+	case "LSH":
+		cpuPtr.ac[iPtr.acd] = lsh(cpuPtr.ac[iPtr.acs], cpuPtr.ac[iPtr.acd])
 
 	case "SBI": // unsigned
 		wd = dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
@@ -74,4 +86,42 @@ func eclipseOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 
 	cpuPtr.pc += dg_phys_addr(iPtr.instrLength)
 	return true
+}
+
+func dlsh(acS, acDh, acDl dg_dword) dg_dword {
+	var shft int8 = int8(acS)
+	var dwd dg_dword = ((acDh & 0x0ffff) << 16) | (acDl & 0x0ffff)
+	if shft != 0 {
+		if shft < -31 || shft > 31 {
+			dwd = 0
+		} else {
+			if shft > 0 {
+				dwd >>= uint8(shft)
+			} else {
+				shft *= -1
+				dwd >>= uint8(shft)
+			}
+		}
+	}
+	return dwd
+}
+
+func lsh(acS, acD dg_dword) dg_dword {
+	var shft int8 = int8(acS)
+	var wd dg_word = dwordGetLowerWord(acD)
+	if shft == 0 {
+		wd = dwordGetLowerWord(acD) // do nothing
+	} else {
+		if shft < -15 || shft > 15 {
+			wd = 0 // 16+ bit shift clears word
+		} else {
+			if shft > 0 {
+				wd >>= uint8(shft)
+			} else {
+				shft *= -1
+				wd >>= uint8(shft)
+			}
+		}
+	}
+	return dg_dword(wd)
 }

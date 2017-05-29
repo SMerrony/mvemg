@@ -8,7 +8,7 @@ import (
 const (
 	DEBUG_LOGS      = 4
 	DEBUG_LOG_LINES = 40000
-	SYSTEM_LOG      = 0
+	DEBUG_LOG       = 0
 	DPF_LOG         = 1
 	DSKP_LOG        = 2
 	MAP_LOG         = 3
@@ -30,7 +30,7 @@ func debugLogsDump() {
 	for l := range logArr {
 		if firstLine[l] != lastLine[l] { // ignore unused or empty logs
 			switch l {
-			case SYSTEM_LOG:
+			case DEBUG_LOG:
 				debugDumpFile, _ = os.OpenFile("mvem_debug.log", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
 			case DPF_LOG:
 				debugDumpFile, _ = os.OpenFile("dpf_debug.log", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
