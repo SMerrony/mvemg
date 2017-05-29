@@ -6,6 +6,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
 )
 
@@ -94,7 +95,7 @@ type dpfData_t struct {
 	mapEnabled      bool
 	memAddr         dg_word // self-incrementing on DG
 	ema             uint8   // 5-bit
-	clyAddr         dg_word // 10-bit
+	cylAddr         dg_word // 10-bit
 	surfAddr        uint8   // 5-bit - increments post-op
 	sectAddr        uint8   // 5-bit - increments mid-op
 	sectCnt         int8    // 5-bit - incrememts mid-op - signed
@@ -107,6 +108,7 @@ type dpfData_t struct {
 
 var (
 	dpfData dpfData_t
+	err     error
 )
 
 // initialise the emulated DPF controller
@@ -115,11 +117,28 @@ func dpfInit() {
 
 	busAddDevice(DEV_DPF, "DPF", DPF_PMB, false, true, true)
 	busSetResetFunc(DEV_DPF, dpfReset)
-
+	busSetDataInFunc(DEV_DPF, dpfDataIn)
+	busSetDataOutFunc(DEV_DPF, dpfDataOut)
 	dpfData.imageAttached = false
 	dpfData.instructionMode = DPF_INS_MODE_NORMAL
 	dpfData.driveStatus = DPF_READY
 
+}
+
+// attepmt to attach an extant MV/Em disk image to the running emulator
+func dpfAttach(dNum int, imgName string) bool {
+	// TODO Disk Number not currently used
+	debugPrint(DPF_LOG, fmt.Sprintf("dpfAttach called for disk #%d with image <%s>\n", dNum, imgName))
+	dpfData.imageFile, err = os.Open(imgName)
+	if err != nil {
+		debugPrint(DPF_LOG, "Failed to open image for attaching\n")
+		log.Printf("WARN: Failed to open DPF image <%s> for ATTach\n", imgName)
+		return false
+	}
+	dpfData.imageFileName = imgName
+	dpfData.imageAttached = true
+	busSetAttached(DEV_DPF)
+	return true
 }
 
 // Create an empty disk file of the correct size for the DPF emulator to use
@@ -138,6 +157,190 @@ func dpfCreateBlank(imgName string) bool {
 	return true
 }
 
+func dpfDataIn(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
+	switch abc {
+	case 'A':
+		switch dpfData.instructionMode {
+		case DPF_INS_MODE_NORMAL:
+			cpuPtr.ac[iPtr.acd] = dg_dword(dpfData.rwStatus)
+			debugPrint(DPF_LOG, fmt.Sprintf("DIA [Read Data Txfr Status] (Normal mode) returning %s for DRV=%d\n",
+				wordToBinStr(dpfData.rwStatus), dpfData.drive))
+		case DPF_INS_MODE_ALT_1:
+			log.Fatal("DPF DIA (Alt Mode 1) not yet implemented")
+		case DPF_INS_MODE_ALT_2:
+			log.Fatal("DPF DIA (Alt Mode 2) not yet implemented")
+		}
+	case 'B':
+		switch dpfData.instructionMode {
+		case DPF_INS_MODE_NORMAL:
+			cpuPtr.ac[iPtr.acd] = dg_dword(dpfData.driveStatus & 0xfeff)
+			debugPrint(DPF_LOG, fmt.Sprintf("DIB [Read Drive Status] (normal mode) DRV=%d, %s to AC%d, PC: %d\n",
+				dpfData.drive, wordToBinStr(dpfData.driveStatus), iPtr.acd, cpuPtr.pc))
+		case DPF_INS_MODE_ALT_1:
+			if dpfData.mapEnabled {
+				cpuPtr.ac[iPtr.acd] = dg_dword(dpfData.ema&0x1f) | 0x8000
+			} else {
+				cpuPtr.ac[iPtr.acd] = dg_dword(dpfData.ema & 0x1f)
+			}
+			debugPrint(DPF_LOG, fmt.Sprintf("DIB [Read EMA] (Alt Mode 1) returning: %d, PC: %d\n",
+				cpuPtr.ac[iPtr.acd], cpuPtr.pc))
+		case DPF_INS_MODE_ALT_2:
+			log.Fatal("DPF DIB (Alt Mode 2) not yet implemented")
+		}
+	case 'C':
+		log.Fatal("DPF DIC not yet implemented")
+	}
+
+	dpfHandleFlag(iPtr.f) // TODO Is this go-able?
+}
+
+func dpfDataOut(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
+	data := dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
+	switch abc {
+	case 'A':
+		dpfData.command = extractDpfCommand(data)
+		dpfData.drive = extractDpfDriveNo(data)
+		dpfData.ema = extractDpfEMA(data)
+		if testWbit(data, 0) {
+			dpfData.rwStatus &= ^dg_word(DPF_RWDONE)
+		}
+		if testWbit(data, 1) {
+			dpfData.rwStatus &= ^dg_word(DPF_DRIVE0DONE)
+		}
+		if testWbit(data, 2) {
+			dpfData.rwStatus &= ^dg_word(DPF_DRIVE1DONE)
+		}
+		if testWbit(data, 3) {
+			dpfData.rwStatus &= ^dg_word(DPF_DRIVE2DONE)
+		}
+		if testWbit(data, 4) {
+			dpfData.rwStatus &= ^dg_word(DPF_DRIVE3DONE)
+		}
+		dpfData.instructionMode = DPF_INS_MODE_NORMAL
+		if dpfData.command == DPF_CMD_SET_ALT_MODE_1 {
+			dpfData.instructionMode = DPF_INS_MODE_ALT_1
+		}
+		if dpfData.command == DPF_CMD_SET_ALT_MODE_2 {
+			dpfData.instructionMode = DPF_INS_MODE_ALT_2
+		}
+		if dpfData.command == DPF_CMD_NO_OP {
+			dpfDoNoOpCommand()
+		}
+		dpfData.lastDOAwasSeek = (dpfData.command == DPF_CMD_SEEK)
+		if dpfData.debug {
+			debugPrint(DPF_LOG, fmt.Sprintf("DOA [Specify Cmd,Drv,EMA] to DRV=%d with data %s at PC: %d\n",
+				dpfData.drive, wordToBinStr(data), cpuPtr.pc))
+		}
+	case 'B':
+		if testWbit(data, 0) {
+			dpfData.ema |= 0x01
+		}
+		dpfData.memAddr = data & 0x7fff
+		if dpfData.debug {
+			debugPrint(DPF_LOG, fmt.Sprintf("DOB [Specify Memory Addr] with data %s at PC: %d\n",
+				wordToBinStr(data), cpuPtr.pc))
+			debugPrint(DPF_LOG, fmt.Sprintf("... MEM Addr: %d\n", dpfData.memAddr))
+		}
+	case 'C':
+		if dpfData.lastDOAwasSeek {
+			dpfData.cylAddr = data & 0x03ff
+			if dpfData.debug {
+				debugPrint(DPF_LOG, fmt.Sprintf("DOC [Specify Cylinder] after SEEK with data %s at PC: %d\n",
+					wordToBinStr(data), cpuPtr.pc))
+				debugPrint(DPF_LOG, fmt.Sprintf("... CYL: %d\n", dpfData.cylAddr))
+			} else {
+				dpfData.mapEnabled = testWbit(data, 0)
+				dpfData.surfAddr = extractSurfAddr(data)
+				dpfData.sectAddr = extractSectAddr(data)
+				dpfData.sectCnt = extractSectCnt(data)
+				if dpfData.debug {
+					debugPrint(DPF_LOG, fmt.Sprintf("DOC [Specify Surf,Sect,Cnt] (not after seek) with data %s at PC: %d\n",
+						wordToBinStr(data), cpuPtr.pc))
+					debugPrint(DPF_LOG, fmt.Sprintf("... MAP: %d, SURF: %d, SECT: %d, SECCNT: %d\n",
+						dpfData.mapEnabled, dpfData.surfAddr, dpfData.sectAddr, dpfData.sectCnt))
+				}
+
+			}
+		}
+	}
+
+	dpfHandleFlag(iPtr.f) // TODO Is this go-able?
+}
+
+func dpfDoDriveOpCommand() {
+	dpfData.instructionMode = DPF_INS_MODE_NORMAL
+	switch dpfData.command {
+	case DPF_CMD_RECAL:
+		dpfData.cylAddr = 0
+		dpfData.surfAddr = 0
+		dpfData.rwStatus = DPF_DRIVE0DONE
+		if dpfData.debug {
+			debugPrint(DPF_LOG, "... RECAL done\n")
+		}
+
+	case DPF_CMD_SEEK:
+		// action the seek
+		dpfData.rwStatus = DPF_DRIVE0DONE
+		if dpfData.debug {
+			debugPrint(DPF_LOG, "... SEEK done\n")
+		}
+
+	default:
+		log.Fatalf("DPF Drive Operation command # %d not yet impelemented", dpfData.command)
+	}
+}
+
+func dpfDoNoOpCommand() {
+	dpfData.instructionMode = DPF_INS_MODE_NORMAL
+	dpfData.rwStatus = 0
+	dpfData.driveStatus = DPF_READY
+	if dpfData.debug {
+		debugPrint(DPF_LOG, "... NO OP command done\n")
+	}
+}
+
+func dpfDoRWcommand() {
+
+	switch dpfData.command {
+
+	default:
+		log.Fatalf("DPF Disk R/W Command %d not yet implemented\n", dpfData.command)
+	}
+
+}
+
+func dpfHandleFlag(f byte) {
+	switch f {
+	case 'S':
+		busSetBusy(DEV_DPF, true)
+		busSetDone(DEV_DPF, false)
+		// TODO stop any I/O
+		dpfData.rwStatus = 0
+		// TODO start I/O timeout
+		dpfData.rwCommand = dpfData.command
+		if dpfData.debug {
+			debugPrint(DPF_LOG, "... S flag set\n")
+		}
+		dpfDoRWcommand()
+		busSetBusy(DEV_DPF, false)
+		busSetDone(DEV_DPF, true)
+
+	case 'C':
+		log.Fatal("DPF C flag not yet implemented")
+
+	case 'P':
+		busSetBusy(DEV_DPF, false)
+		if dpfData.debug {
+			debugPrint(DPF_LOG, "... P flag set\n")
+		}
+		dpfData.rwStatus = 0
+		dpfDoDriveOpCommand()
+
+	default:
+		// no/empty flag - nothing to do
+	}
+}
+
 // reset the DPF controller
 func dpfReset() {
 	dpfData.instructionMode = DPF_INS_MODE_NORMAL
@@ -146,4 +349,34 @@ func dpfReset() {
 	if dpfData.debug {
 		debugPrint(DPF_LOG, "DPF Reset\n")
 	}
+}
+
+func extractDpfCommand(word dg_word) int8 {
+	return int8((word & 0x0780) >> 7)
+}
+
+func extractDpfDriveNo(word dg_word) uint8 {
+	return uint8((word & 0x60) >> 5)
+}
+
+func extractDpfEMA(word dg_word) uint8 {
+	return uint8(word & 0x1f)
+}
+
+func extractSectAddr(word dg_word) uint8 {
+	return uint8((word & 0x03e0) >> 5)
+}
+
+func extractSectCnt(word dg_word) int8 {
+	tmpWd := word
+	if testWbit(tmpWd, 3) { // sign-extend
+		tmpWd |= 0xe0
+	} else {
+		tmpWd &= 0x1f
+	}
+	return int8(tmpWd)
+}
+
+func extractSurfAddr(word dg_word) uint8 {
+	return uint8((word & 0x7c00) >> 10)
 }

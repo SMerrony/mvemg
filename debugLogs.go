@@ -12,6 +12,8 @@ const (
 	DPF_LOG         = 1
 	DSKP_LOG        = 2
 	MAP_LOG         = 3
+
+	LOG_PERMS = 0644
 )
 
 var (
@@ -31,13 +33,13 @@ func debugLogsDump() {
 		if firstLine[l] != lastLine[l] { // ignore unused or empty logs
 			switch l {
 			case DEBUG_LOG:
-				debugDumpFile, _ = os.OpenFile("mvem_debug.log", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
+				debugDumpFile, _ = os.OpenFile("mvem_debug.log", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, LOG_PERMS)
 			case DPF_LOG:
-				debugDumpFile, _ = os.OpenFile("dpf_debug.log", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
+				debugDumpFile, _ = os.OpenFile("dpf_debug.log", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, LOG_PERMS)
 			case DSKP_LOG:
-				debugDumpFile, _ = os.OpenFile("dskp_debug.log", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
+				debugDumpFile, _ = os.OpenFile("dskp_debug.log", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, LOG_PERMS)
 			case MAP_LOG:
-				debugDumpFile, _ = os.OpenFile("map_debug.log", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
+				debugDumpFile, _ = os.OpenFile("map_debug.log", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, LOG_PERMS)
 			}
 			debugDumpFile.WriteString(">>> Dumping Debug Log\n\n")
 			thisLine := firstLine[l]

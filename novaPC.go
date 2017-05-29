@@ -13,8 +13,9 @@ func novaPC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		cpuPtr.pc = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
 
 	case "JSR":
-		cpuPtr.ac[3] = dg_dword(cpuPtr.pc + 1)
+		tmpPC := dg_dword(cpuPtr.pc + 1)
 		cpuPtr.pc = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
+		cpuPtr.ac[3] = tmpPC
 
 	default:
 		log.Printf("ERROR: NOVA_PC instruction <%s> not yet implemented\n", iPtr.mnemonic)

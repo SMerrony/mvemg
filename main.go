@@ -194,6 +194,13 @@ func attach(cmd []string) {
 			ttoPutNLString(" *** Could not ATTach Tape Image ***")
 		}
 
+	case "DPF":
+		if dpfAttach(0, cmd[2]) {
+			ttoPutNLString(" *** DPF Disk Image Attached ***")
+		} else {
+			ttoPutNLString(" *** Could not ATTach DPF Disk Image ***")
+		}
+
 	default:
 		ttoPutNLString(" *** Unknown or unimplemented Device for ATT command ***")
 	}
@@ -336,9 +343,11 @@ func doScript(cmd []string) {
 	scanner := bufio.NewScanner(scriptFile)
 	for scanner.Scan() {
 		doCmd := scanner.Text()
-		debugPrint(DEBUG_LOG, fmt.Sprintf("doScript read command <%s> from file\n", doCmd))
-		ttoPutNLString(doCmd)
-		doCommand(doCmd)
+		if doCmd[0] != '#' {
+			debugPrint(DEBUG_LOG, fmt.Sprintf("doScript read command <%s> from file\n", doCmd))
+			ttoPutNLString(doCmd)
+			doCommand(doCmd)
+		}
 	}
 
 }
