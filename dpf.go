@@ -129,7 +129,7 @@ func dpfInit() {
 func dpfAttach(dNum int, imgName string) bool {
 	// TODO Disk Number not currently used
 	debugPrint(DPF_LOG, fmt.Sprintf("dpfAttach called for disk #%d with image <%s>\n", dNum, imgName))
-	dpfData.imageFile, err = os.Open(imgName)
+	dpfData.imageFile, err = os.OpenFile(imgName, os.O_RDWR, 0755)
 	if err != nil {
 		debugPrint(DPF_LOG, "Failed to open image for attaching\n")
 		log.Printf("WARN: Failed to open DPF image <%s> for ATTach\n", imgName)
@@ -230,6 +230,8 @@ func dpfDataOut(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
 		if dpfData.debug {
 			debugPrint(DPF_LOG, fmt.Sprintf("DOA [Specify Cmd,Drv,EMA] to DRV=%d with data %s at PC: %d\n",
 				dpfData.drive, wordToBinStr(data), cpuPtr.pc))
+			debugPrint(DPF_LOG, fmt.Sprintf("... CMD: (%d), DRV: %d, EMA: %d\n",
+				dpfData.command, dpfData.drive, dpfData.ema))
 		}
 	case 'B':
 		if testWbit(data, 0) {
@@ -248,18 +250,17 @@ func dpfDataOut(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
 				debugPrint(DPF_LOG, fmt.Sprintf("DOC [Specify Cylinder] after SEEK with data %s at PC: %d\n",
 					wordToBinStr(data), cpuPtr.pc))
 				debugPrint(DPF_LOG, fmt.Sprintf("... CYL: %d\n", dpfData.cylAddr))
-			} else {
-				dpfData.mapEnabled = testWbit(data, 0)
-				dpfData.surfAddr = extractSurfAddr(data)
-				dpfData.sectAddr = extractSectAddr(data)
-				dpfData.sectCnt = extractSectCnt(data)
-				if dpfData.debug {
-					debugPrint(DPF_LOG, fmt.Sprintf("DOC [Specify Surf,Sect,Cnt] (not after seek) with data %s at PC: %d\n",
-						wordToBinStr(data), cpuPtr.pc))
-					debugPrint(DPF_LOG, fmt.Sprintf("... MAP: %d, SURF: %d, SECT: %d, SECCNT: %d\n",
-						dpfData.mapEnabled, dpfData.surfAddr, dpfData.sectAddr, dpfData.sectCnt))
-				}
-
+			}
+		} else {
+			dpfData.mapEnabled = testWbit(data, 0)
+			dpfData.surfAddr = extractSurfAddr(data)
+			dpfData.sectAddr = extractSectAddr(data)
+			dpfData.sectCnt = extractSectCnt(data)
+			if dpfData.debug {
+				debugPrint(DPF_LOG, fmt.Sprintf("DOC [Specify Surf,Sect,Cnt] (not after seek) with data %s at PC: %d\n",
+					wordToBinStr(data), cpuPtr.pc))
+				debugPrint(DPF_LOG, fmt.Sprintf("... MAP: %d, SURF: %d, SECT: %d, SECCNT: %d\n",
+					dpfData.mapEnabled, dpfData.surfAddr, dpfData.sectAddr, dpfData.sectCnt))
 			}
 		}
 	}
@@ -275,14 +276,14 @@ func dpfDoDriveOpCommand() {
 		dpfData.surfAddr = 0
 		dpfData.rwStatus = DPF_DRIVE0DONE
 		if dpfData.debug {
-			debugPrint(DPF_LOG, "... RECAL done\n")
+			debugPrint(DPF_LOG, fmt.Sprintf("... RECAL done, %s\n", dpfPrintableAddr()))
 		}
 
 	case DPF_CMD_SEEK:
 		// action the seek
 		dpfData.rwStatus = DPF_DRIVE0DONE
 		if dpfData.debug {
-			debugPrint(DPF_LOG, "... SEEK done\n")
+			debugPrint(DPF_LOG, fmt.Sprintf("... SEEK done, %s\n", dpfPrintableAddr()))
 		}
 
 	default:
@@ -300,8 +301,96 @@ func dpfDoNoOpCommand() {
 }
 
 func dpfDoRWcommand() {
+	var (
+		buffer = make([]byte, DPF_BYTES_PER_SECTOR)
+		wd     dg_word
+	)
+	dpfData.instructionMode = DPF_INS_MODE_NORMAL
 
 	switch dpfData.command {
+
+	case DPF_CMD_READ:
+		if dpfData.debug {
+			debugPrint(DPF_LOG, fmt.Sprintf("... READ command invoked %s\n", dpfPrintableAddr()))
+			debugPrint(DPF_LOG, fmt.Sprintf("... .... Start Address: %d\n", dpfData.memAddr))
+		}
+		dpfData.rwStatus = 0
+		for dpfData.sectCnt != 0 {
+			dpfPositionDiskImage()
+			br, err := dpfData.imageFile.Read(buffer)
+			if br != DPF_BYTES_PER_SECTOR || err != nil {
+				log.Fatalf("ERROR: unexpected return from DPF Image File Read: %s", err)
+			}
+			for w := 0; w < DPF_WORDS_PER_SECTOR; w++ {
+				wd = (dg_word(buffer[w*2]) << 8) | dg_word(buffer[(w*2)+1])
+				if dpfData.mapEnabled {
+					memWriteWordChan(dg_phys_addr(dpfData.memAddr), wd)
+				} else {
+					memWriteWord(dg_phys_addr(dpfData.memAddr), wd)
+				}
+				dpfData.memAddr++
+			}
+			dpfData.sectAddr++
+			dpfData.sectCnt++
+			// end of track?
+			if dpfData.sectAddr == DPF_SECTORS_PER_TRACK {
+				dpfData.surfAddr++
+				dpfData.sectAddr = 0
+			}
+			// end of disk?
+			if dpfData.surfAddr == DPF_SURFACES_PER_DISK {
+				dpfData.rwStatus = DPF_SURFSECT | DPF_RWFAULT | DPF_RWDONE
+				break
+			}
+
+		}
+		if dpfData.debug {
+			debugPrint(DPF_LOG, fmt.Sprintf("... .... READ command finished %s\n", dpfPrintableAddr()))
+			debugPrint(DPF_LOG, fmt.Sprintf("... .... Last Address: %d\n", dpfData.memAddr))
+		}
+		dpfData.rwStatus |= DPF_RWDONE | DPF_DRIVE0DONE
+
+	case DPF_CMD_WRITE:
+		if dpfData.debug {
+			debugPrint(DPF_LOG, fmt.Sprintf("... WRITE command invoked %s\n", dpfPrintableAddr()))
+			debugPrint(DPF_LOG, fmt.Sprintf("... .....  Start Address: %d\n", dpfData.memAddr))
+		}
+		dpfData.rwStatus = 0
+		for dpfData.sectCnt != 0 {
+			dpfPositionDiskImage()
+			for w := 0; w < DPF_WORDS_PER_SECTOR; w++ {
+				if dpfData.mapEnabled {
+					wd = memReadWordChan(dg_phys_addr(dpfData.memAddr))
+				} else {
+					wd = memReadWord(dg_phys_addr(dpfData.memAddr))
+				}
+				dpfData.memAddr++
+				buffer[w*2] = byte((wd & 0xff00) >> 8)
+				buffer[(w*2)+1] = byte(wd & 0x00ff)
+			}
+			bw, err := dpfData.imageFile.Write(buffer)
+			if bw != DPF_BYTES_PER_SECTOR || err != nil {
+				log.Fatalf("ERROR: unexpected return from DPF Image File Write: %s", err)
+			}
+			dpfData.sectAddr++
+			dpfData.sectCnt++
+			// end of track?
+			if dpfData.sectAddr == DPF_SECTORS_PER_TRACK {
+				dpfData.surfAddr++
+				dpfData.sectAddr = 0
+			}
+			// end of disk?
+			if dpfData.surfAddr == DPF_SURFACES_PER_DISK {
+				dpfData.rwStatus = DPF_SURFSECT | DPF_RWFAULT | DPF_RWDONE
+				break
+			}
+
+		}
+		if dpfData.debug {
+			debugPrint(DPF_LOG, fmt.Sprintf("... ..... WRITE command finished %s\n", dpfPrintableAddr()))
+			debugPrint(DPF_LOG, fmt.Sprintf("... ..... Last Address: %d\n", dpfData.memAddr))
+		}
+		dpfData.rwStatus |= DPF_RWDONE | DPF_DRIVE0DONE
 
 	default:
 		log.Fatalf("DPF Disk R/W Command %d not yet implemented\n", dpfData.command)
@@ -341,6 +430,24 @@ func dpfHandleFlag(f byte) {
 	}
 }
 
+// set the disk image file postion according to current C/H/S
+func dpfPositionDiskImage() {
+	var offset, r int64
+	offset = int64(dpfData.cylAddr) * int64(dpfData.surfAddr) * int64(dpfData.sectAddr)
+	r, err = dpfData.imageFile.Seek(offset, 0)
+	if r != offset || err != nil {
+		log.Fatal("DPF could not postition disk image via seek()")
+	}
+}
+
+func dpfPrintableAddr() string {
+	var pa string
+	pa = fmt.Sprintf("DRV: %d, CYL: %d, SURF: %d, SECT: %d, SECCNT: %d",
+		dpfData.drive, dpfData.cylAddr,
+		dpfData.surfAddr, dpfData.sectAddr, dpfData.sectCnt)
+	return pa
+}
+
 // reset the DPF controller
 func dpfReset() {
 	dpfData.instructionMode = DPF_INS_MODE_NORMAL
@@ -368,11 +475,9 @@ func extractSectAddr(word dg_word) uint8 {
 }
 
 func extractSectCnt(word dg_word) int8 {
-	tmpWd := word
-	if testWbit(tmpWd, 3) { // sign-extend
+	tmpWd := word & 0x01f
+	if tmpWd != 0 { // sign-extend
 		tmpWd |= 0xe0
-	} else {
-		tmpWd &= 0x1f
 	}
 	return int8(tmpWd)
 }

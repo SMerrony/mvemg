@@ -35,8 +35,19 @@ func eagleOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 	case "CRYTZ":
 		cpuPtr.carry = false
 
+	case "LLEF":
+		cpuPtr.ac[iPtr.acd] = dg_dword(resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp))
+
+	case "NADD": // signed add
+		res = int32(int16(cpuPtr.ac[iPtr.acd]) + int16(cpuPtr.ac[iPtr.acs]))
+		cpuPtr.ac[iPtr.acd] = dg_dword(res)
+
 	case "NLDAI":
 		cpuPtr.ac[iPtr.acd] = sexWordToDWord(iPtr.imm16b)
+
+	case "NSUB": // signed subtract
+		res = int32(int16(cpuPtr.ac[iPtr.acd]) - int16(cpuPtr.ac[iPtr.acs]))
+		cpuPtr.ac[iPtr.acd] = dg_dword(res)
 
 	case "SSPT": /* NO-OP - see p.8-5 of MV/10000 Sys Func Chars */
 		log.Println("INFO: SSPT is a No-Op on this machine, continuing")
@@ -62,6 +73,9 @@ func eagleOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 
 	case "WINC":
 		cpuPtr.ac[iPtr.acd] = cpuPtr.ac[iPtr.acs] + 1
+
+	case "WIORI":
+		cpuPtr.ac[iPtr.acd] |= iPtr.imm32b
 
 	case "WLDAI":
 		cpuPtr.ac[iPtr.acd] = iPtr.imm32b

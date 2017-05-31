@@ -484,6 +484,8 @@ func run() {
 	log.Println(errDetail)
 	ttoPutNLString(errDetail)
 
+	debugLogsDump()
+
 	errDetail = fmt.Sprintf(" *** MV/Em executed %d	 instructions ***", cpu.instrCount)
 	log.Println(errDetail)
 	ttoPutNLString(errDetail)

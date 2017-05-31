@@ -2,15 +2,17 @@
 package main
 
 import (
+	"fmt"
 	"log"
 )
 
 func eclipseOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 	var (
-		addr dg_phys_addr
-		byt  dg_byte
-		wd   dg_word
-		dwd  dg_dword
+		addr, offset dg_phys_addr
+		byt          dg_byte
+		wd           dg_word
+		dwd          dg_dword
+		bitNum       uint
 	)
 
 	switch iPtr.mnemonic {
@@ -19,6 +21,24 @@ func eclipseOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		wd = dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
 		wd += dg_word(iPtr.immVal) // TODO this is a signed int, is this OK?
 		cpuPtr.ac[iPtr.acd] = dg_dword(wd)
+
+	case "BTO":
+		// TODO Hanfle segment and indirection...
+		if iPtr.acd == iPtr.acs {
+			addr = 0
+		} else {
+			addr = dg_phys_addr(cpuPtr.ac[iPtr.acs]) & 0x7fff // mask off lower 15 bits
+		}
+		offset = (dg_phys_addr(cpuPtr.ac[iPtr.acd]) & 0x0000fff0) >> 4
+		addr += offset // add unsigned offset
+		bitNum = uint(cpuPtr.ac[iPtr.acd] & 0x000f)
+		wd = memReadWord(addr)
+		debugPrint(DEBUG_LOG, fmt.Sprintf("... BTO Addr: %d, Bit: %d, Before: %s\n",
+			addr, bitNum, wordToBinStr(wd)))
+		wd |= 1 << (15 - bitNum) // set the bit
+		memWriteWord(addr, wd)
+		debugPrint(DEBUG_LOG, fmt.Sprintf("... BTO                     Result: %s\n",
+			wordToBinStr(wd)))
 
 	case "DIV": // unsigned divide
 		uw := dwordGetLowerWord(cpuPtr.ac[0])
@@ -56,12 +76,28 @@ func eclipseOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		dwd = cpuPtr.ac[iPtr.acd] >> (uint32(iPtr.immVal) * 4)
 		cpuPtr.ac[iPtr.acd] = dwd & 0x0ffff
 
+	case "IOR":
+		wd = dwordGetLowerWord(cpuPtr.ac[iPtr.acd]) | dwordGetLowerWord(cpuPtr.ac[iPtr.acs])
+		cpuPtr.ac[iPtr.acd] = dg_dword(wd)
+
+	case "IORI":
+		wd = dwordGetLowerWord(cpuPtr.ac[iPtr.acd]) | dg_word(iPtr.immVal)
+		cpuPtr.ac[iPtr.acd] = dg_dword(wd)
+
 	case "LDB":
 		byt = memReadByteEclipseBA(dwordGetLowerWord(cpuPtr.ac[iPtr.acs]))
 		cpuPtr.ac[iPtr.acd] = dg_dword(byt)
 
 	case "LSH":
 		cpuPtr.ac[iPtr.acd] = lsh(cpuPtr.ac[iPtr.acs], cpuPtr.ac[iPtr.acd])
+
+	case "MUL": // unsigned 16-bit multiply with add: (AC1 * AC2) + AC0 => AC0(h) and AC1(l)
+		ac0 := dwordGetLowerWord(cpuPtr.ac[0])
+		ac1 := dwordGetLowerWord(cpuPtr.ac[1])
+		ac2 := dwordGetLowerWord(cpuPtr.ac[2])
+		dwd := (dg_dword(ac1) * dg_dword(ac2)) + dg_dword(ac0)
+		cpuPtr.ac[0] = dg_dword(dwordGetUpperWord(dwd))
+		cpuPtr.ac[1] = dg_dword(dwordGetLowerWord(dwd))
 
 	case "SBI": // unsigned
 		wd = dwordGetLowerWord(cpuPtr.ac[iPtr.acd])

@@ -15,6 +15,19 @@ func eagleMemRef(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 
 	switch iPtr.mnemonic {
 
+	case "LNLDA":
+		addr = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
+		cpuPtr.ac[iPtr.acd] = sexWordToDWord(memReadWord(addr))
+
+	case "LWLDA":
+		addr = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
+		cpuPtr.ac[iPtr.acd] = memReadDWord(addr)
+
+	case "LWSTA":
+		addr = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
+		dwd = cpuPtr.ac[iPtr.acd]
+		memWriteDWord(addr, dwd)
+
 	case "WBLM":
 		/* AC0 - unused, AC1 - no. wds to move (if neg then descending order), AC2 - src, AC3 - dest */
 		numWds := int32(cpuPtr.ac[1])

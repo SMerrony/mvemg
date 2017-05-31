@@ -8,12 +8,30 @@ import (
 func eaglePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 	//var addr dg_phys_addr
 	var (
-		//wd      dg_word
+		wd      dg_word
 		tmp32b  dg_dword
 		tmpAddr dg_phys_addr
 	)
 
 	switch iPtr.mnemonic {
+
+	case "LJMP":
+		cpuPtr.pc = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
+
+	case "LJSR":
+		cpuPtr.ac[3] = dg_dword(cpuPtr.pc) + 3
+		cpuPtr.pc = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
+
+	case "LNISZ":
+		// unsigned narrow increment and skip if zero
+		tmpAddr = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
+		wd = memReadWord(tmpAddr) + 1
+		memWriteWord(tmpAddr, wd)
+		if wd == 0 {
+			cpuPtr.pc += 4
+		} else {
+			cpuPtr.pc += 3
+		}
 
 	case "LWDSZ":
 		// unsigned wide decrement and skip if zero
@@ -134,6 +152,17 @@ func eaglePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 	case "XJSR":
 		cpuPtr.ac[3] = dg_dword(cpuPtr.pc + 2) // TODO Check this, PoP is self-contradictory on p.11-642
 		cpuPtr.pc = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
+
+	case "XNISZ":
+		tmpAddr = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
+		wd = memReadWord(tmpAddr)
+		wd++
+		memWriteWord(tmpAddr, wd)
+		if wd == 0 {
+			cpuPtr.pc += 3
+		} else {
+			cpuPtr.pc += 2
+		}
 
 	default:
 		log.Printf("ERROR: EAGLE_PC instruction <%s> not yet implemented\n", iPtr.mnemonic)

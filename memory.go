@@ -86,6 +86,14 @@ func memReadWord(wordAddr dg_phys_addr) dg_word {
 	return memory.ram[wordAddr]
 }
 
+func memReadWordChan(addr dg_phys_addr) dg_word {
+	pAddr := addr
+	if getDchMode() {
+		pAddr, _ = getBmcDchMapAddr(addr)
+	}
+	return memReadWord(pAddr)
+}
+
 // memWriteWord - ALL memory-writing should ultimately go through this function
 // N.B. minor exceptions are made for nsPush and nsPop
 func memWriteWord(wordAddr dg_phys_addr, datum dg_word) {
