@@ -17,12 +17,12 @@ func eclipseMemRef(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		/* AC0 - unused, AC1 - no. wds to move, AC2 - src, AC3 - dest */
 		numWds := dwordGetLowerWord(cpuPtr.ac[1])
 		if numWds == 0 {
-			debugPrint(DEBUG_LOG, "BLM called with AC1 == 0, not moving anything\n")
+			DebugLog.Printf("BLM called with AC1 == 0, not moving anything\n")
 			break
 		}
 		src := dwordGetLowerWord(cpuPtr.ac[2])
 		dest := dwordGetLowerWord(cpuPtr.ac[3])
-		debugPrint(DEBUG_LOG, fmt.Sprintf("BLM moving %d words from %d to %d\n", numWds, src, dest))
+		DebugLog.Printf(fmt.Sprintf("BLM moving %d words from %d to %d\n", numWds, src, dest))
 		for numWds != 0 {
 			memWriteWord(dg_phys_addr(dest), memReadWord(dg_phys_addr(src)))
 			numWds--

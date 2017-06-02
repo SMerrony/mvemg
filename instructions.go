@@ -267,7 +267,7 @@ func instructionsInit() {
 	instructionSet["STATS"] = instrChars{0x8659, 0xe7ff, ONEACC_1_WORD_FMT, 1, EAGLE_STACK}
 	instructionSet["STB"] = instrChars{0x8608, 0x87ff, TWOACC_1_WORD_FMT, 1, ECLIPSE_OP}
 	instructionSet["SUB"] = instrChars{0x8500, 0x8700, NOVA_TWOACC_MULT_OP_FMT, 1, NOVA_OP}
-	instructionSet["SZB"] = instrChars{0x8488, 0x87ff, TWOACC_1_WORD_FMT, 1, ECLIPSE_OP}
+	instructionSet["SZB"] = instrChars{0x8488, 0x87ff, TWOACC_1_WORD_FMT, 1, ECLIPSE_PC}
 	instructionSet["SZBO"] = instrChars{0x84c8, 0x87ff, TWOACC_1_WORD_FMT, 1, ECLIPSE_OP}
 	instructionSet["WADC"] = instrChars{0x8249, 0x87ff, TWOACC_1_WORD_FMT, 1, EAGLE_OP}
 	instructionSet["WADD"] = instrChars{0x8149, 0x87ff, TWOACC_1_WORD_FMT, 1, EAGLE_OP}

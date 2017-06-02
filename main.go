@@ -44,6 +44,7 @@ var (
 func main() {
 	p = profile.Start(profile.ProfilePath("."))
 	defer p.Stop()
+	debugLogsInit()
 	log.Println("INFO: MV/Em will not start until console connected")
 
 	l, err := net.Listen("tcp", "localhost:"+SCP_PORT)
@@ -126,7 +127,7 @@ func scpGetLine() string {
 func cleanExit() {
 	ttoPutNLString(" *** MV/Emulator stopping at user request ***")
 	p.Stop()
-	debugLogsDump()
+	//debugLogsDump()
 	os.Exit(0)
 }
 
@@ -344,7 +345,7 @@ func doScript(cmd []string) {
 	for scanner.Scan() {
 		doCmd := scanner.Text()
 		if doCmd[0] != '#' {
-			debugPrint(DEBUG_LOG, fmt.Sprintf("doScript read command <%s> from file\n", doCmd))
+			DebugLog.Printf("doScript read command <%s> from file\n", doCmd)
 			ttoPutNLString(doCmd)
 			doCommand(doCmd)
 		}
@@ -442,14 +443,14 @@ func run() {
 		// DECODE
 		iPtr, ok = instructionDecode(thisOp, cpu.pc, cpu.sbr[cpu.pc>>29].lef, cpu.sbr[cpu.pc>>29].io, cpu.atu)
 		if !ok {
-			errDetail = " *** Error: could not execute instruction ***"
+			errDetail = " *** Error: could not decode instruction ***"
 			break
 		}
 		log.Printf("%s\t\t%s\n", iPtr.disassembly, cpuCompactPrintableStatus())
 
 		// EXECUTE
 		if !cpuExecute(iPtr) {
-			errDetail = " *** Error: could not execute instruction"
+			errDetail = " *** Error: could not execute instruction (or CPU HALT encountered) ***"
 			break
 		}
 
@@ -458,7 +459,7 @@ func run() {
 			for _, bAddr := range breakpoints {
 				if bAddr == cpu.pc {
 					ttiStopThread(&cpu)
-					msg := fmt.Sprintf(" *** BREAKpoint hit at physical address %d.", cpu.pc)
+					msg := fmt.Sprintf(" *** BREAKpoint hit at physical address %d. ***", cpu.pc)
 					ttoPutNLString(msg)
 					log.Println(msg)
 					return
@@ -478,13 +479,13 @@ func run() {
 	log.Println(errDetail)
 	ttoPutNLString(errDetail)
 	log.Printf("%s\n", cpuPrintableStatus())
-	ttoPutNLString(cpuPrintableStatus())
+	ttoPutString(cpuPrintableStatus())
 
 	errDetail = " *** CPU halting ***"
 	log.Println(errDetail)
 	ttoPutNLString(errDetail)
 
-	debugLogsDump()
+	//debugLogsDump()
 
 	errDetail = fmt.Sprintf(" *** MV/Em executed %d	 instructions ***", cpu.instrCount)
 	log.Println(errDetail)

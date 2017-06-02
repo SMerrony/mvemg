@@ -2,7 +2,7 @@
 package main
 
 import (
-	"fmt"
+	//"fmt"
 	"log"
 )
 
@@ -17,13 +17,16 @@ func eclipseOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 
 	switch iPtr.mnemonic {
 
-	case "ADI": // unsigned
+	case "ADI": // 16-bit unsigned Add Immediate
 		wd = dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
-		wd += dg_word(iPtr.immVal) // TODO this is a signed int, is this OK?
+		if iPtr.immVal < 1 || iPtr.immVal > 4 {
+			log.Fatal("Invalid immediate value in ADI")
+		}
+		wd += dg_word(iPtr.immVal) // unsigned arithmetic does wraparound in Go
 		cpuPtr.ac[iPtr.acd] = dg_dword(wd)
 
 	case "BTO":
-		// TODO Hanfle segment and indirection...
+		// TODO Handle segment and indirection...
 		if iPtr.acd == iPtr.acs {
 			addr = 0
 		} else {
@@ -33,12 +36,31 @@ func eclipseOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		addr += offset // add unsigned offset
 		bitNum = uint(cpuPtr.ac[iPtr.acd] & 0x000f)
 		wd = memReadWord(addr)
-		debugPrint(DEBUG_LOG, fmt.Sprintf("... BTO Addr: %d, Bit: %d, Before: %s\n",
-			addr, bitNum, wordToBinStr(wd)))
+		DebugLog.Printf("... BTO Addr: %d, Bit: %d, Before: %s\n",
+			addr, bitNum, wordToBinStr(wd))
 		wd |= 1 << (15 - bitNum) // set the bit
 		memWriteWord(addr, wd)
-		debugPrint(DEBUG_LOG, fmt.Sprintf("... BTO                     Result: %s\n",
-			wordToBinStr(wd)))
+		DebugLog.Printf("... BTO                     Result: %s\n", wordToBinStr(wd))
+
+	case "BTZ":
+		// TODO Handle segment and indirection...
+		if iPtr.acd == iPtr.acs {
+			addr = 0
+		} else {
+			addr = dg_phys_addr(cpuPtr.ac[iPtr.acs]) & 0x7fff // mask off lower 15 bits
+		}
+		offset = (dg_phys_addr(cpuPtr.ac[iPtr.acd]) & 0x0000fff0) >> 4
+		addr += offset // add unsigned offset
+		bitNum = uint(cpuPtr.ac[iPtr.acd] & 0x000f)
+		wd = memReadWord(addr)
+		DebugLog.Printf("... BTZ Addr: %d, Bit: %d, Before: %s\n", addr, bitNum, wordToBinStr(wd))
+		//wd |= 1 << (15 - bitNum) // set the bit
+		if testWbit(wd, int(bitNum)) {
+			wd ^= 1 << (15 - bitNum) // clear the bit
+		}
+		memWriteWord(addr, wd)
+		DebugLog.Printf("... BTZ                     Result: %s\n",
+			wordToBinStr(wd))
 
 	case "DIV": // unsigned divide
 		uw := dwordGetLowerWord(cpuPtr.ac[0])
@@ -48,8 +70,9 @@ func eclipseOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		if uw > quot || quot == 0 {
 			cpuPtr.carry = true
 		} else {
-			cpuPtr.ac[0] = dwd % dg_dword(quot)
-			cpuPtr.ac[1] = dwd / dg_dword(quot)
+			cpuPtr.carry = false
+			cpuPtr.ac[0] = (dwd % dg_dword(quot)) & 0x0ffff
+			cpuPtr.ac[1] = (dwd / dg_dword(quot)) & 0x0ffff
 		}
 
 	case "DLSH":
@@ -101,7 +124,10 @@ func eclipseOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 
 	case "SBI": // unsigned
 		wd = dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
-		wd -= dg_word(iPtr.immVal) // TODO this is a signed int, is this OK?
+		if iPtr.immVal < 1 || iPtr.immVal > 4 {
+			log.Fatal("Invalid immediate value in SBI")
+		}
+		wd -= dg_word(iPtr.immVal)
 		cpuPtr.ac[iPtr.acd] = dg_dword(wd)
 
 	case "STB":
@@ -112,8 +138,8 @@ func eclipseOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 
 	case "XCH":
 		dwd = cpuPtr.ac[iPtr.acs]
-		cpuPtr.ac[iPtr.acs] = cpuPtr.ac[iPtr.acd]
-		cpuPtr.ac[iPtr.acd] = dwd
+		cpuPtr.ac[iPtr.acs] = cpuPtr.ac[iPtr.acd] & 0x0ffff
+		cpuPtr.ac[iPtr.acd] = dwd & 0x0ffff
 
 	default:
 		log.Printf("ERROR: ECLIPSE_OP instruction <%s> not yet implemented\n", iPtr.mnemonic)

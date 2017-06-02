@@ -22,3 +22,7 @@ BLANK.DPF
 DISK1.DPF
 
 dpf_debug.log
+
+dpf_debug.log.1
+
+dskp_debug.log

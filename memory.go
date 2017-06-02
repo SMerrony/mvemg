@@ -111,7 +111,7 @@ func memWriteWordChan(addr dg_phys_addr, data dg_word) dg_phys_addr {
 		pAddr, _ = getBmcDchMapAddr(addr)
 	}
 	memWriteWord(pAddr, data)
-	debugPrint(MAP_LOG, fmt.Sprintf("memWriteWordChan got addr: %d, wrote to addr: %d\n", addr, pAddr))
+	MAPlog.Printf("memWriteWordChan got addr: %d, wrote to addr: %d\n", addr, pAddr)
 	return pAddr
 }
 
@@ -142,7 +142,7 @@ func nsPush(seg dg_phys_addr, data dg_word) {
 	memory.ram[NSP_LOC]++ // we allow this directr write to a fixed location for performance
 	addr := dg_phys_addr(memory.ram[NSP_LOC])
 	memWriteWord(addr, data)
-	debugPrint(DEBUG_LOG, fmt.Sprintf("nsPush pushed %8d onto the Narrow Stack at location: %d\n", data, addr))
+	MAPlog.Printf("nsPush pushed %8d onto the Narrow Stack at location: %d\n", data, addr)
 }
 
 // POP a word off the Narrow Stack
@@ -151,7 +151,7 @@ func nsPop(seg dg_phys_addr) dg_word {
 	// TODO overflow/underflow handling - either here or in instruction?
 	addr := dg_phys_addr(memory.ram[NSP_LOC])
 	data := memReadWord(addr)
-	debugPrint(DEBUG_LOG, fmt.Sprintf("nsPop  popped %8d off  the Narrow Stack at location: %d\n", data, addr))
+	MAPlog.Printf("nsPop  popped %8d off  the Narrow Stack at location: %d\n", data, addr)
 	memory.ram[NSP_LOC]-- // we allow this directr write to a fixed location for performance
 	return data
 }

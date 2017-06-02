@@ -2,7 +2,7 @@
 package main
 
 import (
-	"fmt"
+	//"fmt"
 	"log"
 )
 
@@ -10,7 +10,7 @@ func eclipsePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 	var (
 		addr, inc dg_phys_addr
 		acs, h, l int16
-	//wd   dg_word
+		wd        dg_word
 	//dwd dg_dword
 	)
 
@@ -35,7 +35,7 @@ func eclipsePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 				inc = 2
 			}
 		}
-		debugPrint(DEBUG_LOG, fmt.Sprintf("CLM compared %d with limits %d and %d, moving PC by %d\n", acs, l, h, inc))
+		DebugLog.Printf("CLM compared %d with limits %d and %d, moving PC by %d\n", acs, l, h, inc)
 		cpuPtr.pc += inc
 
 	case "DSPA":
@@ -43,8 +43,8 @@ func eclipsePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		offset := dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
 		lowLimit := memReadWord(tableStart - 2)
 		hiLimit := memReadWord(tableStart - 1)
-		debugPrint(DEBUG_LOG, fmt.Sprintf("DSPA called with table at %d, offset %d, lo %d hi %d\n",
-			tableStart, offset, lowLimit, hiLimit))
+		DebugLog.Printf("DSPA called with table at %d, offset %d, lo %d hi %d\n",
+			tableStart, offset, lowLimit, hiLimit)
 		if offset < lowLimit || offset > hiLimit {
 			log.Fatalf("ERROR: DPSA called with out of bounds offset %d", offset)
 		}
@@ -54,6 +54,17 @@ func eclipsePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 			cpuPtr.pc += 2
 		} else {
 			cpuPtr.pc = addr
+		}
+
+	case "EISZ":
+		addr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
+		wd = memReadWord(addr)
+		wd++
+		memWriteWord(addr, wd)
+		if wd == 0 {
+			cpuPtr.pc += 3
+		} else {
+			cpuPtr.pc += 2
 		}
 
 	case "EJMP":
@@ -85,7 +96,29 @@ func eclipsePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		} else {
 			cpuPtr.pc += 1
 		}
-		debugPrint(DEBUG_LOG, fmt.Sprintf("SNB: Wd Addr: %d., word: %0X, bit #: %d\n", addr, wd, bit))
+		DebugLog.Printf("SNB: Wd Addr: %d., word: %0X, bit #: %d\n", addr, wd, bit)
+
+	case "SZB":
+		// resolve an ECLIPSE bit address
+		if iPtr.acd == iPtr.acs {
+			addr = 0
+		} else {
+			eff := dg_word(cpuPtr.ac[iPtr.acs])
+			for testWbit(eff, 0) {
+				eff = memReadWord(dg_phys_addr(eff))
+			}
+			addr = dg_phys_addr(eff)
+		}
+		addr16 := cpuPtr.ac[iPtr.acd] >> 4
+		addr += dg_phys_addr(addr16)
+		wd := memReadWord(addr)
+		bit := int(cpuPtr.ac[iPtr.acd] & 0x000f)
+		if !testWbit(wd, bit) {
+			cpuPtr.pc += 2
+		} else {
+			cpuPtr.pc += 1
+		}
+		DebugLog.Printf("SZB: Wd Addr: %d., word: %0X, bit #: %d\n", addr, wd, bit)
 
 	default:
 		log.Printf("ERROR: ECLIPSE_PC instruction <%s> not yet implemented\n", iPtr.mnemonic)

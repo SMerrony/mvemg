@@ -44,7 +44,7 @@ func novaIO(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		} else {
 			log.Printf("WARN: I/O attempted to unattached or non-I/O capable device 0#%o\n", iPtr.ioDev)
 			if iPtr.ioDev != 2 {
-				debugLogsDump()
+				//debugLogsDump()
 				log.Fatal("crash") // TODO Exception for ?MMU?
 			}
 		}

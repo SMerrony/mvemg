@@ -1,10 +1,8 @@
 // resolve.go
 package main
 
-import (
-	"fmt"
-	//"log"
-)
+//"fmt"
+//"log"
 
 func resolve16bitEclipseAddr(cpuPtr *Cpu, ind byte, mode string, disp int32) dg_phys_addr {
 
@@ -38,7 +36,7 @@ func resolve16bitEclipseAddr(cpuPtr *Cpu, ind byte, mode string, disp int32) dg_
 	// mask off to Eclipse range
 	eff = dg_phys_addr(intEff) & 0x7fff
 
-	debugPrint(DEBUG_LOG, fmt.Sprintf("... resolve16bitEclipseAddr got: %d., returning %d.\n", disp, eff))
+	DebugLog.Printf("... resolve16bitEclipseAddr got: %d., returning %d.\n", disp, eff)
 	return eff
 }
 
@@ -48,7 +46,7 @@ func resolve16bitEagleAddr(cpuPtr *Cpu, ind byte, mode string, disp int32) dg_ph
 	var (
 		eff     dg_phys_addr
 		intEff  int32
-		indAddr dg_word
+		indAddr dg_dword
 	)
 
 	// handle addressing mode...
@@ -65,16 +63,16 @@ func resolve16bitEagleAddr(cpuPtr *Cpu, ind byte, mode string, disp int32) dg_ph
 
 	// handle indirection
 	if ind == '@' { // down the rabbit hole...
-		indAddr = memReadWord(dg_phys_addr(intEff))
-		for testWbit(indAddr, 0) {
-			indAddr = memReadWord(dg_phys_addr(indAddr))
+		indAddr = memReadDWord(dg_phys_addr(intEff))
+		for testDWbit(indAddr, 0) {
+			indAddr = memReadDWord(dg_phys_addr(indAddr))
 		}
 		intEff = int32(indAddr)
 	}
 
 	eff = dg_phys_addr(intEff)
 
-	debugPrint(DEBUG_LOG, fmt.Sprintf("... resolve16bitEagleAddr got: %d., returning %d.\n", disp, eff))
+	DebugLog.Printf("... resolve16bitEagleAddr got: %d., returning %d.\n", disp, eff)
 	return eff
 }
 
@@ -96,13 +94,13 @@ func resolve32bitEffAddr(cpuPtr *Cpu, ind byte, mode string, disp int32) dg_phys
 
 	// handle indirection
 	if ind == '@' { // down the rabbit hole...
-		indAddr := memReadWord(eff)
-		for testWbit(indAddr, 0) {
-			indAddr = memReadWord(dg_phys_addr(indAddr))
+		indAddr := memReadDWord(eff)
+		for testDWbit(indAddr, 0) {
+			indAddr = memReadDWord(dg_phys_addr(indAddr))
 		}
 		eff = dg_phys_addr(indAddr)
 	}
 
-	debugPrint(DEBUG_LOG, fmt.Sprintf("... resolve32bitEffAddr got: %d., returning %d.\n", disp, eff))
+	DebugLog.Printf("... resolve32bitEffAddr got: %d., returning %d.\n", disp, eff)
 	return eff
 }

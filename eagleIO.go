@@ -2,7 +2,7 @@
 package main
 
 import (
-	"fmt"
+	//	"fmt"
 	"log"
 )
 
@@ -51,15 +51,15 @@ func eagleIO(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		if cpuPtr.ac[1] == 0 {
 			mapRegAddr = int(cpuPtr.ac[0] & 0x7ff)
 			wAddr = dg_phys_addr(cpuPtr.ac[2])
-			debugPrint(MAP_LOG, fmt.Sprintf("WLMP called with AC1 = 0 - MapRegAddr was %d, 1st DWord was %d\n",
-				mapRegAddr, memReadDWord(wAddr)))
+			DebugLog.Printf("WLMP called with AC1 = 0 - MapRegAddr was %d, 1st DWord was %d\n",
+				mapRegAddr, memReadDWord(wAddr))
 			bmcdchWriteSlot(mapRegAddr, memReadDWord(wAddr))
 			cpuPtr.ac[0]++
 			cpuPtr.ac[2] += 2
 		} else {
 			for {
 				bmcdchWriteSlot(int(cpuPtr.ac[0]&0x07ff), memReadDWord(dg_phys_addr(cpuPtr.ac[2])))
-				debugPrint(MAP_LOG, fmt.Sprintf("WLMP writing slot %d\n", 1+(cpuPtr.ac[0]&0x7ff)))
+				DebugLog.Printf("WLMP writing slot %d\n", 1+(cpuPtr.ac[0]&0x7ff))
 				cpuPtr.ac[2] += 2
 				cpuPtr.ac[0]++
 				cpuPtr.ac[1]--
