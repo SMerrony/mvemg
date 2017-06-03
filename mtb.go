@@ -260,7 +260,7 @@ func mtbDoCommand() {
 			rec, _ := simht.simhTapeReadRecord(0, int(hdrLen))
 			for w = 0; w < hdrLen; w += 2 {
 				wd = (dg_word(rec[w]) << 8) | dg_word(rec[w+1])
-				pAddr = memWriteWordChan(mtb.memAddrReg, wd)
+				pAddr = memWriteWordDchChan(mtb.memAddrReg, wd)
 				mtbLog.Printf(" ----  Written word (%02X | %02X := %04X) to logical address: %d, physical: %d\n", rec[w], rec[w+1], wd, mtb.memAddrReg, pAddr)
 				mtb.memAddrReg++
 				mtb.negWordCntReg++

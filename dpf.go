@@ -91,8 +91,8 @@ type dpfData_t struct {
 	cmdDrvAddr      byte // 6-bit?
 	command         int8 // 4-bit
 	rwCommand       int8
-	drive           uint8 // 2-bit
-	mapEnabled      bool
+	drive           uint8   // 2-bit
+	mapEnabled      bool    // is the BMC addressing physical (0) or Mapped (1)
 	memAddr         dg_word // self-incrementing on DG
 	ema             uint8   // 5-bit
 	cylAddr         dg_word // 10-bit
@@ -122,10 +122,11 @@ func dpfInit() {
 	dpfData.imageAttached = false
 	dpfData.instructionMode = DPF_INS_MODE_NORMAL
 	dpfData.driveStatus = DPF_READY
+	dpfData.mapEnabled = false
 
 }
 
-// attepmt to attach an extant MV/Em disk image to the running emulator
+// attempt to attach an extant MV/Em disk image to the running emulator
 func dpfAttach(dNum int, imgName string) bool {
 	// TODO Disk Number not currently used
 	DPFlog.Printf("dpfAttach called for disk #%d with image <%s>\n", dNum, imgName)
@@ -177,11 +178,12 @@ func dpfDataIn(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
 			DPFlog.Printf("DIB [Read Drive Status] (normal mode) DRV=%d, %s to AC%d, PC: %d\n",
 				dpfData.drive, wordToBinStr(dpfData.driveStatus), iPtr.acd, cpuPtr.pc)
 		case DPF_INS_MODE_ALT_1:
-			if dpfData.mapEnabled {
-				cpuPtr.ac[iPtr.acd] = dg_dword(dpfData.ema&0x1f) | 0x8000
-			} else {
-				cpuPtr.ac[iPtr.acd] = dg_dword(dpfData.ema & 0x1f)
-			}
+			cpuPtr.ac[iPtr.acd] = dg_dword(0x8000) | (dg_dword(dpfData.ema) & 0x01f)
+			//			if dpfData.mapEnabled {
+			//				cpuPtr.ac[iPtr.acd] = dg_dword(dpfData.ema&0x1f) | 0x8000
+			//			} else {
+			//				cpuPtr.ac[iPtr.acd] = dg_dword(dpfData.ema & 0x1f)
+			//			}
 			DPFlog.Printf("DIB [Read EMA] (Alt Mode 1) returning: %d, PC: %d\n",
 				cpuPtr.ac[iPtr.acd], cpuPtr.pc)
 		case DPF_INS_MODE_ALT_2:
@@ -236,12 +238,15 @@ func dpfDataOut(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
 	case 'B':
 		if testWbit(data, 0) {
 			dpfData.ema |= 0x01
+		} else {
+			dpfData.ema &= 0xfe
 		}
 		dpfData.memAddr = data & 0x7fff
 		if dpfData.debug {
 			DPFlog.Printf("DOB [Specify Memory Addr] with data %s at PC: %d\n",
 				wordToBinStr(data), cpuPtr.pc)
 			DPFlog.Printf("... MEM Addr: %d\n", dpfData.memAddr)
+			DPFlog.Printf("... EMA: %d\n", dpfData.ema)
 		}
 	case 'C':
 		if dpfData.lastDOAwasSeek {
@@ -324,7 +329,7 @@ func dpfDoRWcommand() {
 			for w := 0; w < DPF_WORDS_PER_SECTOR; w++ {
 				wd = (dg_word(buffer[w*2]) << 8) | dg_word(buffer[(w*2)+1])
 				if dpfData.mapEnabled {
-					memWriteWordChan(dg_phys_addr(dpfData.memAddr), wd)
+					memWriteWordBmcChan(dg_phys_addr(dpfData.memAddr), wd)
 				} else {
 					memWriteWord(dg_phys_addr(dpfData.memAddr), wd)
 				}
@@ -363,7 +368,7 @@ func dpfDoRWcommand() {
 			dpfPositionDiskImage()
 			for w := 0; w < DPF_WORDS_PER_SECTOR; w++ {
 				if dpfData.mapEnabled {
-					wd = memReadWordChan(dg_phys_addr(dpfData.memAddr))
+					wd = memReadWordBmcChan(dg_phys_addr(dpfData.memAddr))
 				} else {
 					wd = memReadWord(dg_phys_addr(dpfData.memAddr))
 				}

@@ -29,16 +29,16 @@ var (
 func debugLogsInit() {
 
 	// general debugging output to STDOUT
-	DebugLog = log.New(os.Stdout, "DEBUG: ", log.Ldate|log.Ltime|log.Lshortfile)
+	DebugLog = log.New(os.Stdout, "DEBUG: ", log.Ltime|log.Lshortfile)
 
 	dpfLogHandle, _ := os.OpenFile("dpf_debug.log", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, LOG_PERMS)
-	DPFlog = log.New(dpfLogHandle, "DPF: ", log.Ldate|log.Ltime)
+	DPFlog = log.New(dpfLogHandle, "DPF: ", log.Ltime)
 
 	dskpLogHandle, _ := os.OpenFile("dskp_debug.log", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, LOG_PERMS)
-	DSKPlog = log.New(dskpLogHandle, "DSKP: ", log.Ldate|log.Ltime)
+	DSKPlog = log.New(dskpLogHandle, "DSKP: ", log.Ltime)
 
 	mapLogHandle, _ := os.OpenFile("map_debug.log", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, LOG_PERMS)
-	MAPlog = log.New(mapLogHandle, "MAPPED I/O: ", log.Ldate|log.Ltime|log.Lshortfile)
+	MAPlog = log.New(mapLogHandle, "MAP: ", log.Ltime|log.Lshortfile)
 }
 
 //func debugLogsDump() {

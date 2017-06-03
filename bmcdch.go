@@ -1,5 +1,5 @@
 // bmcdch.go
-// Each "slot" contains two "registers", it seems the contents can be accessed either
+// Each "slot" contains two 16-bit "registers", it seems the contents can be accessed either
 // by slot as a doubleword, OR by slot + high or low word, OR by word directly.
 package main
 
@@ -52,6 +52,7 @@ func bmcdchInit() {
 	}
 	bmcdchReset()
 	log.Println("INFO: BMC/DCH Maps Initialised")
+	MAPlog.Println("BMC/DCH Maps Initialised")
 }
 
 func bmcdchReset() {
@@ -62,7 +63,7 @@ func bmcdchReset() {
 }
 
 func getDchMode() bool {
-	DebugLog.Printf("getDchMode returning: %d\n", boolToInt(testWbit(regs[IOCHAN_DEF_REG], 14)))
+	MAPlog.Printf("getDchMode returning: %d\n", boolToInt(testWbit(regs[IOCHAN_DEF_REG], 14)))
 	return testWbit(regs[IOCHAN_DEF_REG], 14)
 }
 
@@ -93,7 +94,7 @@ func getBmcDchMapAddr(mAddr dg_phys_addr) (dg_phys_addr, dg_phys_addr) {
 	//page = ((regs[slot] & 0x1f) << 16) + (regs[slot+1] << 10);
 	page = dg_phys_addr(regs[(slot*2)+1]) << 10
 	pAddr = (mAddr & 0x3ff) | page
-	DebugLog.Printf("getBmcDchMapAddr got: %d, slot: %d, regs[slot*2+1]: %d, page: %d, returning: %d\n",
+	MAPlog.Printf("getBmcDchMapAddr got: %d, slot: %d, regs[slot*2+1]: %d, page: %d, returning: %d\n",
 		mAddr, slot, regs[(slot*2)+1], page, pAddr)
 	return pAddr, page // TODO page return is just for debugging
 }
