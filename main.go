@@ -87,6 +87,7 @@ func main() {
 		cpuInit()
 		mtbInit()
 		dpfInit()
+		dskpInit()
 
 		// say hello...
 		ttoPutChar(ASCII_FF)
@@ -202,6 +203,13 @@ func attach(cmd []string) {
 			ttoPutNLString(" *** Could not ATTach DPF Disk Image ***")
 		}
 
+	case "DSKP":
+		if dskpAttach(0, cmd[2]) {
+			ttoPutNLString(" *** DSKP Disk Image Attached ***")
+		} else {
+			ttoPutNLString(" *** Could not ATTach DSKP Disk Image ***")
+		}
+
 	default:
 		ttoPutNLString(" *** Unknown or unimplemented Device for ATT command ***")
 	}
@@ -262,7 +270,14 @@ func createBlank(cmd []string) {
 		if dpfCreateBlank(cmd[2]) {
 			ttoPutNLString("Empty MV/Em DPF-type disk image created")
 		} else {
-			ttoPutNLString("Error: could not create empty disk image")
+			ttoPutNLString(" *** Error: could not create empty disk image ***")
+		}
+	case "DSKP":
+		ttoPutNLString("Attempting to CREATE new empty DSKP-type disk image, please wait...")
+		if dskpCreateBlank(cmd[2]) {
+			ttoPutNLString("Empty MV/Em DSKP-type disk image created")
+		} else {
+			ttoPutNLString(" *** Error: could not create empty disk image ***")
 		}
 	default:
 		ttoPutNLString(" *** CREATE not yet supported for that device type ***")

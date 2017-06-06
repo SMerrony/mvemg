@@ -52,29 +52,30 @@ func eclipseStack(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 
 	case "RTN":
 		// complement of SAVE
-		//		memWriteWord(NSP_LOC, memReadWord(NFP_LOC)) // ???
-		//		word := nsPop(0)
-		//		cpuPtr.carry = testWbit(word, 0)
-		//		cpuPtr.pc = dg_phys_addr(word) & 0x7fff
-		//		nfpSave := nsPop(0)               // 1
-		//		cpuPtr.ac[3] = dg_dword(nfpSave)  // 2
-		//		cpuPtr.ac[2] = dg_dword(nsPop(0)) // 3
-		//		cpuPtr.ac[1] = dg_dword(nsPop(0)) // 4
-		//		cpuPtr.ac[0] = dg_dword(nsPop(0)) // 5
-		//		memWriteWord(NFP_LOC, nfpSave)
-		//		return true // because PC set
-
-		nfpSav := memReadWord(NFP_LOC)
-		pwd1 := nsPop(0) // 1
-		cpuPtr.carry = testWbit(pwd1, 0)
-		cpuPtr.pc = dg_phys_addr(pwd1 & 0x07fff)
+		memWriteWord(NSP_LOC, memReadWord(NFP_LOC)) // ???
+		word := nsPop(0)
+		cpuPtr.carry = testWbit(word, 0)
+		cpuPtr.pc = dg_phys_addr(word) & 0x7fff
+		//nfpSave := nsPop(0)               // 1
 		cpuPtr.ac[3] = dg_dword(nsPop(0)) // 2
 		cpuPtr.ac[2] = dg_dword(nsPop(0)) // 3
 		cpuPtr.ac[1] = dg_dword(nsPop(0)) // 4
 		cpuPtr.ac[0] = dg_dword(nsPop(0)) // 5
-		memWriteWord(NSP_LOC, nfpSav-5)
 		memWriteWord(NFP_LOC, dwordGetLowerWord(cpuPtr.ac[3]))
 		return true // because PC set
+
+		//		nfpSav := memReadWord(NFP_LOC)
+		//		pwd1 := nsPop(0) // 1
+		//		cpuPtr.carry = testWbit(pwd1, 0)
+		//		cpuPtr.pc = dg_phys_addr(pwd1 & 0x07fff)
+		//		cpuPtr.ac[3] = dg_dword(nsPop(0)) // 2
+		//		cpuPtr.ac[2] = dg_dword(nsPop(0)) // 3
+		//		cpuPtr.ac[1] = dg_dword(nsPop(0)) // 4
+		//		cpuPtr.ac[0] = dg_dword(nsPop(0)) // 5
+		//		memWriteWord(NSP_LOC, nfpSav-5)
+		//		memWriteWord(NFP_LOC, dwordGetLowerWord(cpuPtr.ac[3]))
+
+		//return true // because PC set
 
 	case "SAVE":
 		nfpSav := memReadWord(NFP_LOC)
@@ -96,10 +97,10 @@ func eclipseStack(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 				nsPush(0, 0) // ...
 			}
 		}
-		//   cpuPtr.ac[3] = dg_dword(memReadWord(NSP_LOC)) // ???
-		//   memWriteWord(NFP_LOC, dg_word(cpuPtr.ac[3]))
-		memWriteWord(NFP_LOC, nspSav+5)
-		cpuPtr.ac[3] = dg_dword(nspSav + 5)
+		cpuPtr.ac[3] = dg_dword(memReadWord(NSP_LOC)) // ???
+		memWriteWord(NFP_LOC, dg_word(cpuPtr.ac[3]))  // ???
+		memWriteWord(NSP_LOC, nspSav+5)
+		//cpuPtr.ac[3] = dg_dword(nspSav + 5)
 
 	default:
 		log.Printf("ERROR: ECLIPSE_STACK instruction <%s> not yet implemented\n", iPtr.mnemonic)

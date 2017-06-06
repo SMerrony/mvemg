@@ -342,12 +342,13 @@ func dpfDoRWcommand() {
 				dpfData.surfAddr++
 				dpfData.sectAddr = 0
 				// NEW CODE...
-				dpfData.rwStatus = DPF_RWDONE //| DPF_RWFAULT | DPF_SURFSECT
-				break
+				//dpfData.rwStatus = DPF_RWDONE //| DPF_RWFAULT | DPF_SURFSECT
+				//break
 			}
-			// end of disk?
+
+			// end of cylinder?
 			if dpfData.surfAddr == DPF_SURFACES_PER_DISK {
-				dpfData.rwStatus = DPF_ILLEGALSECTOR | DPF_RWFAULT | DPF_RWDONE | DPF_SURFSECT
+				dpfData.rwStatus = DPF_RWFAULT | DPF_RWDONE | DPF_SURFSECT
 				break
 			}
 
@@ -356,7 +357,7 @@ func dpfDoRWcommand() {
 			DPFlog.Printf("... .... READ command finished %s\n", dpfPrintableAddr())
 			DPFlog.Printf("... .... Last Address: %d\n", dpfData.memAddr)
 		}
-		dpfData.rwStatus |= DPF_RWDONE //| DPF_DRIVE0DONE
+		dpfData.rwStatus |= DPF_RWDONE | DPF_DRIVE0DONE
 
 	case DPF_CMD_WRITE:
 		if dpfData.debug {
@@ -387,12 +388,12 @@ func dpfDoRWcommand() {
 				dpfData.surfAddr++
 				dpfData.sectAddr = 0
 				// NEW CODE...
-				dpfData.rwStatus = DPF_RWDONE //| DPF_RWFAULT | DPF_SURFSECT
-				break
+				// dpfData.rwStatus = DPF_RWDONE // | DPF_DRIVE0DONE //| DPF_RWFAULT | DPF_SURFSECT
+				// break
 			}
-			// end of disk?
+			// end of cylinder?
 			if dpfData.surfAddr == DPF_SURFACES_PER_DISK {
-				dpfData.rwStatus = DPF_ILLEGALSECTOR | DPF_RWFAULT | DPF_RWDONE | DPF_SURFSECT
+				dpfData.rwStatus = DPF_RWFAULT | DPF_RWDONE | DPF_SURFSECT
 				break
 			}
 
@@ -401,7 +402,7 @@ func dpfDoRWcommand() {
 			DPFlog.Printf("... ..... WRITE command finished %s\n", dpfPrintableAddr())
 			DPFlog.Printf("... ..... Last Address: %d\n", dpfData.memAddr)
 		}
-		dpfData.rwStatus |= DPF_RWDONE //| DPF_DRIVE0DONE
+		dpfData.rwStatus |= DPF_RWDONE | DPF_DRIVE0DONE
 
 	default:
 		log.Fatalf("DPF Disk R/W Command %d not yet implemented\n", dpfData.command)
