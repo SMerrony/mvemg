@@ -91,13 +91,13 @@ func memReadWordDchChan(addr dg_phys_addr) dg_word {
 	if getDchMode() {
 		pAddr, _ = getBmcDchMapAddr(addr)
 	}
-	MAPlog.Printf("memReadWordBmcChan got addr: %d, read from addr: %d\n", addr, pAddr)
+	debugPrint(MAP_LOG, "memReadWordBmcChan got addr: %d, read from addr: %d\n", addr, pAddr)
 	return memReadWord(pAddr)
 }
 
 func memReadWordBmcChan(addr dg_phys_addr) dg_word {
 	pAddr, _ := getBmcDchMapAddr(addr)
-	MAPlog.Printf("memWriteReadBmcChan got addr: %d, wrote to addr: %d\n", addr, pAddr)
+	debugPrint(MAP_LOG, "memWriteReadBmcChan got addr: %d, wrote to addr: %d\n", addr, pAddr)
 	return memReadWord(pAddr)
 }
 
@@ -118,14 +118,14 @@ func memWriteWordDchChan(addr dg_phys_addr, data dg_word) dg_phys_addr {
 		pAddr, _ = getBmcDchMapAddr(addr)
 	}
 	memWriteWord(pAddr, data)
-	MAPlog.Printf("memWriteWordDchChan got addr: %d, wrote to addr: %d\n", addr, pAddr)
+	debugPrint(MAP_LOG, "memWriteWordDchChan got addr: %d, wrote to addr: %d\n", addr, pAddr)
 	return pAddr
 }
 
 func memWriteWordBmcChan(addr dg_phys_addr, data dg_word) dg_phys_addr {
 	pAddr, _ := getBmcDchMapAddr(addr)
 	memWriteWord(pAddr, data)
-	MAPlog.Printf("memWriteWordBmcChan got addr: %d, wrote to addr: %d\n", addr, pAddr)
+	debugPrint(MAP_LOG, "memWriteWordBmcChan got addr: %d, wrote to addr: %d\n", addr, pAddr)
 	return pAddr
 }
 
@@ -156,7 +156,7 @@ func nsPush(seg dg_phys_addr, data dg_word) {
 	memory.ram[NSP_LOC]++ // we allow this directr write to a fixed location for performance
 	addr := dg_phys_addr(memory.ram[NSP_LOC])
 	memWriteWord(addr, data)
-	DebugLog.Printf("nsPush pushed %8d onto the Narrow Stack at location: %d\n", data, addr)
+	debugPrint(DEBUG_LOG, "nsPush pushed %8d onto the Narrow Stack at location: %d\n", data, addr)
 }
 
 // POP a word off the Narrow Stack
@@ -165,7 +165,7 @@ func nsPop(seg dg_phys_addr) dg_word {
 	// TODO overflow/underflow handling - either here or in instruction?
 	addr := dg_phys_addr(memory.ram[NSP_LOC])
 	data := memReadWord(addr)
-	DebugLog.Printf("nsPop  popped %8d off  the Narrow Stack at location: %d\n", data, addr)
+	debugPrint(DEBUG_LOG, "nsPop  popped %8d off  the Narrow Stack at location: %d\n", data, addr)
 	memory.ram[NSP_LOC]-- // we allow this directr write to a fixed location for performance
 	return data
 }

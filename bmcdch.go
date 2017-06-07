@@ -52,7 +52,7 @@ func bmcdchInit() {
 	}
 	bmcdchReset()
 	log.Println("INFO: BMC/DCH Maps Initialised")
-	MAPlog.Println("BMC/DCH Maps Initialised")
+	debugPrint(MAP_LOG, "BMC/DCH Maps Initialised\n")
 }
 
 func bmcdchReset() {
@@ -63,17 +63,17 @@ func bmcdchReset() {
 }
 
 func getDchMode() bool {
-	MAPlog.Printf("getDchMode returning: %d\n", boolToInt(testWbit(regs[IOCHAN_DEF_REG], 14)))
+	debugPrint(MAP_LOG, "getDchMode returning: %d\n", boolToInt(testWbit(regs[IOCHAN_DEF_REG], 14)))
 	return testWbit(regs[IOCHAN_DEF_REG], 14)
 }
 
 func bmcdchWriteReg(reg int, data dg_word) {
-	DebugLog.Printf("bmcdchWriteReg: Reg %d, Data: %d\n", reg, data)
+	debugPrint(DEBUG_LOG, "bmcdchWriteReg: Reg %d, Data: %d\n", reg, data)
 	regs[reg] = data
 }
 
 func bmcdchWriteSlot(slot int, data dg_dword) {
-	DebugLog.Printf("bmcdch*Write*Slot: Slot %d, Data: %d\n", slot, data)
+	debugPrint(DEBUG_LOG, "bmcdch*Write*Slot: Slot %d, Data: %d\n", slot, data)
 	regs[slot*2] = dwordGetUpperWord(data)
 	regs[(slot*2)+1] = dwordGetLowerWord(data)
 }
@@ -94,7 +94,7 @@ func getBmcDchMapAddr(mAddr dg_phys_addr) (dg_phys_addr, dg_phys_addr) {
 	//page = ((regs[slot] & 0x1f) << 16) + (regs[slot+1] << 10);
 	page = dg_phys_addr(regs[(slot*2)+1]) << 10
 	pAddr = (mAddr & 0x3ff) | page
-	MAPlog.Printf("getBmcDchMapAddr got: %d, slot: %d, regs[slot*2+1]: %d, page: %d, returning: %d\n",
+	debugPrint(MAP_LOG, "getBmcDchMapAddr got: %d, slot: %d, regs[slot*2+1]: %d, page: %d, returning: %d\n",
 		mAddr, slot, regs[(slot*2)+1], page, pAddr)
 	return pAddr, page // TODO page return is just for debugging
 }

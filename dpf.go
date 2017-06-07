@@ -129,10 +129,10 @@ func dpfInit() {
 // attempt to attach an extant MV/Em disk image to the running emulator
 func dpfAttach(dNum int, imgName string) bool {
 	// TODO Disk Number not currently used
-	DPFlog.Printf("dpfAttach called for disk #%d with image <%s>\n", dNum, imgName)
+	debugPrint(DPF_LOG, "dpfAttach called for disk #%d with image <%s>\n", dNum, imgName)
 	dpfData.imageFile, err = os.OpenFile(imgName, os.O_RDWR, 0755)
 	if err != nil {
-		DPFlog.Printf("Failed to open image for attaching\n")
+		debugPrint(DPF_LOG, "Failed to open image for attaching\n")
 		log.Printf("WARN: Failed to open DPF image <%s> for ATTach\n", imgName)
 		return false
 	}
@@ -149,7 +149,7 @@ func dpfCreateBlank(imgName string) bool {
 		return false
 	}
 	defer newFile.Close()
-	DPFlog.Printf("dpfCreateBlank attempting to write %d bytes\n", DPF_PHYSICAL_BYTE_SIZE)
+	debugPrint(DPF_LOG, "dpfCreateBlank attempting to write %d bytes\n", DPF_PHYSICAL_BYTE_SIZE)
 	w := bufio.NewWriter(newFile)
 	for b := 0; b < DPF_PHYSICAL_BYTE_SIZE; b++ {
 		w.WriteByte(0)
@@ -164,7 +164,7 @@ func dpfDataIn(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
 		switch dpfData.instructionMode {
 		case DPF_INS_MODE_NORMAL:
 			cpuPtr.ac[iPtr.acd] = dg_dword(dpfData.rwStatus)
-			DPFlog.Printf("DIA [Read Data Txfr Status] (Normal mode) returning %s for DRV=%d\n",
+			debugPrint(DPF_LOG, "DIA [Read Data Txfr Status] (Normal mode) returning %s for DRV=%d\n",
 				wordToBinStr(dpfData.rwStatus), dpfData.drive)
 		case DPF_INS_MODE_ALT_1:
 			log.Fatal("DPF DIA (Alt Mode 1) not yet implemented")
@@ -175,7 +175,7 @@ func dpfDataIn(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
 		switch dpfData.instructionMode {
 		case DPF_INS_MODE_NORMAL:
 			cpuPtr.ac[iPtr.acd] = dg_dword(dpfData.driveStatus & 0xfeff)
-			DPFlog.Printf("DIB [Read Drive Status] (normal mode) DRV=%d, %s to AC%d, PC: %d\n",
+			debugPrint(DPF_LOG, "DIB [Read Drive Status] (normal mode) DRV=%d, %s to AC%d, PC: %d\n",
 				dpfData.drive, wordToBinStr(dpfData.driveStatus), iPtr.acd, cpuPtr.pc)
 		case DPF_INS_MODE_ALT_1:
 			cpuPtr.ac[iPtr.acd] = dg_dword(0x8000) | (dg_dword(dpfData.ema) & 0x01f)
@@ -184,7 +184,7 @@ func dpfDataIn(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
 			//			} else {
 			//				cpuPtr.ac[iPtr.acd] = dg_dword(dpfData.ema & 0x1f)
 			//			}
-			DPFlog.Printf("DIB [Read EMA] (Alt Mode 1) returning: %d, PC: %d\n",
+			debugPrint(DPF_LOG, "DIB [Read EMA] (Alt Mode 1) returning: %d, PC: %d\n",
 				cpuPtr.ac[iPtr.acd], cpuPtr.pc)
 		case DPF_INS_MODE_ALT_2:
 			log.Fatal("DPF DIB (Alt Mode 2) not yet implemented")
@@ -230,9 +230,9 @@ func dpfDataOut(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
 		}
 		dpfData.lastDOAwasSeek = (dpfData.command == DPF_CMD_SEEK)
 		if dpfData.debug {
-			DPFlog.Printf("DOA [Specify Cmd,Drv,EMA] to DRV=%d with data %s at PC: %d\n",
+			debugPrint(DPF_LOG, "DOA [Specify Cmd,Drv,EMA] to DRV=%d with data %s at PC: %d\n",
 				dpfData.drive, wordToBinStr(data), cpuPtr.pc)
-			DPFlog.Printf("... CMD: (%d), DRV: %d, EMA: %d\n",
+			debugPrint(DPF_LOG, "... CMD: (%d), DRV: %d, EMA: %d\n",
 				dpfData.command, dpfData.drive, dpfData.ema)
 		}
 	case 'B':
@@ -243,18 +243,18 @@ func dpfDataOut(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
 		}
 		dpfData.memAddr = data & 0x7fff
 		if dpfData.debug {
-			DPFlog.Printf("DOB [Specify Memory Addr] with data %s at PC: %d\n",
+			debugPrint(DPF_LOG, "DOB [Specify Memory Addr] with data %s at PC: %d\n",
 				wordToBinStr(data), cpuPtr.pc)
-			DPFlog.Printf("... MEM Addr: %d\n", dpfData.memAddr)
-			DPFlog.Printf("... EMA: %d\n", dpfData.ema)
+			debugPrint(DPF_LOG, "... MEM Addr: %d\n", dpfData.memAddr)
+			debugPrint(DPF_LOG, "... EMA: %d\n", dpfData.ema)
 		}
 	case 'C':
 		if dpfData.lastDOAwasSeek {
 			dpfData.cylAddr = data & 0x03ff
 			if dpfData.debug {
-				DPFlog.Printf("DOC [Specify Cylinder] after SEEK with data %s at PC: %d\n",
+				debugPrint(DPF_LOG, "DOC [Specify Cylinder] after SEEK with data %s at PC: %d\n",
 					wordToBinStr(data), cpuPtr.pc)
-				DPFlog.Printf("... CYL: %d\n", dpfData.cylAddr)
+				debugPrint(DPF_LOG, "... CYL: %d\n", dpfData.cylAddr)
 			}
 		} else {
 			dpfData.mapEnabled = testWbit(data, 0)
@@ -262,9 +262,9 @@ func dpfDataOut(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
 			dpfData.sectAddr = extractSectAddr(data)
 			dpfData.sectCnt = extractSectCnt(data)
 			if dpfData.debug {
-				DPFlog.Printf("DOC [Specify Surf,Sect,Cnt] (not after seek) with data %s at PC: %d\n",
+				debugPrint(DPF_LOG, "DOC [Specify Surf,Sect,Cnt] (not after seek) with data %s at PC: %d\n",
 					wordToBinStr(data), cpuPtr.pc)
-				DPFlog.Printf("... MAP: %d, SURF: %d, SECT: %d, SECCNT: %d\n",
+				debugPrint(DPF_LOG, "... MAP: %d, SURF: %d, SECT: %d, SECCNT: %d\n",
 					boolToInt(dpfData.mapEnabled), dpfData.surfAddr, dpfData.sectAddr, dpfData.sectCnt)
 			}
 		}
@@ -281,14 +281,14 @@ func dpfDoDriveOpCommand() {
 		dpfData.surfAddr = 0
 		dpfData.rwStatus = DPF_DRIVE0DONE
 		if dpfData.debug {
-			DPFlog.Printf("... RECAL done, %s\n", dpfPrintableAddr())
+			debugPrint(DPF_LOG, "... RECAL done, %s\n", dpfPrintableAddr())
 		}
 
 	case DPF_CMD_SEEK:
 		// action the seek
 		dpfData.rwStatus = DPF_DRIVE0DONE
 		if dpfData.debug {
-			DPFlog.Printf("... SEEK done, %s\n", dpfPrintableAddr())
+			debugPrint(DPF_LOG, "... SEEK done, %s\n", dpfPrintableAddr())
 		}
 
 	default:
@@ -301,7 +301,7 @@ func dpfDoNoOpCommand() {
 	dpfData.rwStatus = 0
 	dpfData.driveStatus = DPF_READY
 	if dpfData.debug {
-		DPFlog.Printf("... NO OP command done\n")
+		debugPrint(DPF_LOG, "... NO OP command done\n")
 	}
 }
 
@@ -316,8 +316,8 @@ func dpfDoRWcommand() {
 
 	case DPF_CMD_READ:
 		if dpfData.debug {
-			DPFlog.Printf("... READ command invoked %s\n", dpfPrintableAddr())
-			DPFlog.Printf("... .... Start Address: %d\n", dpfData.memAddr)
+			debugPrint(DPF_LOG, "... READ command invoked %s\n", dpfPrintableAddr())
+			debugPrint(DPF_LOG, "... .... Start Address: %d\n", dpfData.memAddr)
 		}
 		dpfData.rwStatus = 0
 		for dpfData.sectCnt != 0 {
@@ -354,15 +354,15 @@ func dpfDoRWcommand() {
 
 		}
 		if dpfData.debug {
-			DPFlog.Printf("... .... READ command finished %s\n", dpfPrintableAddr())
-			DPFlog.Printf("... .... Last Address: %d\n", dpfData.memAddr)
+			debugPrint(DPF_LOG, "... .... READ command finished %s\n", dpfPrintableAddr())
+			debugPrint(DPF_LOG, "... .... Last Address: %d\n", dpfData.memAddr)
 		}
 		dpfData.rwStatus |= DPF_RWDONE | DPF_DRIVE0DONE
 
 	case DPF_CMD_WRITE:
 		if dpfData.debug {
-			DPFlog.Printf("... WRITE command invoked %s\n", dpfPrintableAddr())
-			DPFlog.Printf("... .....  Start Address: %d\n", dpfData.memAddr)
+			debugPrint(DPF_LOG, "... WRITE command invoked %s\n", dpfPrintableAddr())
+			debugPrint(DPF_LOG, "... .....  Start Address: %d\n", dpfData.memAddr)
 		}
 		dpfData.rwStatus = 0
 		for dpfData.sectCnt != 0 {
@@ -399,8 +399,8 @@ func dpfDoRWcommand() {
 
 		}
 		if dpfData.debug {
-			DPFlog.Printf("... ..... WRITE command finished %s\n", dpfPrintableAddr())
-			DPFlog.Printf("... ..... Last Address: %d\n", dpfData.memAddr)
+			debugPrint(DPF_LOG, "... ..... WRITE command finished %s\n", dpfPrintableAddr())
+			debugPrint(DPF_LOG, "... ..... Last Address: %d\n", dpfData.memAddr)
 		}
 		dpfData.rwStatus |= DPF_RWDONE | DPF_DRIVE0DONE
 
@@ -420,7 +420,7 @@ func dpfHandleFlag(f byte) {
 		// TODO start I/O timeout
 		dpfData.rwCommand = dpfData.command
 		if dpfData.debug {
-			DPFlog.Printf("... S flag set\n")
+			debugPrint(DPF_LOG, "... S flag set\n")
 		}
 		dpfDoRWcommand()
 		busSetBusy(DEV_DPF, false)
@@ -432,7 +432,7 @@ func dpfHandleFlag(f byte) {
 	case 'P':
 		busSetBusy(DEV_DPF, false)
 		if dpfData.debug {
-			DPFlog.Printf("... P flag set\n")
+			debugPrint(DPF_LOG, "... P flag set\n")
 		}
 		dpfData.rwStatus = 0
 		dpfDoDriveOpCommand()
@@ -467,7 +467,7 @@ func dpfReset() {
 	dpfData.rwStatus = 0
 	dpfData.driveStatus = DPF_READY
 	if dpfData.debug {
-		DPFlog.Printf("DPF Reset\n")
+		debugPrint(DPF_LOG, "DPF Reset\n")
 	}
 }
 

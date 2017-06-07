@@ -36,11 +36,11 @@ func eclipseOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		addr += offset // add unsigned offset
 		bitNum = uint(cpuPtr.ac[iPtr.acd] & 0x000f)
 		wd = memReadWord(addr)
-		DebugLog.Printf("... BTO Addr: %d, Bit: %d, Before: %s\n",
+		debugPrint(DEBUG_LOG, "... BTO Addr: %d, Bit: %d, Before: %s\n",
 			addr, bitNum, wordToBinStr(wd))
 		wd |= 1 << (15 - bitNum) // set the bit
 		memWriteWord(addr, wd)
-		DebugLog.Printf("... BTO                     Result: %s\n", wordToBinStr(wd))
+		debugPrint(DEBUG_LOG, "... BTO                     Result: %s\n", wordToBinStr(wd))
 
 	case "BTZ":
 		// TODO Handle segment and indirection...
@@ -53,13 +53,13 @@ func eclipseOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		addr += offset // add unsigned offset
 		bitNum = uint(cpuPtr.ac[iPtr.acd] & 0x000f)
 		wd = memReadWord(addr)
-		DebugLog.Printf("... BTZ Addr: %d, Bit: %d, Before: %s\n", addr, bitNum, wordToBinStr(wd))
+		debugPrint(DEBUG_LOG, "... BTZ Addr: %d, Bit: %d, Before: %s\n", addr, bitNum, wordToBinStr(wd))
 		//wd |= 1 << (15 - bitNum) // set the bit
 		if testWbit(wd, int(bitNum)) {
 			wd ^= 1 << (15 - bitNum) // clear the bit
 		}
 		memWriteWord(addr, wd)
-		DebugLog.Printf("... BTZ                     Result: %s\n",
+		debugPrint(DEBUG_LOG, "... BTZ                     Result: %s\n",
 			wordToBinStr(wd))
 
 	case "DIV": // unsigned divide

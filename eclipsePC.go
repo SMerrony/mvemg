@@ -8,9 +8,9 @@ import (
 
 func eclipsePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 	var (
-		addr, inc dg_phys_addr
-		acs, h, l int16
-		wd        dg_word
+		addr, inc      dg_phys_addr
+		acd, acs, h, l int16
+		wd             dg_word
 	//dwd dg_dword
 	)
 
@@ -35,7 +35,7 @@ func eclipsePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 				inc = 2
 			}
 		}
-		DebugLog.Printf("CLM compared %d with limits %d and %d, moving PC by %d\n", acs, l, h, inc)
+		debugPrint(DEBUG_LOG, "CLM compared %d with limits %d and %d, moving PC by %d\n", acs, l, h, inc)
 		cpuPtr.pc += inc
 
 	case "DSPA":
@@ -43,7 +43,7 @@ func eclipsePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		offset := dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
 		lowLimit := memReadWord(tableStart - 2)
 		hiLimit := memReadWord(tableStart - 1)
-		DebugLog.Printf("DSPA called with table at %d, offset %d, lo %d hi %d\n",
+		debugPrint(DEBUG_LOG, "DSPA called with table at %d, offset %d, lo %d hi %d\n",
 			tableStart, offset, lowLimit, hiLimit)
 		if offset < lowLimit || offset > hiLimit {
 			log.Fatalf("ERROR: DPSA called with out of bounds offset %d", offset)
@@ -76,6 +76,15 @@ func eclipsePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		addr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
 		cpuPtr.pc = addr
 
+	case "SGT": //16-bit signed numbers
+		acs = int16(dwordGetLowerWord(cpuPtr.ac[iPtr.acs]))
+		acd = int16(dwordGetLowerWord(cpuPtr.ac[iPtr.acd]))
+		if acs > acd {
+			cpuPtr.pc += 2
+		} else {
+			cpuPtr.pc += 1
+		}
+
 	case "SNB":
 		// resolve an ECLIPSE bit address
 		if iPtr.acd == iPtr.acs {
@@ -96,7 +105,7 @@ func eclipsePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		} else {
 			cpuPtr.pc += 1
 		}
-		DebugLog.Printf("SNB: Wd Addr: %d., word: %0X, bit #: %d\n", addr, wd, bit)
+		debugPrint(DEBUG_LOG, "SNB: Wd Addr: %d., word: %0X, bit #: %d\n", addr, wd, bit)
 
 	case "SZB":
 		// resolve an ECLIPSE bit address
@@ -118,7 +127,7 @@ func eclipsePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		} else {
 			cpuPtr.pc += 1
 		}
-		DebugLog.Printf("SZB: Wd Addr: %d., word: %0X, bit #: %d\n", addr, wd, bit)
+		debugPrint(DEBUG_LOG, "SZB: Wd Addr: %d., word: %0X, bit #: %d\n", addr, wd, bit)
 
 	default:
 		log.Printf("ERROR: ECLIPSE_PC instruction <%s> not yet implemented\n", iPtr.mnemonic)

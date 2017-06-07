@@ -24,7 +24,7 @@ func eclipseStack(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 			first += 4
 		}
 		for thisAc = first; thisAc >= last; thisAc-- {
-			DebugLog.Printf("... popping AC%d\n", acsUp[thisAc])
+			debugPrint(DEBUG_LOG, "... popping AC%d\n", acsUp[thisAc])
 			cpuPtr.ac[acsUp[thisAc]] = dg_dword(nsPop(0))
 		}
 
@@ -40,7 +40,7 @@ func eclipseStack(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 			last += 4
 		}
 		for thisAc = first; thisAc <= last; thisAc++ {
-			DebugLog.Printf("... pushing AC%d\n", acsUp[thisAc])
+			debugPrint(DEBUG_LOG, "... pushing AC%d\n", acsUp[thisAc])
 			nsPush(0, dwordGetLowerWord(cpuPtr.ac[acsUp[thisAc]]))
 		}
 

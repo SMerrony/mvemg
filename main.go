@@ -44,7 +44,7 @@ var (
 func main() {
 	p = profile.Start(profile.ProfilePath("."))
 	defer p.Stop()
-	debugLogsInit()
+	//	debugLogsInit()
 	log.Println("INFO: MV/Em will not start until console connected")
 
 	l, err := net.Listen("tcp", "localhost:"+SCP_PORT)
@@ -128,7 +128,7 @@ func scpGetLine() string {
 func cleanExit() {
 	ttoPutNLString(" *** MV/Emulator stopping at user request ***")
 	p.Stop()
-	//debugLogsDump()
+	debugLogsDump()
 	os.Exit(0)
 }
 
@@ -360,7 +360,7 @@ func doScript(cmd []string) {
 	for scanner.Scan() {
 		doCmd := scanner.Text()
 		if doCmd[0] != '#' {
-			DebugLog.Printf("doScript read command <%s> from file\n", doCmd)
+			// DebugLog.Printf("doScript read command <%s> from file\n", doCmd)
 			ttoPutNLString(doCmd)
 			doCommand(doCmd)
 		}
