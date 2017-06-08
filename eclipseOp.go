@@ -142,7 +142,7 @@ func eclipseOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		cpuPtr.ac[iPtr.acd] = dwd & 0x0ffff
 
 	default:
-		log.Printf("ERROR: ECLIPSE_OP instruction <%s> not yet implemented\n", iPtr.mnemonic)
+		debugPrint(DEBUG_LOG,"ERROR: ECLIPSE_OP instruction <%s> not yet implemented\n", iPtr.mnemonic)
 		return false
 	}
 

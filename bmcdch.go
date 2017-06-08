@@ -98,3 +98,42 @@ func getBmcDchMapAddr(mAddr dg_phys_addr) (dg_phys_addr, dg_phys_addr) {
 		mAddr, slot, regs[(slot*2)+1], page, pAddr)
 	return pAddr, page // TODO page return is just for debugging
 }
+
+type bmcAddr_t struct {
+	isLogical bool // is this a Physical(f) or Logical(t) address?
+
+	// physical addresses...
+	bk  byte         // bank selection bits (3-bit)
+	xca byte         // eXtended Channel Addr bits (3-bit)
+	ca  dg_phys_addr // Channel Addr (15-bit)
+
+	// logical addresess..
+	tt   byte         // Translation Table (5-bit)
+	ttr  byte         // TT Register (5-bit)
+	plow dg_phys_addr // Page Low Order Word (10-bit)
+}
+
+func decodeBmcAddr(bmcAddr dg_phys_addr) bmcAddr_t {
+	var (
+		inAddr dg_dword
+		res    bmcAddr_t
+	)
+
+	inAddr = dg_dword(bmcAddr << 10) // shift lest so we can use documented 21-bit numbering
+	res.isLogical = testDWbit(inAddr, 0)
+	if res.isLogical {
+		// Logical, or Mapped address...
+		res.tt = byte(getDWbits(inAddr, 2, 5))
+		res.ttr = byte(getDWbits(inAddr, 7, 5))
+		// for performance use the parm directly here...
+		res.plow = dg_phys_addr(bmcAddr & 0x3ff) // mask off 10 bits
+	} else {
+		// Physical, or unmapped address..
+		res.bk = byte(getDWbits(inAddr, 1, 3))
+		res.xca = byte(getDWbits(inAddr, 4, 3))
+		// for performance use the parm directly here...
+		res.ca = dg_phys_addr(bmcAddr & 0x7fff) // mask off 15 bits
+	}
+
+	return res
+}

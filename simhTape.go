@@ -34,10 +34,10 @@ func (st *SimhTapes) simhTapeInit() {
 }
 
 func (st *SimhTapes) simhTapeAttach(tNum int, imgName string) bool {
-	log.Printf("INFO: simhTapeAttach called for tape #%d with image <%s>\n", tNum, imgName)
+	debugPrint(DEBUG_LOG,"INFO: simhTapeAttach called for tape #%d with image <%s>\n", tNum, imgName)
 	f, err := os.Open(imgName)
 	if err != nil {
-		log.Printf("ERROR: Could not open simH Tape Image file: %s, due to: %s\n", imgName, err.Error())
+		debugPrint(DEBUG_LOG,"ERROR: Could not open simH Tape Image file: %s, due to: %s\n", imgName, err.Error())
 		return false
 	}
 	st[tNum].fileName = imgName
@@ -47,10 +47,10 @@ func (st *SimhTapes) simhTapeAttach(tNum int, imgName string) bool {
 
 // simulate a tape rewind by seeking to start of SimH tape image file
 func (st *SimhTapes) simhTapeRewind(tNum int) bool {
-	log.Printf("INFO: simhTapeRewind called for tape #%d\n", tNum)
+	debugPrint(DEBUG_LOG,"INFO: simhTapeRewind called for tape #%d\n", tNum)
 	_, err := st[tNum].simhFile.Seek(0, 0)
 	if err != nil {
-		log.Printf("ERROR: Could not rewind simH Tape Image file: %s, due to: %s\n", st[tNum].fileName, err.Error())
+		debugPrint(DEBUG_LOG,"ERROR: Could not rewind simH Tape Image file: %s, due to: %s\n", st[tNum].fileName, err.Error())
 		return false
 	}
 	return true
@@ -61,14 +61,14 @@ func (st *SimhTapes) simhTapeReadRecordHeader(tNum int) (dg_dword, bool) {
 	hdrBytes := make([]byte, 4)
 	nb, err := st[tNum].simhFile.Read(hdrBytes)
 	if err != nil {
-		log.Printf("ERROR: Could not read simH Tape Image record header: %s, due to: %s\n", st[tNum].fileName, err.Error())
+		debugPrint(DEBUG_LOG,"ERROR: Could not read simH Tape Image record header: %s, due to: %s\n", st[tNum].fileName, err.Error())
 		return 0, false
 	}
 	if nb != 4 {
-		log.Printf("ERROR: Wrong length simH Tape Image record header: %d\n", nb)
+		debugPrint(DEBUG_LOG,"ERROR: Wrong length simH Tape Image record header: %d\n", nb)
 		return 0, false
 	}
-	//log.Printf("Debug - Header bytes: %d %d %d %d\n", hdrBytes[0], hdrBytes[1], hdrBytes[2], hdrBytes[3])
+	//debugPrint(DEBUG_LOG,"Debug - Header bytes: %d %d %d %d\n", hdrBytes[0], hdrBytes[1], hdrBytes[2], hdrBytes[3])
 	var hdr dg_dword
 	hdr = dg_dword(hdrBytes[3]) << 24
 	hdr |= dg_dword(hdrBytes[2]) << 16
@@ -82,11 +82,11 @@ func (st *SimhTapes) simhTapeReadRecord(tNum int, byteLen int) ([]byte, bool) {
 	rec := make([]byte, byteLen)
 	nb, err := st[tNum].simhFile.Read(rec)
 	if err != nil {
-		log.Printf("ERROR: Could not read simH Tape Image %s record due to: %s\n", st[tNum].fileName, err.Error())
+		debugPrint(DEBUG_LOG,"ERROR: Could not read simH Tape Image %s record due to: %s\n", st[tNum].fileName, err.Error())
 		return nil, false
 	}
 	if nb != byteLen {
-		log.Printf("ERROR: Could not read simH Tape Image %s record, got %d bytes, expecting %d\n", st[tNum].fileName, nb, byteLen)
+		debugPrint(DEBUG_LOG,"ERROR: Could not read simH Tape Image %s record, got %d bytes, expecting %d\n", st[tNum].fileName, nb, byteLen)
 		return nil, false
 	}
 	return rec, true
@@ -96,7 +96,7 @@ func (st *SimhTapes) simhTapeSpaceFwd(tNum int, recCnt int) bool {
 
 	var hdr, trailer dg_dword
 	done := false
-	log.Printf("DEBUG: simhTapeSpaceFwd called for %d records\n", recCnt)
+	debugPrint(DEBUG_LOG,"DEBUG: simhTapeSpaceFwd called for %d records\n", recCnt)
 
 	// special case when recCnt == 0 which means space forward one file...
 	if recCnt == 0 {
@@ -143,7 +143,7 @@ func (st *SimhTapes) simhTapeScanImage(tNum int) string {
 loop:
 	for {
 		hdr, _ = st.simhTapeReadRecordHeader(tNum)
-		//log.Printf("Debug: got header value: %d\n", hdr)
+		//debugPrint(DEBUG_LOG,"Debug: got header value: %d\n", hdr)
 		switch hdr {
 		case MTR_TMK:
 			if fileSize > 0 {
@@ -169,7 +169,7 @@ loop:
 			markCount = 0
 			st.simhTapeReadRecord(tNum, int(hdr)) // read record and throw away
 			trailer, _ = st.simhTapeReadRecordHeader(tNum)
-			//log.Printf("Debug: got trailer value: %d\n", trailer)
+			//debugPrint(DEBUG_LOG,"Debug: got trailer value: %d\n", trailer)
 			if hdr == trailer {
 				fileSize += int(hdr)
 			} else {

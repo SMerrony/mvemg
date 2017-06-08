@@ -3,7 +3,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 )
 
 func eclipseMemRef(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
@@ -89,7 +88,7 @@ func eclipseMemRef(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		cpuPtr.ac[iPtr.acd] = dg_dword(memReadWord(addr)) & 0x0ffff
 
 	default:
-		log.Printf("ERROR: ECLIPSE_MEMREF instruction <%s> not yet implemented\n", iPtr.mnemonic)
+		debugPrint(DEBUG_LOG, "ERROR: ECLIPSE_MEMREF instruction <%s> not yet implemented\n", iPtr.mnemonic)
 		return false
 	}
 

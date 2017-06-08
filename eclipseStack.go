@@ -1,11 +1,6 @@
 // eclipseStack.go
 package main
 
-import (
-	//"fmt"
-	"log"
-)
-
 func eclipseStack(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 	var (
 		addr                dg_phys_addr
@@ -103,7 +98,7 @@ func eclipseStack(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		//cpuPtr.ac[3] = dg_dword(nspSav + 5)
 
 	default:
-		log.Printf("ERROR: ECLIPSE_STACK instruction <%s> not yet implemented\n", iPtr.mnemonic)
+		debugPrint(DEBUG_LOG, "ERROR: ECLIPSE_STACK instruction <%s> not yet implemented\n", iPtr.mnemonic)
 		return false
 	}
 

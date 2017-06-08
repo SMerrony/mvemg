@@ -133,7 +133,7 @@ func dpfAttach(dNum int, imgName string) bool {
 	dpfData.imageFile, err = os.OpenFile(imgName, os.O_RDWR, 0755)
 	if err != nil {
 		debugPrint(DPF_LOG, "Failed to open image for attaching\n")
-		log.Printf("WARN: Failed to open DPF image <%s> for ATTach\n", imgName)
+		debugPrint(DEBUG_LOG,"WARN: Failed to open DPF image <%s> for ATTach\n", imgName)
 		return false
 	}
 	dpfData.imageFileName = imgName

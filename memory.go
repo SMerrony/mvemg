@@ -39,7 +39,7 @@ func memInit() {
 	// zero ram?
 	memory.atuEnabled = false
 	bmcdchInit()
-	log.Printf("INFO: Initialised %d words of main memory\n", MEM_SIZE_WORDS)
+	debugPrint(DEBUG_LOG,"INFO: Initialised %d words of main memory\n", MEM_SIZE_WORDS)
 }
 
 // read a byte from memory using word address and low-byte flag (true => lower (rightmost) byte)
@@ -96,7 +96,13 @@ func memReadWordDchChan(addr dg_phys_addr) dg_word {
 }
 
 func memReadWordBmcChan(addr dg_phys_addr) dg_word {
-	pAddr, _ := getBmcDchMapAddr(addr)
+	var pAddr dg_phys_addr
+	decodedAddr := decodeBmcAddr(addr)
+	if decodedAddr.isLogical {
+		pAddr, _ = getBmcDchMapAddr(addr) // FIXME
+	} else {
+		pAddr = decodedAddr.ca
+	}
 	debugPrint(MAP_LOG, "memWriteReadBmcChan got addr: %d, wrote to addr: %d\n", addr, pAddr)
 	return memReadWord(pAddr)
 }
@@ -123,7 +129,13 @@ func memWriteWordDchChan(addr dg_phys_addr, data dg_word) dg_phys_addr {
 }
 
 func memWriteWordBmcChan(addr dg_phys_addr, data dg_word) dg_phys_addr {
-	pAddr, _ := getBmcDchMapAddr(addr)
+	var pAddr dg_phys_addr
+	decodedAddr := decodeBmcAddr(addr)
+	if decodedAddr.isLogical {
+		pAddr, _ = getBmcDchMapAddr(addr) // FIXME
+	} else {
+		pAddr = decodedAddr.ca
+	}
 	memWriteWord(pAddr, data)
 	debugPrint(MAP_LOG, "memWriteWordBmcChan got addr: %d, wrote to addr: %d\n", addr, pAddr)
 	return pAddr
@@ -179,12 +191,27 @@ func dwordGetUpperWord(dwd dg_dword) dg_word {
 }
 
 // in the DG world, the first (leftmost) bit is numbered zero...
+// extract nbits from value starting at leftBit
 func getWbits(value dg_word, leftBit int, nbits int) dg_word {
 	var res dg_word = 0
 	rightBit := leftBit + nbits
 	for b := leftBit; b < rightBit; b++ {
 		res = res << 1
 		if testWbit(value, b) {
+			res++
+		}
+	}
+	return res
+}
+
+// in the DG world, the first (leftmost) bit is numbered zero...
+// extract nbits from value starting at leftBit
+func getDWbits(value dg_dword, leftBit int, nbits int) dg_dword {
+	var res dg_dword = 0
+	rightBit := leftBit + nbits
+	for b := leftBit; b < rightBit; b++ {
+		res = res << 1
+		if testDWbit(value, b) {
 			res++
 		}
 	}

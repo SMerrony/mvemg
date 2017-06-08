@@ -54,7 +54,7 @@ func eagleIO(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 			cpu.ion = false
 			break
 		}
-		log.Printf("ERROR: EAGLE_IO instruction <%s> not yet implemented\n", iPtr.mnemonic)
+		debugPrint(DEBUG_LOG,"ERROR: EAGLE_IO instruction <%s> not yet implemented\n", iPtr.mnemonic)
 		return false
 
 	case "WLMP":
@@ -80,7 +80,7 @@ func eagleIO(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		}
 
 	default:
-		log.Printf("ERROR: EAGLE_IO instruction <%s> not yet implemented\n", iPtr.mnemonic)
+		debugPrint(DEBUG_LOG,"ERROR: EAGLE_IO instruction <%s> not yet implemented\n", iPtr.mnemonic)
 		return false
 	}
 
