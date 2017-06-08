@@ -1,32 +1,13 @@
 
-TAPE1.9trk
-
-cover.out
-
-cpu.pprof
-
-mtb_debug.log
-
 mvemg
-
-mvem.log
 
 mvemg.test
 
-map_debug.log
+*.1
+*.9trk
+*.DPF
+*.DSKP
+*.log
+*.out
+*.pprof
 
-mvem_debug.log
-
-BLANK.DPF
-
-DISK1.DPF
-
-dpf_debug.log
-
-dpf_debug.log.1
-
-dskp_debug.log
-
-BLANK.DSKP
-
-DISK1.DSKP
