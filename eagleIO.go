@@ -47,16 +47,6 @@ func eagleIO(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		cpuPtr.ac[1] = UCODE_REV
 		cpuPtr.ac[2] = MEM_SIZE_LCPID // TODO Check this
 
-	case "NIO":
-		// special case: NIOC CPU => INTDS
-		if iPtr.f == 'C' && iPtr.ioDev == DEV_CPU {
-			// same as INTDS
-			cpu.ion = false
-			break
-		}
-		debugPrint(DEBUG_LOG,"ERROR: EAGLE_IO instruction <%s> not yet implemented\n", iPtr.mnemonic)
-		return false
-
 	case "WLMP":
 		if cpuPtr.ac[1] == 0 {
 			mapRegAddr = int(cpuPtr.ac[0] & 0x7ff)
@@ -80,7 +70,7 @@ func eagleIO(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		}
 
 	default:
-		debugPrint(DEBUG_LOG,"ERROR: EAGLE_IO instruction <%s> not yet implemented\n", iPtr.mnemonic)
+		debugPrint(DEBUG_LOG, "ERROR: EAGLE_IO instruction <%s> not yet implemented\n", iPtr.mnemonic)
 		return false
 	}
 

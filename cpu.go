@@ -4,6 +4,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 )
 
 // TODO sbrBits is currently an abstraction of the Segment Base Registers - may need to represent physically
@@ -25,12 +26,20 @@ type Cpu struct {
 	consoleEsc bool
 }
 
+type cpuStatT struct {
+	pc                      dg_phys_addr
+	ac                      [4]dg_dword
+	carry, atu, ion, pfflag bool
+	instrCount              uint64
+}
+
 var (
 	cpu Cpu
 )
 
-func cpuInit() {
+func cpuInit(statsChan chan cpuStatT) {
 	busAddDevice(DEV_CPU, "CPU", CPU_PMB, true, false, false)
+	go cpuStatSender(statsChan)
 }
 
 func cpuPrintableStatus() string {
@@ -82,4 +91,21 @@ func cpuExecute(iPtr *DecodedInstr) bool {
 	}
 	cpu.instrCount++
 	return rc
+}
+
+func cpuStatSender(sChan chan cpuStatT) {
+	var stats cpuStatT
+	for {
+		stats.pc = cpu.pc
+		stats.ac[0] = cpu.ac[0]
+		stats.ac[1] = cpu.ac[1]
+		stats.ac[2] = cpu.ac[1]
+		stats.ac[3] = cpu.ac[3]
+		stats.instrCount = cpu.instrCount
+		select {
+		case sChan <- stats:
+		default:
+		}
+		time.Sleep(time.Millisecond * 100)
+	}
 }

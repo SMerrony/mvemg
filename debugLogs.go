@@ -11,18 +11,19 @@ import (
 const (
 	DEBUG_LOGS      = 4
 	DEBUG_LOG_LINES = 40000
-	DEBUG_LOG       = 0
-	DPF_LOG         = 1
-	DSKP_LOG        = 2
-	MAP_LOG         = 3
+
+	DEBUG_LOG = 0
+	DPF_LOG   = 1
+	DSKP_LOG  = 2
+	MAP_LOG   = 3
 
 	LOG_PERMS = 0644
 )
 
 var (
-	logArr    [DEBUG_LOGS][DEBUG_LOG_LINES]string
-	firstLine [DEBUG_LOGS]int
-	lastLine  [DEBUG_LOGS]int
+	logArr    [DEBUG_LOGS][DEBUG_LOG_LINES]string // the stored log messages
+	firstLine [DEBUG_LOGS]int                     // pointer to the first line of each log
+	lastLine  [DEBUG_LOGS]int                     // pointer to the last line of each log
 
 	// DebugLog, DPFlog, DSKPlog, MAPlog *log.Logger
 )
@@ -77,19 +78,27 @@ func debugLogsDump() {
 	}
 }
 
+// debugPrint doesn't print anything!  It stores the log message
+// in array-backed circular arrays
+// for printing when debugLogsDump() is invoked.
+// This can be called very often, KISS...
 func debugPrint(log int, aFmt string, msg ...interface{}) {
 
 	lastLine[log]++
+
+	// end of log array?
 	if lastLine[log] == DEBUG_LOG_LINES {
-		lastLine[log] = 0
+		lastLine[log] = 0 // wrap-around
 	}
 
+	// has the tail hit the head of the circular buffer?
 	if lastLine[log] == firstLine[log] {
-		firstLine[log]++
+		firstLine[log]++ // advance the head pointer
 		if firstLine[log] == DEBUG_LOG_LINES {
-			firstLine[log] = 0
+			firstLine[log] = 0 // but reset if at limit
 		}
 	}
 
+	// sprintf the given message to tail of the specified log
 	logArr[log][lastLine[log]] = fmt.Sprintf(aFmt, msg...)
 }

@@ -2,6 +2,24 @@ package main
 
 import "testing"
 
+func TestGetWbits(t *testing.T) {
+	var w dg_word = 0xb38f
+	r := getWbits(w, 5, 3)
+	if r != 3 {
+		t.Error("Expected 3, got ", w)
+	}
+
+}
+
+func TestGetDWbits(t *testing.T) {
+	var w dg_dword = 0xb38f00ff
+	r := getDWbits(w, 15, 2)
+	if r != 2 {
+		t.Error("Expected 2, got ", w)
+	}
+
+}
+
 func TestMemWriteReadWord(t *testing.T) {
 	var w dg_word
 	memWriteWord(78, 99)

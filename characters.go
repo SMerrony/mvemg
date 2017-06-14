@@ -10,10 +10,13 @@ const (
 	ASCII_CR  = 0x0D
 	ASCII_ESC = 0x1B
 
-	DASHER_CURSOR_LEFT = 0x19
-	DASHER_DIM_ON      = 034
-	DASHER_DIM_OFF     = 035
-	DASHER_UNDERLINE   = 024
-	DASHER_NORMAL      = 025
-	DASHER_DELETE      = 0x7F
+	DASHER_ERASE_EOL         = 013
+	DASHER_ERASE_PAGE        = 014
+	DASHER_CURSOR_LEFT       = 0x19
+	DASHER_WRITE_WINDOW_ADDR = 020 //followed by col then row
+	DASHER_DIM_ON            = 034
+	DASHER_DIM_OFF           = 035
+	DASHER_UNDERLINE         = 024
+	DASHER_NORMAL            = 025
+	DASHER_DELETE            = 0x7F
 )

@@ -8,10 +8,11 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 )
 
 const (
-	DPF_SURFACES_PER_DISK  = 19
+	DPF_SURFACES_PER_DISK  = 19 //5 // 19
 	DPF_SECTORS_PER_TRACK  = 24
 	DPF_BYTES_PER_SECTOR   = 512
 	DPF_WORDS_PER_SECTOR   = 256
@@ -106,14 +107,27 @@ type dpfData_t struct {
 	lastDOAwasSeek  bool
 }
 
+type dpfStatT struct {
+	imageAttached bool
+	cylinder      dg_word
+	head, sector  uint8
+}
+
 var (
-	dpfData dpfData_t
-	err     error
+	dpfData   dpfData_t
+	err       error
+	cmdDecode [DPF_CMD_FORMAT + 1]string
 )
 
 // initialise the emulated DPF controller
-func dpfInit() {
+func dpfInit(statsChann chan dpfStatT) {
 	dpfData.debug = true
+
+	cmdDecode = [...]string{"READ", "RECAL", "SEEK", "STOP", "OFFSET FWD", "OFFSET REV",
+		"WRITE DISABLE", "RELEASE", "TRESPASS", "SET ALT MODE 1", "SET ALT MODE 2",
+		"NO OP", "VERIFY", "READ BUFFERS", "WRITE", "FORMAT"}
+
+	go dpfStatsSender(statsChann)
 
 	busAddDevice(DEV_DPF, "DPF", DPF_PMB, false, true, true)
 	busSetResetFunc(DEV_DPF, dpfReset)
@@ -133,13 +147,35 @@ func dpfAttach(dNum int, imgName string) bool {
 	dpfData.imageFile, err = os.OpenFile(imgName, os.O_RDWR, 0755)
 	if err != nil {
 		debugPrint(DPF_LOG, "Failed to open image for attaching\n")
-		debugPrint(DEBUG_LOG,"WARN: Failed to open DPF image <%s> for ATTach\n", imgName)
+		debugPrint(DEBUG_LOG, "WARN: Failed to open DPF image <%s> for ATTach\n", imgName)
 		return false
 	}
 	dpfData.imageFileName = imgName
 	dpfData.imageAttached = true
 	busSetAttached(DEV_DPF)
 	return true
+}
+
+func dpfStatsSender(sChan chan dpfStatT) {
+	var stats dpfStatT
+	for {
+		if dpfData.imageAttached {
+			stats.imageAttached = true
+			stats.cylinder = dpfData.cylAddr
+			stats.head = dpfData.surfAddr
+			stats.sector = dpfData.sectAddr
+		} else {
+			stats.imageAttached = false
+			stats.cylinder = 0
+			stats.head = 0
+			stats.sector = 0
+		}
+		select {
+		case sChan <- stats:
+		default:
+		}
+		time.Sleep(time.Millisecond * 333)
+	}
 }
 
 // Create an empty disk file of the correct size for the DPF emulator to use
@@ -190,7 +226,15 @@ func dpfDataIn(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
 			log.Fatal("DPF DIB (Alt Mode 2) not yet implemented")
 		}
 	case 'C':
-		log.Fatal("DPF DIC not yet implemented")
+		var ssc dg_word = 0
+		if dpfData.mapEnabled {
+			ssc = 1 << 15
+		}
+		ssc |= (dg_word(dpfData.surfAddr) & 0x1f) << 10
+		ssc |= (dg_word(dpfData.sectAddr) & 0x1f) << 5
+		ssc |= (dg_word(dpfData.sectCnt) & 0x1f)
+		cpuPtr.ac[iPtr.acd] = dg_dword(ssc)
+		debugPrint(DPF_LOG, "DPF DIC returning: %s\n", wordToBinStr(ssc))
 	}
 
 	dpfHandleFlag(iPtr.f) // TODO Is this go-able?
@@ -232,8 +276,8 @@ func dpfDataOut(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
 		if dpfData.debug {
 			debugPrint(DPF_LOG, "DOA [Specify Cmd,Drv,EMA] to DRV=%d with data %s at PC: %d\n",
 				dpfData.drive, wordToBinStr(data), cpuPtr.pc)
-			debugPrint(DPF_LOG, "... CMD: (%d), DRV: %d, EMA: %d\n",
-				dpfData.command, dpfData.drive, dpfData.ema)
+			debugPrint(DPF_LOG, "... CMD: %s, DRV: %d, EMA: %d\n",
+				cmdDecode[dpfData.command], dpfData.drive, dpfData.ema)
 		}
 	case 'B':
 		if testWbit(data, 0) {
@@ -267,6 +311,10 @@ func dpfDataOut(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
 				debugPrint(DPF_LOG, "... MAP: %d, SURF: %d, SECT: %d, SECCNT: %d\n",
 					boolToInt(dpfData.mapEnabled), dpfData.surfAddr, dpfData.sectAddr, dpfData.sectCnt)
 			}
+		}
+	case 'N': // dummy value for NIO - we just handle the flag below
+		if dpfData.debug {
+			debugPrint(DPF_LOG, "NIO%c received\n", iPtr.f)
 		}
 	}
 
@@ -314,6 +362,7 @@ func dpfDoRWcommand() {
 
 	switch dpfData.command {
 
+	// ===== READ from DPF =====
 	case DPF_CMD_READ:
 		if dpfData.debug {
 			debugPrint(DPF_LOG, "... READ command invoked %s\n", dpfPrintableAddr())
@@ -321,6 +370,10 @@ func dpfDoRWcommand() {
 		}
 		dpfData.rwStatus = 0
 		for dpfData.sectCnt != 0 {
+			dpfCheckSectorPos()
+			if !dpfCheckCylPos() {
+				break
+			}
 			dpfPositionDiskImage()
 			br, err := dpfData.imageFile.Read(buffer)
 			if br != DPF_BYTES_PER_SECTOR || err != nil {
@@ -337,18 +390,8 @@ func dpfDoRWcommand() {
 			}
 			dpfData.sectAddr++
 			dpfData.sectCnt++
-			// end of track?
-			if dpfData.sectAddr == DPF_SECTORS_PER_TRACK {
-				dpfData.surfAddr++
-				dpfData.sectAddr = 0
-				// NEW CODE...
-				//dpfData.rwStatus = DPF_RWDONE //| DPF_RWFAULT | DPF_SURFSECT
-				//break
-			}
-
-			// end of cylinder?
-			if dpfData.surfAddr == DPF_SURFACES_PER_DISK {
-				dpfData.rwStatus = DPF_RWFAULT | DPF_RWDONE | DPF_SURFSECT
+			dpfCheckSectorPos()
+			if !dpfCheckCylPos() {
 				break
 			}
 
@@ -366,6 +409,10 @@ func dpfDoRWcommand() {
 		}
 		dpfData.rwStatus = 0
 		for dpfData.sectCnt != 0 {
+			dpfCheckSectorPos()
+			if !dpfCheckCylPos() {
+				break
+			}
 			dpfPositionDiskImage()
 			for w := 0; w < DPF_WORDS_PER_SECTOR; w++ {
 				if dpfData.mapEnabled {
@@ -383,17 +430,8 @@ func dpfDoRWcommand() {
 			}
 			dpfData.sectAddr++
 			dpfData.sectCnt++
-			// end of track?
-			if dpfData.sectAddr == DPF_SECTORS_PER_TRACK {
-				dpfData.surfAddr++
-				dpfData.sectAddr = 0
-				// NEW CODE...
-				// dpfData.rwStatus = DPF_RWDONE // | DPF_DRIVE0DONE //| DPF_RWFAULT | DPF_SURFSECT
-				// break
-			}
-			// end of cylinder?
-			if dpfData.surfAddr == DPF_SURFACES_PER_DISK {
-				dpfData.rwStatus = DPF_RWFAULT | DPF_RWDONE | DPF_SURFSECT
+			dpfCheckSectorPos()
+			if !dpfCheckCylPos() {
 				break
 			}
 
@@ -408,6 +446,28 @@ func dpfDoRWcommand() {
 		log.Fatalf("DPF Disk R/W Command %d not yet implemented\n", dpfData.command)
 	}
 
+}
+
+func dpfCheckSectorPos() bool {
+	ok := true
+	// end of track?
+	if dpfData.sectAddr >= DPF_SECTORS_PER_TRACK {
+		dpfData.surfAddr++
+		dpfData.sectAddr = 0
+		ok = false
+	}
+	return ok
+}
+
+func dpfCheckCylPos() bool {
+	ok := true
+	// end of cylinder?
+	if dpfData.surfAddr >= DPF_SURFACES_PER_DISK {
+		dpfData.surfAddr = 0
+		dpfData.sectAddr = 0
+		ok = false
+	}
+	return ok
 }
 
 func dpfHandleFlag(f byte) {

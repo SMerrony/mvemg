@@ -130,7 +130,7 @@ func eclipsePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		debugPrint(DEBUG_LOG, "SZB: Wd Addr: %d., word: %0X, bit #: %d\n", addr, wd, bit)
 
 	default:
-		debugPrint(DEBUG_LOG,"ERROR: ECLIPSE_PC instruction <%s> not yet implemented\n", iPtr.mnemonic)
+		debugPrint(DEBUG_LOG, "ERROR: ECLIPSE_PC instruction <%s> not yet implemented\n", iPtr.mnemonic)
 		return false
 	}
 

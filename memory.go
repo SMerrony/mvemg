@@ -39,7 +39,7 @@ func memInit() {
 	// zero ram?
 	memory.atuEnabled = false
 	bmcdchInit()
-	debugPrint(DEBUG_LOG,"INFO: Initialised %d words of main memory\n", MEM_SIZE_WORDS)
+	debugPrint(DEBUG_LOG, "INFO: Initialised %d words of main memory\n", MEM_SIZE_WORDS)
 }
 
 // read a byte from memory using word address and low-byte flag (true => lower (rightmost) byte)
@@ -165,7 +165,7 @@ func memWriteDWord(wordAddr dg_phys_addr, dwd dg_dword) {
 func nsPush(seg dg_phys_addr, data dg_word) {
 	// TODO segment handling
 	// TODO overflow/underflow handling - either here or in instruction?
-	memory.ram[NSP_LOC]++ // we allow this directr write to a fixed location for performance
+	memory.ram[NSP_LOC]++ // we allow this direct write to a fixed location for performance
 	addr := dg_phys_addr(memory.ram[NSP_LOC])
 	memWriteWord(addr, data)
 	debugPrint(DEBUG_LOG, "nsPush pushed %8d onto the Narrow Stack at location: %d\n", data, addr)
@@ -178,7 +178,7 @@ func nsPop(seg dg_phys_addr) dg_word {
 	addr := dg_phys_addr(memory.ram[NSP_LOC])
 	data := memReadWord(addr)
 	debugPrint(DEBUG_LOG, "nsPop  popped %8d off  the Narrow Stack at location: %d\n", data, addr)
-	memory.ram[NSP_LOC]-- // we allow this directr write to a fixed location for performance
+	memory.ram[NSP_LOC]-- // we allow this direct write to a fixed location for performance
 	return data
 }
 

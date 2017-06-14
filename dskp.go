@@ -5,12 +5,14 @@ package main
 
 import (
 	"bufio"
-	//"fmt"
+	"fmt"
 	"log"
 	"os"
+	"time"
 )
 
 const (
+	// Physical disk characteristics
 	DSKP_SURFACES_PER_DISK  = 8
 	DSKP_HEADS_PER_SURFACE  = 2
 	DSKP_SECTORS_PER_TRACK  = 75
@@ -18,20 +20,27 @@ const (
 	DSKP_BYTES_PER_SECTOR   = 512
 	DSKP_PHYSICAL_CYLINDERS = 981
 	DSKP_USER_CYLINDERS     = 978
-	DSKP_LOGICAL_BLOCKS     = 1157952 // ???
+	DSKP_LOGICAL_BLOCKS     = 1157952 // ??? 1147943
 	DSKP_UCODE_REV          = 99
 
 	DSKP_INT_INF_BLK_SIZE   = 8
 	DSKP_CTRLR_INF_BLK_SIZE = 2
 	DSKP_UNIT_INF_BLK_SIZE  = 7
 	DSKP_CB_MAX_SIZE        = 21
-	DSKP_CB_MIN_SIZE        = 12 // Was 10
+	DSKP_CB_MIN_SIZE        = 10 // 12 // Was 10
 
 	STAT_XEC_STATE_RESETTING  = 0x00
 	STAT_XEC_STATE_RESET_DONE = 0x01
 	STAT_XEC_STATE_BEGUN      = 0x08
 	STAT_XEC_STATE_MAPPED     = 0x0c
 	STAT_XEC_STATE_DIAG_MODE  = 0x04
+
+	STAT_CCS_ASYNC          = 0
+	STAT_CCS_PIO_INV_CMD    = 1
+	STAT_CCS_PIO_CMD_FAILED = 2
+	STAT_CCS_PIO_CMD_OK     = 3
+
+	STAT_ASYNC_NO_ERRORS = 5
 
 	// DSKP PIO Command Set
 	DSKP_PROG_LOAD             = 000
@@ -104,11 +113,15 @@ const (
 	DSKP_MAP_UPSTREAM_HPT   = 1 << 12
 
 	// calculated consts
-	DSKP_PHYSICAL_BYTE_SIZE  = DSKP_SURFACES_PER_DISK * DSKP_HEADS_PER_SURFACE * DSKP_SECTORS_PER_TRACK * DSKP_BYTES_PER_SECTOR * DSKP_PHYSICAL_CYLINDERS
+	// DSKP_PHYSICAL_BYTE_SIZE is the total  # bytes on a DSKP-type disk
+	DSKP_PHYSICAL_BYTE_SIZE = DSKP_SURFACES_PER_DISK * DSKP_HEADS_PER_SURFACE * DSKP_SECTORS_PER_TRACK * DSKP_BYTES_PER_SECTOR * DSKP_PHYSICAL_CYLINDERS
+	// DSKP_PHYSICAL_BLOCK_SIZE is the total # blocks on a DSKP-type disk
 	DSKP_PHYSICAL_BLOCK_SIZE = DSKP_SURFACES_PER_DISK * DSKP_HEADS_PER_SURFACE * DSKP_SECTORS_PER_TRACK * DSKP_PHYSICAL_CYLINDERS
+
+	DSKP_STAT_MS = 333 // Will send status update this often
 )
 
-type dskpData_t struct {
+type dskpDataT struct {
 	// MV/Em internals...
 	debug         bool
 	imageAttached bool
@@ -122,16 +135,26 @@ type dskpData_t struct {
 	ctrlInfBlock                          [DSKP_CTRLR_INF_BLK_SIZE]dg_word
 	unitInfBlock                          [DSKP_UNIT_INF_BLK_SIZE]dg_word
 	cylinder, head, sector                dg_word
+	sectorNo                              dg_dword
+}
+
+type dskpStatT struct {
+	imageAttached                      bool
+	statusRegA, statusRegB, statusRegC dg_word
+	cylinder, head, sector             dg_word
+	sectorNo                           dg_dword
 }
 
 var (
-	dskpData dskpData_t
+	dskpData dskpDataT
 )
 
-func dskpInit() {
+func dskpInit(statsChann chan dskpStatT) {
 	debugPrint(DSKP_LOG, "DSKP Initialising via call to dskpInit()...\n")
 
 	dskpData.debug = true
+
+	go dskpStatSender(statsChann)
 
 	busAddDevice(DEV_DSKP, "DSKP", DSKP_PMB, false, true, true)
 	busSetResetFunc(DEV_DSKP, dskpReset)
@@ -149,13 +172,49 @@ func dskpAttach(dNum int, imgName string) bool {
 	dskpData.imageFile, err = os.OpenFile(imgName, os.O_RDWR, 0755)
 	if err != nil {
 		debugPrint(DSKP_LOG, "Failed to open image for attaching\n")
-		debugPrint(DEBUG_LOG,"WARN: Failed to open dskp image <%s> for ATTach\n", imgName)
+		debugPrint(DEBUG_LOG, "WARN: Failed to open dskp image <%s> for ATTach\n", imgName)
 		return false
 	}
 	dskpData.imageFileName = imgName
 	dskpData.imageAttached = true
 	busSetAttached(DEV_DSKP)
 	return true
+}
+
+func dskpStatSender(sChan chan dskpStatT) {
+	var stats dskpStatT
+	fmt.Printf("dskpStatSender() started\n")
+	for {
+
+		if dskpData.imageAttached {
+			stats.imageAttached = true
+			stats.cylinder = dskpData.cylinder
+			stats.head = dskpData.head
+			stats.sector = dskpData.sector
+			stats.statusRegA = dskpData.statusRegA
+			stats.statusRegB = dskpData.statusRegB
+			stats.statusRegC = dskpData.statusRegC
+			stats.sectorNo = dskpData.sectorNo
+		} else {
+			stats.imageAttached = false
+			stats.cylinder = 0
+			stats.head = 0
+			stats.sector = 0
+			stats.statusRegA = 0
+			stats.statusRegB = 0
+			stats.statusRegC = 0
+			stats.sectorNo = 0
+		}
+		//fmt.Printf("dskpStatSender()  before send\n")
+		select {
+		case sChan <- stats:
+			//fmt.Printf("dskpStatSender() after sending C: %d, H: %d S: %d #: %d\n",
+			//	stats.cylinder, stats.head, stats.sector, stats.sectorNo)
+		default:
+		}
+
+		time.Sleep(time.Millisecond * DSKP_STAT_MS)
+	}
 }
 
 // Create an empty disk file of the correct size for the DSKP emulator to use
@@ -229,10 +288,8 @@ func dskpDoPioCommand() {
 			debugPrint(DSKP_LOG, "... BEGIN command, unit # %d\n", dskpData.commandRegA)
 		}
 		// pretend we have succesfully booted ourself
-		dskpData.statusRegC = STAT_XEC_STATE_BEGUN << 12
-		if testWbit(dskpData.commandRegC, 15) {
-			dskpData.statusRegC |= (3 << 10)
-		}
+		dskpData.statusRegB = 0
+		dskpSetPioStatusRegC(STAT_XEC_STATE_BEGUN, STAT_CCS_PIO_CMD_OK, DSKP_BEGIN, testWbit(dskpData.commandRegC, 15))
 		if dskpData.debug {
 			debugPrint(DSKP_LOG, "... ..... returning %s\n", wordToBinStr(dskpData.statusRegC))
 		}
@@ -243,10 +300,12 @@ func dskpDoPioCommand() {
 		}
 		dskpData.statusRegA = dskpData.mappingRegA
 		dskpData.statusRegB = dskpData.mappingRegB
+		dskpSetPioStatusRegC(0, STAT_CCS_PIO_CMD_OK, DSKP_GET_MAPPING, testWbit(dskpData.commandRegC, 15))
 		if dskpData.debug {
 			debugPrint(DSKP_LOG, "... ... Status Reg A set to %s\n", wordToBinStr(dskpData.statusRegA))
 			debugPrint(DSKP_LOG, "... ... Status Reg B set to %s\n", wordToBinStr(dskpData.statusRegB))
 		}
+		dskpSetPioStatusRegC(0, STAT_CCS_PIO_CMD_OK, DSKP_GET_MAPPING, testWbit(dskpData.commandRegC, 15))
 
 	case DSKP_SET_MAPPING:
 		if dskpData.debug {
@@ -258,6 +317,7 @@ func dskpDoPioCommand() {
 			debugPrint(DSKP_LOG, "... ... Mapping Reg A set to %s\n", wordToBinStr(dskpData.commandRegA))
 			debugPrint(DSKP_LOG, "... ... Mapping Reg B set to %s\n", wordToBinStr(dskpData.commandRegB))
 		}
+		dskpSetPioStatusRegC(STAT_XEC_STATE_MAPPED, STAT_CCS_PIO_CMD_OK, DSKP_SET_MAPPING, testWbit(dskpData.commandRegC, 15))
 
 	case DSKP_GET_INTERFACE:
 		addr = dg_phys_addr(dskpData.commandRegA)<<16 | dg_phys_addr(dskpData.commandRegB)
@@ -271,6 +331,7 @@ func dskpDoPioCommand() {
 				debugPrint(DSKP_LOG, "... ... Word %d: %s\n", w, wordToBinStr(dskpData.intInfBlock[w]))
 			}
 		}
+		dskpSetPioStatusRegC(0, STAT_CCS_PIO_CMD_OK, DSKP_GET_INTERFACE, testWbit(dskpData.commandRegC, 15))
 
 	case DSKP_SET_INTERFACE:
 		addr = dg_phys_addr(dskpData.commandRegA)<<16 | dg_phys_addr(dskpData.commandRegB)
@@ -285,6 +346,12 @@ func dskpDoPioCommand() {
 		dskpData.intInfBlock[w] = memReadWord(addr + w)
 		w = 7
 		dskpData.intInfBlock[w] = memReadWord(addr + w)
+		if dskpData.debug {
+			debugPrint(DSKP_LOG, "... ... Word 5: %s\n", wordToBinStr(dskpData.intInfBlock[5]))
+			debugPrint(DSKP_LOG, "... ... Word 6: %s\n", wordToBinStr(dskpData.intInfBlock[6]))
+			debugPrint(DSKP_LOG, "... ... Word 7: %s\n", wordToBinStr(dskpData.intInfBlock[7]))
+		}
+		dskpSetPioStatusRegC(0, STAT_CCS_PIO_CMD_OK, DSKP_SET_INTERFACE, testWbit(dskpData.commandRegC, 15))
 
 	case DSKP_GET_UNIT:
 		addr = dg_phys_addr(dskpData.commandRegA)<<16 | dg_phys_addr(dskpData.commandRegB)
@@ -298,6 +365,7 @@ func dskpDoPioCommand() {
 				debugPrint(DSKP_LOG, "... ... Word %d: %s\n", w, wordToBinStr(dskpData.unitInfBlock[w]))
 			}
 		}
+		dskpSetPioStatusRegC(0, STAT_CCS_PIO_CMD_OK, DSKP_GET_UNIT, testWbit(dskpData.commandRegC, 15))
 
 	case DSKP_SET_UNIT:
 		addr = dg_phys_addr(dskpData.commandRegA)<<16 | dg_phys_addr(dskpData.commandRegB)
@@ -308,6 +376,10 @@ func dskpDoPioCommand() {
 		// only the first word is writable according to p.2-16
 		// TODO check no active CBs first
 		dskpData.unitInfBlock[0] = memReadWord(addr)
+		dskpSetPioStatusRegC(0, STAT_CCS_PIO_CMD_OK, DSKP_SET_UNIT, testWbit(dskpData.commandRegC, 15))
+		if dskpData.debug {
+			debugPrint(DSKP_LOG, "... ... Overwrote word 0 of UIB with: %s\n", wordToBinStr(dskpData.unitInfBlock[0]))
+		}
 
 	case DSKP_RESET:
 		dskpReset()
@@ -320,6 +392,11 @@ func dskpDoPioCommand() {
 		}
 		dskpData.ctrlInfBlock[0] = memReadWord(addr)
 		dskpData.ctrlInfBlock[1] = memReadWord(addr + 1)
+		dskpSetPioStatusRegC(0, STAT_CCS_PIO_CMD_OK, DSKP_SET_CONTROLLER, testWbit(dskpData.commandRegC, 15))
+		if dskpData.debug {
+			debugPrint(DSKP_LOG, "... ... Word 0: %s\n", wordToBinStr(dskpData.ctrlInfBlock[0]))
+			debugPrint(DSKP_LOG, "... ... Word 1: %s\n", wordToBinStr(dskpData.ctrlInfBlock[1]))
+		}
 
 	case DSKP_START_LIST:
 		addr = dg_phys_addr(dskpData.commandRegA)<<16 | dg_phys_addr(dskpData.commandRegB)
@@ -331,6 +408,7 @@ func dskpDoPioCommand() {
 		dskpProcessCB(addr)
 		dskpData.statusRegA = dwordGetUpperWord(dg_dword(addr)) // return address of 1st CB processed
 		dskpData.statusRegB = dwordGetLowerWord(dg_dword(addr))
+		//dskpSetPioStatusRegC(0, STAT_CCS_PIO_CMD_OK, DSKP_START_LIST, testWbit(dskpData.commandRegC, 15))
 
 	default:
 		log.Panicf("DSKP command %d not yet implemented\n", pioCmd)
@@ -361,17 +439,20 @@ func dskpHandleFlag(f byte) {
 		dskpDoPioCommand()
 		busSetBusy(DEV_DSKP, false)
 		busSetDone(DEV_DSKP, true)
+
 	case 'C':
 		if dskpData.debug {
 			debugPrint(DSKP_LOG, "... C flag set, clearing DONE flag\n")
 		}
 		busSetDone(DEV_DSKP, false)
 		// TODO clear pending interrupt
+
 	case 'P':
 		if dskpData.debug {
 			debugPrint(DSKP_LOG, "... P flag set\n")
 		}
 		log.Fatalln("P flag not yet implemented in DSKP")
+
 	default:
 		// no/empty flag - nothing to do
 	}
@@ -385,6 +466,7 @@ func dskpPositionDiskImage(sectorNum dg_dword) {
 		log.Fatalln("DSKP could not position disk image")
 	}
 	// TODO Set C/H/S???
+	dskpData.sectorNo = sectorNum
 }
 
 func dskpProcessCB(addr dg_phys_addr) {
@@ -424,14 +506,17 @@ func dskpProcessCB(addr dg_phys_addr) {
 		dskpData.cylinder = 0
 		dskpData.head = 0
 		dskpData.sector = 0
+		dskpData.sectorNo = 0
 		dskpData.imageFile.Seek(0, 0)
 		cb[DSKP_CB_ERR_STATUS] = 0
 		cb[DSKP_CB_UNIT_STATUS] = 1 << 13 // b0010000000000000; // Ready
-		dskpData.statusRegC = 5           // 005;     Not full, no errors
-		cb[DSKP_CB_CB_STATUS] = 1         // finally, set Done bit
+		//dskpData.statusRegC = 5           // 005;     Not full, no errors
+		dskpSetAsyncStatusRegC(STAT_XEC_STATE_MAPPED, STAT_ASYNC_NO_ERRORS)
+		cb[DSKP_CB_CB_STATUS] = 1 // finally, set Done bit
 
 	case DSKP_CB_OP_READ:
 		sectorNumber = (dg_dword(cb[DSKP_CB_DEV_ADDR_HIGH]) << 16) | dg_dword(cb[DSKP_CB_DEV_ADDR_LOW])
+		dskpData.sectorNo = sectorNumber
 		if testWbit(cb[DSKP_CB_PAGENO_LIST_ADDR_HIGH], 0) {
 			// logical premapped host address
 			physTransfers = false
@@ -461,6 +546,7 @@ func dskpProcessCB(addr dg_phys_addr) {
 
 	case DSKP_CB_OP_WRITE:
 		sectorNumber = (dg_dword(cb[DSKP_CB_DEV_ADDR_HIGH]) << 16) | dg_dword(cb[DSKP_CB_DEV_ADDR_LOW])
+		dskpData.sectorNo = sectorNumber
 		if testWbit(cb[DSKP_CB_PAGENO_LIST_ADDR_HIGH], 0) {
 			// logical premapped host address
 			physTransfers = false
@@ -508,7 +594,7 @@ func dskpReset() {
 	dskpResetCtrlrInfBlock()
 	dskpResetUnitInfBlock()
 	dskpData.statusRegB = 0
-	dskpData.statusRegC = STAT_XEC_STATE_RESET_DONE << 12
+	dskpSetPioStatusRegC(STAT_XEC_STATE_RESET_DONE, 0, 0, testWbit(dskpData.commandRegC, 15))
 	if dskpData.debug {
 		debugPrint(DSKP_LOG, "DSKP Reset via call to dskpReset()\n")
 	}
@@ -542,10 +628,24 @@ func dskpResetMapping() {
 func dskpResetUnitInfBlock() {
 	var logicalBlocks dg_dword = DSKP_LOGICAL_BLOCKS
 	dskpData.unitInfBlock[0] = 0
-	dskpData.unitInfBlock[1] = 9<<8 | DSKP_UCODE_REV
+	dskpData.unitInfBlock[1] = 9<<12 | DSKP_UCODE_REV
 	dskpData.unitInfBlock[2] = dwordGetUpperWord(logicalBlocks)
 	dskpData.unitInfBlock[3] = dwordGetLowerWord(logicalBlocks)
 	dskpData.unitInfBlock[4] = DSKP_BYTES_PER_SECTOR
 	dskpData.unitInfBlock[5] = DSKP_USER_CYLINDERS
 	dskpData.unitInfBlock[6] = ((DSKP_SURFACES_PER_DISK * DSKP_HEADS_PER_SURFACE) << 8) | (0x00ff & DSKP_SECTORS_PER_TRACK)
+}
+
+func dskpSetAsyncStatusRegC(stat byte, asyncIntCode dg_word) {
+	dskpData.statusRegC = dg_word(stat) << 12
+	dskpData.statusRegC |= (asyncIntCode & 0x03ff)
+}
+
+func dskpSetPioStatusRegC(stat byte, ccs byte, cmdEcho dg_word, rr bool) {
+	dskpData.statusRegC = dg_word(stat) << 12
+	dskpData.statusRegC |= (dg_word(ccs) & 3) << 10
+	dskpData.statusRegC |= (cmdEcho & 0x01ff) << 1
+	if rr {
+		dskpData.statusRegC |= 1
+	}
 }

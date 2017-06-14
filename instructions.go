@@ -235,7 +235,7 @@ func instructionsInit() {
 	instructionSet["NADI"] = instrChars{0x8599, 0x87ff, IMM_ONEACC_FMT, 1, EAGLE_OP}
 	instructionSet["NCLID"] = instrChars{0x683f, 0xffff, UNIQUE_1_WORD_FMT, 1, EAGLE_IO}
 	instructionSet["NEG"] = instrChars{0x8100, 0x8700, NOVA_TWOACC_MULT_OP_FMT, 1, NOVA_OP}
-	instructionSet["NIO"] = instrChars{0x6000, 0xff00, IO_FLAGS_DEV_FMT, 1, EAGLE_IO}
+	instructionSet["NIO"] = instrChars{0x6000, 0xff00, IO_FLAGS_DEV_FMT, 1, NOVA_IO}
 	instructionSet["NLDAI"] = instrChars{0xc629, 0xe7ff, ONEACC_2_WORD_FMT, 2, EAGLE_OP}
 	instructionSet["NMUL"] = instrChars{0x8069, 0x87ff, TWOACC_1_WORD_FMT, 1, EAGLE_OP}
 	instructionSet["NSBI"] = instrChars{0x85a9, 0x87ff, IMM_ONEACC_FMT, 1, EAGLE_OP}

@@ -12,9 +12,10 @@ import (
 	//"mvemg/tto"
 )
 
-import "github.com/pkg/profile"
+// import "github.com/pkg/profile"
 
 const (
+	STAT_PORT   = "9999"
 	SCP_PORT    = "10000"
 	SCP_BUFSIZE = 135
 
@@ -38,12 +39,15 @@ var p interface {
 }
 
 var (
-	breakpoints []dg_phys_addr
+	breakpoints   []dg_phys_addr
+	cpuStatsChan  chan cpuStatT
+	dpfStatsChan  chan dpfStatT
+	dskpStatsChan chan dskpStatT
 )
 
 func main() {
-	p = profile.Start(profile.ProfilePath("."))
-	defer p.Stop()
+	//p = profile.Start(profile.ProfilePath("."))
+	//defer p.Stop()
 	//	debugLogsInit()
 	log.Println("INFO: MV/Em will not start until console connected")
 
@@ -63,6 +67,10 @@ func main() {
 			log.Println("ERROR: Could not accept on console port: ", err.Error())
 			os.Exit(1)
 		}
+
+		cpuStatsChan = make(chan cpuStatT, 3)
+		dpfStatsChan = make(chan dpfStatT, 3)
+		dskpStatsChan = make(chan dskpStatT, 3)
 
 		/***
 		 *  The console is connected, now we can set up our emulated machine
@@ -84,14 +92,16 @@ func main() {
 		ttoInit(conn)
 		ttiInit(conn)
 		instructionsInit()
-		cpuInit()
+		cpuInit(cpuStatsChan)
 		mtbInit()
-		dpfInit()
-		dskpInit()
+		dpfInit(dpfStatsChan)
+		dskpInit(dskpStatsChan)
 
 		// say hello...
 		ttoPutChar(ASCII_FF)
 		ttoPutStringNL(" *** Welcome to the MV/Emulator - Type HE for help ***")
+
+		go statusCollector(cpuStatsChan, dpfStatsChan, dskpStatsChan)
 
 		// the main SCP/console interaction loop
 		for {
@@ -127,14 +137,14 @@ func scpGetLine() string {
 // Exit cleanly, tidying up as much as we can
 func cleanExit() {
 	ttoPutNLString(" *** MV/Emulator stopping at user request ***")
-	p.Stop()
+	//p.Stop()
 	debugLogsDump()
 	os.Exit(0)
 }
 
 func doCommand(cmd string) {
 	words := strings.Split(strings.TrimSpace(cmd), " ")
-	debugPrint(DEBUG_LOG,"INFO: doCommand parsed command as <%s>\n", words[0])
+	debugPrint(DEBUG_LOG, "INFO: doCommand parsed command as <%s>\n", words[0])
 
 	switch words[0] {
 	// SCP-like commands
@@ -187,7 +197,7 @@ func attach(cmd []string) {
 		ttoPutNLString(" *** ATT command requires arguments: <dev> and <image> ***")
 		return
 	}
-	debugPrint(DEBUG_LOG,"INFO: Attach called  with parms <%s> <%s>\n", cmd[1], cmd[2])
+	debugPrint(DEBUG_LOG, "INFO: Attach called  with parms <%s> <%s>\n", cmd[1], cmd[2])
 	switch cmd[1] {
 	case "MTB":
 		if mtbAttach(0, cmd[2]) {
@@ -220,7 +230,7 @@ func boot(cmd []string) {
 		ttoPutNLString(" *** B command requires <devicenumber> ***")
 		return
 	}
-	debugPrint(DEBUG_LOG,"INFO: Boot called  with parm <%s>\n", cmd[1])
+	debugPrint(DEBUG_LOG, "INFO: Boot called  with parm <%s>\n", cmd[1])
 	dev, err := strconv.ParseInt(cmd[1], 8, 16) // FIXME Input Radix used here
 	devNum := int(dev)
 	if err != nil {
@@ -351,7 +361,7 @@ func doScript(cmd []string) {
 	scriptFile, err := os.Open(cmd[1])
 	if err != nil {
 		ttoPutNLString(" *** Could not open MV/Em command script ***")
-		debugPrint(DEBUG_LOG,"WARN: Could not open MV/Em command script <%s>\n", cmd[1])
+		debugPrint(DEBUG_LOG, "WARN: Could not open MV/Em command script <%s>\n", cmd[1])
 		return
 	}
 	defer scriptFile.Close()
@@ -461,7 +471,7 @@ func run() {
 			errDetail = " *** Error: could not decode instruction ***"
 			break
 		}
-		debugPrint(DEBUG_LOG,"%s\t\t%s\n", iPtr.disassembly, cpuCompactPrintableStatus())
+		debugPrint(DEBUG_LOG, "%s\t\t%s\n", iPtr.disassembly, cpuCompactPrintableStatus())
 
 		// EXECUTE
 		if !cpuExecute(iPtr) {
@@ -493,7 +503,7 @@ func run() {
 	// run halted due to either error or console escape
 	log.Println(errDetail)
 	ttoPutNLString(errDetail)
-	debugPrint(DEBUG_LOG,"%s\n", cpuPrintableStatus())
+	debugPrint(DEBUG_LOG, "%s\n", cpuPrintableStatus())
 	ttoPutString(cpuPrintableStatus())
 
 	errDetail = " *** CPU halting ***"
