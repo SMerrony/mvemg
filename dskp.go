@@ -27,7 +27,7 @@ const (
 	DSKP_CTRLR_INF_BLK_SIZE = 2
 	DSKP_UNIT_INF_BLK_SIZE  = 7
 	DSKP_CB_MAX_SIZE        = 21
-	DSKP_CB_MIN_SIZE        = 10 // 12 // Was 10
+	DSKP_CB_MIN_SIZE        = 10 //12 // Was 10
 
 	STAT_XEC_STATE_RESETTING  = 0x00
 	STAT_XEC_STATE_RESET_DONE = 0x01
@@ -238,13 +238,13 @@ func dskpDataIn(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
 	switch abc {
 	case 'A':
 		cpuPtr.ac[iPtr.acd] = dg_dword(dskpData.statusRegA)
-		debugPrint(DSKP_LOG, "DIA [Read Status A] returning %s for DRV=%d\n", wordToBinStr(dskpData.statusRegA), 0)
+		debugPrint(DSKP_LOG, "DIA [Read Status A] returning %s for DRV=%d, PC: %d\n", wordToBinStr(dskpData.statusRegA), 0, cpuPtr.pc)
 	case 'B':
 		cpuPtr.ac[iPtr.acd] = dg_dword(dskpData.statusRegB)
-		debugPrint(DSKP_LOG, "DIB [Read Status B] returning %s for DRV=%d\n", wordToBinStr(dskpData.statusRegB), 0)
+		debugPrint(DSKP_LOG, "DIB [Read Status B] returning %s for DRV=%d, PC: %d\n", wordToBinStr(dskpData.statusRegB), 0, cpuPtr.pc)
 	case 'C':
 		cpuPtr.ac[iPtr.acd] = dg_dword(dskpData.statusRegC)
-		debugPrint(DSKP_LOG, "DIC [Read Status C] returning %s for DRV=%d\n", wordToBinStr(dskpData.statusRegC), 0)
+		debugPrint(DSKP_LOG, "DIC [Read Status C] returning %s for DRV=%d, PC: %d\n", wordToBinStr(dskpData.statusRegC), 0, cpuPtr.pc)
 	}
 	dskpHandleFlag(iPtr.f)
 }
@@ -446,6 +446,10 @@ func dskpHandleFlag(f byte) {
 		}
 		busSetDone(DEV_DSKP, false)
 		// TODO clear pending interrupt
+		dskpSetPioStatusRegC(STAT_XEC_STATE_MAPPED,
+			STAT_CCS_PIO_CMD_OK,
+			dg_word(dskpExtractPioCommand(dskpData.commandRegC)),
+			testWbit(dskpData.commandRegC, 15))
 
 	case 'P':
 		if dskpData.debug {
@@ -472,7 +476,7 @@ func dskpPositionDiskImage(sectorNum dg_dword) {
 func dskpProcessCB(addr dg_phys_addr) {
 	var (
 		cb                 [DSKP_CB_MAX_SIZE]dg_word
-		w                  int
+		w, cbLength        int
 		nextCB             dg_phys_addr
 		sect, sectorNumber dg_dword
 		physTransfers      bool
@@ -480,17 +484,18 @@ func dskpProcessCB(addr dg_phys_addr) {
 		buffer             = make([]byte, DSKP_BYTES_PER_SECTOR)
 		tmpWd              dg_word
 	)
-
+	cbLength = DSKP_CB_MIN_SIZE + dskpGetCBextendedStatusSize()
+	if dskpData.debug {
+		debugPrint(DSKP_LOG, "... Processing CB, extended status size is: %d\n", dskpGetCBextendedStatusSize())
+	}
 	// copy CB contents from host memory
-	for w = 0; w < DSKP_CB_MIN_SIZE; w++ {
+	for w = 0; w < cbLength; w++ {
 		cb[w] = memReadWord(addr + dg_phys_addr(w))
 		if dskpData.debug {
 			debugPrint(DSKP_LOG, "... CB[%d]: %d\n", w, cb[w])
 		}
 	}
-	for w = DSKP_CB_MIN_SIZE; w < DSKP_CB_MAX_SIZE; w++ {
-		cb[w] = 0
-	}
+
 	opCode := cb[DSKP_CB_INA_FLAGS_OPCODE] & 0x03ff
 	nextCB = dg_phys_addr(cb[DSKP_CB_LINK_ADDR_HIGH])<<16 | dg_phys_addr(cb[DSKP_CB_LINK_ADDR_LOW])
 	if dskpData.debug {
@@ -508,11 +513,16 @@ func dskpProcessCB(addr dg_phys_addr) {
 		dskpData.sector = 0
 		dskpData.sectorNo = 0
 		dskpData.imageFile.Seek(0, 0)
-		cb[DSKP_CB_ERR_STATUS] = 0
-		cb[DSKP_CB_UNIT_STATUS] = 1 << 13 // b0010000000000000; // Ready
-		//dskpData.statusRegC = 5           // 005;     Not full, no errors
+		if cbLength >= DSKP_CB_ERR_STATUS+1 {
+			cb[DSKP_CB_ERR_STATUS] = 0
+		}
+		if cbLength >= DSKP_CB_UNIT_STATUS+1 {
+			cb[DSKP_CB_UNIT_STATUS] = 1 << 13 // b0010000000000000; // Ready
+		}
+		if cbLength >= DSKP_CB_CB_STATUS+1 {
+			cb[DSKP_CB_CB_STATUS] = 1 // finally, set Done bit
+		}
 		dskpSetAsyncStatusRegC(STAT_XEC_STATE_MAPPED, STAT_ASYNC_NO_ERRORS)
-		cb[DSKP_CB_CB_STATUS] = 1 // finally, set Done bit
 
 	case DSKP_CB_OP_READ:
 		sectorNumber = (dg_dword(cb[DSKP_CB_DEV_ADDR_HIGH]) << 16) | dg_dword(cb[DSKP_CB_DEV_ADDR_LOW])
@@ -527,7 +537,7 @@ func dskpProcessCB(addr dg_phys_addr) {
 		}
 		if dskpData.debug {
 			debugPrint(DSKP_LOG, "... .. CB READ command, SECCNT: %d\n", cb[DSKP_CB_TXFER_COUNT])
-			debugPrint(DSKP_LOG, "... .. .. .... to sector:       %d\n", sectorNumber)
+			debugPrint(DSKP_LOG, "... .. .. .... from sector:     %d\n", sectorNumber)
 			debugPrint(DSKP_LOG, "... .. .. .... from phys addr:  %d\n", physAddr)
 			debugPrint(DSKP_LOG, "... .. .. .... physical txfer?: %d\n", boolToInt(physTransfers))
 		}
@@ -539,10 +549,17 @@ func dskpProcessCB(addr dg_phys_addr) {
 				memWriteWordBmcChan(physAddr+(dg_phys_addr(sect)*DSKP_WORDS_PER_SECTOR)+dg_phys_addr(w), tmpWd)
 			}
 		}
-		cb[DSKP_CB_ERR_STATUS] = 0
-		cb[DSKP_CB_UNIT_STATUS] = 1 << 13 // Ready
-		dskpData.statusRegC = 5           // not full, no errrors
-		cb[DSKP_CB_CB_STATUS] = 1         // finally, set done bit
+		if cbLength >= DSKP_CB_ERR_STATUS+1 {
+			cb[DSKP_CB_ERR_STATUS] = 0
+		}
+		if cbLength >= DSKP_CB_UNIT_STATUS+1 {
+			cb[DSKP_CB_UNIT_STATUS] = 1 << 13 // b0010000000000000; // Ready
+		}
+		if cbLength >= DSKP_CB_CB_STATUS+1 {
+			cb[DSKP_CB_CB_STATUS] = 1 // finally, set Done bit
+		}
+		//dskpSetAsyncStatusRegC(STAT_XEC_STATE_MAPPED, STAT_ASYNC_NO_ERRORS)
+		dskpSetAsyncStatusRegC(0, STAT_ASYNC_NO_ERRORS)
 
 	case DSKP_CB_OP_WRITE:
 		sectorNumber = (dg_dword(cb[DSKP_CB_DEV_ADDR_HIGH]) << 16) | dg_dword(cb[DSKP_CB_DEV_ADDR_LOW])
@@ -570,16 +587,23 @@ func dskpProcessCB(addr dg_phys_addr) {
 			}
 			dskpData.imageFile.Write(buffer)
 		}
-		cb[DSKP_CB_ERR_STATUS] = 0
-		cb[DSKP_CB_UNIT_STATUS] = 1 << 13 // Ready
-		dskpData.statusRegC = 5           // not full, no errrors
-		cb[DSKP_CB_CB_STATUS] = 1         // finally, set done bit
+		if cbLength >= DSKP_CB_ERR_STATUS+1 {
+			cb[DSKP_CB_ERR_STATUS] = 0
+		}
+		if cbLength >= DSKP_CB_UNIT_STATUS+1 {
+			cb[DSKP_CB_UNIT_STATUS] = 1 << 13 // b0010000000000000; // Ready
+		}
+		if cbLength >= DSKP_CB_CB_STATUS+1 {
+			cb[DSKP_CB_CB_STATUS] = 1 // finally, set Done bit
+		}
+		//dskpSetAsyncStatusRegC(STAT_XEC_STATE_MAPPED, STAT_ASYNC_NO_ERRORS)
+		dskpSetAsyncStatusRegC(0, STAT_ASYNC_NO_ERRORS)
 
 	default:
 		log.Fatalf("DSKP CB Command %d not yet implemented\n", opCode)
 	}
 	// write back CB
-	for w = 0; w < (DSKP_CB_MIN_SIZE + dskpGetCBextendedStatusSize()); w++ {
+	for w = 0; w < cbLength; w++ {
 		memWriteWordBmcChan(addr+dg_phys_addr(w), cb[w])
 	}
 	// chain to next CB?
@@ -594,7 +618,7 @@ func dskpReset() {
 	dskpResetCtrlrInfBlock()
 	dskpResetUnitInfBlock()
 	dskpData.statusRegB = 0
-	dskpSetPioStatusRegC(STAT_XEC_STATE_RESET_DONE, 0, 0, testWbit(dskpData.commandRegC, 15))
+	dskpSetPioStatusRegC(STAT_XEC_STATE_RESET_DONE, 0, DSKP_RESET, testWbit(dskpData.commandRegC, 15))
 	if dskpData.debug {
 		debugPrint(DSKP_LOG, "DSKP Reset via call to dskpReset()\n")
 	}
