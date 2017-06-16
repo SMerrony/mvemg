@@ -26,12 +26,15 @@ type Cpu struct {
 	consoleEsc bool
 }
 
+// cpuStatT defines the data we will send to the statusCollector monitor
 type cpuStatT struct {
 	pc                      dg_phys_addr
 	ac                      [4]dg_dword
 	carry, atu, ion, pfflag bool
 	instrCount              uint64
 }
+
+const CPU_STAT_PERIOD_MS = 100 // i.e. we send stats every 1/10th of a second
 
 var (
 	cpu Cpu
@@ -106,6 +109,6 @@ func cpuStatSender(sChan chan cpuStatT) {
 		case sChan <- stats:
 		default:
 		}
-		time.Sleep(time.Millisecond * 100)
+		time.Sleep(time.Millisecond * CPU_STAT_PERIOD_MS)
 	}
 }

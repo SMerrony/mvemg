@@ -40,7 +40,9 @@ func eagleMemRef(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		} else {
 			src := dg_phys_addr(cpuPtr.ac[2])
 			dest := dg_phys_addr(cpuPtr.ac[3])
-			debugPrint(DEBUG_LOG,"DEBUG: WBLM moving %d words from %d to %d\n", numWds, src, dest)
+			if debugLogging {
+				debugPrint(DEBUG_LOG, "DEBUG: WBLM moving %d words from %d to %d\n", numWds, src, dest)
+			}
 			for numWds != 0 {
 				memWriteWord(dest, memReadWord(src))
 				numWds -= order
@@ -90,7 +92,7 @@ func eagleMemRef(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		memWriteDWord(addr, dwd)
 
 	default:
-		debugPrint(DEBUG_LOG,"ERROR: EAGLE_MEMREF instruction <%s> not yet implemented\n", iPtr.mnemonic)
+		log.Fatalf("ERROR: EAGLE_MEMREF instruction <%s> not yet implemented\n", iPtr.mnemonic)
 		return false
 	}
 

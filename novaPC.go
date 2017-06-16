@@ -1,6 +1,8 @@
 // novaPC.go
 package main
 
+import "log"
+
 func novaPC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 	switch iPtr.mnemonic {
 
@@ -14,7 +16,7 @@ func novaPC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		cpuPtr.ac[3] = tmpPC
 
 	default:
-		debugPrint(DEBUG_LOG, "ERROR: NOVA_PC instruction <%s> not yet implemented\n", iPtr.mnemonic)
+		log.Fatalf("ERROR: NOVA_PC instruction <%s> not yet implemented\n", iPtr.mnemonic)
 		return false
 	}
 	return true

@@ -1,6 +1,8 @@
 // eclipseStack.go
 package main
 
+import "log"
+
 func eclipseStack(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 	var (
 		addr                dg_phys_addr
@@ -19,7 +21,9 @@ func eclipseStack(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 			first += 4
 		}
 		for thisAc = first; thisAc >= last; thisAc-- {
-			debugPrint(DEBUG_LOG, "... popping AC%d\n", acsUp[thisAc])
+			if debugLogging {
+				debugPrint(DEBUG_LOG, "... popping AC%d\n", acsUp[thisAc])
+			}
 			cpuPtr.ac[acsUp[thisAc]] = dg_dword(nsPop(0))
 		}
 
@@ -35,7 +39,9 @@ func eclipseStack(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 			last += 4
 		}
 		for thisAc = first; thisAc <= last; thisAc++ {
-			debugPrint(DEBUG_LOG, "... pushing AC%d\n", acsUp[thisAc])
+			if debugLogging {
+				debugPrint(DEBUG_LOG, "... pushing AC%d\n", acsUp[thisAc])
+			}
 			nsPush(0, dwordGetLowerWord(cpuPtr.ac[acsUp[thisAc]]))
 		}
 
@@ -98,7 +104,7 @@ func eclipseStack(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		//cpuPtr.ac[3] = dg_dword(nspSav + 5)
 
 	default:
-		debugPrint(DEBUG_LOG, "ERROR: ECLIPSE_STACK instruction <%s> not yet implemented\n", iPtr.mnemonic)
+		log.Fatalf("ERROR: ECLIPSE_STACK instruction <%s> not yet implemented\n", iPtr.mnemonic)
 		return false
 	}
 

@@ -2,7 +2,6 @@
 package main
 
 import (
-	//	"fmt"
 	"log"
 )
 
@@ -51,15 +50,19 @@ func eagleIO(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		if cpuPtr.ac[1] == 0 {
 			mapRegAddr = int(cpuPtr.ac[0] & 0x7ff)
 			wAddr = dg_phys_addr(cpuPtr.ac[2])
-			debugPrint(DEBUG_LOG, "WLMP called with AC1 = 0 - MapRegAddr was %d, 1st DWord was %d\n",
-				mapRegAddr, memReadDWord(wAddr))
+			if debugLogging {
+				debugPrint(DEBUG_LOG, "WLMP called with AC1 = 0 - MapRegAddr was %d, 1st DWord was %d\n",
+					mapRegAddr, memReadDWord(wAddr))
+			}
 			bmcdchWriteSlot(mapRegAddr, memReadDWord(wAddr))
 			cpuPtr.ac[0]++
 			cpuPtr.ac[2] += 2
 		} else {
 			for {
 				bmcdchWriteSlot(int(cpuPtr.ac[0]&0x07ff), memReadDWord(dg_phys_addr(cpuPtr.ac[2])))
-				debugPrint(DEBUG_LOG, "WLMP writing slot %d\n", 1+(cpuPtr.ac[0]&0x7ff))
+				if debugLogging {
+					debugPrint(DEBUG_LOG, "WLMP writing slot %d\n", 1+(cpuPtr.ac[0]&0x7ff))
+				}
 				cpuPtr.ac[2] += 2
 				cpuPtr.ac[0]++
 				cpuPtr.ac[1]--
@@ -70,7 +73,7 @@ func eagleIO(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		}
 
 	default:
-		debugPrint(DEBUG_LOG, "ERROR: EAGLE_IO instruction <%s> not yet implemented\n", iPtr.mnemonic)
+		log.Fatalf("ERROR: EAGLE_IO instruction <%s> not yet implemented\n", iPtr.mnemonic)
 		return false
 	}
 

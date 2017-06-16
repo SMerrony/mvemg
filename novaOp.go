@@ -77,8 +77,7 @@ func novaOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		}
 
 	default:
-		debugPrint(DEBUG_LOG,"ERROR: NOVA_MEMREF instruction <%s> not yet implemented\n", iPtr.mnemonic)
-		return false
+		log.Fatalf("ERROR: NOVA_MEMREF instruction <%s> not yet implemented\n", iPtr.mnemonic)
 	}
 
 	// shift if required

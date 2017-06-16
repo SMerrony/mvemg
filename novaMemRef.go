@@ -1,6 +1,8 @@
 // novaMemRef.go
 package main
 
+import "log"
+
 func novaMemRef(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 
 	var shifter dg_word
@@ -37,7 +39,7 @@ func novaMemRef(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		memWriteWord(effAddr, shifter)
 
 	default:
-		debugPrint(DEBUG_LOG, "ERROR: NOVA_MEMREF instruction <%s> not yet implemented\n", iPtr.mnemonic)
+		log.Fatalf("ERROR: NOVA_MEMREF instruction <%s> not yet implemented\n", iPtr.mnemonic)
 		return false
 	}
 	cpuPtr.pc++

@@ -9,12 +9,19 @@ import (
 )
 
 const (
-	STAT_CPU_ROW  = 2
-	STAT_CPU_ROW2 = 4
-	STAT_DPF_ROW  = 6
-	STAT_DSKP_ROW = 8
+	// define which screen row each of the monotored data appear on
+	STAT_CPU_ROW  = 3
+	STAT_CPU_ROW2 = 5
+	STAT_DPF_ROW  = 7
+	STAT_DSKP_ROW = 9
 )
 
+// StatusCollector maintains a near real-time status screen available on STAT_PORT.
+// The screen uses DG DASHER control codes for formatting, so a DASHER terminal emulator
+// should be attached to it for good results.
+// The function (which is intended to be run as a goroutine) listens for status updates
+// from known senders and upon receiving an update refreshes the display of that status
+// on the monitor page.
 func statusCollector(
 	cpuChan chan cpuStatT,
 	dpfChan chan dpfStatT,
@@ -42,9 +49,11 @@ func statusCollector(
 			os.Exit(1)
 		}
 
-		statusSendString(conn, fmt.Sprintf("%cMV/Em Status", DASHER_ERASE_PAGE))
+		statusSendString(conn, fmt.Sprintf("%c                        MV/Em Status\012", DASHER_ERASE_PAGE))
+		statusSendString(conn, "                        ============")
 
 		for {
+			// blocking wait for a status update to arrive
 			select {
 			case cpuStats = <-cpuChan:
 				iCount = cpuStats.instrCount - lastIcount

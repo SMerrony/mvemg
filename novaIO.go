@@ -61,7 +61,9 @@ func novaIO(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 			cpu.ion = false
 			break
 		}
-		debugPrint(DEBUG_LOG, "Sending NIO to device #%d.\n", iPtr.ioDev)
+		if debugLogging {
+			debugPrint(DEBUG_LOG, "Sending NIO to device #%d.\n", iPtr.ioDev)
+		}
 		busDataOut(cpuPtr, iPtr, 'N') // DUMMY FLAG
 
 	case "PRTSEL":
@@ -79,27 +81,35 @@ func novaIO(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		case "BN":
 			if busy {
 				cpuPtr.pc++
-				debugPrint(DEBUG_LOG, "... skipping")
+				if debugLogging {
+					debugPrint(DEBUG_LOG, "... skipping")
+				}
 			}
 		case "BZ":
 			if !busy {
 				cpuPtr.pc++
-				debugPrint(DEBUG_LOG, "... skipping")
+				if debugLogging {
+					debugPrint(DEBUG_LOG, "... skipping")
+				}
 			}
 		case "DN":
 			if done {
 				cpuPtr.pc++
-				debugPrint(DEBUG_LOG, "... skipping")
+				if debugLogging {
+					debugPrint(DEBUG_LOG, "... skipping")
+				}
 			}
 		case "DZ":
 			if !done {
 				cpuPtr.pc++
-				debugPrint(DEBUG_LOG, "... skipping")
+				if debugLogging {
+					debugPrint(DEBUG_LOG, "... skipping")
+				}
 			}
 		}
 
 	default:
-		debugPrint(DEBUG_LOG, "ERROR: NOVA_IO instruction <%s> not yet implemented\n", iPtr.mnemonic)
+		log.Fatalf("ERROR: NOVA_IO instruction <%s> not yet implemented\n", iPtr.mnemonic)
 		return false
 	}
 

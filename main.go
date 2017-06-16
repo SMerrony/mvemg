@@ -39,6 +39,7 @@ var p interface {
 }
 
 var (
+	debugLogging  bool = true
 	breakpoints   []dg_phys_addr
 	cpuStatsChan  chan cpuStatT
 	dpfStatsChan  chan dpfStatT
@@ -101,13 +102,14 @@ func main() {
 		ttoPutChar(ASCII_FF)
 		ttoPutStringNL(" *** Welcome to the MV/Emulator - Type HE for help ***")
 
+		// kick off the status monitor routine
 		go statusCollector(cpuStatsChan, dpfStatsChan, dskpStatsChan)
 
 		// the main SCP/console interaction loop
 		for {
 			ttoPutNLString("SCP-CLI> ")
 			command := scpGetLine()
-			log.Println("INFO: Got SCP command: " + command)
+			//log.Println("INFO: Got SCP command: " + command)
 			doCommand(command)
 		}
 	}
@@ -144,7 +146,9 @@ func cleanExit() {
 
 func doCommand(cmd string) {
 	words := strings.Split(strings.TrimSpace(cmd), " ")
-	debugPrint(DEBUG_LOG, "INFO: doCommand parsed command as <%s>\n", words[0])
+	if debugLogging {
+		debugPrint(DEBUG_LOG, "INFO: doCommand parsed command as <%s>\n", words[0])
+	}
 
 	switch words[0] {
 	// SCP-like commands
@@ -197,7 +201,9 @@ func attach(cmd []string) {
 		ttoPutNLString(" *** ATT command requires arguments: <dev> and <image> ***")
 		return
 	}
-	debugPrint(DEBUG_LOG, "INFO: Attach called  with parms <%s> <%s>\n", cmd[1], cmd[2])
+	if debugLogging {
+		debugPrint(DEBUG_LOG, "INFO: Attach called  with parms <%s> <%s>\n", cmd[1], cmd[2])
+	}
 	switch cmd[1] {
 	case "MTB":
 		if mtbAttach(0, cmd[2]) {
@@ -230,7 +236,9 @@ func boot(cmd []string) {
 		ttoPutNLString(" *** B command requires <devicenumber> ***")
 		return
 	}
-	debugPrint(DEBUG_LOG, "INFO: Boot called  with parm <%s>\n", cmd[1])
+	if debugLogging {
+		debugPrint(DEBUG_LOG, "INFO: Boot called  with parm <%s>\n", cmd[1])
+	}
 	dev, err := strconv.ParseInt(cmd[1], 8, 16) // FIXME Input Radix used here
 	devNum := int(dev)
 	if err != nil {
@@ -361,7 +369,9 @@ func doScript(cmd []string) {
 	scriptFile, err := os.Open(cmd[1])
 	if err != nil {
 		ttoPutNLString(" *** Could not open MV/Em command script ***")
-		debugPrint(DEBUG_LOG, "WARN: Could not open MV/Em command script <%s>\n", cmd[1])
+		if debugLogging {
+			debugPrint(DEBUG_LOG, "WARN: Could not open MV/Em command script <%s>\n", cmd[1])
+		}
 		return
 	}
 	defer scriptFile.Close()
@@ -370,7 +380,6 @@ func doScript(cmd []string) {
 	for scanner.Scan() {
 		doCmd := scanner.Text()
 		if doCmd[0] != '#' {
-			// DebugLog.Printf("doScript read command <%s> from file\n", doCmd)
 			ttoPutNLString(doCmd)
 			doCommand(doCmd)
 		}
@@ -471,7 +480,9 @@ func run() {
 			errDetail = " *** Error: could not decode instruction ***"
 			break
 		}
-		debugPrint(DEBUG_LOG, "%s\t\t%s\n", iPtr.disassembly, cpuCompactPrintableStatus())
+		if debugLogging {
+			debugPrint(DEBUG_LOG, "%s\t\t%s\n", iPtr.disassembly, cpuCompactPrintableStatus())
+		}
 
 		// EXECUTE
 		if !cpuExecute(iPtr) {
@@ -503,14 +514,14 @@ func run() {
 	// run halted due to either error or console escape
 	log.Println(errDetail)
 	ttoPutNLString(errDetail)
-	debugPrint(DEBUG_LOG, "%s\n", cpuPrintableStatus())
+	if debugLogging {
+		debugPrint(DEBUG_LOG, "%s\n", cpuPrintableStatus())
+	}
 	ttoPutString(cpuPrintableStatus())
 
 	errDetail = " *** CPU halting ***"
 	log.Println(errDetail)
 	ttoPutNLString(errDetail)
-
-	//debugLogsDump()
 
 	errDetail = fmt.Sprintf(" *** MV/Em executed %d	 instructions ***", cpu.instrCount)
 	log.Println(errDetail)

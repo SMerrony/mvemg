@@ -1,8 +1,10 @@
 // eaglePC.go
 package main
 
+import "log"
+
 func eaglePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
-	//var addr dg_phys_addr
+
 	var (
 		wd      dg_word
 		tmp32b  dg_dword
@@ -161,7 +163,7 @@ func eaglePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		}
 
 	default:
-		debugPrint(DEBUG_LOG, "ERROR: EAGLE_PC instruction <%s> not yet implemented\n", iPtr.mnemonic)
+		log.Fatalf("ERROR: EAGLE_PC instruction <%s> not yet implemented\n", iPtr.mnemonic)
 		return false
 	}
 

@@ -2,7 +2,6 @@
 package main
 
 import (
-	//"fmt"
 	"log"
 )
 
@@ -36,11 +35,15 @@ func eclipseOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		addr += offset // add unsigned offset
 		bitNum = uint(cpuPtr.ac[iPtr.acd] & 0x000f)
 		wd = memReadWord(addr)
-		debugPrint(DEBUG_LOG, "... BTO Addr: %d, Bit: %d, Before: %s\n",
-			addr, bitNum, wordToBinStr(wd))
+		if debugLogging {
+			debugPrint(DEBUG_LOG, "... BTO Addr: %d, Bit: %d, Before: %s\n",
+				addr, bitNum, wordToBinStr(wd))
+		}
 		wd |= 1 << (15 - bitNum) // set the bit
 		memWriteWord(addr, wd)
-		debugPrint(DEBUG_LOG, "... BTO                     Result: %s\n", wordToBinStr(wd))
+		if debugLogging {
+			debugPrint(DEBUG_LOG, "... BTO                     Result: %s\n", wordToBinStr(wd))
+		}
 
 	case "BTZ":
 		// TODO Handle segment and indirection...
@@ -53,14 +56,18 @@ func eclipseOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		addr += offset // add unsigned offset
 		bitNum = uint(cpuPtr.ac[iPtr.acd] & 0x000f)
 		wd = memReadWord(addr)
-		debugPrint(DEBUG_LOG, "... BTZ Addr: %d, Bit: %d, Before: %s\n", addr, bitNum, wordToBinStr(wd))
+		if debugLogging {
+			debugPrint(DEBUG_LOG, "... BTZ Addr: %d, Bit: %d, Before: %s\n", addr, bitNum, wordToBinStr(wd))
+		}
 		//wd |= 1 << (15 - bitNum) // set the bit
 		if testWbit(wd, int(bitNum)) {
 			wd ^= 1 << (15 - bitNum) // clear the bit
 		}
 		memWriteWord(addr, wd)
-		debugPrint(DEBUG_LOG, "... BTZ                     Result: %s\n",
-			wordToBinStr(wd))
+		if debugLogging {
+			debugPrint(DEBUG_LOG, "... BTZ                     Result: %s\n",
+				wordToBinStr(wd))
+		}
 
 	case "DIV": // unsigned divide
 		uw := dwordGetLowerWord(cpuPtr.ac[0])
@@ -142,7 +149,7 @@ func eclipseOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		cpuPtr.ac[iPtr.acd] = dwd & 0x0ffff
 
 	default:
-		debugPrint(DEBUG_LOG,"ERROR: ECLIPSE_OP instruction <%s> not yet implemented\n", iPtr.mnemonic)
+		log.Fatalf("ERROR: ECLIPSE_OP instruction <%s> not yet implemented\n", iPtr.mnemonic)
 		return false
 	}
 
