@@ -16,10 +16,10 @@ type sbrBits struct {
 
 type Cpu struct {
 	// representations of physical attributes
-	pc                      dg_phys_addr
-	ac                      [4]dg_dword
-	carry, atu, ion, pfflag bool
-	sbr                     [8]sbrBits
+	pc                           dg_phys_addr
+	ac                           [4]dg_dword
+	carry, atu, ion, pfflag, ovk bool
+	sbr                          [8]sbrBits
 
 	// emulator internals
 	instrCount uint64
@@ -87,8 +87,8 @@ func cpuExecute(iPtr *DecodedInstr) bool {
 		rc = eagleMemRef(&cpu, iPtr)
 	case EAGLE_PC:
 		rc = eaglePC(&cpu, iPtr)
-		//	case EAGLE_STACK:
-		//		rc = eagleStack(&cpu, iPtr)
+	case EAGLE_STACK:
+		rc = eagleStack(&cpu, iPtr)
 	default:
 		log.Fatalln("ERROR: Unimplemented instruction type in cpuExecute()")
 	}

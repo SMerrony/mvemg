@@ -8,19 +8,37 @@ import (
 func eagleIO(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 
 	var (
-		word, dataWord dg_word
-		dwd            dg_dword
-		mapRegAddr     int
-		rw             bool
-		wAddr          dg_phys_addr
+		cmd, word, dataWord dg_word
+		dwd                 dg_dword
+		mapRegAddr          int
+		rw                  bool
+		wAddr               dg_phys_addr
 	)
 
 	switch iPtr.mnemonic {
 
 	case "CIO":
+		// TODO handle I/O channel
 		word = dwordGetLowerWord(cpuPtr.ac[iPtr.acs])
 		mapRegAddr = int(word & 0x0fff)
 		rw = testWbit(word, 0)
+		if rw { // write command
+			dataWord = dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
+			bmcdchWriteReg(mapRegAddr, dataWord)
+		} else { // read command
+			dataWord = bmcdchReadReg(mapRegAddr)
+			cpuPtr.ac[iPtr.acd] = dg_dword(dataWord)
+		}
+
+	case "CIOI":
+		// TODO handle I/O channel
+		if iPtr.acs == iPtr.acd {
+			cmd = iPtr.imm16b
+		} else {
+			cmd = iPtr.imm16b | dwordGetLowerWord(cpuPtr.ac[iPtr.acs])
+		}
+		mapRegAddr = int(cmd & 0x0fff)
+		rw = testWbit(cmd, 0)
 		if rw { // write command
 			dataWord = dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
 			bmcdchWriteReg(mapRegAddr, dataWord)

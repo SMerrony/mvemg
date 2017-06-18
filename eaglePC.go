@@ -6,9 +6,9 @@ import "log"
 func eaglePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 
 	var (
-		wd      dg_word
-		tmp32b  dg_dword
-		tmpAddr dg_phys_addr
+		wd          dg_word
+		dwd, tmp32b dg_dword
+		tmpAddr     dg_phys_addr
 	)
 
 	switch iPtr.mnemonic {
@@ -30,6 +30,10 @@ func eaglePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		} else {
 			cpuPtr.pc += 3
 		}
+
+	case "LPSHJ":
+		wsPush(0, dg_dword(cpuPtr.pc)+3)
+		cpuPtr.pc = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
 
 	case "LWDSZ":
 		// unsigned wide decrement and skip if zero
@@ -157,6 +161,17 @@ func eaglePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		wd++
 		memWriteWord(tmpAddr, wd)
 		if wd == 0 {
+			cpuPtr.pc += 3
+		} else {
+			cpuPtr.pc += 2
+		}
+
+	case "XWDSZ":
+		tmpAddr = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
+		dwd = memReadDWord(tmpAddr)
+		dwd--
+		memWriteDWord(tmpAddr, dwd)
+		if dwd == 0 {
 			cpuPtr.pc += 3
 		} else {
 			cpuPtr.pc += 2

@@ -62,6 +62,9 @@ func eagleOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		cpuPtr.ac[iPtr.acd] = dg_dword(int32(cpuPtr.ac[iPtr.acd]) + int32(dwd))
 		// FIXME - handle overflow and carry
 
+	case "WADI":
+		cpuPtr.ac[iPtr.acd] += dg_dword(iPtr.immVal)
+
 	case "WAND":
 		cpuPtr.ac[iPtr.acd] &= cpuPtr.ac[iPtr.acs]
 
@@ -94,6 +97,9 @@ func eagleOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 
 	case "WMOV":
 		cpuPtr.ac[iPtr.acd] = cpuPtr.ac[iPtr.acs]
+
+	case "WNADI":
+		cpuPtr.ac[iPtr.acd] += sexWordToDWord(iPtr.imm16b)
 
 	case "WNEG":
 		cpuPtr.ac[iPtr.acd] = -cpuPtr.ac[iPtr.acs] // FIXME WNEG - handle CARRY/OVR

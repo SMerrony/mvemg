@@ -376,16 +376,17 @@ func dpfDoRWcommand() {
 			}
 			dpfPositionDiskImage()
 			br, err := dpfData.imageFile.Read(buffer)
+
 			if br != DPF_BYTES_PER_SECTOR || err != nil {
 				log.Fatalf("ERROR: unexpected return from DPF Image File Read: %s", err)
 			}
 			for w := 0; w < DPF_WORDS_PER_SECTOR; w++ {
 				wd = (dg_word(buffer[w*2]) << 8) | dg_word(buffer[(w*2)+1])
-				if dpfData.mapEnabled {
-					memWriteWordBmcChan(dg_phys_addr(dpfData.memAddr), wd)
-				} else {
-					memWriteWord(dg_phys_addr(dpfData.memAddr), wd)
-				}
+				//if dpfData.mapEnabled {
+				memWriteWordBmcChan(dg_phys_addr(dpfData.memAddr), wd)
+				//} else {
+				// memWriteWord(dg_phys_addr(dpfData.memAddr), wd)
+				//}
 				dpfData.memAddr++
 			}
 			dpfData.sectAddr++
@@ -398,9 +399,10 @@ func dpfDoRWcommand() {
 		}
 		if dpfData.debug {
 			debugPrint(DPF_LOG, "... .... READ command finished %s\n", dpfPrintableAddr())
-			debugPrint(DPF_LOG, "... .... Last Address: %d\n", dpfData.memAddr)
+			debugPrint(DPF_LOG, "%X", buffer)
+			debugPrint(DPF_LOG, "\n... .... Last Address: %d\n", dpfData.memAddr)
 		}
-		dpfData.rwStatus |= DPF_RWDONE | DPF_DRIVE0DONE
+		dpfData.rwStatus |= DPF_RWDONE //| DPF_DRIVE0DONE
 
 	case DPF_CMD_WRITE:
 		if dpfData.debug {
@@ -415,11 +417,11 @@ func dpfDoRWcommand() {
 			}
 			dpfPositionDiskImage()
 			for w := 0; w < DPF_WORDS_PER_SECTOR; w++ {
-				if dpfData.mapEnabled {
-					wd = memReadWordBmcChan(dg_phys_addr(dpfData.memAddr))
-				} else {
-					wd = memReadWord(dg_phys_addr(dpfData.memAddr))
-				}
+				//if dpfData.mapEnabled {
+				wd = memReadWordBmcChan(dg_phys_addr(dpfData.memAddr))
+				//} else {
+				//wd = memReadWord(dg_phys_addr(dpfData.memAddr))
+				//}
 				dpfData.memAddr++
 				buffer[w*2] = byte((wd & 0xff00) >> 8)
 				buffer[(w*2)+1] = byte(wd & 0x00ff)
@@ -438,9 +440,10 @@ func dpfDoRWcommand() {
 		}
 		if dpfData.debug {
 			debugPrint(DPF_LOG, "... ..... WRITE command finished %s\n", dpfPrintableAddr())
+			debugPrint(DPF_LOG, "%X", buffer)
 			debugPrint(DPF_LOG, "... ..... Last Address: %d\n", dpfData.memAddr)
 		}
-		dpfData.rwStatus |= DPF_RWDONE | DPF_DRIVE0DONE
+		dpfData.rwStatus |= DPF_RWDONE //| DPF_DRIVE0DONE
 
 	default:
 		log.Fatalf("DPF Disk R/W Command %d not yet implemented\n", dpfData.command)

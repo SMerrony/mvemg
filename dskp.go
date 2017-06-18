@@ -20,7 +20,7 @@ const (
 	DSKP_BYTES_PER_SECTOR   = 512
 	DSKP_PHYSICAL_CYLINDERS = 981
 	DSKP_USER_CYLINDERS     = 978
-	DSKP_LOGICAL_BLOCKS     = 1157952 // ??? 1147943
+	DSKP_LOGICAL_BLOCKS     = 1157952 // ??? 1147943 17<<16 | 43840
 	DSKP_UCODE_REV          = 99
 
 	DSKP_INT_INF_BLK_SIZE   = 8
@@ -127,6 +127,7 @@ type dskpDataT struct {
 	imageAttached bool
 	imageFileName string
 	imageFile     *os.File
+	reads, writes uint64
 	// DG data...
 	commandRegA, commandRegB, commandRegC dg_word
 	statusRegA, statusRegB, statusRegC    dg_word
@@ -143,6 +144,7 @@ type dskpStatT struct {
 	statusRegA, statusRegB, statusRegC dg_word
 	cylinder, head, sector             dg_word
 	sectorNo                           dg_dword
+	reads, writes                      uint64
 }
 
 var (
@@ -195,6 +197,8 @@ func dskpStatSender(sChan chan dskpStatT) {
 			stats.statusRegB = dskpData.statusRegB
 			stats.statusRegC = dskpData.statusRegC
 			stats.sectorNo = dskpData.sectorNo
+			stats.reads = dskpData.reads
+			stats.writes = dskpData.writes
 		} else {
 			stats.imageAttached = false
 			stats.cylinder = 0
@@ -204,6 +208,8 @@ func dskpStatSender(sChan chan dskpStatT) {
 			stats.statusRegB = 0
 			stats.statusRegC = 0
 			stats.sectorNo = 0
+			stats.reads = 0
+			stats.writes = 0
 		}
 		//fmt.Printf("dskpStatSender()  before send\n")
 		select {
@@ -558,6 +564,7 @@ func dskpProcessCB(addr dg_phys_addr) {
 		if cbLength >= DSKP_CB_CB_STATUS+1 {
 			cb[DSKP_CB_CB_STATUS] = 1 // finally, set Done bit
 		}
+		dskpData.reads++
 		//dskpSetAsyncStatusRegC(STAT_XEC_STATE_MAPPED, STAT_ASYNC_NO_ERRORS)
 		dskpSetAsyncStatusRegC(0, STAT_ASYNC_NO_ERRORS)
 
@@ -596,6 +603,7 @@ func dskpProcessCB(addr dg_phys_addr) {
 		if cbLength >= DSKP_CB_CB_STATUS+1 {
 			cb[DSKP_CB_CB_STATUS] = 1 // finally, set Done bit
 		}
+		dskpData.writes++
 		//dskpSetAsyncStatusRegC(STAT_XEC_STATE_MAPPED, STAT_ASYNC_NO_ERRORS)
 		dskpSetAsyncStatusRegC(0, STAT_ASYNC_NO_ERRORS)
 
@@ -653,8 +661,8 @@ func dskpResetUnitInfBlock() {
 	var logicalBlocks dg_dword = DSKP_LOGICAL_BLOCKS
 	dskpData.unitInfBlock[0] = 0
 	dskpData.unitInfBlock[1] = 9<<12 | DSKP_UCODE_REV
-	dskpData.unitInfBlock[2] = dwordGetUpperWord(logicalBlocks)
-	dskpData.unitInfBlock[3] = dwordGetLowerWord(logicalBlocks)
+	dskpData.unitInfBlock[2] = dwordGetUpperWord(logicalBlocks) // 17.
+	dskpData.unitInfBlock[3] = dwordGetLowerWord(logicalBlocks) // 43840.
 	dskpData.unitInfBlock[4] = DSKP_BYTES_PER_SECTOR
 	dskpData.unitInfBlock[5] = DSKP_USER_CYLINDERS
 	dskpData.unitInfBlock[6] = ((DSKP_SURFACES_PER_DISK * DSKP_HEADS_PER_SURFACE) << 8) | (0x00ff & DSKP_SECTORS_PER_TRACK)

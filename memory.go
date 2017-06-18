@@ -108,7 +108,7 @@ func memReadWordBmcChan(addr dg_phys_addr) dg_word {
 }
 
 // memWriteWord - ALL memory-writing should ultimately go through this function
-// N.B. minor exceptions are made for nsPush and nsPop
+// N.B. minor exceptions may be made for nsPush() and nsPop()
 func memWriteWord(wordAddr dg_phys_addr, datum dg_word) {
 	if wordAddr >= MEM_SIZE_WORDS {
 		log.Fatalf("ERROR: Attempt to write word beyond end of physical memory using address: %d", wordAddr)
@@ -182,6 +182,29 @@ func nsPop(seg dg_phys_addr) dg_word {
 	return data
 }
 
+// PUSH a doubleword onto the Wide Stack
+func wsPush(seg dg_phys_addr, data dg_dword) {
+	// TODO segment handling
+	// TODO overflow/underflow handling - either here or in instruction?
+	memory.ram[WSP_LOC] += 2 // we allow this direct write to a fixed location for performance
+	addr := dg_phys_addr(memory.ram[WSP_LOC])
+	memWriteDWord(addr, data)
+	debugPrint(DEBUG_LOG, "wsPush pushed %8d onto the Wide Stack at location: %d\n", data, addr)
+}
+
+// POP a word off the Wide Stack
+func wsPop(seg dg_phys_addr) dg_dword {
+	// TODO segment handling
+	// TODO overflow/underflow handling - either here or in instruction?
+	addr := dg_phys_addr(memory.ram[WSP_LOC])
+	dword := memReadDWord(addr)
+	memory.ram[WSP_LOC] -= 2 // we allow this direct write to a fixed location for performance
+	debugPrint(DEBUG_LOG, "wsPop  popped %8d off  the Wide Stack at location: %d\n", dword, addr)
+	return dword
+}
+
+// dwordGetLowerWord gets the DG-lower word of a doubleword
+// Called VERY often, hopefully inlined!
 func dwordGetLowerWord(dwd dg_dword) dg_word {
 	return dg_word(dwd) & 0x0000ffff
 }

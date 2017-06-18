@@ -19,6 +19,11 @@ func eagleMemRef(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		addr = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
 		cpuPtr.ac[iPtr.acd] = sexWordToDWord(memReadWord(addr))
 
+	case "LNSTA":
+		addr = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
+		wd = dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
+		memWriteWord(addr, wd)
+
 	case "LWLDA":
 		addr = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
 		cpuPtr.ac[iPtr.acd] = memReadDWord(addr)

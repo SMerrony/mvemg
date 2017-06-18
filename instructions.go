@@ -11,58 +11,59 @@ import (
 
 // instruction types
 const (
-	NOVA_MEMREF    = iota
-	NOVA_OP        = iota
-	NOVA_IO        = iota
-	NOVA_PC        = iota
-	ECLIPSE_MEMREF = iota
-	ECLIPSE_OP     = iota
-	ECLIPSE_PC     = iota
-	ECLIPSE_STACK  = iota
-	EAGLE_IO       = iota
-	EAGLE_PC       = iota
-	EAGLE_OP       = iota
-	EAGLE_MEMREF   = iota
-	EAGLE_STACK    = iota
+	NOVA_MEMREF = iota
+	NOVA_OP
+	NOVA_IO
+	NOVA_PC
+	ECLIPSE_MEMREF
+	ECLIPSE_OP
+	ECLIPSE_PC
+	ECLIPSE_STACK
+	EAGLE_IO
+	EAGLE_PC
+	EAGLE_OP
+	EAGLE_MEMREF
+	EAGLE_STACK
 )
 
 // instruction formats
 const (
-	UNDEFINED_FMT                 = iota
-	DERR_FMT                      = iota
-	IMM_MODE_2_WORD_FMT           = iota
-	IMM_ONEACC_FMT                = iota
-	IO_FLAGS_DEV_FMT              = iota
-	IO_RESET_FMT                  = iota
-	IO_TEST_DEV_FMT               = iota
-	LNDO_4_WORD_FMT               = iota
-	NOACC_MODE_3_WORD_FMT         = iota
-	NOACC_MODE_IMM_IND_3_WORD_FMT = iota
-	NOACC_MODE_IND_2_WORD_E_FMT   = iota
-	NOACC_MODE_IND_2_WORD_X_FMT   = iota
-	NOACC_MODE_IND_3_WORD_FMT     = iota
-	NOACC_MODE_IND_4_WORD_FMT     = iota
-	NOVA_DATA_IO_FMT              = iota
-	NOVA_NOACC_EFF_ADDR_FMT       = iota
-	NOVA_ONEACC_EFF_ADDR_FMT      = iota
-	NOVA_TWOACC_MULT_OP_FMT       = iota
-	ONEACC_2_WORD_FMT             = iota
-	ONEACC_IMM_2_WORD_FMT         = iota
-	ONEACC_IMM_3_WORD_FMT         = iota
-	ONEACC_IMM_IND_3_WORD_FMT     = iota
-	ONEACC_MODE_2_WORD_E_FMT      = iota
-	ONEACC_MODE_2_WORD_X_B_FMT    = iota
-	ONEACC_MODE_3_WORD_FMT        = iota
-	ONEACC_MODE_IND_2_WORD_E_FMT  = iota
-	ONEACC_MODE_IND_2_WORD_X_FMT  = iota
-	ONEACC_MODE_IND_3_WORD_FMT    = iota
-	ONEACC_1_WORD_FMT             = iota
-	UNIQUE_1_WORD_FMT             = iota
-	UNIQUE_2_WORD_FMT             = iota
-	SPLIT_8BIT_DISP_FMT           = iota
-	THREE_WORD_DO_FMT             = iota
-	TWOACC_1_WORD_FMT             = iota
-	WSKB_FMT                      = iota
+	DerrFmt = iota
+	IMM_MODE_2_WORD_FMT
+	IMM_ONEACC_FMT
+	IO_FLAGS_DEV_FMT
+	IO_RESET_FMT
+	IO_TEST_DEV_FMT
+	LNDO_4_WORD_FMT
+	NOACC_MODE_3_WORD_FMT
+	NOACC_MODE_IMM_IND_3_WORD_FMT
+	NOACC_MODE_IND_2_WORD_E_FMT
+	NOACC_MODE_IND_2_WORD_X_FMT
+	NOACC_MODE_IND_3_WORD_FMT
+	NOACC_MODE_IND_4_WORD_FMT
+	NOVA_DATA_IO_FMT
+	NOVA_NOACC_EFF_ADDR_FMT
+	NOVA_ONEACC_EFF_ADDR_FMT
+	NOVA_TWOACC_MULT_OP_FMT
+	//	ONEACC_2_WORD_FMT             = iota
+	ONEACC_IMM_2_WORD_FMT
+	// ONEACC_DISP_2_WORD_FMT       = iota
+	ONEACC_IMM_3_WORD_FMT
+	ONEACC_IMM_IND_3_WORD_FMT
+	ONEACC_MODE_2_WORD_E_FMT
+	ONEACC_MODE_2_WORD_X_B_FMT
+	ONEACC_MODE_3_WORD_FMT
+	ONEACC_MODE_IND_2_WORD_E_FMT
+	ONEACC_MODE_IND_2_WORD_X_FMT
+	ONEACC_MODE_IND_3_WORD_FMT
+	ONEACC_1_WORD_FMT
+	UNIQUE_1_WORD_FMT
+	UNIQUE_2_WORD_FMT
+	SPLIT_8BIT_DISP_FMT
+	THREE_WORD_DO_FMT
+	TWOACC_1_WORD_FMT
+	TWOACC_IMM_2_WORD_FMT
+	WSKB_FMT
 )
 
 // the characteristics of each instruction
@@ -76,6 +77,8 @@ type instrChars struct {
 	//xeqCounter uint64  // count of # times instruction hit during this run
 }
 
+// InstructionSet contains the map of all recognised instruction.
+// N.B. Recognised, not implemented necessarily.
 type InstructionSet map[string]instrChars
 
 var instructionSet = make(InstructionSet)
@@ -85,6 +88,8 @@ var ioTests = [...]string{"BN", "BZ", "DN", "DZ"}
 var modes = [...]string{"Absolute", "PC", "AC2", "AC3"}
 var skips = [...]string{"NONE", "SKP", "SZC", "SNC", "SZR", "SNR", "SEZ", "SBN"}
 
+// DecodedInstr contains the MV/Em internal decode of an opcode and any
+// parameters.
 type DecodedInstr struct {
 	mnemonic          string
 	instrFmt          int
@@ -115,18 +120,18 @@ func instructionsInit() {
 
 	instructionSet["ADC"] = instrChars{0x8400, 0x8700, NOVA_TWOACC_MULT_OP_FMT, 1, NOVA_OP}
 	instructionSet["ADD"] = instrChars{0x8600, 0x8700, NOVA_TWOACC_MULT_OP_FMT, 1, NOVA_OP}
-	instructionSet["ADDI"] = instrChars{0xe7f8, 0xe7ff, ONEACC_2_WORD_FMT, 2, EAGLE_OP}
+	instructionSet["ADDI"] = instrChars{0xe7f8, 0xe7ff, ONEACC_IMM_2_WORD_FMT, 2, EAGLE_OP}
 	instructionSet["ADI"] = instrChars{0x8008, 0x87ff, IMM_ONEACC_FMT, 1, ECLIPSE_OP}
 	instructionSet["ANC"] = instrChars{0x8188, 0x87ff, TWOACC_1_WORD_FMT, 1, EAGLE_OP}
 	instructionSet["AND"] = instrChars{0x8700, 0x8700, NOVA_TWOACC_MULT_OP_FMT, 1, NOVA_OP}
-	instructionSet["ANDI"] = instrChars{0xc7f8, 0xe7ff, ONEACC_2_WORD_FMT, 2, EAGLE_OP}
+	instructionSet["ANDI"] = instrChars{0xc7f8, 0xe7ff, ONEACC_IMM_2_WORD_FMT, 2, EAGLE_OP}
 	instructionSet["BAM"] = instrChars{0x97c8, 0xffff, UNIQUE_1_WORD_FMT, 1, NOVA_OP}
 	instructionSet["BKPT"] = instrChars{0xc789, 0xffff, UNIQUE_1_WORD_FMT, 1, EAGLE_PC}
 	instructionSet["BLM"] = instrChars{0xb7c8, 0xffff, UNIQUE_1_WORD_FMT, 1, ECLIPSE_MEMREF}
 	instructionSet["BTO"] = instrChars{0x8408, 0x87ff, TWOACC_1_WORD_FMT, 1, ECLIPSE_OP}
 	instructionSet["BTZ"] = instrChars{0x8448, 0x87ff, TWOACC_1_WORD_FMT, 1, ECLIPSE_OP}
 	instructionSet["CIO"] = instrChars{0x85e9, 0x87ff, TWOACC_1_WORD_FMT, 1, EAGLE_IO}
-	instructionSet["CIOI"] = instrChars{0x8509, 0x87ff, TWOACC_1_WORD_FMT, 1, EAGLE_IO}
+	instructionSet["CIOI"] = instrChars{0x85f9, 0x87ff, TWOACC_IMM_2_WORD_FMT, 2, EAGLE_IO} // FIXED BITS, LEN
 	instructionSet["CLM"] = instrChars{0x84f8, 0x87ff, TWOACC_1_WORD_FMT, 1, ECLIPSE_PC}
 	instructionSet["CMP"] = instrChars{0xdfa8, 0xffff, UNIQUE_1_WORD_FMT, 1, ECLIPSE_MEMREF}
 	instructionSet["CMT"] = instrChars{0xefa8, 0xffff, UNIQUE_1_WORD_FMT, 1, NOVA_OP}
@@ -140,7 +145,7 @@ func instructionsInit() {
 	instructionSet["CVWN"] = instrChars{0xe669, 0xe7ff, ONEACC_1_WORD_FMT, 1, EAGLE_OP}
 	instructionSet["DAD"] = instrChars{0x8088, 0x87ff, TWOACC_1_WORD_FMT, 1, NOVA_OP}
 	instructionSet["DEQUE"] = instrChars{0xe7c9, 0xffff, UNIQUE_1_WORD_FMT, 1, EAGLE_OP}
-	instructionSet["DERR"] = instrChars{0x8f09, 0x8fcf, DERR_FMT, 1, EAGLE_OP}
+	instructionSet["DERR"] = instrChars{0x8f09, 0x8fcf, DerrFmt, 1, EAGLE_OP}
 	instructionSet["DHXL"] = instrChars{0x8388, 0x87ff, IMM_ONEACC_FMT, 1, NOVA_OP}
 	instructionSet["DHXR"] = instrChars{0x83c8, 0x87ff, IMM_ONEACC_FMT, 1, NOVA_OP}
 	instructionSet["DIA"] = instrChars{0x6100, 0xe700, NOVA_DATA_IO_FMT, 1, NOVA_IO}
@@ -183,7 +188,7 @@ func instructionsInit() {
 	instructionSet["INTDS"] = instrChars{0x60bf, 0xffff, UNIQUE_1_WORD_FMT, 1, EAGLE_IO}
 	instructionSet["INTEN"] = instrChars{0x607f, 0xffff, UNIQUE_1_WORD_FMT, 1, EAGLE_IO}
 	instructionSet["IOR"] = instrChars{0x8108, 0x87ff, TWOACC_1_WORD_FMT, 1, ECLIPSE_OP}
-	instructionSet["IORI"] = instrChars{0x87f8, 0xe7ff, ONEACC_2_WORD_FMT, 2, ECLIPSE_OP}
+	instructionSet["IORI"] = instrChars{0x87f8, 0xe7ff, ONEACC_IMM_2_WORD_FMT, 2, ECLIPSE_OP}
 	instructionSet["IORST"] = instrChars{0x653f, 0xe73f, IO_RESET_FMT, 1, NOVA_IO}
 	instructionSet["ISZ"] = instrChars{0x1000, 0xf800, NOVA_NOACC_EFF_ADDR_FMT, 1, NOVA_MEMREF}
 	instructionSet["ISZTS"] = instrChars{0xc7c9, 0xffff, UNIQUE_1_WORD_FMT, 1, EAGLE_OP}
@@ -221,6 +226,7 @@ func instructionsInit() {
 	instructionSet["LPEF"] = instrChars{0xa6f9, 0xe7ff, NOACC_MODE_IND_3_WORD_FMT, 3, EAGLE_MEMREF}
 	instructionSet["LPEFB"] = instrChars{0xc6f9, 0xe7ff, NOACC_MODE_3_WORD_FMT, 3, EAGLE_OP}
 	instructionSet["LPHY"] = instrChars{0x87e9, 0xffff, UNIQUE_1_WORD_FMT, 1, EAGLE_OP}
+	instructionSet["LPSHJ"] = instrChars{0xC6C9, 0xE7FF, NOACC_MODE_IND_3_WORD_FMT, 3, EAGLE_PC} // added here
 	instructionSet["LSH"] = instrChars{0x8288, 0x87ff, TWOACC_1_WORD_FMT, 1, ECLIPSE_OP}
 	instructionSet["LWDO"] = instrChars{0x8798, 0x87ff, LNDO_4_WORD_FMT, 4, EAGLE_PC}
 	instructionSet["LWDSZ"] = instrChars{0x86f9, 0xe7ff, NOACC_MODE_IND_3_WORD_FMT, 3, EAGLE_PC}
@@ -231,12 +237,12 @@ func instructionsInit() {
 	instructionSet["MSKO"] = instrChars{0x643f, 0xe7ff, ONEACC_1_WORD_FMT, 1, EAGLE_IO}
 	instructionSet["MUL"] = instrChars{0xc7c8, 0xffff, UNIQUE_1_WORD_FMT, 1, ECLIPSE_OP}
 	instructionSet["NADD"] = instrChars{0x8049, 0x87ff, TWOACC_1_WORD_FMT, 1, EAGLE_OP}
-	instructionSet["NADDI"] = instrChars{0xc639, 0xe7ff, ONEACC_2_WORD_FMT, 2, EAGLE_OP}
+	instructionSet["NADDI"] = instrChars{0xc639, 0xe7ff, ONEACC_IMM_2_WORD_FMT, 2, EAGLE_OP}
 	instructionSet["NADI"] = instrChars{0x8599, 0x87ff, IMM_ONEACC_FMT, 1, EAGLE_OP}
 	instructionSet["NCLID"] = instrChars{0x683f, 0xffff, UNIQUE_1_WORD_FMT, 1, EAGLE_IO}
 	instructionSet["NEG"] = instrChars{0x8100, 0x8700, NOVA_TWOACC_MULT_OP_FMT, 1, NOVA_OP}
 	instructionSet["NIO"] = instrChars{0x6000, 0xff00, IO_FLAGS_DEV_FMT, 1, NOVA_IO}
-	instructionSet["NLDAI"] = instrChars{0xc629, 0xe7ff, ONEACC_2_WORD_FMT, 2, EAGLE_OP}
+	instructionSet["NLDAI"] = instrChars{0xc629, 0xe7ff, ONEACC_IMM_2_WORD_FMT, 2, EAGLE_OP}
 	instructionSet["NMUL"] = instrChars{0x8069, 0x87ff, TWOACC_1_WORD_FMT, 1, EAGLE_OP}
 	instructionSet["NSBI"] = instrChars{0x85a9, 0x87ff, IMM_ONEACC_FMT, 1, EAGLE_OP}
 	instructionSet["NSUB"] = instrChars{0x8059, 0x87ff, TWOACC_1_WORD_FMT, 1, EAGLE_OP}
@@ -288,12 +294,14 @@ func instructionsInit() {
 	instructionSet["WLDAI"] = instrChars{0xc689, 0xe7ff, ONEACC_IMM_3_WORD_FMT, 3, EAGLE_OP}
 	instructionSet["WLMP"] = instrChars{0xa7f9, 0xffff, UNIQUE_1_WORD_FMT, 1, EAGLE_IO}
 	instructionSet["WLSH"] = instrChars{0x8559, 0x87ff, TWOACC_1_WORD_FMT, 1, EAGLE_OP}
-	instructionSet["WLSHI"] = instrChars{0xe6d9, 0xe7ff, ONEACC_2_WORD_FMT, 2, EAGLE_OP}
+	instructionSet["WLSHI"] = instrChars{0xe6d9, 0xe7ff, ONEACC_IMM_2_WORD_FMT, 2, EAGLE_OP}
 	instructionSet["WLSI"] = instrChars{0x85b9, 0x87ff, IMM_ONEACC_FMT, 1, EAGLE_OP}
 	instructionSet["WMOV"] = instrChars{0x8379, 0x87ff, TWOACC_1_WORD_FMT, 1, EAGLE_OP}
 	instructionSet["WMOVR"] = instrChars{0xe699, 0xe7ff, ONEACC_1_WORD_FMT, 1, EAGLE_OP}
+	instructionSet["WNADI"] = instrChars{0xE6F9, 0xE7FF, ONEACC_IMM_2_WORD_FMT, 2, EAGLE_OP} // added here
 	instructionSet["WNEG"] = instrChars{0x8269, 0x87ff, TWOACC_1_WORD_FMT, 1, EAGLE_OP}
 	instructionSet["WRTN"] = instrChars{0x87a9, 0xffff, UNIQUE_1_WORD_FMT, 1, EAGLE_PC}
+	instructionSet["WSAVR"] = instrChars{0xA729, 0xFFFF, UNIQUE_2_WORD_FMT, 2, EAGLE_STACK} // added here
 	instructionSet["WSBI"] = instrChars{0x8589, 0x87ff, IMM_ONEACC_FMT, 1, EAGLE_OP}
 	instructionSet["WSEQ"] = instrChars{0x80b9, 0x87ff, TWOACC_1_WORD_FMT, 1, EAGLE_PC}
 	instructionSet["WSEQI"] = instrChars{0xe6c9, 0xe7ff, ONEACC_IMM_2_WORD_FMT, 2, EAGLE_PC}
@@ -329,6 +337,7 @@ func instructionsInit() {
 	instructionSet["XSTB"] = instrChars{0x8429, 0x87ff, ONEACC_MODE_2_WORD_X_B_FMT, 2, EAGLE_MEMREF}
 	instructionSet["XWADD"] = instrChars{0x8118, 0x87ff, ONEACC_MODE_IND_2_WORD_X_FMT, 2, EAGLE_MEMREF}
 	instructionSet["XWADI"] = instrChars{0x8518, 0x87ff, IMM_MODE_2_WORD_FMT, 2, EAGLE_MEMREF}
+	instructionSet["XWDSZ"] = instrChars{0xA639, 0xE7FF, NOACC_MODE_IND_2_WORD_X_FMT, 2, EAGLE_PC} // added here
 	instructionSet["XWLDA"] = instrChars{0x8309, 0x87ff, ONEACC_MODE_IND_2_WORD_X_FMT, 2, EAGLE_MEMREF}
 	instructionSet["XWSBI"] = instrChars{0x8558, 0x87ff, IMM_MODE_2_WORD_FMT, 2, EAGLE_OP}
 	instructionSet["XWSTA"] = instrChars{0x8319, 0x87ff, ONEACC_MODE_IND_2_WORD_X_FMT, 2, EAGLE_MEMREF}
@@ -448,10 +457,12 @@ func instructionDecode(opcode dg_word, pc dg_phys_addr, lefMode bool, ioOn bool,
 		decodedInstr.acd = int(getWbits(opcode, 3, 2))
 		decodedInstr.disassembly += fmt.Sprintf(" %d,%d", decodedInstr.acs, decodedInstr.acd)
 
-	case ONEACC_2_WORD_FMT: // eg. ADDI, IORI, NADDI, NLDAI, WLSHI
+	case TWOACC_IMM_2_WORD_FMT:
+		decodedInstr.acs = int(getWbits(opcode, 1, 2))
 		decodedInstr.acd = int(getWbits(opcode, 3, 2))
 		decodedInstr.imm16b = memReadWord(pc + 1)
-		decodedInstr.disassembly += fmt.Sprintf(" %d.,%d [2-Word OpCode]", int16(decodedInstr.imm16b), decodedInstr.acd)
+		decodedInstr.disassembly += fmt.Sprintf(" %d.,%d,%d", decodedInstr.imm16b, decodedInstr.acs,
+			decodedInstr.acd)
 
 	case NOACC_MODE_3_WORD_FMT: // eg. LPEFB
 		decodedInstr.mode = decodeMode(getWbits(opcode, 3, 2))
@@ -461,7 +472,7 @@ func instructionDecode(opcode dg_word, pc dg_phys_addr, lefMode bool, ioOn bool,
 	case NOACC_MODE_IND_2_WORD_E_FMT, NOACC_MODE_IND_2_WORD_X_FMT:
 		debugPrint(DEBUG_LOG, "X_FMT: Mnemonic is <%s>\n", decodedInstr.mnemonic)
 		switch decodedInstr.mnemonic {
-		case "XJMP", "XJSR", "XNDSZ", "XNISZ", "XPEF":
+		case "XJMP", "XJSR", "XNDSZ", "XNISZ", "XPEF", "XWDSZ":
 			decodedInstr.mode = decodeMode(getWbits(opcode, 3, 2))
 		case "EDSZ", "EISZ", "EJMP", "EJSR", "PSHJ":
 			decodedInstr.mode = decodeMode(getWbits(opcode, 6, 2))
@@ -612,7 +623,7 @@ func instructionDecode(opcode dg_word, pc dg_phys_addr, lefMode bool, ioOn bool,
 		decodedInstr.disassembly += fmt.Sprintf(" %d,%d. %c%d.%s [3-Word OpCode]",
 			decodedInstr.acd, decodedInstr.offset, decodedInstr.ind, decodedInstr.disp, modeToString(decodedInstr.mode))
 
-	case ONEACC_IMM_2_WORD_FMT:
+	case ONEACC_IMM_2_WORD_FMT: // eg. ADDI, IORI, NADDI, NLDAI, WLSHI
 		decodedInstr.acd = int(getWbits(opcode, 3, 2))
 		secondWord = memReadWord(pc + 1)
 		decodedInstr.imm16b = secondWord
