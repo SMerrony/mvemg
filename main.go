@@ -1,4 +1,24 @@
 // mvemg project main.go
+
+// Copyright (C) 2017  Steve Merrony
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
 package main
 
 import (
@@ -9,18 +29,20 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	//"mvemg/tto"
 )
 
 // import "github.com/pkg/profile"
 
 const (
-	STAT_PORT   = "9999"
-	SCP_PORT    = "10000"
-	SCP_BUFSIZE = 135
+	// StatPort is the port for the real-time status monitor
+	StatPort = "9999"
+	// ScpPort is  the port for the SCP master console
+	ScpPort = "10000"
+	// ScpBuffSize is the char buffer length for SCP input lines
+	ScpBuffSize = 135
 
-	CMD_UNKNOWN = " *** UNKNOWN SCP-CLI COMMAND ***"
-	CMD_NYI     = "Command Not Yet Implemented"
+	cmdUnknown = " *** UNKNOWN SCP-CLI COMMAND ***"
+	cmdNYI     = "Command Not Yet Implemented"
 )
 
 type (
@@ -52,7 +74,7 @@ func main() {
 	//	debugLogsInit()
 	log.Println("INFO: MV/Em will not start until console connected")
 
-	l, err := net.Listen("tcp", "localhost:"+SCP_PORT)
+	l, err := net.Listen("tcp", "localhost:"+ScpPort)
 	if err != nil {
 		log.Println("ERROR: Could not listen on console port: ", err.Error())
 		os.Exit(1)
@@ -60,7 +82,6 @@ func main() {
 
 	// close the port once we are done
 	defer l.Close()
-	//defer debugLogsDump()
 
 	for {
 		conn, err := l.Accept()
@@ -104,6 +125,14 @@ func main() {
 
 		// kick off the status monitor routine
 		go statusCollector(cpuStatsChan, dpfStatsChan, dskpStatsChan)
+
+		// run any command specified on the command line
+		args := os.Args[1:]
+		if len(args) == 1 {
+			command := fmt.Sprintf("DO %s", args[0])
+			log.Printf("INFO: got startup command <%s>\n", command)
+			doCommand(command) // N.B. will not pass here until start-up script is complete...
+		}
 
 		// the main SCP/console interaction loop
 		for {
@@ -159,13 +188,13 @@ func doCommand(cmd string) {
 	case "CO":
 		run()
 	case "E":
-		ttoPutNLString(CMD_NYI)
+		ttoPutNLString(cmdNYI)
 	case "HE":
 		showHelp()
 	case "SS":
 		singleStep()
 	case "ST":
-		ttoPutNLString(CMD_NYI)
+		ttoPutNLString(cmdNYI)
 
 	// emulator commands
 	case "ATT":
@@ -183,13 +212,13 @@ func doCommand(cmd string) {
 	case "EXIT":
 		cleanExit()
 	case "NOBREAK":
-		ttoPutNLString(CMD_NYI)
+		ttoPutNLString(cmdNYI)
 	case "SAVE":
-		ttoPutNLString(CMD_NYI)
+		ttoPutNLString(cmdNYI)
 	case "SHOW":
 		show(words)
 	default:
-		ttoPutNLString(CMD_UNKNOWN)
+		ttoPutNLString(cmdUnknown)
 	}
 }
 

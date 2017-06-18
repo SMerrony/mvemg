@@ -1,6 +1,3 @@
-UserGuide.md
-============
-
 # MV/Em User Guide #
 
 The current version of MV/Em emulates a minimally-configured Data General MV/10000 minicomputer from c.1983.
@@ -22,6 +19,7 @@ When MV/Em is started from a console you may optionally supply a script name whi
 initial DO SCRIPT (see below) once a console is attached.
 
 Once you have invoked MV/Em you must connect a DASHER terminal emulator to port 10000 on the local machine.
+The emulator will not initialise until there is a connection on that port.
 
 You should immediately be greeted with the welcome message...
 
@@ -71,10 +69,10 @@ The following commands have been implemented...
 > Single-Step one instruction from the PC.
 
 ### Emulator Commands ###
-MV/Emulator commands control the emulation environment rather than the virtual machine.  They are loosely based on [SimH] commands.
+MV/Emulator commands control the emulation environment rather than the virtual machine.  They are loosely based on [[SimH]] commands.
 
 #### ATT `<dev> <file>` ####
-> ATTach an image file to the named device.  Tape file images must be in SimH format.
+> ATTach an image file to the named device.  Tape file images must be in SimH format.  
 
 #### BREAK `<addr>` ####
 > Set an execution BREAKpoint at the given address - the emulator will pause if that address is reached.  Use the CO command to continue execution.
@@ -82,15 +80,20 @@ MV/Emulator commands control the emulation environment rather than the virtual m
 #### CHECK ####
 > CHECK the validity of an attached tape image by attempting to read it all and displaying a summary of the virtual tape's contents on the console.
 
+#### CREATE `<type> <imageFileName>` ####
+> CREATE an empty disk image suitable for attaching to the emulator and initialising with DFMTR.  eg. CREATE DPF BLANK.DPF
+
 #### DIS `<from> <to> | +<#>` ####
 > DISplay/disassemble memory between the given addresses or # locations from the PC.
 
 #### DO `<scriptfile>` ####
 > DO emulator commands from the file.  
-> Here is an example scriptfile which attaches a SimH tape image to the MTB device, attempts to boot from device 18 (MTB) and finally displays the status of the CPU...
+> Here is an example scriptfile which attaches a SimH tape image to the MTB device,  attaches a DPF-type disk image, and
+attempts to boot from device 22 (MTB) and finally displays the status of the CPU...
 
     ATT MTB TAPE1.9trk
-    B 18
+	ATT DPF DISK1.DPF
+    B 22
     .
   
 #### EXIT ####
@@ -101,5 +104,4 @@ MV/Emulator commands control the emulation environment rather than the virtual m
 
 #### SHOW DEV ####
 > SHOW a display a brief summary all known DEVices and their busy/done flags and statuses
-
 

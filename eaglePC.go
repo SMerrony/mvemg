@@ -54,6 +54,10 @@ func eaglePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		//		}
 		cpuPtr.pc += dg_phys_addr(iPtr.disp)
 
+	case "WPOPJ":
+		dwd = wsPop(0)
+		cpuPtr.pc = dg_phys_addr(dwd) & 0x0fffffff
+
 	case "WSEQ":
 		if iPtr.acd == iPtr.acs {
 			tmp32b = 0

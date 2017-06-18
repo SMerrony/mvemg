@@ -300,6 +300,7 @@ func instructionsInit() {
 	instructionSet["WMOVR"] = instrChars{0xe699, 0xe7ff, ONEACC_1_WORD_FMT, 1, EAGLE_OP}
 	instructionSet["WNADI"] = instrChars{0xE6F9, 0xE7FF, ONEACC_IMM_2_WORD_FMT, 2, EAGLE_OP} // added here
 	instructionSet["WNEG"] = instrChars{0x8269, 0x87ff, TWOACC_1_WORD_FMT, 1, EAGLE_OP}
+	instructionSet["WPOPJ"] = instrChars{0x8789, 0xFFFF, UNIQUE_1_WORD_FMT, 1, EAGLE_PC} // added here
 	instructionSet["WRTN"] = instrChars{0x87a9, 0xffff, UNIQUE_1_WORD_FMT, 1, EAGLE_PC}
 	instructionSet["WSAVR"] = instrChars{0xA729, 0xFFFF, UNIQUE_2_WORD_FMT, 2, EAGLE_STACK} // added here
 	instructionSet["WSBI"] = instrChars{0x8589, 0x87ff, IMM_ONEACC_FMT, 1, EAGLE_OP}
