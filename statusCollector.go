@@ -26,6 +26,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"time"
 )
 
 const (
@@ -48,10 +49,13 @@ func statusCollector(
 	dskpChan chan dskpStatT) {
 
 	var (
-		cpuStats                cpuStatT
-		lastIcount, iCount, ips uint64
-		dpfStats                dpfStatT
-		dskpStats               dskpStatT
+		cpuStats           cpuStatT
+		lastIcount, iCount uint64
+		ips                float64
+		lastCPUtime        time.Time
+		//		lastCPUtime, lastDpfTime, lastDskpTime time.Time
+		dpfStats  dpfStatT
+		dskpStats dskpStatT
 	)
 
 	l, err := net.Listen("tcp", "localhost:"+StatPort)
@@ -78,9 +82,10 @@ func statusCollector(
 			case cpuStats = <-cpuChan:
 				iCount = cpuStats.instrCount - lastIcount
 				lastIcount = cpuStats.instrCount
-				ips = iCount / 100 // to get kIPS
+				ips = float64(iCount) / (time.Since(lastCPUtime).Seconds() * 1000)
+				lastCPUtime = time.Now()
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", DASHER_WRITE_WINDOW_ADDR, 0, statCPUrow, DASHER_ERASE_EOL))
-				statusSendString(conn, fmt.Sprintf("PC:  %010d   Interrupts: %d    ATU: %d     IPS: %dk/sec",
+				statusSendString(conn, fmt.Sprintf("PC:  %010d   Interrupts: %d    ATU: %d     IPS: %.fk/sec",
 					cpuStats.pc,
 					boolToInt(cpuStats.ion),
 					boolToInt(cpuStats.atu),
