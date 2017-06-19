@@ -11,3 +11,4 @@ mvemg.test
 *.out
 *.pprof
 
+*.json
