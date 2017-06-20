@@ -46,7 +46,7 @@ func ttoDataOut(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
 	switch abc {
 	case 'A':
 		ascii = byte(cpuPtr.ac[iPtr.acd])
-		debugPrint(DEBUG_LOG,"ttoDataOut: AC# %d contains %d                                 yielding ASCII char<%c>\n",
+		debugPrint(debugLog, "ttoDataOut: AC# %d contains %d                                 yielding ASCII char<%c>\n",
 			iPtr.acd, cpuPtr.ac[iPtr.acd], ascii)
 		if iPtr.f == 'S' {
 			busSetBusy(DEV_TTO, true)

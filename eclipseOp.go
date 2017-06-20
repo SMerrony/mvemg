@@ -36,13 +36,13 @@ func eclipseOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		bitNum = uint(cpuPtr.ac[iPtr.acd] & 0x000f)
 		wd = memReadWord(addr)
 		if debugLogging {
-			debugPrint(DEBUG_LOG, "... BTO Addr: %d, Bit: %d, Before: %s\n",
+			debugPrint(debugLog, "... BTO Addr: %d, Bit: %d, Before: %s\n",
 				addr, bitNum, wordToBinStr(wd))
 		}
 		wd |= 1 << (15 - bitNum) // set the bit
 		memWriteWord(addr, wd)
 		if debugLogging {
-			debugPrint(DEBUG_LOG, "... BTO                     Result: %s\n", wordToBinStr(wd))
+			debugPrint(debugLog, "... BTO                     Result: %s\n", wordToBinStr(wd))
 		}
 
 	case "BTZ":
@@ -57,7 +57,7 @@ func eclipseOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		bitNum = uint(cpuPtr.ac[iPtr.acd] & 0x000f)
 		wd = memReadWord(addr)
 		if debugLogging {
-			debugPrint(DEBUG_LOG, "... BTZ Addr: %d, Bit: %d, Before: %s\n", addr, bitNum, wordToBinStr(wd))
+			debugPrint(debugLog, "... BTZ Addr: %d, Bit: %d, Before: %s\n", addr, bitNum, wordToBinStr(wd))
 		}
 		//wd |= 1 << (15 - bitNum) // set the bit
 		if testWbit(wd, int(bitNum)) {
@@ -65,7 +65,7 @@ func eclipseOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		}
 		memWriteWord(addr, wd)
 		if debugLogging {
-			debugPrint(DEBUG_LOG, "... BTZ                     Result: %s\n",
+			debugPrint(debugLog, "... BTZ                     Result: %s\n",
 				wordToBinStr(wd))
 		}
 

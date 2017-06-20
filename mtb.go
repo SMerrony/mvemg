@@ -53,6 +53,13 @@ const (
 	SR2_PE_MODE    = 0x0001
 )
 
+// const mtbStatsPeriodMs = 500
+
+// type mtbStatT struct {
+// 	imageAttached bool
+
+// }
+
 type Mtb struct {
 	simhTapeNum            int
 	imageAttached          bool
@@ -147,7 +154,7 @@ func mtbLoadTBoot(mem Memory) {
 	simht.simhTapeRewind(0)
 	hdr, ok := simht.simhTapeReadRecordHeader(0)
 	if !ok || hdr != TBTSIZ_B {
-		debugPrint(DEBUG_LOG,"WARN: mtbLoadTBoot called when no bootable tape image attached\n")
+		debugPrint(debugLog, "WARN: mtbLoadTBoot called when no bootable tape image attached\n")
 		return
 	}
 	tapeData, ok := simht.simhTapeReadRecord(0, TBTSIZ_B)
@@ -162,7 +169,7 @@ func mtbLoadTBoot(mem Memory) {
 	}
 	trailer, ok := simht.simhTapeReadRecordHeader(0)
 	if hdr != trailer {
-		debugPrint(DEBUG_LOG,"WARN: mtbLoadTBoot found mismatched trailer in TBOOT file\n")
+		debugPrint(debugLog, "WARN: mtbLoadTBoot found mismatched trailer in TBOOT file\n")
 	}
 }
 

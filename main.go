@@ -176,7 +176,7 @@ func cleanExit() {
 func doCommand(cmd string) {
 	words := strings.Split(strings.TrimSpace(cmd), " ")
 	if debugLogging {
-		debugPrint(DEBUG_LOG, "INFO: doCommand parsed command as <%s>\n", words[0])
+		debugPrint(debugLog, "INFO: doCommand parsed command as <%s>\n", words[0])
 	}
 
 	switch words[0] {
@@ -231,7 +231,7 @@ func attach(cmd []string) {
 		return
 	}
 	if debugLogging {
-		debugPrint(DEBUG_LOG, "INFO: Attach called  with parms <%s> <%s>\n", cmd[1], cmd[2])
+		debugPrint(debugLog, "INFO: Attach called  with parms <%s> <%s>\n", cmd[1], cmd[2])
 	}
 	switch cmd[1] {
 	case "MTB":
@@ -266,7 +266,7 @@ func boot(cmd []string) {
 		return
 	}
 	if debugLogging {
-		debugPrint(DEBUG_LOG, "INFO: Boot called  with parm <%s>\n", cmd[1])
+		debugPrint(debugLog, "INFO: Boot called  with parm <%s>\n", cmd[1])
 	}
 	dev, err := strconv.ParseInt(cmd[1], 8, 16) // FIXME Input Radix used here
 	devNum := int(dev)
@@ -399,7 +399,7 @@ func doScript(cmd []string) {
 	if err != nil {
 		ttoPutNLString(" *** Could not open MV/Em command script ***")
 		if debugLogging {
-			debugPrint(DEBUG_LOG, "WARN: Could not open MV/Em command script <%s>\n", cmd[1])
+			debugPrint(debugLog, "WARN: Could not open MV/Em command script <%s>\n", cmd[1])
 		}
 		return
 	}
@@ -510,7 +510,7 @@ func run() {
 			break
 		}
 		if debugLogging {
-			debugPrint(DEBUG_LOG, "%s\t\t%s\n", iPtr.disassembly, cpuCompactPrintableStatus())
+			debugPrint(debugLog, "%s\t\t%s\n", iPtr.disassembly, cpuCompactPrintableStatus())
 		}
 
 		// EXECUTE
@@ -544,7 +544,7 @@ func run() {
 	log.Println(errDetail)
 	ttoPutNLString(errDetail)
 	if debugLogging {
-		debugPrint(DEBUG_LOG, "%s\n", cpuPrintableStatus())
+		debugPrint(debugLog, "%s\n", cpuPrintableStatus())
 	}
 	ttoPutString(cpuPrintableStatus())
 

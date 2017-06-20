@@ -39,7 +39,7 @@ func memInit() {
 	// zero ram?
 	memory.atuEnabled = false
 	bmcdchInit()
-	debugPrint(DEBUG_LOG, "INFO: Initialised %d words of main memory\n", MEM_SIZE_WORDS)
+	debugPrint(debugLog, "INFO: Initialised %d words of main memory\n", MEM_SIZE_WORDS)
 }
 
 // read a byte from memory using word address and low-byte flag (true => lower (rightmost) byte)
@@ -91,7 +91,7 @@ func memReadWordDchChan(addr dg_phys_addr) dg_word {
 	if getDchMode() {
 		pAddr, _ = getBmcDchMapAddr(addr)
 	}
-	debugPrint(MAP_LOG, "memReadWordBmcChan got addr: %d, read from addr: %d\n", addr, pAddr)
+	debugPrint(mapLog, "memReadWordBmcChan got addr: %d, read from addr: %d\n", addr, pAddr)
 	return memReadWord(pAddr)
 }
 
@@ -103,7 +103,7 @@ func memReadWordBmcChan(addr dg_phys_addr) dg_word {
 	} else {
 		pAddr = decodedAddr.ca
 	}
-	debugPrint(MAP_LOG, "memWriteReadBmcChan got addr: %d, wrote to addr: %d\n", addr, pAddr)
+	debugPrint(mapLog, "memWriteReadBmcChan got addr: %d, wrote to addr: %d\n", addr, pAddr)
 	return memReadWord(pAddr)
 }
 
@@ -124,7 +124,7 @@ func memWriteWordDchChan(addr dg_phys_addr, data dg_word) dg_phys_addr {
 		pAddr, _ = getBmcDchMapAddr(addr)
 	}
 	memWriteWord(pAddr, data)
-	debugPrint(MAP_LOG, "memWriteWordDchChan got addr: %d, wrote to addr: %d\n", addr, pAddr)
+	debugPrint(mapLog, "memWriteWordDchChan got addr: %d, wrote to addr: %d\n", addr, pAddr)
 	return pAddr
 }
 
@@ -137,7 +137,7 @@ func memWriteWordBmcChan(addr dg_phys_addr, data dg_word) dg_phys_addr {
 		pAddr = decodedAddr.ca
 	}
 	memWriteWord(pAddr, data)
-	debugPrint(MAP_LOG, "memWriteWordBmcChan got addr: %d, wrote to addr: %d\n", addr, pAddr)
+	debugPrint(mapLog, "memWriteWordBmcChan got addr: %d, wrote to addr: %d\n", addr, pAddr)
 	return pAddr
 }
 
@@ -168,7 +168,7 @@ func nsPush(seg dg_phys_addr, data dg_word) {
 	memory.ram[NSP_LOC]++ // we allow this direct write to a fixed location for performance
 	addr := dg_phys_addr(memory.ram[NSP_LOC])
 	memWriteWord(addr, data)
-	debugPrint(DEBUG_LOG, "nsPush pushed %8d onto the Narrow Stack at location: %d\n", data, addr)
+	debugPrint(debugLog, "nsPush pushed %8d onto the Narrow Stack at location: %d\n", data, addr)
 }
 
 // POP a word off the Narrow Stack
@@ -177,7 +177,7 @@ func nsPop(seg dg_phys_addr) dg_word {
 	// TODO overflow/underflow handling - either here or in instruction?
 	addr := dg_phys_addr(memory.ram[NSP_LOC])
 	data := memReadWord(addr)
-	debugPrint(DEBUG_LOG, "nsPop  popped %8d off  the Narrow Stack at location: %d\n", data, addr)
+	debugPrint(debugLog, "nsPop  popped %8d off  the Narrow Stack at location: %d\n", data, addr)
 	memory.ram[NSP_LOC]-- // we allow this direct write to a fixed location for performance
 	return data
 }
@@ -189,7 +189,7 @@ func wsPush(seg dg_phys_addr, data dg_dword) {
 	memory.ram[WSP_LOC] += 2 // we allow this direct write to a fixed location for performance
 	addr := dg_phys_addr(memory.ram[WSP_LOC])
 	memWriteDWord(addr, data)
-	debugPrint(DEBUG_LOG, "wsPush pushed %8d onto the Wide Stack at location: %d\n", data, addr)
+	debugPrint(debugLog, "wsPush pushed %8d onto the Wide Stack at location: %d\n", data, addr)
 }
 
 // POP a word off the Wide Stack
@@ -199,7 +199,7 @@ func wsPop(seg dg_phys_addr) dg_dword {
 	addr := dg_phys_addr(memory.ram[WSP_LOC])
 	dword := memReadDWord(addr)
 	memory.ram[WSP_LOC] -= 2 // we allow this direct write to a fixed location for performance
-	debugPrint(DEBUG_LOG, "wsPop  popped %8d off  the Wide Stack at location: %d\n", dword, addr)
+	debugPrint(debugLog, "wsPop  popped %8d off  the Wide Stack at location: %d\n", dword, addr)
 	return dword
 }
 
