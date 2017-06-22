@@ -60,8 +60,11 @@ func eagleMemRef(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 				}
 			}
 			cpuPtr.ac[1] = 0
-			cpuPtr.ac[2] = dg_dword(dest) // TODO confirm this
-			cpuPtr.ac[3] = dg_dword(dest)
+			//cpuPtr.ac[2] = dg_dword(dest) // TODO confirm this
+			//cpuPtr.ac[3] = dg_dword(dest)
+			// TESTING..
+			cpuPtr.ac[2] = dg_dword(src + 1) // TODO confirm this
+			cpuPtr.ac[3] = dg_dword(dest + 1)
 		}
 	case "XLDB":
 		cpuPtr.ac[iPtr.acd] = dg_dword(memReadByte(resolve16bitEagleAddr(cpuPtr, ' ', iPtr.mode, iPtr.disp), iPtr.loHiBit)) & 0x00ff

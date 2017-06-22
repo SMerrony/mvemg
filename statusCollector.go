@@ -38,8 +38,10 @@ const (
 )
 
 // StatusCollector maintains a near real-time status screen available on STAT_PORT.
+//
 // The screen uses DG DASHER control codes for formatting, so a DASHER terminal emulator
 // should be attached to it for good results.
+//
 // The function (which is intended to be run as a goroutine) listens for status updates
 // from known senders and upon receiving an update refreshes the display of that status
 // on the monitor page.

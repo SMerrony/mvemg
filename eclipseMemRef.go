@@ -34,8 +34,8 @@ func eclipseMemRef(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 			dest++
 		}
 		cpuPtr.ac[1] = 0
-		cpuPtr.ac[2] = dg_dword(src) // TODO confirm this is right, doc ambiguous
-		cpuPtr.ac[3] = dg_dword(dest)
+		cpuPtr.ac[2] = dg_dword(src + 1) // TODO confirm this is right, doc ambiguous
+		cpuPtr.ac[3] = dg_dword(dest + 1)
 
 	case "CMP":
 		str2len := dwordGetLowerWord(cpuPtr.ac[0])

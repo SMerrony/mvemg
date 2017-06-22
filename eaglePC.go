@@ -9,6 +9,7 @@ func eaglePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		wd          dg_word
 		dwd, tmp32b dg_dword
 		tmpAddr     dg_phys_addr
+		s32a, s32b  int32
 	)
 
 	switch iPtr.mnemonic {
@@ -58,7 +59,7 @@ func eaglePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		dwd = wsPop(0)
 		cpuPtr.pc = dg_phys_addr(dwd) & 0x0fffffff
 
-	case "WSEQ":
+	case "WSEQ": // Signedness doen't matter for equality testing
 		if iPtr.acd == iPtr.acs {
 			tmp32b = 0
 		} else {
@@ -78,13 +79,14 @@ func eaglePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 			cpuPtr.pc += 2
 		}
 
-	case "WSGE":
+	case "WSGE": // wide signed
 		if iPtr.acd == iPtr.acs {
-			tmp32b = 0
+			s32a = 0
 		} else {
-			tmp32b = cpuPtr.ac[iPtr.acd]
+			s32a = int32(cpuPtr.ac[iPtr.acd]) // this does the right thing in Go
 		}
-		if cpuPtr.ac[iPtr.acs] >= tmp32b {
+		s32b = int32(cpuPtr.ac[iPtr.acs])
+		if s32b >= s32a {
 			cpuPtr.pc += 2
 		} else {
 			cpuPtr.pc += 1
@@ -92,11 +94,12 @@ func eaglePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 
 	case "WSGT":
 		if iPtr.acd == iPtr.acs {
-			tmp32b = 0
+			s32a = 0
 		} else {
-			tmp32b = cpuPtr.ac[iPtr.acd]
+			s32a = int32(cpuPtr.ac[iPtr.acd]) // this does the right thing in Go
 		}
-		if cpuPtr.ac[iPtr.acs] > tmp32b {
+		s32b = int32(cpuPtr.ac[iPtr.acs])
+		if s32b > s32a {
 			cpuPtr.pc += 2
 		} else {
 			cpuPtr.pc += 1
@@ -118,11 +121,12 @@ func eaglePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 
 	case "WSLE":
 		if iPtr.acd == iPtr.acs {
-			tmp32b = 0
+			s32a = 0
 		} else {
-			tmp32b = cpuPtr.ac[iPtr.acd]
+			s32a = int32(cpuPtr.ac[iPtr.acd]) // this does the right thing in Go
 		}
-		if cpuPtr.ac[iPtr.acs] <= tmp32b {
+		s32b = int32(cpuPtr.ac[iPtr.acs])
+		if s32b <= s32a {
 			cpuPtr.pc += 2
 		} else {
 			cpuPtr.pc += 1
@@ -130,11 +134,12 @@ func eaglePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 
 	case "WSLT":
 		if iPtr.acd == iPtr.acs {
-			tmp32b = 0
+			s32a = 0
 		} else {
-			tmp32b = cpuPtr.ac[iPtr.acd]
+			s32a = int32(cpuPtr.ac[iPtr.acd]) // this does the right thing in Go
 		}
-		if cpuPtr.ac[iPtr.acs] < tmp32b {
+		s32b = int32(cpuPtr.ac[iPtr.acs])
+		if s32b < s32a {
 			cpuPtr.pc += 2
 		} else {
 			cpuPtr.pc += 1
@@ -159,10 +164,10 @@ func eaglePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		cpuPtr.ac[3] = dg_dword(cpuPtr.pc + 2) // TODO Check this, PoP is self-contradictory on p.11-642
 		cpuPtr.pc = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
 
-	case "XNISZ":
+	case "XNISZ": // unsigned narrow increment and skip if zero
 		tmpAddr = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
 		wd = memReadWord(tmpAddr)
-		wd++
+		wd++   // N.B. have checked that 0xffff + 1 == 0 in Go
 		memWriteWord(tmpAddr, wd)
 		if wd == 0 {
 			cpuPtr.pc += 3

@@ -72,5 +72,5 @@ The final write only performs the DIC and DICC.
 
 Exactly the same crash occurs after (apparently succesfully) running a surface analysis.
 
-Looking at the disassembly, there is only space reserved for 16 (or 17) 512B blocks, so why is DFMTR trying to write 25???
+Looking at the disassembly, there is only space reserved for 16 (or 17) 512B blocks, so why is DFMTR trying to write 25???  Something is going wrong before the final WRITE.
 
