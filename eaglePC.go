@@ -167,7 +167,7 @@ func eaglePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 	case "XNISZ": // unsigned narrow increment and skip if zero
 		tmpAddr = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
 		wd = memReadWord(tmpAddr)
-		wd++   // N.B. have checked that 0xffff + 1 == 0 in Go
+		wd++ // N.B. have checked that 0xffff + 1 == 0 in Go
 		memWriteWord(tmpAddr, wd)
 		if wd == 0 {
 			cpuPtr.pc += 3

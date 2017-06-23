@@ -4,6 +4,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"mvemg/logging"
 	"os"
 	//"strconv"
 )
@@ -39,7 +40,7 @@ func memInit() {
 	// zero ram?
 	memory.atuEnabled = false
 	bmcdchInit()
-	debugPrint(debugLog, "INFO: Initialised %d words of main memory\n", MEM_SIZE_WORDS)
+	logging.DebugPrint(logging.DebugLog, "INFO: Initialised %d words of main memory\n", MEM_SIZE_WORDS)
 }
 
 // read a byte from memory using word address and low-byte flag (true => lower (rightmost) byte)
@@ -91,7 +92,7 @@ func memReadWordDchChan(addr dg_phys_addr) dg_word {
 	if getDchMode() {
 		pAddr, _ = getBmcDchMapAddr(addr)
 	}
-	debugPrint(mapLog, "memReadWordBmcChan got addr: %d, read from addr: %d\n", addr, pAddr)
+	logging.DebugPrint(logging.MapLog, "memReadWordBmcChan got addr: %d, read from addr: %d\n", addr, pAddr)
 	return memReadWord(pAddr)
 }
 
@@ -103,7 +104,7 @@ func memReadWordBmcChan(addr dg_phys_addr) dg_word {
 	} else {
 		pAddr = decodedAddr.ca
 	}
-	debugPrint(mapLog, "memWriteReadBmcChan got addr: %d, wrote to addr: %d\n", addr, pAddr)
+	logging.DebugPrint(logging.MapLog, "memWriteReadBmcChan got addr: %d, wrote to addr: %d\n", addr, pAddr)
 	return memReadWord(pAddr)
 }
 
@@ -124,7 +125,7 @@ func memWriteWordDchChan(addr dg_phys_addr, data dg_word) dg_phys_addr {
 		pAddr, _ = getBmcDchMapAddr(addr)
 	}
 	memWriteWord(pAddr, data)
-	debugPrint(mapLog, "memWriteWordDchChan got addr: %d, wrote to addr: %d\n", addr, pAddr)
+	logging.DebugPrint(logging.MapLog, "memWriteWordDchChan got addr: %d, wrote to addr: %d\n", addr, pAddr)
 	return pAddr
 }
 
@@ -137,7 +138,7 @@ func memWriteWordBmcChan(addr dg_phys_addr, data dg_word) dg_phys_addr {
 		pAddr = decodedAddr.ca
 	}
 	memWriteWord(pAddr, data)
-	debugPrint(mapLog, "memWriteWordBmcChan got addr: %d, wrote to addr: %d\n", addr, pAddr)
+	logging.DebugPrint(logging.MapLog, "memWriteWordBmcChan got addr: %d, wrote to addr: %d\n", addr, pAddr)
 	return pAddr
 }
 
@@ -168,7 +169,7 @@ func nsPush(seg dg_phys_addr, data dg_word) {
 	memory.ram[NSP_LOC]++ // we allow this direct write to a fixed location for performance
 	addr := dg_phys_addr(memory.ram[NSP_LOC])
 	memWriteWord(addr, data)
-	debugPrint(debugLog, "nsPush pushed %8d onto the Narrow Stack at location: %d\n", data, addr)
+	logging.DebugPrint(logging.DebugLog, "nsPush pushed %8d onto the Narrow Stack at location: %d\n", data, addr)
 }
 
 // POP a word off the Narrow Stack
@@ -177,7 +178,7 @@ func nsPop(seg dg_phys_addr) dg_word {
 	// TODO overflow/underflow handling - either here or in instruction?
 	addr := dg_phys_addr(memory.ram[NSP_LOC])
 	data := memReadWord(addr)
-	debugPrint(debugLog, "nsPop  popped %8d off  the Narrow Stack at location: %d\n", data, addr)
+	logging.DebugPrint(logging.DebugLog, "nsPop  popped %8d off  the Narrow Stack at location: %d\n", data, addr)
 	memory.ram[NSP_LOC]-- // we allow this direct write to a fixed location for performance
 	return data
 }
@@ -189,7 +190,7 @@ func wsPush(seg dg_phys_addr, data dg_dword) {
 	memory.ram[WSP_LOC] += 2 // we allow this direct write to a fixed location for performance
 	addr := dg_phys_addr(memory.ram[WSP_LOC])
 	memWriteDWord(addr, data)
-	debugPrint(debugLog, "wsPush pushed %8d onto the Wide Stack at location: %d\n", data, addr)
+	logging.DebugPrint(logging.DebugLog, "wsPush pushed %8d onto the Wide Stack at location: %d\n", data, addr)
 }
 
 // POP a word off the Wide Stack
@@ -199,8 +200,42 @@ func wsPop(seg dg_phys_addr) dg_dword {
 	addr := dg_phys_addr(memory.ram[WSP_LOC])
 	dword := memReadDWord(addr)
 	memory.ram[WSP_LOC] -= 2 // we allow this direct write to a fixed location for performance
-	debugPrint(debugLog, "wsPop  popped %8d off  the Wide Stack at location: %d\n", dword, addr)
+	logging.DebugPrint(logging.DebugLog, "wsPop  popped %8d off  the Wide Stack at location: %d\n", dword, addr)
 	return dword
+}
+
+// utility functions
+
+// BoolToInt converts a bool to 1 or 0
+func BoolToInt(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
+}
+
+// BoolToYN converts a bool to Y or N
+func BoolToYN(b bool) byte {
+	if b {
+		return 'Y'
+	}
+	return 'N'
+}
+
+// BoolToOnOff converts a bool to "On" or "Off"
+func BoolToOnOff(b bool) string {
+	if b {
+		return "On"
+	}
+	return "Off"
+}
+
+// BoolToOZ converts a boolean to a O(ne) or Z(ero) byte
+func boolToOZ(b bool) byte {
+	if b {
+		return 'O'
+	}
+	return 'Z'
 }
 
 // dwordGetLowerWord gets the DG-lower word of a doubleword

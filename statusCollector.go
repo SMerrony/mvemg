@@ -51,10 +51,11 @@ func statusCollector(
 	dskpChan chan dskpStatT) {
 
 	var (
-		cpuStats           cpuStatT
-		lastIcount, iCount uint64
-		ips                float64
-		lastCPUtime        time.Time
+		cpuStats                     cpuStatT
+		lastIcount, iCount           uint64
+		ips, dskpIops                float64
+		lastCPUtime, lastDskpTime    time.Time
+		thisDskpIOcnt, lastDskpIOcnt uint64
 		//		lastCPUtime, lastDpfTime, lastDskpTime time.Time
 		dpfStats  dpfStatT
 		dskpStats dskpStatT
@@ -87,10 +88,10 @@ func statusCollector(
 				ips = float64(iCount) / (time.Since(lastCPUtime).Seconds() * 1000)
 				lastCPUtime = time.Now()
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", DASHER_WRITE_WINDOW_ADDR, 0, statCPUrow, DASHER_ERASE_EOL))
-				statusSendString(conn, fmt.Sprintf("PC:  %010d   Interrupts: %d    ATU: %d     IPS: %.fk/sec",
+				statusSendString(conn, fmt.Sprintf("PC:  %010d   Interrupts: %s    ATU: %s     IPS: %.fk/sec",
 					cpuStats.pc,
-					boolToInt(cpuStats.ion),
-					boolToInt(cpuStats.atu),
+					BoolToOnOff(cpuStats.ion),
+					BoolToOnOff(cpuStats.atu),
 					ips))
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", DASHER_WRITE_WINDOW_ADDR, 0, statCPUrow2, DASHER_ERASE_EOL))
 				statusSendString(conn, fmt.Sprintf("AC0: %010d   AC1: %010d   AC2: %010d   AC3: %010d",
@@ -100,19 +101,24 @@ func statusCollector(
 					cpuStats.ac[3]))
 			case dpfStats = <-dpfChan:
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", DASHER_WRITE_WINDOW_ADDR, 0, statDPFrow, DASHER_ERASE_EOL))
-				statusSendString(conn, fmt.Sprintf("DPF  - Attached: %d  CYL: %04d  HD: %02d  SECT: %03d",
-					boolToInt(dpfStats.imageAttached),
+				statusSendString(conn, fmt.Sprintf("DPF  - Attached: %c  CYL: %04d  HD: %02d  SECT: %03d",
+					BoolToYN(dpfStats.imageAttached),
 					dpfStats.cylinder,
 					dpfStats.head,
 					dpfStats.sector))
 
 			case dskpStats = <-dskpChan:
+				thisDskpIOcnt = dskpStats.writes + dskpStats.reads
+				dskpIops = float64(thisDskpIOcnt-lastDskpIOcnt) / time.Since(lastDskpTime).Seconds()
+				lastDskpIOcnt = thisDskpIOcnt
+				lastDskpTime = time.Now()
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", DASHER_WRITE_WINDOW_ADDR, 0, statDSKProw, DASHER_ERASE_EOL))
-				statusSendString(conn, fmt.Sprintf("DSKP - Attached: %d  CYL: %04d  HD: %02d  SECT: %03d  SECNUM: %08d",
-					boolToInt(dskpStats.imageAttached),
-					dskpStats.cylinder,
-					dskpStats.head,
-					dskpStats.sector,
+				statusSendString(conn, fmt.Sprintf("DSKP - Attached: %c  IOPS: %.f  SECNUM: %08d",
+					BoolToYN(dskpStats.imageAttached),
+					dskpIops,
+					//dskpStats.cylinder,
+					//dskpStats.head,
+					//dskpStats.sector,
 					dskpStats.sectorNo))
 			}
 		}

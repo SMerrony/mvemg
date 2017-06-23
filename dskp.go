@@ -27,6 +27,7 @@ import (
 	"bufio"
 	"fmt"
 	"log"
+	"mvemg/logging"
 	"os"
 	"time"
 )
@@ -133,10 +134,10 @@ const (
 	DSKP_MAP_UPSTREAM_HPT   = 1 << 12
 
 	// calculated consts
-	// DSKP_PHYSICAL_BYTE_SIZE is the total  # bytes on a DSKP-type disk
-	DSKP_PHYSICAL_BYTE_SIZE = dskpSurfacesPerDisk * dskpHeadsPerSurface * dskpSectorsPerTrack * dskpBytesPerSector * dskpPhysicalCylinders
-	// DSKP_PHYSICAL_BLOCK_SIZE is the total # blocks on a DSKP-type disk
-	DSKP_PHYSICAL_BLOCK_SIZE = dskpSurfacesPerDisk * dskpHeadsPerSurface * dskpSectorsPerTrack * dskpPhysicalCylinders
+	// dskpPhysicalByteSize is the total  # bytes on a DSKP-type disk
+	dskpPhysicalByteSize = dskpSurfacesPerDisk * dskpHeadsPerSurface * dskpSectorsPerTrack * dskpBytesPerSector * dskpPhysicalCylinders
+	// dskpPhysicalBlockSize is the total # blocks on a DSKP-type disk
+	dskpPhysicalBlockSize = dskpSurfacesPerDisk * dskpHeadsPerSurface * dskpSectorsPerTrack * dskpPhysicalCylinders
 )
 
 type dskpDataT struct {
@@ -157,14 +158,14 @@ type dskpDataT struct {
 	sectorNo                              dg_dword
 }
 
-const dskpStatsPeriodMs = 333 // Will send status update this often
+const dskpStatsPeriodMs = 500 // Will send status update this often
 
 type dskpStatT struct {
 	imageAttached                      bool
 	statusRegA, statusRegB, statusRegC dg_word
-	cylinder, head, sector             dg_word
-	sectorNo                           dg_dword
-	reads, writes                      uint64
+	//	cylinder, head, sector             dg_word
+	sectorNo      dg_dword
+	reads, writes uint64
 }
 
 var (
@@ -173,7 +174,7 @@ var (
 
 // dskpInit is called once by the main routine to initialise this DSKP emulator
 func dskpInit(statsChann chan dskpStatT) {
-	debugPrint(dskpLog, "DSKP Initialising via call to dskpInit()...\n")
+	logging.DebugPrint(logging.DskpLog, "DSKP Initialising via call to dskpInit()...\n")
 
 	dskpData.debug = true
 
@@ -191,11 +192,11 @@ func dskpInit(statsChann chan dskpStatT) {
 // attempt to attach an extant MV/Em disk image to the running emulator
 func dskpAttach(dNum int, imgName string) bool {
 	// TODO Disk Number not currently used
-	debugPrint(dskpLog, "dskpAttach called for disk #%d with image <%s>\n", dNum, imgName)
+	logging.DebugPrint(logging.DskpLog, "dskpAttach called for disk #%d with image <%s>\n", dNum, imgName)
 	dskpData.imageFile, err = os.OpenFile(imgName, os.O_RDWR, 0755)
 	if err != nil {
-		debugPrint(dskpLog, "Failed to open image for attaching\n")
-		debugPrint(debugLog, "WARN: Failed to open dskp image <%s> for ATTach\n", imgName)
+		logging.DebugPrint(logging.DskpLog, "Failed to open image for attaching\n")
+		logging.DebugPrint(logging.DebugLog, "WARN: Failed to open dskp image <%s> for ATTach\n", imgName)
 		return false
 	}
 	dskpData.imageFileName = imgName
@@ -211,9 +212,9 @@ func dskpStatSender(sChan chan dskpStatT) {
 
 		if dskpData.imageAttached {
 			stats.imageAttached = true
-			stats.cylinder = dskpData.cylinder
-			stats.head = dskpData.head
-			stats.sector = dskpData.sector
+			//stats.cylinder = dskpData.cylinder
+			//stats.head = dskpData.head
+			//stats.sector = dskpData.sector
 			stats.statusRegA = dskpData.statusRegA
 			stats.statusRegB = dskpData.statusRegB
 			stats.statusRegC = dskpData.statusRegC
@@ -242,9 +243,9 @@ func dskpCreateBlank(imgName string) bool {
 		return false
 	}
 	defer newFile.Close()
-	debugPrint(dskpLog, "dskpCreateBlank attempting to write %d bytes\n", DSKP_PHYSICAL_BYTE_SIZE)
+	logging.DebugPrint(logging.DskpLog, "dskpCreateBlank attempting to write %d bytes\n", dskpPhysicalByteSize)
 	w := bufio.NewWriter(newFile)
-	for b := 0; b < DSKP_PHYSICAL_BYTE_SIZE; b++ {
+	for b := 0; b < dskpPhysicalByteSize; b++ {
 		w.WriteByte(0)
 	}
 	w.Flush()
@@ -256,13 +257,13 @@ func dskpDataIn(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
 	switch abc {
 	case 'A':
 		cpuPtr.ac[iPtr.acd] = dg_dword(dskpData.statusRegA)
-		debugPrint(dskpLog, "DIA [Read Status A] returning %s for DRV=%d, PC: %d\n", wordToBinStr(dskpData.statusRegA), 0, cpuPtr.pc)
+		logging.DebugPrint(logging.DskpLog, "DIA [Read Status A] returning %s for DRV=%d, PC: %d\n", wordToBinStr(dskpData.statusRegA), 0, cpuPtr.pc)
 	case 'B':
 		cpuPtr.ac[iPtr.acd] = dg_dword(dskpData.statusRegB)
-		debugPrint(dskpLog, "DIB [Read Status B] returning %s for DRV=%d, PC: %d\n", wordToBinStr(dskpData.statusRegB), 0, cpuPtr.pc)
+		logging.DebugPrint(logging.DskpLog, "DIB [Read Status B] returning %s for DRV=%d, PC: %d\n", wordToBinStr(dskpData.statusRegB), 0, cpuPtr.pc)
 	case 'C':
 		cpuPtr.ac[iPtr.acd] = dg_dword(dskpData.statusRegC)
-		debugPrint(dskpLog, "DIC [Read Status C] returning %s for DRV=%d, PC: %d\n", wordToBinStr(dskpData.statusRegC), 0, cpuPtr.pc)
+		logging.DebugPrint(logging.DskpLog, "DIC [Read Status C] returning %s for DRV=%d, PC: %d\n", wordToBinStr(dskpData.statusRegC), 0, cpuPtr.pc)
 	}
 	dskpHandleFlag(iPtr.f)
 }
@@ -273,19 +274,19 @@ func dskpDataOut(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
 	case 'A':
 		dskpData.commandRegA = dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
 		if dskpData.debug {
-			debugPrint(dskpLog, "DOA [Load Cmd Reg A] from AC%d containing %s, PC: %d\n",
+			logging.DebugPrint(logging.DskpLog, "DOA [Load Cmd Reg A] from AC%d containing %s, PC: %d\n",
 				iPtr.acd, wordToBinStr(dskpData.commandRegA), cpuPtr.pc)
 		}
 	case 'B':
 		dskpData.commandRegB = dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
 		if dskpData.debug {
-			debugPrint(dskpLog, "DOB [Load Cmd Reg B] from AC%d containing %s, PC: %d\n",
+			logging.DebugPrint(logging.DskpLog, "DOB [Load Cmd Reg B] from AC%d containing %s, PC: %d\n",
 				iPtr.acd, wordToBinStr(dskpData.commandRegB), cpuPtr.pc)
 		}
 	case 'C':
 		dskpData.commandRegC = dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
 		if dskpData.debug {
-			debugPrint(dskpLog, "DOC [Load Cmd Reg C] from AC%d containing %s, PC: %d\n",
+			logging.DebugPrint(logging.DskpLog, "DOC [Load Cmd Reg C] from AC%d containing %s, PC: %d\n",
 				iPtr.acd, wordToBinStr(dskpData.commandRegC), cpuPtr.pc)
 		}
 	}
@@ -303,50 +304,50 @@ func dskpDoPioCommand() {
 
 	case DSKP_BEGIN:
 		if dskpData.debug {
-			debugPrint(dskpLog, "... BEGIN command, unit # %d\n", dskpData.commandRegA)
+			logging.DebugPrint(logging.DskpLog, "... BEGIN command, unit # %d\n", dskpData.commandRegA)
 		}
 		// pretend we have succesfully booted ourself
 		dskpData.statusRegB = 0
 		dskpSetPioStatusRegC(STAT_XEC_STATE_BEGUN, STAT_CCS_PIO_CMD_OK, DSKP_BEGIN, testWbit(dskpData.commandRegC, 15))
 		if dskpData.debug {
-			debugPrint(dskpLog, "... ..... returning %s\n", wordToBinStr(dskpData.statusRegC))
+			logging.DebugPrint(logging.DskpLog, "... ..... returning %s\n", wordToBinStr(dskpData.statusRegC))
 		}
 
 	case DSKP_GET_MAPPING:
 		if dskpData.debug {
-			debugPrint(dskpLog, "... GET MAPPING command\n")
+			logging.DebugPrint(logging.DskpLog, "... GET MAPPING command\n")
 		}
 		dskpData.statusRegA = dskpData.mappingRegA
 		dskpData.statusRegB = dskpData.mappingRegB
 		dskpSetPioStatusRegC(0, STAT_CCS_PIO_CMD_OK, DSKP_GET_MAPPING, testWbit(dskpData.commandRegC, 15))
 		if dskpData.debug {
-			debugPrint(dskpLog, "... ... Status Reg A set to %s\n", wordToBinStr(dskpData.statusRegA))
-			debugPrint(dskpLog, "... ... Status Reg B set to %s\n", wordToBinStr(dskpData.statusRegB))
+			logging.DebugPrint(logging.DskpLog, "... ... Status Reg A set to %s\n", wordToBinStr(dskpData.statusRegA))
+			logging.DebugPrint(logging.DskpLog, "... ... Status Reg B set to %s\n", wordToBinStr(dskpData.statusRegB))
 		}
 		dskpSetPioStatusRegC(0, STAT_CCS_PIO_CMD_OK, DSKP_GET_MAPPING, testWbit(dskpData.commandRegC, 15))
 
 	case DSKP_SET_MAPPING:
 		if dskpData.debug {
-			debugPrint(dskpLog, "... SET MAPPING command\n")
+			logging.DebugPrint(logging.DskpLog, "... SET MAPPING command\n")
 		}
 		dskpData.mappingRegA = dskpData.commandRegA
 		dskpData.mappingRegB = dskpData.commandRegB
 		if dskpData.debug {
-			debugPrint(dskpLog, "... ... Mapping Reg A set to %s\n", wordToBinStr(dskpData.commandRegA))
-			debugPrint(dskpLog, "... ... Mapping Reg B set to %s\n", wordToBinStr(dskpData.commandRegB))
+			logging.DebugPrint(logging.DskpLog, "... ... Mapping Reg A set to %s\n", wordToBinStr(dskpData.commandRegA))
+			logging.DebugPrint(logging.DskpLog, "... ... Mapping Reg B set to %s\n", wordToBinStr(dskpData.commandRegB))
 		}
 		dskpSetPioStatusRegC(STAT_XEC_STATE_MAPPED, STAT_CCS_PIO_CMD_OK, DSKP_SET_MAPPING, testWbit(dskpData.commandRegC, 15))
 
 	case DSKP_GET_INTERFACE:
 		addr = dg_phys_addr(dskpData.commandRegA)<<16 | dg_phys_addr(dskpData.commandRegB)
 		if dskpData.debug {
-			debugPrint(dskpLog, "... GET INTERFACE INFO command\n")
-			debugPrint(dskpLog, "... ... Destination Start Address: %d\n", addr)
+			logging.DebugPrint(logging.DskpLog, "... GET INTERFACE INFO command\n")
+			logging.DebugPrint(logging.DskpLog, "... ... Destination Start Address: %d\n", addr)
 		}
 		for w = 0; w < DSKP_INT_INF_BLK_SIZE; w++ {
 			memWriteWord(addr+w, dskpData.intInfBlock[w])
 			if dskpData.debug {
-				debugPrint(dskpLog, "... ... Word %d: %s\n", w, wordToBinStr(dskpData.intInfBlock[w]))
+				logging.DebugPrint(logging.DskpLog, "... ... Word %d: %s\n", w, wordToBinStr(dskpData.intInfBlock[w]))
 			}
 		}
 		dskpSetPioStatusRegC(0, STAT_CCS_PIO_CMD_OK, DSKP_GET_INTERFACE, testWbit(dskpData.commandRegC, 15))
@@ -354,8 +355,8 @@ func dskpDoPioCommand() {
 	case DSKP_SET_INTERFACE:
 		addr = dg_phys_addr(dskpData.commandRegA)<<16 | dg_phys_addr(dskpData.commandRegB)
 		if dskpData.debug {
-			debugPrint(dskpLog, "... SET INTERFACE INFO command\n")
-			debugPrint(dskpLog, "... ... Origin Start Address: %d\n", addr)
+			logging.DebugPrint(logging.DskpLog, "... SET INTERFACE INFO command\n")
+			logging.DebugPrint(logging.DskpLog, "... ... Origin Start Address: %d\n", addr)
 		}
 		// only a few fields can be changed...
 		w = 5
@@ -365,22 +366,22 @@ func dskpDoPioCommand() {
 		w = 7
 		dskpData.intInfBlock[w] = memReadWord(addr + w)
 		if dskpData.debug {
-			debugPrint(dskpLog, "... ... Word 5: %s\n", wordToBinStr(dskpData.intInfBlock[5]))
-			debugPrint(dskpLog, "... ... Word 6: %s\n", wordToBinStr(dskpData.intInfBlock[6]))
-			debugPrint(dskpLog, "... ... Word 7: %s\n", wordToBinStr(dskpData.intInfBlock[7]))
+			logging.DebugPrint(logging.DskpLog, "... ... Word 5: %s\n", wordToBinStr(dskpData.intInfBlock[5]))
+			logging.DebugPrint(logging.DskpLog, "... ... Word 6: %s\n", wordToBinStr(dskpData.intInfBlock[6]))
+			logging.DebugPrint(logging.DskpLog, "... ... Word 7: %s\n", wordToBinStr(dskpData.intInfBlock[7]))
 		}
 		dskpSetPioStatusRegC(0, STAT_CCS_PIO_CMD_OK, DSKP_SET_INTERFACE, testWbit(dskpData.commandRegC, 15))
 
 	case DSKP_GET_UNIT:
 		addr = dg_phys_addr(dskpData.commandRegA)<<16 | dg_phys_addr(dskpData.commandRegB)
 		if dskpData.debug {
-			debugPrint(dskpLog, "... GET UNIT INFO command\n")
-			debugPrint(dskpLog, "... ... Destination Start Address: %d\n", addr)
+			logging.DebugPrint(logging.DskpLog, "... GET UNIT INFO command\n")
+			logging.DebugPrint(logging.DskpLog, "... ... Destination Start Address: %d\n", addr)
 		}
 		for w = 0; w < DSKP_UNIT_INF_BLK_SIZE; w++ {
 			memWriteWord(addr+w, dskpData.unitInfBlock[w])
 			if dskpData.debug {
-				debugPrint(dskpLog, "... ... Word %d: %s\n", w, wordToBinStr(dskpData.unitInfBlock[w]))
+				logging.DebugPrint(logging.DskpLog, "... ... Word %d: %s\n", w, wordToBinStr(dskpData.unitInfBlock[w]))
 			}
 		}
 		dskpSetPioStatusRegC(0, STAT_CCS_PIO_CMD_OK, DSKP_GET_UNIT, testWbit(dskpData.commandRegC, 15))
@@ -388,15 +389,15 @@ func dskpDoPioCommand() {
 	case DSKP_SET_UNIT:
 		addr = dg_phys_addr(dskpData.commandRegA)<<16 | dg_phys_addr(dskpData.commandRegB)
 		if dskpData.debug {
-			debugPrint(dskpLog, "... SET UNIT INFO command\n")
-			debugPrint(dskpLog, "... ... Origin Start Address: %d\n", addr)
+			logging.DebugPrint(logging.DskpLog, "... SET UNIT INFO command\n")
+			logging.DebugPrint(logging.DskpLog, "... ... Origin Start Address: %d\n", addr)
 		}
 		// only the first word is writable according to p.2-16
 		// TODO check no active CBs first
 		dskpData.unitInfBlock[0] = memReadWord(addr)
 		dskpSetPioStatusRegC(0, STAT_CCS_PIO_CMD_OK, DSKP_SET_UNIT, testWbit(dskpData.commandRegC, 15))
 		if dskpData.debug {
-			debugPrint(dskpLog, "... ... Overwrote word 0 of UIB with: %s\n", wordToBinStr(dskpData.unitInfBlock[0]))
+			logging.DebugPrint(logging.DskpLog, "... ... Overwrote word 0 of UIB with: %s\n", wordToBinStr(dskpData.unitInfBlock[0]))
 		}
 
 	case DSKP_RESET:
@@ -405,22 +406,22 @@ func dskpDoPioCommand() {
 	case DSKP_SET_CONTROLLER:
 		addr = dg_phys_addr(dskpData.commandRegA)<<16 | dg_phys_addr(dskpData.commandRegB)
 		if dskpData.debug {
-			debugPrint(dskpLog, "... SET CONTROLLER INFO command\n")
-			debugPrint(dskpLog, "... ... Origin Start Address: %d\n", addr)
+			logging.DebugPrint(logging.DskpLog, "... SET CONTROLLER INFO command\n")
+			logging.DebugPrint(logging.DskpLog, "... ... Origin Start Address: %d\n", addr)
 		}
 		dskpData.ctrlInfBlock[0] = memReadWord(addr)
 		dskpData.ctrlInfBlock[1] = memReadWord(addr + 1)
 		dskpSetPioStatusRegC(0, STAT_CCS_PIO_CMD_OK, DSKP_SET_CONTROLLER, testWbit(dskpData.commandRegC, 15))
 		if dskpData.debug {
-			debugPrint(dskpLog, "... ... Word 0: %s\n", wordToBinStr(dskpData.ctrlInfBlock[0]))
-			debugPrint(dskpLog, "... ... Word 1: %s\n", wordToBinStr(dskpData.ctrlInfBlock[1]))
+			logging.DebugPrint(logging.DskpLog, "... ... Word 0: %s\n", wordToBinStr(dskpData.ctrlInfBlock[0]))
+			logging.DebugPrint(logging.DskpLog, "... ... Word 1: %s\n", wordToBinStr(dskpData.ctrlInfBlock[1]))
 		}
 
 	case DSKP_START_LIST:
 		addr = dg_phys_addr(dskpData.commandRegA)<<16 | dg_phys_addr(dskpData.commandRegB)
 		if dskpData.debug {
-			debugPrint(dskpLog, "... START LIST command\n")
-			debugPrint(dskpLog, "... ..... First CB Address: %d\n", addr)
+			logging.DebugPrint(logging.DskpLog, "... START LIST command\n")
+			logging.DebugPrint(logging.DskpLog, "... ..... First CB Address: %d\n", addr)
 		}
 		// TODO should check addr validity before starting processing
 		dskpProcessCB(addr)
@@ -452,7 +453,7 @@ func dskpHandleFlag(f byte) {
 		busSetBusy(DEV_DSKP, true)
 		busSetDone(DEV_DSKP, false)
 		if dskpData.debug {
-			debugPrint(dskpLog, "... S flag set\n")
+			logging.DebugPrint(logging.DskpLog, "... S flag set\n")
 		}
 		dskpDoPioCommand()
 		busSetBusy(DEV_DSKP, false)
@@ -460,7 +461,7 @@ func dskpHandleFlag(f byte) {
 
 	case 'C':
 		if dskpData.debug {
-			debugPrint(dskpLog, "... C flag set, clearing DONE flag\n")
+			logging.DebugPrint(logging.DskpLog, "... C flag set, clearing DONE flag\n")
 		}
 		busSetDone(DEV_DSKP, false)
 		// TODO clear pending interrupt
@@ -471,7 +472,7 @@ func dskpHandleFlag(f byte) {
 
 	case 'P':
 		if dskpData.debug {
-			debugPrint(dskpLog, "... P flag set\n")
+			logging.DebugPrint(logging.DskpLog, "... P flag set\n")
 		}
 		log.Fatalln("P flag not yet implemented in DSKP")
 
@@ -504,27 +505,27 @@ func dskpProcessCB(addr dg_phys_addr) {
 	)
 	cbLength = DSKP_CB_MIN_SIZE + dskpGetCBextendedStatusSize()
 	if dskpData.debug {
-		debugPrint(dskpLog, "... Processing CB, extended status size is: %d\n", dskpGetCBextendedStatusSize())
+		logging.DebugPrint(logging.DskpLog, "... Processing CB, extended status size is: %d\n", dskpGetCBextendedStatusSize())
 	}
 	// copy CB contents from host memory
 	for w = 0; w < cbLength; w++ {
 		cb[w] = memReadWord(addr + dg_phys_addr(w))
 		if dskpData.debug {
-			debugPrint(dskpLog, "... CB[%d]: %d\n", w, cb[w])
+			logging.DebugPrint(logging.DskpLog, "... CB[%d]: %d\n", w, cb[w])
 		}
 	}
 
 	opCode := cb[DSKP_CB_INA_FLAGS_OPCODE] & 0x03ff
 	nextCB = dg_phys_addr(cb[DSKP_CB_LINK_ADDR_HIGH])<<16 | dg_phys_addr(cb[DSKP_CB_LINK_ADDR_LOW])
 	if dskpData.debug {
-		debugPrint(dskpLog, "... CB OpCode: %d\n", opCode)
-		debugPrint(dskpLog, "... .. Next CB Addr: %d\n", nextCB)
+		logging.DebugPrint(logging.DskpLog, "... CB OpCode: %d\n", opCode)
+		logging.DebugPrint(logging.DskpLog, "... .. Next CB Addr: %d\n", nextCB)
 	}
 	switch opCode {
 
 	case DSKP_CB_OP_RECALIBRATE_DISK:
 		if dskpData.debug {
-			debugPrint(dskpLog, "... .. RECALIBRATE\n")
+			logging.DebugPrint(logging.DskpLog, "... .. RECALIBRATE\n")
 		}
 		dskpData.cylinder = 0
 		dskpData.head = 0
@@ -554,10 +555,10 @@ func dskpProcessCB(addr dg_phys_addr) {
 			physAddr = dg_phys_addr(cb[DSKP_CB_TXFER_ADDR_HIGH])<<16 | dg_phys_addr(cb[DSKP_CB_TXFER_ADDR_LOW])
 		}
 		if dskpData.debug {
-			debugPrint(dskpLog, "... .. CB READ command, SECCNT: %d\n", cb[DSKP_CB_TXFER_COUNT])
-			debugPrint(dskpLog, "... .. .. .... from sector:     %d\n", sectorNumber)
-			debugPrint(dskpLog, "... .. .. .... from phys addr:  %d\n", physAddr)
-			debugPrint(dskpLog, "... .. .. .... physical txfer?: %d\n", boolToInt(physTransfers))
+			logging.DebugPrint(logging.DskpLog, "... .. CB READ command, SECCNT: %d\n", cb[DSKP_CB_TXFER_COUNT])
+			logging.DebugPrint(logging.DskpLog, "... .. .. .... from sector:     %d\n", sectorNumber)
+			logging.DebugPrint(logging.DskpLog, "... .. .. .... from phys addr:  %d\n", physAddr)
+			logging.DebugPrint(logging.DskpLog, "... .. .. .... physical txfer?: %d\n", BoolToInt(physTransfers))
 		}
 		for sect = 0; sect < dg_dword(cb[DSKP_CB_TXFER_COUNT]); sect++ {
 			dskpPositionDiskImage(sectorNumber + sect)
@@ -566,6 +567,7 @@ func dskpProcessCB(addr dg_phys_addr) {
 				tmpWd = (dg_word(buffer[w*2]) << 8) | dg_word(buffer[(w*2)+1])
 				memWriteWordBmcChan(physAddr+(dg_phys_addr(sect)*dskpWordsPerSector)+dg_phys_addr(w), tmpWd)
 			}
+			dskpData.reads++
 		}
 		if cbLength >= DSKP_CB_ERR_STATUS+1 {
 			cb[DSKP_CB_ERR_STATUS] = 0
@@ -576,10 +578,10 @@ func dskpProcessCB(addr dg_phys_addr) {
 		if cbLength >= DSKP_CB_CB_STATUS+1 {
 			cb[DSKP_CB_CB_STATUS] = 1 // finally, set Done bit
 		}
-		dskpData.reads++
+
 		if dskpData.debug {
-			debugPrint(dskpLog, "... .. .... READ command finished\n")
-			debugPrint(dskpLog, "Last buffer: %X\n", buffer)
+			logging.DebugPrint(logging.DskpLog, "... .. .... READ command finished\n")
+			logging.DebugPrint(logging.DskpLog, "Last buffer: %X\n", buffer)
 		}
 		//dskpSetAsyncStatusRegC(STAT_XEC_STATE_MAPPED, STAT_ASYNC_NO_ERRORS)
 		dskpSetAsyncStatusRegC(0, STAT_ASYNC_NO_ERRORS)
@@ -596,10 +598,10 @@ func dskpProcessCB(addr dg_phys_addr) {
 			physAddr = dg_phys_addr(cb[DSKP_CB_TXFER_ADDR_HIGH])<<16 | dg_phys_addr(cb[DSKP_CB_TXFER_ADDR_LOW])
 		}
 		if dskpData.debug {
-			debugPrint(dskpLog, "... .. CB WRITE command, SECCNT: %d\n", cb[DSKP_CB_TXFER_COUNT])
-			debugPrint(dskpLog, "... .. .. ..... to sector:       %d\n", sectorNumber)
-			debugPrint(dskpLog, "... .. .. ..... from phys addr:  %d\n", physAddr)
-			debugPrint(dskpLog, "... .. .. ..... physical txfer?: %d\n", boolToInt(physTransfers))
+			logging.DebugPrint(logging.DskpLog, "... .. CB WRITE command, SECCNT: %d\n", cb[DSKP_CB_TXFER_COUNT])
+			logging.DebugPrint(logging.DskpLog, "... .. .. ..... to sector:       %d\n", sectorNumber)
+			logging.DebugPrint(logging.DskpLog, "... .. .. ..... from phys addr:  %d\n", physAddr)
+			logging.DebugPrint(logging.DskpLog, "... .. .. ..... physical txfer?: %d\n", BoolToInt(physTransfers))
 		}
 		for sect = 0; sect < dg_dword(cb[DSKP_CB_TXFER_COUNT]); sect++ {
 			dskpPositionDiskImage(sectorNumber + sect)
@@ -610,8 +612,9 @@ func dskpProcessCB(addr dg_phys_addr) {
 			}
 			dskpData.imageFile.Write(buffer)
 			if dskpData.debug {
-				debugPrint(dskpLog, "Wrote buffer: %X\n", buffer)
+				logging.DebugPrint(logging.DskpLog, "Wrote buffer: %X\n", buffer)
 			}
+			dskpData.writes++
 		}
 		if cbLength >= DSKP_CB_ERR_STATUS+1 {
 			cb[DSKP_CB_ERR_STATUS] = 0
@@ -622,7 +625,7 @@ func dskpProcessCB(addr dg_phys_addr) {
 		if cbLength >= DSKP_CB_CB_STATUS+1 {
 			cb[DSKP_CB_CB_STATUS] = 1 // finally, set Done bit
 		}
-		dskpData.writes++
+
 		//dskpSetAsyncStatusRegC(STAT_XEC_STATE_MAPPED, STAT_ASYNC_NO_ERRORS)
 		dskpSetAsyncStatusRegC(0, STAT_ASYNC_NO_ERRORS)
 
@@ -647,7 +650,7 @@ func dskpReset() {
 	dskpData.statusRegB = 0
 	dskpSetPioStatusRegC(STAT_XEC_STATE_RESET_DONE, 0, DSKP_RESET, testWbit(dskpData.commandRegC, 15))
 	if dskpData.debug {
-		debugPrint(dskpLog, "DSKP Reset via call to dskpReset()\n")
+		logging.DebugPrint(logging.DskpLog, "DSKP Reset via call to dskpReset()\n")
 	}
 }
 

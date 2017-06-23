@@ -1,6 +1,8 @@
 // resolve.go
 package main
 
+import "mvemg/logging"
+
 func resolve16bitEclipseAddr(cpuPtr *Cpu, ind byte, mode string, disp int32) dg_phys_addr {
 
 	var (
@@ -34,7 +36,7 @@ func resolve16bitEclipseAddr(cpuPtr *Cpu, ind byte, mode string, disp int32) dg_
 	eff = dg_phys_addr(intEff) & 0x7fff
 
 	if debugLogging {
-		debugPrint(debugLog, "... resolve16bitEclipseAddr got: %d., returning %d.\n", disp, eff)
+		logging.DebugPrint(logging.DebugLog, "... resolve16bitEclipseAddr got: %d., returning %d.\n", disp, eff)
 	}
 	return eff
 }
@@ -72,7 +74,7 @@ func resolve16bitEagleAddr(cpuPtr *Cpu, ind byte, mode string, disp int32) dg_ph
 	eff = dg_phys_addr(intEff)
 
 	if debugLogging {
-		debugPrint(debugLog, "... resolve16bitEagleAddr got: %d., returning %d.\n", disp, eff)
+		logging.DebugPrint(logging.DebugLog, "... resolve16bitEagleAddr got: %d., returning %d.\n", disp, eff)
 	}
 	return eff
 }
@@ -103,7 +105,7 @@ func resolve32bitEffAddr(cpuPtr *Cpu, ind byte, mode string, disp int32) dg_phys
 	}
 
 	if debugLogging {
-		debugPrint(debugLog, "... resolve32bitEffAddr got: %d., returning %d.\n", disp, eff)
+		logging.DebugPrint(logging.DebugLog, "... resolve32bitEffAddr got: %d., returning %d.\n", disp, eff)
 	}
 	return eff
 }

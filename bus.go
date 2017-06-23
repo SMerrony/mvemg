@@ -1,20 +1,42 @@
 // bus.go
+
+// Copyright (C) 2017  Steve Merrony
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
 package main
 
 import (
 	"fmt"
 	"log"
-	//"os"
+	"mvemg/logging"
 )
 
-// I/O reset func
-type ResetFunc func()
+type (
+	// I/O reset func
+	ResetFunc func()
 
-// DOx func
-type DataOutFunc func(*Cpu, *DecodedInstr, byte)
+	// DOx func
+	DataOutFunc func(*Cpu, *DecodedInstr, byte)
 
-// DIx func
-type DataInFunc func(*Cpu, *DecodedInstr, byte)
+	// DIx func
+	DataInFunc func(*Cpu, *DecodedInstr, byte)
+)
 
 type device struct {
 	mnemonic        string
@@ -57,26 +79,26 @@ func busAddDevice(devNum int, mnem string, pmb int, att bool, io bool, boot bool
 	d[devNum].simAttached = att
 	d[devNum].ioDevice = io
 	d[devNum].bootable = boot
-	debugPrint(debugLog, "INFO: Device 0%o added to bus\n", devNum)
+	logging.DebugPrint(logging.DebugLog, "INFO: Device 0%o added to bus\n", devNum)
 }
 
 func busSetDataInFunc(devNum int, fn DataInFunc) {
 	d[devNum].dataInFunc = fn
-	debugPrint(debugLog, "INFO: Bus Data In function set for dev #0%o\n", devNum)
+	logging.DebugPrint(logging.DebugLog, "INFO: Bus Data In function set for dev #0%o\n", devNum)
 }
 
 func busDataIn(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
-	//debugPrint(DEBUG_LOG, "DEBUG: Bus Data In function called for dev #0%o\n", iPtr.ioDev)
+	//logging.DebugPrint(logging.DEBUG_LOG, "DEBUG: Bus Data In function called for dev #0%o\n", iPtr.ioDev)
 	if d[iPtr.ioDev].dataInFunc == nil {
 		log.Fatal("ERROR: busDataIn called with no function set")
 	}
 	d[iPtr.ioDev].dataInFunc(cpuPtr, iPtr, abc)
-	// debugPrint(DEBUG_LOG, "INFO: Bus Data In function called for dev #0%o\n", iPtr.ioDev)
+	// logging.DebugPrint(logging.DEBUG_LOG, "INFO: Bus Data In function called for dev #0%o\n", iPtr.ioDev)
 }
 
 func busSetDataOutFunc(devNum int, fn DataOutFunc) {
 	d[devNum].dataOutFunc = fn
-	debugPrint(debugLog, "INFO: Bus Data Out function set for dev #0%o\n", devNum)
+	logging.DebugPrint(logging.DebugLog, "INFO: Bus Data Out function set for dev #0%o\n", devNum)
 }
 
 func busDataOut(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
@@ -84,12 +106,12 @@ func busDataOut(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
 		log.Fatal("ERROR: busDataOut called with no function set")
 	}
 	d[iPtr.ioDev].dataOutFunc(cpuPtr, iPtr, abc)
-	debugPrint(debugLog, "INFO: Bus Data Out function called for dev #0%o\n", iPtr.ioDev)
+	logging.DebugPrint(logging.DebugLog, "INFO: Bus Data Out function called for dev #0%o\n", iPtr.ioDev)
 }
 
 func busSetResetFunc(devNum int, resetFn ResetFunc) {
 	d[devNum].resetFunc = resetFn
-	debugPrint(debugLog, "INFO: Bus reset function set for dev #0%o\n", devNum)
+	logging.DebugPrint(logging.DebugLog, "INFO: Bus reset function set for dev #0%o\n", devNum)
 }
 
 func busResetDevice(devNum int) {
@@ -120,12 +142,12 @@ func busIsAttached(devNum int) bool {
 
 func busSetBusy(devNum int, f bool) {
 	d[devNum].busy = f
-	debugPrint(debugLog, "... Busy flag set to %d for device #0%o\n", boolToInt(f), devNum)
+	logging.DebugPrint(logging.DebugLog, "... Busy flag set to %d for device #0%o\n", BoolToInt(f), devNum)
 }
 
 func busSetDone(devNum int, f bool) {
 	d[devNum].done = f
-	debugPrint(debugLog, "... Done flag set to %d for device #0%o\n", boolToInt(f), devNum)
+	logging.DebugPrint(logging.DebugLog, "... Done flag set to %d for device #0%o\n", BoolToInt(f), devNum)
 }
 
 func busGetBusy(devNum int) bool {
@@ -144,13 +166,6 @@ func busIsIODevice(devNum int) bool {
 	return d[devNum].ioDevice
 }
 
-func boolToInt(b bool) int {
-	if b {
-		return 1
-	}
-	return 0
-}
-
 func busGetPrintableDevList() string {
 	lst := fmt.Sprintf(" #  Mnem   PMB  I/O Busy Done Status%c", ASCII_NL)
 	var line string
@@ -158,7 +173,7 @@ func busGetPrintableDevList() string {
 		if d[dev].mnemonic != "" {
 			line = fmt.Sprintf("%#3o %-6s %2d. %3d %4d %4d  ",
 				dev, d[dev].mnemonic, d[dev].priorityMaskBit,
-				boolToInt(d[dev].ioDevice), boolToInt(d[dev].busy), boolToInt(d[dev].done))
+				BoolToInt(d[dev].ioDevice), BoolToInt(d[dev].busy), BoolToInt(d[dev].done))
 			if d[dev].simAttached {
 				line += "Attached"
 			} else {

@@ -25,6 +25,7 @@ import (
 	"bufio"
 	"fmt"
 	"log"
+	"mvemg/logging"
 	"net"
 	"os"
 	"strconv"
@@ -169,14 +170,14 @@ func scpGetLine() string {
 func cleanExit() {
 	ttoPutNLString(" *** MV/Emulator stopping at user request ***")
 	//p.Stop()
-	debugLogsDump()
+	logging.DebugLogsDump()
 	os.Exit(0)
 }
 
 func doCommand(cmd string) {
 	words := strings.Split(strings.TrimSpace(cmd), " ")
 	if debugLogging {
-		debugPrint(debugLog, "INFO: doCommand parsed command as <%s>\n", words[0])
+		logging.DebugPrint(logging.DebugLog, "INFO: doCommand parsed command as <%s>\n", words[0])
 	}
 
 	switch words[0] {
@@ -231,7 +232,7 @@ func attach(cmd []string) {
 		return
 	}
 	if debugLogging {
-		debugPrint(debugLog, "INFO: Attach called  with parms <%s> <%s>\n", cmd[1], cmd[2])
+		logging.DebugPrint(logging.DebugLog, "INFO: Attach called  with parms <%s> <%s>\n", cmd[1], cmd[2])
 	}
 	switch cmd[1] {
 	case "MTB":
@@ -266,7 +267,7 @@ func boot(cmd []string) {
 		return
 	}
 	if debugLogging {
-		debugPrint(debugLog, "INFO: Boot called  with parm <%s>\n", cmd[1])
+		logging.DebugPrint(logging.DebugLog, "INFO: Boot called  with parm <%s>\n", cmd[1])
 	}
 	dev, err := strconv.ParseInt(cmd[1], 8, 16) // FIXME Input Radix used here
 	devNum := int(dev)
@@ -399,7 +400,7 @@ func doScript(cmd []string) {
 	if err != nil {
 		ttoPutNLString(" *** Could not open MV/Em command script ***")
 		if debugLogging {
-			debugPrint(debugLog, "WARN: Could not open MV/Em command script <%s>\n", cmd[1])
+			logging.DebugPrint(logging.DebugLog, "WARN: Could not open MV/Em command script <%s>\n", cmd[1])
 		}
 		return
 	}
@@ -510,7 +511,7 @@ func run() {
 			break
 		}
 		if debugLogging {
-			debugPrint(debugLog, "%s\t\t%s\n", iPtr.disassembly, cpuCompactPrintableStatus())
+			logging.DebugPrint(logging.DebugLog, "%s\t\t%s\n", iPtr.disassembly, cpuCompactPrintableStatus())
 		}
 
 		// EXECUTE
@@ -544,7 +545,7 @@ func run() {
 	log.Println(errDetail)
 	ttoPutNLString(errDetail)
 	if debugLogging {
-		debugPrint(debugLog, "%s\n", cpuPrintableStatus())
+		logging.DebugPrint(logging.DebugLog, "%s\n", cpuPrintableStatus())
 	}
 	ttoPutString(cpuPrintableStatus())
 

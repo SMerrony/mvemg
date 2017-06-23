@@ -4,6 +4,7 @@ package main
 import (
 	//"bytes"
 	"log"
+	"mvemg/logging"
 	"os"
 )
 
@@ -154,7 +155,7 @@ func mtbLoadTBoot(mem Memory) {
 	simht.simhTapeRewind(0)
 	hdr, ok := simht.simhTapeReadRecordHeader(0)
 	if !ok || hdr != TBTSIZ_B {
-		debugPrint(debugLog, "WARN: mtbLoadTBoot called when no bootable tape image attached\n")
+		logging.DebugPrint(logging.DebugLog, "WARN: mtbLoadTBoot called when no bootable tape image attached\n")
 		return
 	}
 	tapeData, ok := simht.simhTapeReadRecord(0, TBTSIZ_B)
@@ -169,7 +170,7 @@ func mtbLoadTBoot(mem Memory) {
 	}
 	trailer, ok := simht.simhTapeReadRecordHeader(0)
 	if hdr != trailer {
-		debugPrint(debugLog, "WARN: mtbLoadTBoot found mismatched trailer in TBOOT file\n")
+		logging.DebugPrint(logging.DebugLog, "WARN: mtbLoadTBoot found mismatched trailer in TBOOT file\n")
 	}
 }
 

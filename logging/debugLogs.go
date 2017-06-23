@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package main
+package logging
 
 import (
 	"fmt"
@@ -29,10 +29,14 @@ const (
 	numDebugLogs     = 4
 	numDebugLogLines = 40000
 
-	debugLog = 0
-	dpfLog   = 1
-	dskpLog  = 2
-	mapLog   = 3
+	// DebugLog is the general-purpose log
+	DebugLog = 0
+	// DpfLog is for the DPF module
+	DpfLog = 1
+	// DskpLog is for the DSKP module
+	DskpLog = 2
+	// MapLog is for BMC/DCH-related logging
+	MapLog = 3
 
 	logPerms = 0644
 )
@@ -43,7 +47,8 @@ var (
 	lastLine  [numDebugLogs]int                      // pointer to the last line of each log
 )
 
-func debugLogsDump() {
+// DebugLogsDump can be called to dump out each of the non-empty debug logs to text files
+func DebugLogsDump() {
 
 	var (
 		debugDumpFile *os.File
@@ -53,13 +58,13 @@ func debugLogsDump() {
 	for l := range logArr {
 		if firstLine[l] != lastLine[l] { // ignore unused or empty logs
 			switch l {
-			case debugLog:
+			case DebugLog:
 				debugDumpFile, _ = os.OpenFile("mvem_debug.log", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, logPerms)
-			case dpfLog:
+			case DpfLog:
 				debugDumpFile, _ = os.OpenFile("dpf_debug.log", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, logPerms)
-			case dskpLog:
+			case DskpLog:
 				debugDumpFile, _ = os.OpenFile("dskp_debug.log", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, logPerms)
-			case mapLog:
+			case MapLog:
 				debugDumpFile, _ = os.OpenFile("map_debug.log", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, logPerms)
 			}
 			debugDumpFile.WriteString(">>> Dumping Debug Log\n\n")
@@ -78,11 +83,11 @@ func debugLogsDump() {
 	}
 }
 
-// debugPrint doesn't print anything!  It stores the log message
+// DebugPrint doesn't print anything!  It stores the log message
 // in array-backed circular arrays
 // for printing when debugLogsDump() is invoked.
 // This func can be called very often, KISS...
-func debugPrint(log int, aFmt string, msg ...interface{}) {
+func DebugPrint(log int, aFmt string, msg ...interface{}) {
 
 	lastLine[log]++
 

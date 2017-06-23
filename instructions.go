@@ -3,6 +3,7 @@ package main
 
 import (
 	"fmt"
+	"mvemg/logging"
 )
 
 // N.B. If using the instruction map exported from the C emulator, then
@@ -345,7 +346,7 @@ func instructionsInit() {
 	instructionSet["XWSUB"] = instrChars{0x8158, 0x87ff, ONEACC_MODE_IND_2_WORD_X_FMT, 2, EAGLE_OP}
 	instructionSet["ZEX"] = instrChars{0x8359, 0x87ff, TWOACC_1_WORD_FMT, 1, EAGLE_OP}
 
-	debugPrint(debugLog, "INFO: %d Instruction Set Opcodes loaded\n", len(instructionSet))
+	logging.DebugPrint(logging.DebugLog, "INFO: %d Instruction Set Opcodes loaded\n", len(instructionSet))
 }
 
 func instructionFind(opcode dg_word, lefMode bool, ioOn bool, atuOn bool) string {
@@ -385,7 +386,7 @@ func instructionDecode(opcode dg_word, pc dg_phys_addr, lefMode bool, ioOn bool,
 	decodedInstr.disassembly = "; Unknown instruction"
 	mnem := instructionFind(opcode, lefMode, ioOn, autOn)
 	if mnem == "" {
-		debugPrint(debugLog, "INFO: instructionFind failed to return anything to instructionDecode for location %d\n", pc)
+		logging.DebugPrint(logging.DebugLog, "INFO: instructionFind failed to return anything to instructionDecode for location %d\n", pc)
 		return &decodedInstr, false
 	}
 	decodedInstr.mnemonic = mnem
@@ -471,7 +472,7 @@ func instructionDecode(opcode dg_word, pc dg_phys_addr, lefMode bool, ioOn bool,
 		decodedInstr.disassembly += fmt.Sprintf(" %d.,%s [3-Word OpCode]", decodedInstr.imm32b, modeToString(decodedInstr.mode))
 
 	case NOACC_MODE_IND_2_WORD_E_FMT, NOACC_MODE_IND_2_WORD_X_FMT:
-		debugPrint(debugLog, "X_FMT: Mnemonic is <%s>\n", decodedInstr.mnemonic)
+		logging.DebugPrint(logging.DebugLog, "X_FMT: Mnemonic is <%s>\n", decodedInstr.mnemonic)
 		switch decodedInstr.mnemonic {
 		case "XJMP", "XJSR", "XNDSZ", "XNISZ", "XPEF", "XWDSZ":
 			decodedInstr.mode = decodeMode(getWbits(opcode, 3, 2))
@@ -650,7 +651,7 @@ func instructionDecode(opcode dg_word, pc dg_phys_addr, lefMode bool, ioOn bool,
 		decodedInstr.disassembly += fmt.Sprintf(" %d.", decodedInstr.bitNum)
 
 	default:
-		debugPrint(debugLog, "ERROR: Invalid instruction format (%d) for instruction %s", decodedInstr.instrFmt, decodedInstr.mnemonic)
+		logging.DebugPrint(logging.DebugLog, "ERROR: Invalid instruction format (%d) for instruction %s", decodedInstr.instrFmt, decodedInstr.mnemonic)
 		return nil, false
 	}
 	return &decodedInstr, true
@@ -690,7 +691,7 @@ func decode15bitDisp(d15 dg_word, mode string) int32 {
 		}
 	}
 	if debugLogging {
-		debugPrint(debugLog, "... decode15bitDisp got: %d, returning: %d\n", d15, disp)
+		logging.DebugPrint(logging.DebugLog, "... decode15bitDisp got: %d, returning: %d\n", d15, disp)
 	}
 	return disp
 }
@@ -710,7 +711,7 @@ func decode15bitEclipseDisp(d15 dg_word, mode string) int32 {
 		}
 	}
 	if debugLogging {
-		debugPrint(debugLog, "... decode15bitEclispeDisp got: %d, returning: %d\n", d15, disp)
+		logging.DebugPrint(logging.DebugLog, "... decode15bitEclispeDisp got: %d, returning: %d\n", d15, disp)
 	}
 	return disp
 }
@@ -720,7 +721,7 @@ func decode16bitByteDisp(d16 dg_word) (int32, bool) {
 	loHi := testWbit(d16, 15)
 	disp = int32(d16 >> 1)
 	if debugLogging {
-		debugPrint(debugLog, "... decode16bitByteDisp got: %d, returning %d\n", d16, disp)
+		logging.DebugPrint(logging.DebugLog, "... decode16bitByteDisp got: %d, returning %d\n", d16, disp)
 	}
 	return disp, loHi
 }
@@ -738,7 +739,7 @@ func decode31bitDisp(d1, d2 dg_word, mode string) int32 {
 		disp++ // see p.1-12 of PoP
 	}
 	if debugLogging {
-		debugPrint(debugLog, "... decode31bitDisp got: %d %d, returning: %d\n", d1, d2, disp)
+		logging.DebugPrint(logging.DebugLog, "... decode31bitDisp got: %d %d, returning: %d\n", d1, d2, disp)
 	}
 	return disp
 }

@@ -3,6 +3,7 @@ package main
 
 import (
 	"log"
+	"mvemg/logging"
 )
 
 func eclipsePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
@@ -35,7 +36,7 @@ func eclipsePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 			}
 		}
 		if debugLogging {
-			debugPrint(debugLog, "CLM compared %d with limits %d and %d, moving PC by %d\n", acs, l, h, inc)
+			logging.DebugPrint(logging.DebugLog, "CLM compared %d with limits %d and %d, moving PC by %d\n", acs, l, h, inc)
 		}
 		cpuPtr.pc += inc
 
@@ -45,7 +46,7 @@ func eclipsePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		lowLimit := memReadWord(tableStart - 2)
 		hiLimit := memReadWord(tableStart - 1)
 		if debugLogging {
-			debugPrint(debugLog, "DSPA called with table at %d, offset %d, lo %d hi %d\n",
+			logging.DebugPrint(logging.DebugLog, "DSPA called with table at %d, offset %d, lo %d hi %d\n",
 				tableStart, offset, lowLimit, hiLimit)
 		}
 		if offset < lowLimit || offset > hiLimit {
@@ -109,7 +110,7 @@ func eclipsePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 			cpuPtr.pc += 1
 		}
 		if debugLogging {
-			debugPrint(debugLog, "SNB: Wd Addr: %d., word: %0X, bit #: %d\n", addr, wd, bit)
+			logging.DebugPrint(logging.DebugLog, "SNB: Wd Addr: %d., word: %0X, bit #: %d\n", addr, wd, bit)
 		}
 
 	case "SZB":
@@ -133,7 +134,7 @@ func eclipsePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 			cpuPtr.pc += 1
 		}
 		if debugLogging {
-			debugPrint(debugLog, "SZB: Wd Addr: %d., word: %0X, bit #: %d\n", addr, wd, bit)
+			logging.DebugPrint(logging.DebugLog, "SZB: Wd Addr: %d., word: %0X, bit #: %d\n", addr, wd, bit)
 		}
 
 	default:

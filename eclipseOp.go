@@ -3,6 +3,7 @@ package main
 
 import (
 	"log"
+	"mvemg/logging"
 )
 
 func eclipseOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
@@ -36,13 +37,13 @@ func eclipseOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		bitNum = uint(cpuPtr.ac[iPtr.acd] & 0x000f)
 		wd = memReadWord(addr)
 		if debugLogging {
-			debugPrint(debugLog, "... BTO Addr: %d, Bit: %d, Before: %s\n",
+			logging.DebugPrint(logging.DebugLog, "... BTO Addr: %d, Bit: %d, Before: %s\n",
 				addr, bitNum, wordToBinStr(wd))
 		}
 		wd |= 1 << (15 - bitNum) // set the bit
 		memWriteWord(addr, wd)
 		if debugLogging {
-			debugPrint(debugLog, "... BTO                     Result: %s\n", wordToBinStr(wd))
+			logging.DebugPrint(logging.DebugLog, "... BTO                     Result: %s\n", wordToBinStr(wd))
 		}
 
 	case "BTZ":
@@ -57,7 +58,7 @@ func eclipseOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		bitNum = uint(cpuPtr.ac[iPtr.acd] & 0x000f)
 		wd = memReadWord(addr)
 		if debugLogging {
-			debugPrint(debugLog, "... BTZ Addr: %d, Bit: %d, Before: %s\n", addr, bitNum, wordToBinStr(wd))
+			logging.DebugPrint(logging.DebugLog, "... BTZ Addr: %d, Bit: %d, Before: %s\n", addr, bitNum, wordToBinStr(wd))
 		}
 		//wd |= 1 << (15 - bitNum) // set the bit
 		if testWbit(wd, int(bitNum)) {
@@ -65,7 +66,7 @@ func eclipseOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		}
 		memWriteWord(addr, wd)
 		if debugLogging {
-			debugPrint(debugLog, "... BTZ                     Result: %s\n",
+			logging.DebugPrint(logging.DebugLog, "... BTZ                     Result: %s\n",
 				wordToBinStr(wd))
 		}
 

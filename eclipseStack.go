@@ -1,7 +1,10 @@
 // eclipseStack.go
 package main
 
-import "log"
+import (
+	"log"
+	"mvemg/logging"
+)
 
 func eclipseStack(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 	var (
@@ -22,7 +25,7 @@ func eclipseStack(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		}
 		for thisAc = first; thisAc >= last; thisAc-- {
 			if debugLogging {
-				debugPrint(debugLog, "... popping AC%d\n", acsUp[thisAc])
+				logging.DebugPrint(logging.DebugLog, "... popping AC%d\n", acsUp[thisAc])
 			}
 			cpuPtr.ac[acsUp[thisAc]] = dg_dword(nsPop(0))
 		}
@@ -40,7 +43,7 @@ func eclipseStack(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		}
 		for thisAc = first; thisAc <= last; thisAc++ {
 			if debugLogging {
-				debugPrint(debugLog, "... pushing AC%d\n", acsUp[thisAc])
+				logging.DebugPrint(logging.DebugLog, "... pushing AC%d\n", acsUp[thisAc])
 			}
 			nsPush(0, dwordGetLowerWord(cpuPtr.ac[acsUp[thisAc]]))
 		}

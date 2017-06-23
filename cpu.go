@@ -48,13 +48,13 @@ func cpuInit(statsChan chan cpuStatT) {
 func cpuPrintableStatus() string {
 	res := fmt.Sprintf("%c      AC0       AC1       AC2       AC3        PC CRY ATU%c", ASCII_NL, ASCII_NL)
 	res += fmt.Sprintf("%9d %9d %9d %9d %9d", cpu.ac[0], cpu.ac[1], cpu.ac[2], cpu.ac[3], cpu.pc)
-	res += fmt.Sprintf("  %d   %d", boolToInt(cpu.carry), boolToInt(cpu.atu))
+	res += fmt.Sprintf("  %d   %d", BoolToInt(cpu.carry), BoolToInt(cpu.atu))
 	return res
 }
 
 func cpuCompactPrintableStatus() string {
 	res := fmt.Sprintf("AC0: %d AC1: %d AC2: %d AC3: %d CRY: %d PC: %d",
-		cpu.ac[0], cpu.ac[1], cpu.ac[2], cpu.ac[3], boolToInt(cpu.carry), cpu.pc)
+		cpu.ac[0], cpu.ac[1], cpu.ac[2], cpu.ac[3], BoolToInt(cpu.carry), cpu.pc)
 	return res
 }
 

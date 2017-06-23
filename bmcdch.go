@@ -5,6 +5,8 @@ package main
 
 import (
 	"log"
+
+	"mvemg/logging"
 )
 
 // See p.8-44 of PoP for meanings of these...
@@ -52,7 +54,7 @@ func bmcdchInit() {
 	}
 	bmcdchReset()
 	log.Println("INFO: BMC/DCH Maps Initialised")
-	debugPrint(mapLog, "BMC/DCH Maps Initialised\n")
+	logging.DebugPrint(logging.MapLog, "BMC/DCH Maps Initialised\n")
 }
 
 func bmcdchReset() {
@@ -63,17 +65,17 @@ func bmcdchReset() {
 }
 
 func getDchMode() bool {
-	debugPrint(mapLog, "getDchMode returning: %d\n", boolToInt(testWbit(regs[IOCHAN_DEF_REG], 14)))
+	logging.DebugPrint(logging.MapLog, "getDchMode returning: %d\n", BoolToInt(testWbit(regs[IOCHAN_DEF_REG], 14)))
 	return testWbit(regs[IOCHAN_DEF_REG], 14)
 }
 
 func bmcdchWriteReg(reg int, data dg_word) {
-	debugPrint(debugLog, "bmcdchWriteReg: Reg %d, Data: %d\n", reg, data)
+	logging.DebugPrint(logging.DebugLog, "bmcdchWriteReg: Reg %d, Data: %d\n", reg, data)
 	regs[reg] = data
 }
 
 func bmcdchWriteSlot(slot int, data dg_dword) {
-	debugPrint(debugLog, "bmcdch*Write*Slot: Slot %d, Data: %d\n", slot, data)
+	logging.DebugPrint(logging.DebugLog, "bmcdch*Write*Slot: Slot %d, Data: %d\n", slot, data)
 	regs[slot*2] = dwordGetUpperWord(data)
 	regs[(slot*2)+1] = dwordGetLowerWord(data)
 }
@@ -94,7 +96,7 @@ func getBmcDchMapAddr(mAddr dg_phys_addr) (dg_phys_addr, dg_phys_addr) {
 	//page = ((regs[slot] & 0x1f) << 16) + (regs[slot+1] << 10);
 	page = dg_phys_addr(regs[(slot*2)+1]) << 10
 	pAddr = (mAddr & 0x3ff) | page
-	debugPrint(mapLog, "getBmcDchMapAddr got: %d, slot: %d, regs[slot*2+1]: %d, page: %d, returning: %d\n",
+	logging.DebugPrint(logging.MapLog, "getBmcDchMapAddr got: %d, slot: %d, regs[slot*2+1]: %d, page: %d, returning: %d\n",
 		mAddr, slot, regs[(slot*2)+1], page, pAddr)
 	return pAddr, page // TODO page return is just for debugging
 }
