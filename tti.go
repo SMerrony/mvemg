@@ -34,7 +34,7 @@ func ttiReset() {
 }
 
 // This is called from Bus to implement DIA from the TTI DEV_TTIice
-func ttiDataIn(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
+func ttiDataIn(cpuPtr *CPU, iPtr *DecodedInstr, abc byte) {
 
 	cpuPtr.ac[iPtr.acd] = dg_dword(oneCharBuf) // grab the char from the buffer
 
@@ -57,7 +57,7 @@ func ttiDataIn(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
 // FIXME - The ttiTask handling is rather obviously derived from the pthreads version
 // in previous versions of the emulator.  It needs to be rethought in an idiomatically Go
 // way using channels etc.
-func ttiTask(cpuPtr *Cpu) {
+func ttiTask(cpuPtr *CPU) {
 	log.Println("INFO: ttiTask starting")
 	for {
 		if cpuPtr.consoleEsc {
@@ -74,12 +74,12 @@ func ttiTask(cpuPtr *Cpu) {
 	}
 }
 
-func ttiStartTask(c *Cpu) {
+func ttiStartTask(c *CPU) {
 	c.consoleEsc = false
 	go ttiTask(c)
 }
 
-func ttiStopThread(c *Cpu) {
+func ttiStopThread(c *CPU) {
 	c.consoleEsc = true
 	log.Println("INFO: ttiTask being terminated")
 

@@ -41,6 +41,7 @@ const (
 	NOACC_MODE_IND_2_WORD_E_FMT
 	NOACC_MODE_IND_2_WORD_X_FMT
 	NOACC_MODE_IND_3_WORD_FMT
+	NOACC_MODE_IND_3_WORD_XCALL_FMT
 	NOACC_MODE_IND_4_WORD_FMT
 	NOVA_DATA_IO_FMT
 	NOVA_NOACC_EFF_ADDR_FMT
@@ -319,7 +320,7 @@ func instructionsInit() {
 	instructionSet["WSNEI"] = instrChars{0xe6e9, 0xe7ff, ONEACC_IMM_2_WORD_FMT, 2, EAGLE_PC}
 	instructionSet["WSTB"] = instrChars{0x8539, 0x87ff, TWOACC_1_WORD_FMT, 1, EAGLE_MEMREF}
 	instructionSet["WSUB"] = instrChars{0x8159, 0x87ff, TWOACC_1_WORD_FMT, 1, EAGLE_OP}
-	instructionSet["XCALL"] = instrChars{0x8609, 0xe7ff, NOACC_MODE_IND_3_WORD_FMT, 3, EAGLE_PC}
+	instructionSet["XCALL"] = instrChars{0x8609, 0xe7ff, NOACC_MODE_IND_3_WORD_XCALL_FMT, 3, EAGLE_PC}
 	instructionSet["XCH"] = instrChars{0x81c8, 0x87ff, TWOACC_1_WORD_FMT, 1, ECLIPSE_OP}
 	instructionSet["XJMP"] = instrChars{0xc609, 0xe7ff, NOACC_MODE_IND_2_WORD_X_FMT, 2, EAGLE_PC}
 	instructionSet["XJSR"] = instrChars{0xc619, 0xe7ff, NOACC_MODE_IND_2_WORD_X_FMT, 2, EAGLE_PC}
@@ -498,6 +499,16 @@ func instructionDecode(opcode dg_word, pc dg_phys_addr, lefMode bool, ioOn bool,
 		decodedInstr.disp = decode31bitDisp(secondWord, thirdWord, decodedInstr.mode)
 		decodedInstr.disassembly += fmt.Sprintf(" %c%d.%s [3-Word OpCode]",
 			decodedInstr.ind, decodedInstr.disp, modeToString(decodedInstr.mode))
+
+	case NOACC_MODE_IND_3_WORD_XCALL_FMT: // XCALL
+		decodedInstr.mode = decodeMode(getWbits(opcode, 3, 2))
+		secondWord = memReadWord(pc + 1)
+		thirdWord = memReadWord(pc + 2)
+		decodedInstr.ind = decodeIndirect(testWbit(secondWord, 0))
+		decodedInstr.disp = decode15bitDisp(secondWord, decodedInstr.mode)
+		decodedInstr.argCount = int(thirdWord)
+		decodedInstr.disassembly += fmt.Sprintf(" %c%d.%s, %d [3-Word OpCode]",
+			decodedInstr.ind, decodedInstr.disp, modeToString(decodedInstr.mode), decodedInstr.argCount)
 
 	case LNDO_4_WORD_FMT:
 		decodedInstr.acd = int(getWbits(opcode, 1, 2))

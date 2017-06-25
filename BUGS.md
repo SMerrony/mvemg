@@ -1,7 +1,7 @@
 BUGS.md
 =======
 
-# DFMTR DPF Bug 1
+# DFMTR DPF Bug #1
 
 Apparent memory corruption during Pattern 1 of surface analysis.
 
@@ -10,9 +10,9 @@ Instruction at 11514 STA 0,0,AC3 is overwriting code, causing a crash (JMP to lo
 Looking at the code, it might just be that the BBT is overflowing, in which case the disk reading/writing is not working
 as expected.
 
-# DFMTR DPF Bug 2
+# DFMTR DPF Bug #2
 
-When NOT doing a surface analysis  - very similar to DSKP Bug 1
+When NOT doing a surface analysis  - very similar to DSKP Bug #1
 
 Crash with fatal internal error (not JMP to location zero).
 
@@ -20,14 +20,11 @@ Reports PC: 35502, AC0: 354, AC1: 111021, AC2: 5
 
 As below, several 16-sector blocks appear to be written, then a 25-sector one after which the crash occurs.
 
-# DFMTR DSKP Bug 1
+# DFMTR DSKP Bug #1
 
 Crash with fatal internal error (not JMP to location zero).
 
 Reports PC: 35502, AC0: 53, AC1: 111412, AC2: 21
-
-DFMTR does not like the status/flag responses from the emulated DSKP unit. Some retries are performed then 
-it gives up.
 
 The code looks like it could be better structured to distinguish SYNC and ASYNC operations and result statuses.
 

@@ -3,7 +3,7 @@ package main
 
 import "log"
 
-func novaPC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
+func novaPC(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 	switch iPtr.mnemonic {
 
 	case "JMP":

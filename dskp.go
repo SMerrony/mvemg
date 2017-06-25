@@ -42,6 +42,8 @@ const (
 	dskpPhysicalCylinders = 981
 	dskpUserCylinders     = 978
 	dskpLogicalBlocks     = 1157952 // ??? 1147943 17<<16 | 43840
+	dskpLogicalBlocksH    = dskpLogicalBlocks >> 16
+	dskpLogicalBlocksL    = dskpLogicalBlocks & 0x0ffff
 	dskpUcodeRev          = 99
 
 	DSKP_INT_INF_BLK_SIZE   = 8
@@ -154,8 +156,8 @@ type dskpDataT struct {
 	intInfBlock                           [DSKP_INT_INF_BLK_SIZE]dg_word
 	ctrlInfBlock                          [DSKP_CTRLR_INF_BLK_SIZE]dg_word
 	unitInfBlock                          [DSKP_UNIT_INF_BLK_SIZE]dg_word
-	cylinder, head, sector                dg_word
-	sectorNo                              dg_dword
+	// cylinder, head, sector                dg_word
+	sectorNo dg_dword
 }
 
 const dskpStatsPeriodMs = 500 // Will send status update this often
@@ -253,7 +255,7 @@ func dskpCreateBlank(imgName string) bool {
 }
 
 // Handle the DIA/B/C PIO commands
-func dskpDataIn(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
+func dskpDataIn(cpuPtr *CPU, iPtr *DecodedInstr, abc byte) {
 	switch abc {
 	case 'A':
 		cpuPtr.ac[iPtr.acd] = dg_dword(dskpData.statusRegA)
@@ -269,7 +271,7 @@ func dskpDataIn(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
 }
 
 // Handle the DOA/B/C PIO commands
-func dskpDataOut(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
+func dskpDataOut(cpuPtr *CPU, iPtr *DecodedInstr, abc byte) {
 	switch abc {
 	case 'A':
 		dskpData.commandRegA = dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
@@ -481,27 +483,26 @@ func dskpHandleFlag(f byte) {
 	}
 }
 
-// seek to the disk position according to sector number
-func dskpPositionDiskImage(sectorNum dg_dword) {
-	var offset int64 = int64(sectorNum) * dskpBytesPerSector
+// seek to the disk position according to sector number in dskpData structure
+func dskpPositionDiskImage() {
+	var offset = int64(dskpData.sectorNo) * dskpBytesPerSector
 	_, err := dskpData.imageFile.Seek(offset, 0)
 	if err != nil {
 		log.Fatalln("DSKP could not position disk image")
 	}
 	// TODO Set C/H/S???
-	dskpData.sectorNo = sectorNum
 }
 
 func dskpProcessCB(addr dg_phys_addr) {
 	var (
-		cb                 [DSKP_CB_MAX_SIZE]dg_word
-		w, cbLength        int
-		nextCB             dg_phys_addr
-		sect, sectorNumber dg_dword
-		physTransfers      bool
-		physAddr           dg_phys_addr
-		buffer             = make([]byte, dskpBytesPerSector)
-		tmpWd              dg_word
+		cb            [DSKP_CB_MAX_SIZE]dg_word
+		w, cbLength   int
+		nextCB        dg_phys_addr
+		sect          dg_dword
+		physTransfers bool
+		physAddr      dg_phys_addr
+		buffer        = make([]byte, dskpBytesPerSector)
+		tmpWd         dg_word
 	)
 	cbLength = DSKP_CB_MIN_SIZE + dskpGetCBextendedStatusSize()
 	if dskpData.debug {
@@ -527,11 +528,11 @@ func dskpProcessCB(addr dg_phys_addr) {
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... .. RECALIBRATE\n")
 		}
-		dskpData.cylinder = 0
-		dskpData.head = 0
-		dskpData.sector = 0
+		//dskpData.cylinder = 0
+		//dskpData.head = 0
+		//dskpData.sector = 0
 		dskpData.sectorNo = 0
-		dskpData.imageFile.Seek(0, 0)
+		dskpPositionDiskImage()
 		if cbLength >= DSKP_CB_ERR_STATUS+1 {
 			cb[DSKP_CB_ERR_STATUS] = 0
 		}
@@ -544,8 +545,7 @@ func dskpProcessCB(addr dg_phys_addr) {
 		dskpSetAsyncStatusRegC(STAT_XEC_STATE_MAPPED, STAT_ASYNC_NO_ERRORS)
 
 	case DSKP_CB_OP_READ:
-		sectorNumber = (dg_dword(cb[DSKP_CB_DEV_ADDR_HIGH]) << 16) | dg_dword(cb[DSKP_CB_DEV_ADDR_LOW])
-		dskpData.sectorNo = sectorNumber
+		dskpData.sectorNo = (dg_dword(cb[DSKP_CB_DEV_ADDR_HIGH]) << 16) | dg_dword(cb[DSKP_CB_DEV_ADDR_LOW])
 		if testWbit(cb[DSKP_CB_PAGENO_LIST_ADDR_HIGH], 0) {
 			// logical premapped host address
 			physTransfers = false
@@ -556,12 +556,13 @@ func dskpProcessCB(addr dg_phys_addr) {
 		}
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... .. CB READ command, SECCNT: %d\n", cb[DSKP_CB_TXFER_COUNT])
-			logging.DebugPrint(logging.DskpLog, "... .. .. .... from sector:     %d\n", sectorNumber)
+			logging.DebugPrint(logging.DskpLog, "... .. .. .... from sector:     %d\n", dskpData.sectorNo)
 			logging.DebugPrint(logging.DskpLog, "... .. .. .... from phys addr:  %d\n", physAddr)
 			logging.DebugPrint(logging.DskpLog, "... .. .. .... physical txfer?: %d\n", BoolToInt(physTransfers))
 		}
 		for sect = 0; sect < dg_dword(cb[DSKP_CB_TXFER_COUNT]); sect++ {
-			dskpPositionDiskImage(sectorNumber + sect)
+			dskpData.sectorNo += sect
+			dskpPositionDiskImage()
 			dskpData.imageFile.Read(buffer)
 			for w = 0; w < dskpWordsPerSector; w++ {
 				tmpWd = (dg_word(buffer[w*2]) << 8) | dg_word(buffer[(w*2)+1])
@@ -587,8 +588,7 @@ func dskpProcessCB(addr dg_phys_addr) {
 		dskpSetAsyncStatusRegC(0, STAT_ASYNC_NO_ERRORS)
 
 	case DSKP_CB_OP_WRITE:
-		sectorNumber = (dg_dword(cb[DSKP_CB_DEV_ADDR_HIGH]) << 16) | dg_dword(cb[DSKP_CB_DEV_ADDR_LOW])
-		dskpData.sectorNo = sectorNumber
+		dskpData.sectorNo = (dg_dword(cb[DSKP_CB_DEV_ADDR_HIGH]) << 16) | dg_dword(cb[DSKP_CB_DEV_ADDR_LOW])
 		if testWbit(cb[DSKP_CB_PAGENO_LIST_ADDR_HIGH], 0) {
 			// logical premapped host address
 			physTransfers = false
@@ -599,12 +599,13 @@ func dskpProcessCB(addr dg_phys_addr) {
 		}
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... .. CB WRITE command, SECCNT: %d\n", cb[DSKP_CB_TXFER_COUNT])
-			logging.DebugPrint(logging.DskpLog, "... .. .. ..... to sector:       %d\n", sectorNumber)
+			logging.DebugPrint(logging.DskpLog, "... .. .. ..... to sector:       %d\n", dskpData.sectorNo)
 			logging.DebugPrint(logging.DskpLog, "... .. .. ..... from phys addr:  %d\n", physAddr)
 			logging.DebugPrint(logging.DskpLog, "... .. .. ..... physical txfer?: %d\n", BoolToInt(physTransfers))
 		}
 		for sect = 0; sect < dg_dword(cb[DSKP_CB_TXFER_COUNT]); sect++ {
-			dskpPositionDiskImage(sectorNumber + sect)
+			dskpData.sectorNo += sect
+			dskpPositionDiskImage()
 			for w = 0; w < dskpWordsPerSector; w++ {
 				tmpWd = memReadWordBmcChan(physAddr + (dg_phys_addr(sect) * dskpWordsPerSector) + dg_phys_addr(w))
 				buffer[w*2] = byte(tmpWd >> 8)
@@ -680,11 +681,10 @@ func dskpResetMapping() {
 
 // setup the unit information block to power-up defaults pp.2-16
 func dskpResetUnitInfBlock() {
-	var logicalBlocks dg_dword = dskpLogicalBlocks
 	dskpData.unitInfBlock[0] = 0
 	dskpData.unitInfBlock[1] = 9<<12 | dskpUcodeRev
-	dskpData.unitInfBlock[2] = dwordGetUpperWord(logicalBlocks) // 17.
-	dskpData.unitInfBlock[3] = dwordGetLowerWord(logicalBlocks) // 43840.
+	dskpData.unitInfBlock[2] = dg_word(dskpLogicalBlocksH) // 17.
+	dskpData.unitInfBlock[3] = dg_word(dskpLogicalBlocksL) // 43840.
 	dskpData.unitInfBlock[4] = dskpBytesPerSector
 	dskpData.unitInfBlock[5] = dskpUserCylinders
 	dskpData.unitInfBlock[6] = ((dskpSurfacesPerDisk * dskpHeadsPerSurface) << 8) | (0x00ff & dskpSectorsPerTrack)

@@ -5,7 +5,7 @@ import (
 	"log"
 )
 
-func novaOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
+func novaOp(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 
 	var (
 		shifter          dg_word

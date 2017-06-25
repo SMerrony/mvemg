@@ -6,7 +6,7 @@ import (
 	"mvemg/logging"
 )
 
-func eagleIO(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
+func eagleIO(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 
 	var (
 		cmd, word, dataWord dg_word

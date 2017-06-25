@@ -7,7 +7,7 @@ import (
 	"mvemg/logging"
 )
 
-func eclipseMemRef(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
+func eclipseMemRef(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 	var (
 		addr dg_phys_addr
 	)

@@ -3,7 +3,7 @@ package main
 
 import "log"
 
-func eaglePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
+func eaglePC(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 
 	var (
 		wd          dg_word
@@ -156,6 +156,11 @@ func eaglePC(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
 		} else {
 			cpuPtr.pc += 1
 		}
+
+	case "XCALL":
+		// FIXME - only handling the trivial case so far
+		cpuPtr.ac[3] = dg_dword(cpuPtr.pc) + 3
+		cpuPtr.pc = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
 
 	case "XJMP":
 		cpuPtr.pc = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)

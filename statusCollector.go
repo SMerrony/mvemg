@@ -43,8 +43,9 @@ const (
 // should be attached to it for good results.
 //
 // The function (which is intended to be run as a goroutine) listens for status updates
-// from known senders and upon receiving an update refreshes the display of that status
-// on the monitor page.
+// from known senders' channels and upon receiving an update refreshes the display of that status
+// on the monitor page.  It is therefore the responsibility of the sender to update the
+// status as often as it sees fit.
 func statusCollector(
 	cpuChan chan cpuStatT,
 	dpfChan chan dpfStatT,
@@ -56,9 +57,8 @@ func statusCollector(
 		ips, dskpIops                float64
 		lastCPUtime, lastDskpTime    time.Time
 		thisDskpIOcnt, lastDskpIOcnt uint64
-		//		lastCPUtime, lastDpfTime, lastDskpTime time.Time
-		dpfStats  dpfStatT
-		dskpStats dskpStatT
+		dpfStats                     dpfStatT
+		dskpStats                    dskpStatT
 	)
 
 	l, err := net.Listen("tcp", "localhost:"+StatPort)

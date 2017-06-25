@@ -5,7 +5,7 @@ import (
 	"log"
 )
 
-func eagleOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
+func eagleOp(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 	//var addr dg_phys_addr
 
 	var (

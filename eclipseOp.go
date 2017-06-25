@@ -6,7 +6,7 @@ import (
 	"mvemg/logging"
 )
 
-func eclipseOp(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
+func eclipseOp(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 	var (
 		addr, offset dg_phys_addr
 		byt          dg_byte

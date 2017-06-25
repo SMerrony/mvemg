@@ -147,7 +147,7 @@ Rather than copying a ROM and executing that, we simply mimic its basic actions.
 * Put the loaded code at physical location 0
 * ...
 */
-func mtbLoadTBoot(mem Memory) {
+func mtbLoadTBoot(mem memoryT) {
 	const (
 		TBTSIZ_B = 2048
 		TBTSIZ_W = 1024
@@ -175,7 +175,7 @@ func mtbLoadTBoot(mem Memory) {
 }
 
 // This is called from Bus to implement DIx from the MTB device
-func mtbDataIn(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
+func mtbDataIn(cpuPtr *CPU, iPtr *DecodedInstr, abc byte) {
 
 	switch iPtr.f {
 	case 'S':
@@ -209,7 +209,7 @@ func mtbDataIn(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
 }
 
 // This is called from Bus to implement DOx from the MTB device
-func mtbDataOut(cpuPtr *Cpu, iPtr *DecodedInstr, abc byte) {
+func mtbDataOut(cpuPtr *CPU, iPtr *DecodedInstr, abc byte) {
 
 	switch iPtr.f {
 	case 'S':

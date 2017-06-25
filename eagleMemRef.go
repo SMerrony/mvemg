@@ -6,7 +6,7 @@ import (
 	"mvemg/logging"
 )
 
-func eagleMemRef(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
+func eagleMemRef(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 	var (
 		addr dg_phys_addr
 		wd   dg_word

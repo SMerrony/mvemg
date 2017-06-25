@@ -2,7 +2,7 @@ package main
 
 import "log"
 
-func eagleStack(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
+func eagleStack(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 
 	var wfpSav, dwd dg_dword
 

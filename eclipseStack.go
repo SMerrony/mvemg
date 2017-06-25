@@ -6,7 +6,7 @@ import (
 	"mvemg/logging"
 )
 
-func eclipseStack(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
+func eclipseStack(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 	var (
 		addr                dg_phys_addr
 		first, last, thisAc int

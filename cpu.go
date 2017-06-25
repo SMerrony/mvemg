@@ -14,7 +14,8 @@ type sbrBits struct {
 	physAddr        uint32 // 19 bits used
 }
 
-type Cpu struct {
+// CPU holds the current state of a CPU
+type CPU struct {
 	// representations of physical attributes
 	pc                           dg_phys_addr
 	ac                           [4]dg_dword
@@ -34,10 +35,10 @@ type cpuStatT struct {
 	instrCount              uint64
 }
 
-const CPU_STAT_PERIOD_MS = 100 // i.e. we send stats every 1/10th of a second
+const cpuStatPeriodMs = 125 // i.e. we send stats every 1/8th of a second
 
 var (
-	cpu Cpu
+	cpu CPU
 )
 
 func cpuInit(statsChan chan cpuStatT) {
@@ -109,6 +110,6 @@ func cpuStatSender(sChan chan cpuStatT) {
 		case sChan <- stats:
 		default:
 		}
-		time.Sleep(time.Millisecond * CPU_STAT_PERIOD_MS)
+		time.Sleep(time.Millisecond * cpuStatPeriodMs)
 	}
 }

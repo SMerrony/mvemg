@@ -3,7 +3,7 @@ package main
 
 import "log"
 
-func novaMemRef(cpuPtr *Cpu, iPtr *DecodedInstr) bool {
+func novaMemRef(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 
 	var shifter dg_word
 	var effAddr dg_phys_addr

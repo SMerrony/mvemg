@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"log"
 	"mvemg/logging"
-	"os"
-	//"strconv"
+	"runtime/debug"
 )
 
 const (
@@ -28,13 +27,13 @@ const (
 	NSFA_LOC = 043
 )
 
-type Memory struct {
+type memoryT struct {
 	ram                 [MEM_SIZE_WORDS]dg_word
 	atuEnabled          bool
 	pushCount, popCount int
 }
 
-var memory Memory
+var memory memoryT
 
 func memInit() {
 	// zero ram?
@@ -45,10 +44,6 @@ func memInit() {
 
 // read a byte from memory using word address and low-byte flag (true => lower (rightmost) byte)
 func memReadByte(wordAddr dg_phys_addr, loByte bool) dg_byte {
-	if wordAddr >= MEM_SIZE_WORDS {
-		log.Fatalf("ERROR: Attempt to read byte beyond end of physical memory using address: %d", wordAddr)
-		os.Exit(1)
-	}
 	var res dg_byte
 	wd := memory.ram[wordAddr]
 	if loByte {
@@ -70,6 +65,9 @@ func memReadByteEclipseBA(byteAddr16 dg_word) dg_byte {
 }
 
 func memWriteByte(wordAddr dg_phys_addr, loByte bool, b dg_byte) {
+	if wordAddr == 2891 {
+		debug.PrintStack()
+	}
 	wd := memory.ram[wordAddr]
 	if loByte {
 		wd = (wd & 0xff00) | dg_word(b)
@@ -79,10 +77,16 @@ func memWriteByte(wordAddr dg_phys_addr, loByte bool, b dg_byte) {
 	memWriteWord(wordAddr, wd)
 }
 
+func debugCatcher() {
+	x := 99
+	x--
+	debug.PrintStack()
+}
+
 func memReadWord(wordAddr dg_phys_addr) dg_word {
+
 	if wordAddr >= MEM_SIZE_WORDS {
 		log.Fatalf("ERROR: Attempt to read word beyond end of physical memory using address: %d", wordAddr)
-		os.Exit(1)
 	}
 	return memory.ram[wordAddr]
 }
@@ -111,9 +115,11 @@ func memReadWordBmcChan(addr dg_phys_addr) dg_word {
 // memWriteWord - ALL memory-writing should ultimately go through this function
 // N.B. minor exceptions may be made for nsPush() and nsPop()
 func memWriteWord(wordAddr dg_phys_addr, datum dg_word) {
+	if wordAddr == 2891 {
+		debugCatcher()
+	}
 	if wordAddr >= MEM_SIZE_WORDS {
 		log.Fatalf("ERROR: Attempt to write word beyond end of physical memory using address: %d", wordAddr)
-		os.Exit(1)
 	}
 	memory.ram[wordAddr] = datum
 }
@@ -145,7 +151,6 @@ func memWriteWordBmcChan(addr dg_phys_addr, data dg_word) dg_phys_addr {
 func memReadDWord(wordAddr dg_phys_addr) dg_dword {
 	if wordAddr >= MEM_SIZE_WORDS {
 		log.Fatalf("ERROR: Attempt to read doubleword beyond end of physical memory using address: %d", wordAddr)
-		os.Exit(1)
 	}
 	var dword dg_dword
 	dword = dg_dword(memory.ram[wordAddr]) << 16
@@ -156,7 +161,6 @@ func memReadDWord(wordAddr dg_phys_addr) dg_dword {
 func memWriteDWord(wordAddr dg_phys_addr, dwd dg_dword) {
 	if wordAddr >= MEM_SIZE_WORDS {
 		log.Fatalf("ERROR: Attempt to write doubleword beyond end of physical memory using address: %d", wordAddr)
-		os.Exit(1)
 	}
 	memWriteWord(wordAddr, dwordGetUpperWord(dwd))
 	memWriteWord(wordAddr+1, dwordGetLowerWord(dwd))
@@ -241,17 +245,17 @@ func boolToOZ(b bool) byte {
 // dwordGetLowerWord gets the DG-lower word of a doubleword
 // Called VERY often, hopefully inlined!
 func dwordGetLowerWord(dwd dg_dword) dg_word {
-	return dg_word(dwd) & 0x0000ffff
+	return dg_word(dwd) // & 0x0000ffff mask unneccessary
 }
 
 func dwordGetUpperWord(dwd dg_dword) dg_word {
-	return dg_word((dwd >> 16) & 0x0000ffff)
+	return dg_word(dwd >> 16)
 }
 
 // in the DG world, the first (leftmost) bit is numbered zero...
 // extract nbits from value starting at leftBit
 func getWbits(value dg_word, leftBit int, nbits int) dg_word {
-	var res dg_word = 0
+	var res dg_word
 	rightBit := leftBit + nbits
 	for b := leftBit; b < rightBit; b++ {
 		res = res << 1
@@ -265,7 +269,7 @@ func getWbits(value dg_word, leftBit int, nbits int) dg_word {
 // in the DG world, the first (leftmost) bit is numbered zero...
 // extract nbits from value starting at leftBit
 func getDWbits(value dg_dword, leftBit int, nbits int) dg_dword {
-	var res dg_dword = 0
+	var res dg_dword
 	rightBit := leftBit + nbits
 	for b := leftBit; b < rightBit; b++ {
 		res = res << 1

@@ -3,7 +3,7 @@ package main
 
 import "mvemg/logging"
 
-func resolve16bitEclipseAddr(cpuPtr *Cpu, ind byte, mode string, disp int32) dg_phys_addr {
+func resolve16bitEclipseAddr(cpuPtr *CPU, ind byte, mode string, disp int32) dg_phys_addr {
 
 	var (
 		eff     dg_phys_addr
@@ -42,7 +42,7 @@ func resolve16bitEclipseAddr(cpuPtr *Cpu, ind byte, mode string, disp int32) dg_
 }
 
 // This is the same as resolve16bitEclipseAddr, but without the range masking at the end
-func resolve16bitEagleAddr(cpuPtr *Cpu, ind byte, mode string, disp int32) dg_phys_addr {
+func resolve16bitEagleAddr(cpuPtr *CPU, ind byte, mode string, disp int32) dg_phys_addr {
 
 	var (
 		eff     dg_phys_addr
@@ -79,7 +79,7 @@ func resolve16bitEagleAddr(cpuPtr *Cpu, ind byte, mode string, disp int32) dg_ph
 	return eff
 }
 
-func resolve32bitEffAddr(cpuPtr *Cpu, ind byte, mode string, disp int32) dg_phys_addr {
+func resolve32bitEffAddr(cpuPtr *CPU, ind byte, mode string, disp int32) dg_phys_addr {
 
 	eff := dg_phys_addr(disp)
 
