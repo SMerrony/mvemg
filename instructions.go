@@ -1,4 +1,24 @@
 // instructions.go
+
+// Copyright (C) 2017  Steve Merrony
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
 package main
 
 import (
@@ -196,14 +216,14 @@ func instructionsInit() {
 	instructionSet["ISZTS"] = instrChars{0xc7c9, 0xffff, UNIQUE_1_WORD_FMT, 1, EAGLE_OP}
 	instructionSet["JMP"] = instrChars{0x0, 0xf800, NOVA_NOACC_EFF_ADDR_FMT, 1, NOVA_PC}
 	instructionSet["JSR"] = instrChars{0x800, 0xf800, NOVA_NOACC_EFF_ADDR_FMT, 1, NOVA_PC}
-	instructionSet["LCALL"] = instrChars{0xa6c9, 0xe7ff, NOACC_MODE_IND_4_WORD_FMT, 4, EAGLE_MEMREF}
+	instructionSet["LCALL"] = instrChars{0xa6c9, 0xe7ff, NOACC_MODE_IND_4_WORD_FMT, 4, EAGLE_PC} // altered
 	instructionSet["LCPID"] = instrChars{0x8759, 0xffff, UNIQUE_1_WORD_FMT, 1, EAGLE_IO}
 	instructionSet["LDA"] = instrChars{0x2000, 0xe000, NOVA_ONEACC_EFF_ADDR_FMT, 1, NOVA_MEMREF}
-	instructionSet["LDAFP"] = instrChars{0xc669, 0xe7ff, ONEACC_1_WORD_FMT, 1, NOVA_OP}
-	instructionSet["LDASB"] = instrChars{0xc649, 0xe7ff, ONEACC_1_WORD_FMT, 1, NOVA_OP}
-	instructionSet["LDASL"] = instrChars{0xa669, 0xe7ff, ONEACC_1_WORD_FMT, 1, NOVA_OP}
-	instructionSet["LDASP"] = instrChars{0xa669, 0xe7ff, ONEACC_1_WORD_FMT, 1, NOVA_OP}
-	instructionSet["LDATS"] = instrChars{0x8649, 0xe7ff, ONEACC_1_WORD_FMT, 1, NOVA_OP}
+	instructionSet["LDAFP"] = instrChars{0xc669, 0xe7ff, ONEACC_1_WORD_FMT, 1, EAGLE_STACK} // moved these to EAGLE_
+	instructionSet["LDASB"] = instrChars{0xc649, 0xe7ff, ONEACC_1_WORD_FMT, 1, EAGLE_STACK}
+	instructionSet["LDASL"] = instrChars{0xa669, 0xe7ff, ONEACC_1_WORD_FMT, 1, EAGLE_STACK}
+	instructionSet["LDASP"] = instrChars{0xa649, 0xe7ff, ONEACC_1_WORD_FMT, 1, EAGLE_STACK} // fixed bits here
+	instructionSet["LDATS"] = instrChars{0x8649, 0xe7ff, ONEACC_1_WORD_FMT, 1, EAGLE_OP}    //////////////////////////
 	instructionSet["LDB"] = instrChars{0x85c8, 0x87ff, TWOACC_1_WORD_FMT, 1, ECLIPSE_OP}
 	instructionSet["LDSP"] = instrChars{0x8519, 0x87ff, ONEACC_MODE_IND_3_WORD_FMT, 3, EAGLE_PC}
 	instructionSet["LEF"] = instrChars{0x6000, 0xe000, NOVA_ONEACC_EFF_ADDR_FMT, 1, NOVA_MEMREF}
@@ -290,6 +310,7 @@ func instructionsInit() {
 	instructionSet["WBTO"] = instrChars{0x8299, 0x87ff, TWOACC_1_WORD_FMT, 1, EAGLE_OP}
 	instructionSet["WBTZ"] = instrChars{0x82a9, 0x87ff, TWOACC_1_WORD_FMT, 1, EAGLE_OP}
 	instructionSet["WCLM"] = instrChars{0x8569, 0x87ff, TWOACC_1_WORD_FMT, 1, EAGLE_OP}
+	instructionSet["WCMV"] = instrChars{0x8779, 0xFFFF, UNIQUE_1_WORD_FMT, 1, EAGLE_MEMREF} // added here
 	instructionSet["WCOM"] = instrChars{0x8459, 0x87ff, TWOACC_1_WORD_FMT, 1, EAGLE_OP}
 	instructionSet["WINC"] = instrChars{0x8259, 0x87ff, TWOACC_1_WORD_FMT, 1, EAGLE_OP}
 	instructionSet["WIORI"] = instrChars{0x86a9, 0xe7ff, ONEACC_IMM_3_WORD_FMT, 3, EAGLE_OP}
@@ -305,6 +326,7 @@ func instructionsInit() {
 	instructionSet["WPOPJ"] = instrChars{0x8789, 0xFFFF, UNIQUE_1_WORD_FMT, 1, EAGLE_PC} // added here
 	instructionSet["WRTN"] = instrChars{0x87a9, 0xffff, UNIQUE_1_WORD_FMT, 1, EAGLE_PC}
 	instructionSet["WSAVR"] = instrChars{0xA729, 0xFFFF, UNIQUE_2_WORD_FMT, 2, EAGLE_STACK} // added here
+	instructionSet["WSAVS"] = instrChars{0xA739, 0xFFFF, UNIQUE_2_WORD_FMT, 2, EAGLE_STACK} // added here
 	instructionSet["WSBI"] = instrChars{0x8589, 0x87ff, IMM_ONEACC_FMT, 1, EAGLE_OP}
 	instructionSet["WSEQ"] = instrChars{0x80b9, 0x87ff, TWOACC_1_WORD_FMT, 1, EAGLE_PC}
 	instructionSet["WSEQI"] = instrChars{0xe6c9, 0xe7ff, ONEACC_IMM_2_WORD_FMT, 2, EAGLE_PC}
@@ -336,7 +358,7 @@ func instructionsInit() {
 	instructionSet["XNSBI"] = instrChars{0x8458, 0x87ff, IMM_MODE_2_WORD_FMT, 2, EAGLE_MEMREF}
 	instructionSet["XNSTA"] = instrChars{0x8339, 0x87ff, ONEACC_MODE_IND_2_WORD_X_FMT, 2, EAGLE_MEMREF}
 	instructionSet["XNSUB"] = instrChars{0x8058, 0x87ff, IMM_MODE_2_WORD_FMT, 2, EAGLE_MEMREF}
-	instructionSet["XPEF"] = instrChars{0x86e9, 0xe7ff, NOACC_MODE_IND_2_WORD_X_FMT, 2, EAGLE_MEMREF}
+	instructionSet["XPEF"] = instrChars{0x8629, 0xe7ff, NOACC_MODE_IND_2_WORD_X_FMT, 2, EAGLE_MEMREF} // bits fixed here
 	instructionSet["XSTB"] = instrChars{0x8429, 0x87ff, ONEACC_MODE_2_WORD_X_B_FMT, 2, EAGLE_MEMREF}
 	instructionSet["XWADD"] = instrChars{0x8118, 0x87ff, ONEACC_MODE_IND_2_WORD_X_FMT, 2, EAGLE_MEMREF}
 	instructionSet["XWADI"] = instrChars{0x8518, 0x87ff, IMM_MODE_2_WORD_FMT, 2, EAGLE_MEMREF}

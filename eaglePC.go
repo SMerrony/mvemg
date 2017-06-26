@@ -14,6 +14,11 @@ func eaglePC(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 
 	switch iPtr.mnemonic {
 
+	case "LCALL": // FIXME - LCALL only handling trivial case, no checking
+		cpuPtr.ac[3] = dg_dword(cpuPtr.pc) + 4
+		cpuPtr.pc = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
+		cpuPtr.ovk = false
+
 	case "LJMP":
 		cpuPtr.pc = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
 
