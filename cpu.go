@@ -24,7 +24,7 @@ type CPU struct {
 
 	// emulator internals
 	instrCount uint64
-	consoleEsc bool
+	scpIO      bool
 }
 
 // cpuStatT defines the data we will send to the statusCollector monitor
@@ -41,9 +41,10 @@ var (
 	cpu CPU
 )
 
-func cpuInit(statsChan chan cpuStatT) {
+func cpuInit(statsChan chan cpuStatT) *CPU {
 	busAddDevice(DEV_CPU, "CPU", CPU_PMB, true, false, false)
 	go cpuStatSender(statsChan)
+	return &cpu
 }
 
 func cpuPrintableStatus() string {

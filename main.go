@@ -62,11 +62,12 @@ var p interface {
 }
 
 var (
-	debugLogging  bool = true
+	debugLogging  = true
 	breakpoints   []dg_phys_addr
 	cpuStatsChan  chan cpuStatT
 	dpfStatsChan  chan dpfStatT
 	dskpStatsChan chan dskpStatT
+	ttiSCPchan    chan byte
 )
 
 func main() {
@@ -91,9 +92,13 @@ func main() {
 			os.Exit(1)
 		}
 
+		// create the channels used for near-real-time status monitoring
+		// See statusCollector.go for details
 		cpuStatsChan = make(chan cpuStatT, 3)
 		dpfStatsChan = make(chan dpfStatT, 3)
 		dskpStatsChan = make(chan dskpStatT, 3)
+
+		ttiSCPchan = make(chan byte, ScpBuffSize)
 
 		/***
 		 *  The console is connected, now we can set up our emulated machine
@@ -112,10 +117,10 @@ func main() {
 		memInit()
 		busInit()
 		busAddDevice(DEV_SCP, "SCP", SCP_PMB, true, false, false)
-		ttoInit(conn)
-		ttiInit(conn)
 		instructionsInit()
-		cpuInit(cpuStatsChan)
+		cpuPtr := cpuInit(cpuStatsChan)
+		ttoInit(conn)
+		ttiInit(conn, cpuPtr, ttiSCPchan)
 		mtbInit()
 		dpfInit(dpfStatsChan)
 		dskpInit(dskpStatsChan)
@@ -136,6 +141,7 @@ func main() {
 		}
 
 		// the main SCP/console interaction loop
+		cpu.scpIO = true
 		for {
 			ttoPutNLString("SCP-CLI> ")
 			command := scpGetLine()
@@ -150,7 +156,8 @@ func scpGetLine() string {
 	line := []byte{}
 	var cc byte
 	for cc != ASCII_CR {
-		cc = ttiGetChar()
+		cc = <-ttiSCPchan
+		//cc = ttiGetChar()
 		// handle the DASHER Delete key
 		if cc == DASHER_DELETE && len(line) > 0 {
 			ttoPutChar(DASHER_CURSOR_LEFT)
@@ -495,10 +502,12 @@ func run() {
 		iPtr      *DecodedInstr
 		ok        bool
 		errDetail string
+		//b         byte
 	)
 
 	// direct console input to the VM
-	ttiStartTask(&cpu)
+	//ttiStartTask(&cpu)
+	cpu.scpIO = false
 
 	for {
 		// FETCH
@@ -524,7 +533,8 @@ func run() {
 		if len(breakpoints) > 0 {
 			for _, bAddr := range breakpoints {
 				if bAddr == cpu.pc {
-					ttiStopThread(&cpu)
+					//ttiStopThread(&cpu)
+					cpu.scpIO = true
 					msg := fmt.Sprintf(" *** BREAKpoint hit at physical address %d. ***", cpu.pc)
 					ttoPutNLString(msg)
 					log.Println(msg)
@@ -533,9 +543,9 @@ func run() {
 			}
 		}
 
-		// Console ESCape?
-		if cpu.consoleEsc {
-			cpu.consoleEsc = false
+		if cpu.scpIO {
+			//cpu.consoleEsc = false
+			//cpu.scpIO = true
 			errDetail = " *** Console ESCape ***"
 			break
 		}
@@ -557,5 +567,5 @@ func run() {
 	log.Println(errDetail)
 	ttoPutNLString(errDetail)
 
-	ttiStopThread(&cpu)
+	//ttiStopThread(&cpu)
 }

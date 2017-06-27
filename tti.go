@@ -1,4 +1,24 @@
 // tti - console input
+
+// Copyright (C) 2017  Steve Merrony
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
 package main
 
 import (
@@ -12,21 +32,37 @@ var (
 	oneCharBuf byte
 )
 
-func ttiInit(c net.Conn) {
+func ttiInit(c net.Conn, cpuPtr *CPU, ch chan<- byte) {
 	tti = c
 	busAddDevice(DEV_TTI, "TTI", TTI_PMB, true, true, false)
 	busSetResetFunc(DEV_TTI, ttiReset)
 	busSetDataInFunc(DEV_TTI, ttiDataIn)
+	go ttiListener(cpuPtr, ch)
 }
 
-func ttiGetChar() byte {
+func ttiListener(cpuPtr *CPU, scpChan chan<- byte) {
 	b := make([]byte, 80)
-	n, err := tti.Read(b)
-	if err != nil || n == 0 {
-		log.Println("ERROR: could not read from console port: ", err.Error())
-		os.Exit(1)
+	for {
+		n, err := tti.Read(b)
+		if err != nil || n == 0 {
+			log.Println("ERROR: could not read from console port: ", err.Error())
+			os.Exit(1)
+		}
+		log.Printf("DEBUG: ttiListener() got <%c>\n", b[0])
+		for c := 0; c < n; c++ {
+			if b[c] == ASCII_ESC || b[c] == 0 {
+				cpuPtr.scpIO = true
+			}
+			if cpuPtr.scpIO {
+				// to the SCP
+				scpChan <- b[c]
+			} else {
+				// to the CPU
+				oneCharBuf = b[c]
+				busSetDone(DEV_TTI, true)
+			}
+		}
 	}
-	return b[0]
 }
 
 func ttiReset() {
@@ -52,35 +88,4 @@ func ttiDataIn(cpuPtr *CPU, iPtr *DecodedInstr, abc byte) {
 	default:
 		log.Fatalf("ERROR: unexpected source buffer <%c> for DOx ac,TTO instruction\n", abc)
 	}
-}
-
-// FIXME - The ttiTask handling is rather obviously derived from the pthreads version
-// in previous versions of the emulator.  It needs to be rethought in an idiomatically Go
-// way using channels etc.
-func ttiTask(cpuPtr *CPU) {
-	log.Println("INFO: ttiTask starting")
-	for {
-		if cpuPtr.consoleEsc {
-			// this traps setting of the flag by the emulator rather than the user
-			return
-		}
-		oneCharBuf = ttiGetChar()
-		if oneCharBuf == ASCII_ESC {
-			log.Println("INFO: ttiTask stopping due to console ESCape")
-			cpuPtr.consoleEsc = true
-			return
-		}
-		busSetDone(DEV_TTI, true)
-	}
-}
-
-func ttiStartTask(c *CPU) {
-	c.consoleEsc = false
-	go ttiTask(c)
-}
-
-func ttiStopThread(c *CPU) {
-	c.consoleEsc = true
-	log.Println("INFO: ttiTask being terminated")
-
 }
