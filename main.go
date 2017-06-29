@@ -506,7 +506,6 @@ func run() {
 	)
 
 	// direct console input to the VM
-	//ttiStartTask(&cpu)
 	cpu.scpIO = false
 
 	for {
@@ -543,13 +542,14 @@ func run() {
 			}
 		}
 
+		// Console interrupt?
 		if cpu.scpIO {
-			//cpu.consoleEsc = false
-			//cpu.scpIO = true
 			errDetail = " *** Console ESCape ***"
 			break
 		}
 	}
+
+	cpu.scpIO = true
 
 	// run halted due to either error or console escape
 	log.Println(errDetail)
