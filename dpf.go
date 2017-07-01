@@ -319,7 +319,7 @@ func dpfDataOut(cpuPtr *CPU, iPtr *DecodedInstr, abc byte) {
 		}
 	case 'C':
 		if dpfData.lastDOAwasSeek {
-			dpfData.cylAddr = data & 0x03ff
+			dpfData.cylAddr = data & 0x03ff // mask off lower 10 bits
 			if dpfData.debug {
 				logging.DebugPrint(logging.DpfLog, "DOC [Specify Cylinder] after SEEK with data %s at PC: %d\n",
 					wordToBinStr(data), cpuPtr.pc)
@@ -420,11 +420,13 @@ func dpfDoRWcommand() {
 			if !dpfCheckCylPos() {
 				break
 			}
+			if dpfData.debug {
+				logging.DebugPrint(logging.DpfLog, "Buffer: %X\n", buffer)
+			}
 
 		}
 		if dpfData.debug {
 			logging.DebugPrint(logging.DpfLog, "... .... READ command finished %s\n", dpfPrintableAddr())
-			logging.DebugPrint(logging.DpfLog, "Last buffer: %X", buffer)
 			logging.DebugPrint(logging.DpfLog, "\n... .... Last Address: %d\n", dpfData.memAddr)
 		}
 		dpfData.rwStatus |= DPF_RWDONE //| DPF_DRIVE0DONE
@@ -461,11 +463,12 @@ func dpfDoRWcommand() {
 			if !dpfCheckCylPos() {
 				break
 			}
-
+			if dpfData.debug {
+				logging.DebugPrint(logging.DpfLog, "Buffer: %X\n", buffer)
+			}
 		}
 		if dpfData.debug {
 			logging.DebugPrint(logging.DpfLog, "... ..... WRITE command finished %s\n", dpfPrintableAddr())
-			logging.DebugPrint(logging.DpfLog, "%X", buffer)
 			logging.DebugPrint(logging.DpfLog, "... ..... Last Address: %d\n", dpfData.memAddr)
 		}
 		dpfData.rwStatus |= DPF_RWDONE //| DPF_DRIVE0DONE

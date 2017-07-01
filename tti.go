@@ -48,7 +48,7 @@ func ttiListener(cpuPtr *CPU, scpChan chan<- byte) {
 			log.Println("ERROR: could not read from console port: ", err.Error())
 			os.Exit(1)
 		}
-		log.Printf("DEBUG: ttiListener() got <%c>\n", b[0])
+		//log.Printf("DEBUG: ttiListener() got <%c>\n", b[0])
 		for c := 0; c < n; c++ {
 			if b[c] == ASCII_ESC || b[c] == 0 {
 				cpuPtr.scpIO = true

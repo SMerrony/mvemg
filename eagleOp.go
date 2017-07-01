@@ -21,7 +21,7 @@ func eagleOp(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 		// signed 16-bit add immediate
 		s16 = int16(dwordGetLowerWord(cpuPtr.ac[iPtr.acd]))
 		s16 += int16(iPtr.imm16b)
-		cpuPtr.ac[iPtr.acd] = dg_dword(s16)
+		cpuPtr.ac[iPtr.acd] = dg_dword(s16) & 0X0000FFFF
 
 	case "ANDI":
 		wd = dwordGetLowerWord(cpuPtr.ac[iPtr.acd])

@@ -420,37 +420,19 @@ func instructionDecode(opcode dg_word, pc dg_phys_addr, lefMode bool, ioOn bool,
 
 	switch decodedInstr.instrFmt {
 
-	case NOVA_NOACC_EFF_ADDR_FMT:
-		decodedInstr.ind = decodeIndirect(testWbit(opcode, 5))
-		decodedInstr.mode = decodeMode(getWbits(opcode, 6, 2))
-		decodedInstr.disp = decode8bitDisp(dg_byte(opcode&0x00ff), decodedInstr.mode)
-		decodedInstr.disassembly += fmt.Sprintf(" %c%d.%s",
-			decodedInstr.ind, decodedInstr.disp, modeToString(decodedInstr.mode))
+	case IMM_MODE_2_WORD_FMT: // eg. XNADI
+		decodedInstr.immVal = decode2bitImm(getWbits(opcode, 1, 2))
+		decodedInstr.mode = decodeMode(getWbits(opcode, 3, 2))
+		secondWord = memReadWord(pc + 1)
+		decodedInstr.ind = decodeIndirect(testWbit(secondWord, 0))
+		decodedInstr.disp = decode15bitDisp(secondWord, decodedInstr.mode)
+		decodedInstr.disassembly += fmt.Sprintf(" %d.,%d.%s [2-Word OpCode]",
+			decodedInstr.immVal, decodedInstr.disp, modeToString(decodedInstr.mode))
 
-	case NOVA_ONEACC_EFF_ADDR_FMT:
+	case IMM_ONEACC_FMT: // eg. HXL, NADI, WLSI
+		decodedInstr.immVal = decode2bitImm(getWbits(opcode, 1, 2))
 		decodedInstr.acd = int(getWbits(opcode, 3, 2))
-		decodedInstr.ind = decodeIndirect(testWbit(opcode, 5))
-		decodedInstr.mode = decodeMode(getWbits(opcode, 6, 2))
-		decodedInstr.disp = decode8bitDisp(dg_byte(opcode&0x00ff), decodedInstr.mode)
-		decodedInstr.disassembly += fmt.Sprintf(" %d,%c%d.%s",
-			decodedInstr.acd, decodedInstr.ind, decodedInstr.disp, modeToString(decodedInstr.mode))
-
-	case NOVA_TWOACC_MULT_OP_FMT:
-		decodedInstr.acs = int(getWbits(opcode, 1, 2))
-		decodedInstr.acd = int(getWbits(opcode, 3, 2))
-		decodedInstr.sh = decodeShift(getWbits(opcode, 8, 2))
-		decodedInstr.c = decodeCarry(getWbits(opcode, 10, 2))
-		decodedInstr.nl = decodeNoLoad(testWbit(opcode, 12))
-		decodedInstr.skip = decodeSkip(getWbits(opcode, 13, 3))
-		decodedInstr.disassembly += fmt.Sprintf("%c%c%c %d,%d %s",
-			decodedInstr.c, decodedInstr.sh, decodedInstr.nl, decodedInstr.acs, decodedInstr.acd, skipToString(decodedInstr.skip))
-
-	case NOVA_DATA_IO_FMT:
-		decodedInstr.acd = int(getWbits(opcode, 3, 2))
-		decodedInstr.f = decodeIOFlags(getWbits(opcode, 8, 2))
-		decodedInstr.ioDev = int(getWbits(opcode, 10, 6))
-		decodedInstr.disassembly += fmt.Sprintf("%c %d,%s",
-			decodedInstr.f, decodedInstr.acd, deviceToString(decodedInstr.ioDev))
+		decodedInstr.disassembly += fmt.Sprintf(" %d.,%d", decodedInstr.immVal, decodedInstr.acd)
 
 	case IO_FLAGS_DEV_FMT:
 		decodedInstr.f = decodeIOFlags(getWbits(opcode, 8, 2))
@@ -466,28 +448,17 @@ func instructionDecode(opcode dg_word, pc dg_phys_addr, lefMode bool, ioOn bool,
 		decodedInstr.ioDev = int(getWbits(opcode, 10, 6))
 		decodedInstr.disassembly += fmt.Sprintf("%s %s", decodedInstr.t, deviceToString(decodedInstr.ioDev))
 
-	case UNIQUE_1_WORD_FMT:
-		// nothing to do in this case
-
-	case UNIQUE_2_WORD_FMT:
-		decodedInstr.imm16b = memReadWord(pc + 1)
-		decodedInstr.disassembly += fmt.Sprintf(" %d. [2-Word OpCode]", int16(decodedInstr.imm16b))
-
-	case ONEACC_1_WORD_FMT:
-		decodedInstr.acd = int(getWbits(opcode, 3, 2))
-		decodedInstr.disassembly += fmt.Sprintf(" %d", decodedInstr.acd)
-
-	case TWOACC_1_WORD_FMT: // eg. WSUB
-		decodedInstr.acs = int(getWbits(opcode, 1, 2))
-		decodedInstr.acd = int(getWbits(opcode, 3, 2))
-		decodedInstr.disassembly += fmt.Sprintf(" %d,%d", decodedInstr.acs, decodedInstr.acd)
-
-	case TWOACC_IMM_2_WORD_FMT:
-		decodedInstr.acs = int(getWbits(opcode, 1, 2))
-		decodedInstr.acd = int(getWbits(opcode, 3, 2))
-		decodedInstr.imm16b = memReadWord(pc + 1)
-		decodedInstr.disassembly += fmt.Sprintf(" %d.,%d,%d", decodedInstr.imm16b, decodedInstr.acs,
-			decodedInstr.acd)
+	case LNDO_4_WORD_FMT:
+		decodedInstr.acd = int(getWbits(opcode, 1, 2))
+		decodedInstr.mode = decodeMode(getWbits(opcode, 3, 2))
+		secondWord = memReadWord(pc + 1)
+		thirdWord = memReadWord(pc + 2)
+		fourthWord = memReadWord(pc + 3)
+		decodedInstr.ind = decodeIndirect(testWbit(secondWord, 0))
+		decodedInstr.disp = decode31bitDisp(secondWord, thirdWord, decodedInstr.mode)
+		decodedInstr.offset = int32(fourthWord)
+		decodedInstr.disassembly += fmt.Sprintf(" %d,%d.,%c%d%s [4-Word OpCode]",
+			decodedInstr.acd, decodedInstr.offset, decodedInstr.ind, decodedInstr.disp, modeToString(decodedInstr.mode))
 
 	case NOACC_MODE_3_WORD_FMT: // eg. LPEFB
 		decodedInstr.mode = decodeMode(getWbits(opcode, 3, 2))
@@ -532,18 +503,6 @@ func instructionDecode(opcode dg_word, pc dg_phys_addr, lefMode bool, ioOn bool,
 		decodedInstr.disassembly += fmt.Sprintf(" %c%d.%s, %d [3-Word OpCode]",
 			decodedInstr.ind, decodedInstr.disp, modeToString(decodedInstr.mode), decodedInstr.argCount)
 
-	case LNDO_4_WORD_FMT:
-		decodedInstr.acd = int(getWbits(opcode, 1, 2))
-		decodedInstr.mode = decodeMode(getWbits(opcode, 3, 2))
-		secondWord = memReadWord(pc + 1)
-		thirdWord = memReadWord(pc + 2)
-		fourthWord = memReadWord(pc + 3)
-		decodedInstr.ind = decodeIndirect(testWbit(secondWord, 0))
-		decodedInstr.disp = decode31bitDisp(secondWord, thirdWord, decodedInstr.mode)
-		decodedInstr.offset = int32(fourthWord)
-		decodedInstr.disassembly += fmt.Sprintf(" %d,%d.,%c%d%s [4-Word OpCode]",
-			decodedInstr.acd, decodedInstr.offset, decodedInstr.ind, decodedInstr.disp, modeToString(decodedInstr.mode))
-
 	case NOACC_MODE_IMM_IND_3_WORD_FMT: // eg. LNADI, LNSBI
 		decodedInstr.immVal = decode2bitImm(getWbits(opcode, 1, 2))
 		decodedInstr.mode = decodeMode(getWbits(opcode, 3, 2))
@@ -565,6 +524,41 @@ func instructionDecode(opcode dg_word, pc dg_phys_addr, lefMode bool, ioOn bool,
 		decodedInstr.disassembly += fmt.Sprintf(" %c%d.%s,%d. [4-Word OpCode]",
 			decodedInstr.ind, decodedInstr.disp, modeToString(decodedInstr.mode), decodedInstr.argCount)
 
+	case NOVA_DATA_IO_FMT:
+		decodedInstr.acd = int(getWbits(opcode, 3, 2))
+		decodedInstr.f = decodeIOFlags(getWbits(opcode, 8, 2))
+		decodedInstr.ioDev = int(getWbits(opcode, 10, 6))
+		decodedInstr.disassembly += fmt.Sprintf("%c %d,%s",
+			decodedInstr.f, decodedInstr.acd, deviceToString(decodedInstr.ioDev))
+
+	case NOVA_NOACC_EFF_ADDR_FMT:
+		decodedInstr.ind = decodeIndirect(testWbit(opcode, 5))
+		decodedInstr.mode = decodeMode(getWbits(opcode, 6, 2))
+		decodedInstr.disp = decode8bitDisp(dg_byte(opcode&0x00ff), decodedInstr.mode)
+		decodedInstr.disassembly += fmt.Sprintf(" %c%d.%s",
+			decodedInstr.ind, decodedInstr.disp, modeToString(decodedInstr.mode))
+
+	case NOVA_ONEACC_EFF_ADDR_FMT:
+		decodedInstr.acd = int(getWbits(opcode, 3, 2))
+		decodedInstr.ind = decodeIndirect(testWbit(opcode, 5))
+		decodedInstr.mode = decodeMode(getWbits(opcode, 6, 2))
+		decodedInstr.disp = decode8bitDisp(dg_byte(opcode&0x00ff), decodedInstr.mode)
+		decodedInstr.disassembly += fmt.Sprintf(" %d,%c%d.%s",
+			decodedInstr.acd, decodedInstr.ind, decodedInstr.disp, modeToString(decodedInstr.mode))
+
+	case NOVA_TWOACC_MULT_OP_FMT:
+		decodedInstr.acs = int(getWbits(opcode, 1, 2))
+		decodedInstr.acd = int(getWbits(opcode, 3, 2))
+		decodedInstr.sh = decodeShift(getWbits(opcode, 8, 2))
+		decodedInstr.c = decodeCarry(getWbits(opcode, 10, 2))
+		decodedInstr.nl = decodeNoLoad(testWbit(opcode, 12))
+		decodedInstr.skip = decodeSkip(getWbits(opcode, 13, 3))
+		decodedInstr.disassembly += fmt.Sprintf("%c%c%c %d,%d %s",
+			decodedInstr.c, decodedInstr.sh, decodedInstr.nl, decodedInstr.acs, decodedInstr.acd, skipToString(decodedInstr.skip))
+
+	case ONEACC_1_WORD_FMT:
+		decodedInstr.acd = int(getWbits(opcode, 3, 2))
+		decodedInstr.disassembly += fmt.Sprintf(" %d", decodedInstr.acd)
 	case ONEACC_MODE_2_WORD_X_B_FMT: // eg. XLDB, XLEFB, XSTB
 		decodedInstr.mode = decodeMode(getWbits(opcode, 1, 2))
 		decodedInstr.acd = int(getWbits(opcode, 3, 2))
@@ -580,6 +574,15 @@ func instructionDecode(opcode dg_word, pc dg_phys_addr, lefMode bool, ioOn bool,
 		decodedInstr.disp, decodedInstr.loHiBit = decode16bitByteDisp(secondWord)
 		decodedInstr.disassembly += fmt.Sprintf(" %d,%d.+%c%s [2-Word OpCode]",
 			decodedInstr.acd, decodedInstr.disp*2, loHiToByte(decodedInstr.loHiBit), modeToString(decodedInstr.mode))
+
+	case ONEACC_MODE_3_WORD_FMT: // eg. LLDB, LLEFB
+		decodedInstr.mode = decodeMode(getWbits(opcode, 1, 2))
+		decodedInstr.acd = int(getWbits(opcode, 3, 2))
+		secondWord = memReadWord(pc + 1)
+		thirdWord = memReadWord(pc + 2)
+		decodedInstr.disp = decode31bitDisp(secondWord, thirdWord, decodedInstr.mode)
+		decodedInstr.disassembly += fmt.Sprintf(" %d,%d.%s [3-Word OpCode]",
+			decodedInstr.acd, decodedInstr.disp, modeToString(decodedInstr.mode))
 
 	case ONEACC_MODE_IND_2_WORD_E_FMT: // eg. ELDA
 		decodedInstr.mode = decodeMode(getWbits(opcode, 6, 2))
@@ -604,15 +607,6 @@ func instructionDecode(opcode dg_word, pc dg_phys_addr, lefMode bool, ioOn bool,
 		decodedInstr.disassembly += fmt.Sprintf(" %d,%c%d.%s [2-Word OpCode]",
 			decodedInstr.acd, decodedInstr.ind, decodedInstr.disp, modeToString(decodedInstr.mode))
 
-	case ONEACC_MODE_3_WORD_FMT: // eg. LLDB, LLEFB
-		decodedInstr.mode = decodeMode(getWbits(opcode, 1, 2))
-		decodedInstr.acd = int(getWbits(opcode, 3, 2))
-		secondWord = memReadWord(pc + 1)
-		thirdWord = memReadWord(pc + 2)
-		decodedInstr.disp = decode31bitDisp(secondWord, thirdWord, decodedInstr.mode)
-		decodedInstr.disassembly += fmt.Sprintf(" %d,%d.%s [3-Word OpCode]",
-			decodedInstr.acd, decodedInstr.disp, modeToString(decodedInstr.mode))
-
 	case ONEACC_MODE_IND_3_WORD_FMT: // eg. LWLDA/LWSTA,LNLDA
 		decodedInstr.mode = decodeMode(getWbits(opcode, 1, 2))
 		decodedInstr.acd = int(getWbits(opcode, 3, 2))
@@ -622,41 +616,6 @@ func instructionDecode(opcode dg_word, pc dg_phys_addr, lefMode bool, ioOn bool,
 		decodedInstr.disp = decode31bitDisp(secondWord, thirdWord, decodedInstr.mode)
 		decodedInstr.disassembly += fmt.Sprintf(" %d,%c%d.%s [3-Word OpCode]",
 			decodedInstr.acd, decodedInstr.ind, decodedInstr.disp, modeToString(decodedInstr.mode))
-
-	case ONEACC_IMM_IND_3_WORD_FMT:
-		decodedInstr.immVal = decode2bitImm(getWbits(opcode, 1, 2))
-		decodedInstr.acd = int(getWbits(opcode, 3, 2))
-		secondWord = memReadWord(pc + 1)
-		decodedInstr.ind = decodeIndirect(testWbit(secondWord, 0))
-		thirdWord = memReadWord(pc + 2)
-		decodedInstr.disp = decode31bitDisp(secondWord, thirdWord, decodedInstr.mode)
-		decodedInstr.disassembly += fmt.Sprintf(" %d.,%d.%c%d. [3-Word OpCode]",
-			decodedInstr.immVal, decodedInstr.acd, decodedInstr.ind, decodedInstr.disp)
-
-	case IMM_ONEACC_FMT: // eg. HXL, NADI, WLSI
-		decodedInstr.immVal = decode2bitImm(getWbits(opcode, 1, 2))
-		decodedInstr.acd = int(getWbits(opcode, 3, 2))
-		decodedInstr.disassembly += fmt.Sprintf(" %d.,%d", decodedInstr.immVal, decodedInstr.acd)
-
-	case IMM_MODE_2_WORD_FMT: // eg. XNADI
-		decodedInstr.immVal = decode2bitImm(getWbits(opcode, 1, 2))
-		decodedInstr.mode = decodeMode(getWbits(opcode, 3, 2))
-		secondWord = memReadWord(pc + 1)
-		decodedInstr.ind = decodeIndirect(testWbit(secondWord, 0))
-		decodedInstr.disp = decode15bitDisp(secondWord, decodedInstr.mode)
-		decodedInstr.disassembly += fmt.Sprintf(" %d.,%d.%s [2-Word OpCode]",
-			decodedInstr.immVal, decodedInstr.disp, modeToString(decodedInstr.mode))
-
-	case THREE_WORD_DO_FMT: // eg. XNDO
-		decodedInstr.acd = int(getWbits(opcode, 1, 2))
-		decodedInstr.mode = decodeMode(getWbits(opcode, 3, 2))
-		secondWord = memReadWord(pc + 1)
-		decodedInstr.ind = decodeIndirect(testWbit(secondWord, 0))
-		decodedInstr.disp = decode15bitDisp(secondWord, decodedInstr.mode)
-		thirdWord = memReadWord(pc + 2)
-		decodedInstr.offset = int32(uint16(thirdWord))
-		decodedInstr.disassembly += fmt.Sprintf(" %d,%d. %c%d.%s [3-Word OpCode]",
-			decodedInstr.acd, decodedInstr.offset, decodedInstr.ind, decodedInstr.disp, modeToString(decodedInstr.mode))
 
 	case ONEACC_IMM_2_WORD_FMT: // eg. ADDI, IORI, NADDI, NLDAI, WLSHI
 		decodedInstr.acd = int(getWbits(opcode, 3, 2))
@@ -669,12 +628,52 @@ func instructionDecode(opcode dg_word, pc dg_phys_addr, lefMode bool, ioOn bool,
 		decodedInstr.imm32b = memReadDWord(pc + 1)
 		decodedInstr.disassembly += fmt.Sprintf(" %d.,%d [3-Word OpCode]", decodedInstr.imm32b, decodedInstr.acd)
 
+	case ONEACC_IMM_IND_3_WORD_FMT:
+		decodedInstr.immVal = decode2bitImm(getWbits(opcode, 1, 2))
+		decodedInstr.acd = int(getWbits(opcode, 3, 2))
+		secondWord = memReadWord(pc + 1)
+		decodedInstr.ind = decodeIndirect(testWbit(secondWord, 0))
+		thirdWord = memReadWord(pc + 2)
+		decodedInstr.disp = decode31bitDisp(secondWord, thirdWord, decodedInstr.mode)
+		decodedInstr.disassembly += fmt.Sprintf(" %d.,%d.%c%d. [3-Word OpCode]",
+			decodedInstr.immVal, decodedInstr.acd, decodedInstr.ind, decodedInstr.disp)
+
+	case TWOACC_1_WORD_FMT: // eg. WSUB
+		decodedInstr.acs = int(getWbits(opcode, 1, 2))
+		decodedInstr.acd = int(getWbits(opcode, 3, 2))
+		decodedInstr.disassembly += fmt.Sprintf(" %d,%d", decodedInstr.acs, decodedInstr.acd)
+
 	case SPLIT_8BIT_DISP_FMT:
 		tmp8bit = dg_byte(getWbits(opcode, 1, 4) & 0xff)
 		tmp8bit = tmp8bit << 4
 		tmp8bit |= dg_byte(getWbits(opcode, 6, 4) & 0xff)
 		decodedInstr.disp = decode8bitDisp(tmp8bit, "PC")
 		decodedInstr.disassembly += fmt.Sprintf(" %d.", int32(decodedInstr.disp))
+
+	case THREE_WORD_DO_FMT: // eg. XNDO
+		decodedInstr.acd = int(getWbits(opcode, 1, 2))
+		decodedInstr.mode = decodeMode(getWbits(opcode, 3, 2))
+		secondWord = memReadWord(pc + 1)
+		decodedInstr.ind = decodeIndirect(testWbit(secondWord, 0))
+		decodedInstr.disp = decode15bitDisp(secondWord, decodedInstr.mode)
+		thirdWord = memReadWord(pc + 2)
+		decodedInstr.offset = int32(uint16(thirdWord))
+		decodedInstr.disassembly += fmt.Sprintf(" %d,%d. %c%d.%s [3-Word OpCode]",
+			decodedInstr.acd, decodedInstr.offset, decodedInstr.ind, decodedInstr.disp, modeToString(decodedInstr.mode))
+
+	case TWOACC_IMM_2_WORD_FMT:
+		decodedInstr.acs = int(getWbits(opcode, 1, 2))
+		decodedInstr.acd = int(getWbits(opcode, 3, 2))
+		decodedInstr.imm16b = memReadWord(pc + 1)
+		decodedInstr.disassembly += fmt.Sprintf(" %d.,%d,%d", decodedInstr.imm16b, decodedInstr.acs,
+			decodedInstr.acd)
+
+	case UNIQUE_1_WORD_FMT:
+		// nothing to do in this case
+
+	case UNIQUE_2_WORD_FMT:
+		decodedInstr.imm16b = memReadWord(pc + 1)
+		decodedInstr.disassembly += fmt.Sprintf(" %d. [2-Word OpCode]", int16(decodedInstr.imm16b))
 
 	case WSKB_FMT:
 		tmp8bit = dg_byte(getWbits(opcode, 1, 3) & 0xff)
