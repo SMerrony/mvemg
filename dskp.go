@@ -255,7 +255,7 @@ func dskpCreateBlank(imgName string) bool {
 }
 
 // Handle the DIA/B/C PIO commands
-func dskpDataIn(cpuPtr *CPU, iPtr *DecodedInstr, abc byte) {
+func dskpDataIn(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 	switch abc {
 	case 'A':
 		cpuPtr.ac[iPtr.acd] = dg_dword(dskpData.statusRegA)
@@ -271,7 +271,7 @@ func dskpDataIn(cpuPtr *CPU, iPtr *DecodedInstr, abc byte) {
 }
 
 // Handle the DOA/B/C PIO commands
-func dskpDataOut(cpuPtr *CPU, iPtr *DecodedInstr, abc byte) {
+func dskpDataOut(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 	switch abc {
 	case 'A':
 		dskpData.commandRegA = dwordGetLowerWord(cpuPtr.ac[iPtr.acd])

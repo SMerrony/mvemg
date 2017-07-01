@@ -22,7 +22,6 @@
 package main
 
 import (
-	"fmt"
 	"mvemg/logging"
 )
 
@@ -67,11 +66,10 @@ const (
 	NOVA_NOACC_EFF_ADDR_FMT
 	NOVA_ONEACC_EFF_ADDR_FMT
 	NOVA_TWOACC_MULT_OP_FMT
-	//	ONEACC_2_WORD_FMT             = iota
 	ONEACC_IMM_2_WORD_FMT
-	// ONEACC_DISP_2_WORD_FMT       = iota
+	ONEACC_IMMWD_2_WORD_FMT
 	ONEACC_IMM_3_WORD_FMT
-	ONEACC_IMM_IND_3_WORD_FMT
+	ONEACC_IMMDWD_3_WORD_FMT
 	ONEACC_MODE_2_WORD_E_FMT
 	ONEACC_MODE_2_WORD_X_B_FMT
 	ONEACC_MODE_3_WORD_FMT
@@ -110,30 +108,6 @@ var ioTests = [...]string{"BN", "BZ", "DN", "DZ"}
 var modes = [...]string{"Absolute", "PC", "AC2", "AC3"}
 var skips = [...]string{"NONE", "SKP", "SZC", "SNC", "SZR", "SNR", "SEZ", "SBN"}
 
-// DecodedInstr contains the MV/Em internal decode of an opcode and any
-// parameters.
-type DecodedInstr struct {
-	mnemonic          string
-	instrFmt          int
-	instrType         int
-	instrLength       int
-	c, ind, sh, nl, f byte
-	t                 string
-	ioDev             int
-	acs, acd          int
-	skip              string
-	mode              string
-	disp              int32 // we express displacements as signed 32
-	loHiBit           bool
-	offset, immVal    int32
-	imm16b            dg_word
-	imm32b            dg_dword
-	argCount, bitNum  int
-	disassembly       string
-}
-
-var decodedInstr DecodedInstr
-
 func instructionsInit() {
 
 	// the following section was generated programmatically from the corresponding structure
@@ -146,7 +120,7 @@ func instructionsInit() {
 	instructionSet["ADI"] = instrChars{0x8008, 0x87ff, IMM_ONEACC_FMT, 1, ECLIPSE_OP}
 	instructionSet["ANC"] = instrChars{0x8188, 0x87ff, TWOACC_1_WORD_FMT, 1, EAGLE_OP}
 	instructionSet["AND"] = instrChars{0x8700, 0x8700, NOVA_TWOACC_MULT_OP_FMT, 1, NOVA_OP}
-	instructionSet["ANDI"] = instrChars{0xc7f8, 0xe7ff, ONEACC_IMM_2_WORD_FMT, 2, EAGLE_OP}
+	instructionSet["ANDI"] = instrChars{0xc7f8, 0xe7ff, ONEACC_IMMWD_2_WORD_FMT, 2, EAGLE_OP}
 	instructionSet["BAM"] = instrChars{0x97c8, 0xffff, UNIQUE_1_WORD_FMT, 1, NOVA_OP}
 	instructionSet["BKPT"] = instrChars{0xc789, 0xffff, UNIQUE_1_WORD_FMT, 1, EAGLE_PC}
 	instructionSet["BLM"] = instrChars{0xb7c8, 0xffff, UNIQUE_1_WORD_FMT, 1, ECLIPSE_MEMREF}
@@ -210,7 +184,7 @@ func instructionsInit() {
 	instructionSet["INTDS"] = instrChars{0x60bf, 0xffff, UNIQUE_1_WORD_FMT, 1, EAGLE_IO}
 	instructionSet["INTEN"] = instrChars{0x607f, 0xffff, UNIQUE_1_WORD_FMT, 1, EAGLE_IO}
 	instructionSet["IOR"] = instrChars{0x8108, 0x87ff, TWOACC_1_WORD_FMT, 1, ECLIPSE_OP}
-	instructionSet["IORI"] = instrChars{0x87f8, 0xe7ff, ONEACC_IMM_2_WORD_FMT, 2, ECLIPSE_OP}
+	instructionSet["IORI"] = instrChars{0x87f8, 0xe7ff, ONEACC_IMMWD_2_WORD_FMT, 2, ECLIPSE_OP}
 	instructionSet["IORST"] = instrChars{0x653f, 0xe73f, IO_RESET_FMT, 1, NOVA_IO}
 	instructionSet["ISZ"] = instrChars{0x1000, 0xf800, NOVA_NOACC_EFF_ADDR_FMT, 1, NOVA_MEMREF}
 	instructionSet["ISZTS"] = instrChars{0xc7c9, 0xffff, UNIQUE_1_WORD_FMT, 1, EAGLE_OP}
@@ -302,7 +276,7 @@ func instructionsInit() {
 	instructionSet["WADI"] = instrChars{0x84b9, 0x87ff, IMM_ONEACC_FMT, 1, EAGLE_OP}
 	instructionSet["WANC"] = instrChars{0x8549, 0x87ff, TWOACC_1_WORD_FMT, 1, EAGLE_OP}
 	instructionSet["WAND"] = instrChars{0x8449, 0x87ff, TWOACC_1_WORD_FMT, 1, EAGLE_OP}
-	instructionSet["WANDI"] = instrChars{0x8699, 0xe7ff, ONEACC_IMM_3_WORD_FMT, 3, EAGLE_OP}
+	instructionSet["WANDI"] = instrChars{0x8699, 0xe7ff, ONEACC_IMMDWD_3_WORD_FMT, 3, EAGLE_OP}
 	instructionSet["WASH"] = instrChars{0x8279, 0x87ff, TWOACC_1_WORD_FMT, 1, EAGLE_OP}
 	instructionSet["WASHI"] = instrChars{0xc6a9, 0xe7ff, ONEACC_IMM_2_WORD_FMT, 2, EAGLE_OP}
 	instructionSet["WBLM"] = instrChars{0xe749, 0xffff, UNIQUE_1_WORD_FMT, 1, EAGLE_MEMREF}
@@ -313,8 +287,8 @@ func instructionsInit() {
 	instructionSet["WCMV"] = instrChars{0x8779, 0xFFFF, UNIQUE_1_WORD_FMT, 1, EAGLE_MEMREF} // added here
 	instructionSet["WCOM"] = instrChars{0x8459, 0x87ff, TWOACC_1_WORD_FMT, 1, EAGLE_OP}
 	instructionSet["WINC"] = instrChars{0x8259, 0x87ff, TWOACC_1_WORD_FMT, 1, EAGLE_OP}
-	instructionSet["WIORI"] = instrChars{0x86a9, 0xe7ff, ONEACC_IMM_3_WORD_FMT, 3, EAGLE_OP}
-	instructionSet["WLDAI"] = instrChars{0xc689, 0xe7ff, ONEACC_IMM_3_WORD_FMT, 3, EAGLE_OP}
+	instructionSet["WIORI"] = instrChars{0x86a9, 0xe7ff, ONEACC_IMMDWD_3_WORD_FMT, 3, EAGLE_OP}
+	instructionSet["WLDAI"] = instrChars{0xc689, 0xe7ff, ONEACC_IMMDWD_3_WORD_FMT, 3, EAGLE_OP}
 	instructionSet["WLMP"] = instrChars{0xa7f9, 0xffff, UNIQUE_1_WORD_FMT, 1, EAGLE_IO}
 	instructionSet["WLSH"] = instrChars{0x8559, 0x87ff, TWOACC_1_WORD_FMT, 1, EAGLE_OP}
 	instructionSet["WLSHI"] = instrChars{0xe6d9, 0xe7ff, ONEACC_IMM_2_WORD_FMT, 2, EAGLE_OP}
@@ -370,487 +344,4 @@ func instructionsInit() {
 	instructionSet["ZEX"] = instrChars{0x8359, 0x87ff, TWOACC_1_WORD_FMT, 1, EAGLE_OP}
 
 	logging.DebugPrint(logging.DebugLog, "INFO: %d Instruction Set Opcodes loaded\n", len(instructionSet))
-}
-
-func instructionFind(opcode dg_word, lefMode bool, ioOn bool, atuOn bool) string {
-	var tail dg_word
-	for mn, insChar := range instructionSet {
-		if (opcode & insChar.mask) == insChar.bits {
-			// there are some exceptions to the normal decoding...
-			switch mn {
-			case "LEF":
-				if lefMode {
-					return mn
-				}
-			case "ADC", "ADD", "AND", "COM", "INC", "MOV", "NEG", "SUB":
-				tail = opcode & 0x000f
-				if tail < 8 || tail > 9 {
-					return mn
-				}
-			default:
-				return mn
-
-			}
-		}
-	}
-	return ""
-}
-
-/* Decode an opcode
-N.B. For the moment this function both decodes and disassembles the given instruction,
-for performance in the future these two tasks should probably either be separated or
-controlled by flags passed into the function.
-*/
-func instructionDecode(opcode dg_word, pc dg_phys_addr, lefMode bool, ioOn bool, autOn bool) (*DecodedInstr, bool) {
-	var secondWord, thirdWord, fourthWord dg_word
-	var tmp8bit dg_byte
-
-	decodedInstr = DecodedInstr{}
-	decodedInstr.disassembly = "; Unknown instruction"
-	mnem := instructionFind(opcode, lefMode, ioOn, autOn)
-	if mnem == "" {
-		logging.DebugPrint(logging.DebugLog, "INFO: instructionFind failed to return anything to instructionDecode for location %d\n", pc)
-		return &decodedInstr, false
-	}
-	decodedInstr.mnemonic = mnem
-	decodedInstr.disassembly = mnem
-	decodedInstr.instrFmt = instructionSet[mnem].instrFmt
-	decodedInstr.instrType = instructionSet[mnem].instrType
-	decodedInstr.instrLength = instructionSet[mnem].instrLen
-
-	switch decodedInstr.instrFmt {
-
-	case IMM_MODE_2_WORD_FMT: // eg. XNADI
-		decodedInstr.immVal = decode2bitImm(getWbits(opcode, 1, 2))
-		decodedInstr.mode = decodeMode(getWbits(opcode, 3, 2))
-		secondWord = memReadWord(pc + 1)
-		decodedInstr.ind = decodeIndirect(testWbit(secondWord, 0))
-		decodedInstr.disp = decode15bitDisp(secondWord, decodedInstr.mode)
-		decodedInstr.disassembly += fmt.Sprintf(" %d.,%d.%s [2-Word OpCode]",
-			decodedInstr.immVal, decodedInstr.disp, modeToString(decodedInstr.mode))
-
-	case IMM_ONEACC_FMT: // eg. HXL, NADI, WLSI
-		decodedInstr.immVal = decode2bitImm(getWbits(opcode, 1, 2))
-		decodedInstr.acd = int(getWbits(opcode, 3, 2))
-		decodedInstr.disassembly += fmt.Sprintf(" %d.,%d", decodedInstr.immVal, decodedInstr.acd)
-
-	case IO_FLAGS_DEV_FMT:
-		decodedInstr.f = decodeIOFlags(getWbits(opcode, 8, 2))
-		decodedInstr.ioDev = int(getWbits(opcode, 10, 6))
-		decodedInstr.disassembly += fmt.Sprintf("%c %s",
-			decodedInstr.f, deviceToString(decodedInstr.ioDev))
-
-	case IO_RESET_FMT:
-		decodedInstr.acd = int(getWbits(opcode, 3, 2)) // TODO is this needed/used?
-
-	case IO_TEST_DEV_FMT:
-		decodedInstr.t = decodeIOTest(getWbits(opcode, 8, 2))
-		decodedInstr.ioDev = int(getWbits(opcode, 10, 6))
-		decodedInstr.disassembly += fmt.Sprintf("%s %s", decodedInstr.t, deviceToString(decodedInstr.ioDev))
-
-	case LNDO_4_WORD_FMT:
-		decodedInstr.acd = int(getWbits(opcode, 1, 2))
-		decodedInstr.mode = decodeMode(getWbits(opcode, 3, 2))
-		secondWord = memReadWord(pc + 1)
-		thirdWord = memReadWord(pc + 2)
-		fourthWord = memReadWord(pc + 3)
-		decodedInstr.ind = decodeIndirect(testWbit(secondWord, 0))
-		decodedInstr.disp = decode31bitDisp(secondWord, thirdWord, decodedInstr.mode)
-		decodedInstr.offset = int32(fourthWord)
-		decodedInstr.disassembly += fmt.Sprintf(" %d,%d.,%c%d%s [4-Word OpCode]",
-			decodedInstr.acd, decodedInstr.offset, decodedInstr.ind, decodedInstr.disp, modeToString(decodedInstr.mode))
-
-	case NOACC_MODE_3_WORD_FMT: // eg. LPEFB
-		decodedInstr.mode = decodeMode(getWbits(opcode, 3, 2))
-		decodedInstr.imm32b = memReadDWord(pc + 1)
-		decodedInstr.disassembly += fmt.Sprintf(" %d.,%s [3-Word OpCode]", decodedInstr.imm32b, modeToString(decodedInstr.mode))
-
-	case NOACC_MODE_IND_2_WORD_E_FMT, NOACC_MODE_IND_2_WORD_X_FMT:
-		logging.DebugPrint(logging.DebugLog, "X_FMT: Mnemonic is <%s>\n", decodedInstr.mnemonic)
-		switch decodedInstr.mnemonic {
-		case "XJMP", "XJSR", "XNDSZ", "XNISZ", "XPEF", "XWDSZ":
-			decodedInstr.mode = decodeMode(getWbits(opcode, 3, 2))
-		case "EDSZ", "EISZ", "EJMP", "EJSR", "PSHJ":
-			decodedInstr.mode = decodeMode(getWbits(opcode, 6, 2))
-		}
-		secondWord = memReadWord(pc + 1)
-		decodedInstr.ind = decodeIndirect(testWbit(secondWord, 0))
-		switch decodedInstr.mnemonic {
-		case "EJSR", "EJMP": // FIXME - maybe more exceptions needed here
-			decodedInstr.disp = decode15bitEclipseDisp(secondWord, decodedInstr.mode)
-		default:
-			decodedInstr.disp = decode15bitDisp(secondWord, decodedInstr.mode)
-		}
-		decodedInstr.disassembly += fmt.Sprintf(" %c%d.%s [2-Word OpCode]",
-			decodedInstr.ind, decodedInstr.disp, modeToString(decodedInstr.mode))
-
-	case NOACC_MODE_IND_3_WORD_FMT: // eg. LJMP/LJSR, LNDSZ, LWDS
-		decodedInstr.mode = decodeMode(getWbits(opcode, 3, 2))
-		secondWord = memReadWord(pc + 1)
-		thirdWord = memReadWord(pc + 2)
-		decodedInstr.ind = decodeIndirect(testWbit(secondWord, 0))
-		decodedInstr.disp = decode31bitDisp(secondWord, thirdWord, decodedInstr.mode)
-		decodedInstr.disassembly += fmt.Sprintf(" %c%d.%s [3-Word OpCode]",
-			decodedInstr.ind, decodedInstr.disp, modeToString(decodedInstr.mode))
-
-	case NOACC_MODE_IND_3_WORD_XCALL_FMT: // XCALL
-		decodedInstr.mode = decodeMode(getWbits(opcode, 3, 2))
-		secondWord = memReadWord(pc + 1)
-		thirdWord = memReadWord(pc + 2)
-		decodedInstr.ind = decodeIndirect(testWbit(secondWord, 0))
-		decodedInstr.disp = decode15bitDisp(secondWord, decodedInstr.mode)
-		decodedInstr.argCount = int(thirdWord)
-		decodedInstr.disassembly += fmt.Sprintf(" %c%d.%s, %d [3-Word OpCode]",
-			decodedInstr.ind, decodedInstr.disp, modeToString(decodedInstr.mode), decodedInstr.argCount)
-
-	case NOACC_MODE_IMM_IND_3_WORD_FMT: // eg. LNADI, LNSBI
-		decodedInstr.immVal = decode2bitImm(getWbits(opcode, 1, 2))
-		decodedInstr.mode = decodeMode(getWbits(opcode, 3, 2))
-		secondWord = memReadWord(pc + 1)
-		thirdWord = memReadWord(pc + 2)
-		decodedInstr.ind = decodeIndirect(testWbit(secondWord, 0))
-		decodedInstr.disp = decode31bitDisp(secondWord, thirdWord, decodedInstr.mode)
-		decodedInstr.disassembly += fmt.Sprintf(" %d.,%c%d.%s [3-Word OpCode]",
-			decodedInstr.immVal, decodedInstr.ind, decodedInstr.disp, modeToString(decodedInstr.mode))
-
-	case NOACC_MODE_IND_4_WORD_FMT: // eg. LCALL
-		decodedInstr.mode = decodeMode(getWbits(opcode, 3, 2))
-		secondWord = memReadWord(pc + 1)
-		thirdWord = memReadWord(pc + 2)
-		fourthWord = memReadWord(pc + 3)
-		decodedInstr.ind = decodeIndirect(testWbit(secondWord, 0))
-		decodedInstr.disp = decode31bitDisp(secondWord, thirdWord, decodedInstr.mode)
-		decodedInstr.argCount = int(fourthWord)
-		decodedInstr.disassembly += fmt.Sprintf(" %c%d.%s,%d. [4-Word OpCode]",
-			decodedInstr.ind, decodedInstr.disp, modeToString(decodedInstr.mode), decodedInstr.argCount)
-
-	case NOVA_DATA_IO_FMT:
-		decodedInstr.acd = int(getWbits(opcode, 3, 2))
-		decodedInstr.f = decodeIOFlags(getWbits(opcode, 8, 2))
-		decodedInstr.ioDev = int(getWbits(opcode, 10, 6))
-		decodedInstr.disassembly += fmt.Sprintf("%c %d,%s",
-			decodedInstr.f, decodedInstr.acd, deviceToString(decodedInstr.ioDev))
-
-	case NOVA_NOACC_EFF_ADDR_FMT:
-		decodedInstr.ind = decodeIndirect(testWbit(opcode, 5))
-		decodedInstr.mode = decodeMode(getWbits(opcode, 6, 2))
-		decodedInstr.disp = decode8bitDisp(dg_byte(opcode&0x00ff), decodedInstr.mode)
-		decodedInstr.disassembly += fmt.Sprintf(" %c%d.%s",
-			decodedInstr.ind, decodedInstr.disp, modeToString(decodedInstr.mode))
-
-	case NOVA_ONEACC_EFF_ADDR_FMT:
-		decodedInstr.acd = int(getWbits(opcode, 3, 2))
-		decodedInstr.ind = decodeIndirect(testWbit(opcode, 5))
-		decodedInstr.mode = decodeMode(getWbits(opcode, 6, 2))
-		decodedInstr.disp = decode8bitDisp(dg_byte(opcode&0x00ff), decodedInstr.mode)
-		decodedInstr.disassembly += fmt.Sprintf(" %d,%c%d.%s",
-			decodedInstr.acd, decodedInstr.ind, decodedInstr.disp, modeToString(decodedInstr.mode))
-
-	case NOVA_TWOACC_MULT_OP_FMT:
-		decodedInstr.acs = int(getWbits(opcode, 1, 2))
-		decodedInstr.acd = int(getWbits(opcode, 3, 2))
-		decodedInstr.sh = decodeShift(getWbits(opcode, 8, 2))
-		decodedInstr.c = decodeCarry(getWbits(opcode, 10, 2))
-		decodedInstr.nl = decodeNoLoad(testWbit(opcode, 12))
-		decodedInstr.skip = decodeSkip(getWbits(opcode, 13, 3))
-		decodedInstr.disassembly += fmt.Sprintf("%c%c%c %d,%d %s",
-			decodedInstr.c, decodedInstr.sh, decodedInstr.nl, decodedInstr.acs, decodedInstr.acd, skipToString(decodedInstr.skip))
-
-	case ONEACC_1_WORD_FMT:
-		decodedInstr.acd = int(getWbits(opcode, 3, 2))
-		decodedInstr.disassembly += fmt.Sprintf(" %d", decodedInstr.acd)
-	case ONEACC_MODE_2_WORD_X_B_FMT: // eg. XLDB, XLEFB, XSTB
-		decodedInstr.mode = decodeMode(getWbits(opcode, 1, 2))
-		decodedInstr.acd = int(getWbits(opcode, 3, 2))
-		secondWord = memReadWord(pc + 1)
-		decodedInstr.disp, decodedInstr.loHiBit = decode16bitByteDisp(secondWord)
-		decodedInstr.disassembly += fmt.Sprintf(" %d,%d.+%c%s [2-Word OpCode]",
-			decodedInstr.acd, decodedInstr.disp*2, loHiToByte(decodedInstr.loHiBit), modeToString(decodedInstr.mode))
-
-	case ONEACC_MODE_2_WORD_E_FMT: // eg. ELDB, ESTB
-		decodedInstr.mode = decodeMode(getWbits(opcode, 6, 2))
-		decodedInstr.acd = int(getWbits(opcode, 3, 2))
-		secondWord = memReadWord(pc + 1)
-		decodedInstr.disp, decodedInstr.loHiBit = decode16bitByteDisp(secondWord)
-		decodedInstr.disassembly += fmt.Sprintf(" %d,%d.+%c%s [2-Word OpCode]",
-			decodedInstr.acd, decodedInstr.disp*2, loHiToByte(decodedInstr.loHiBit), modeToString(decodedInstr.mode))
-
-	case ONEACC_MODE_3_WORD_FMT: // eg. LLDB, LLEFB
-		decodedInstr.mode = decodeMode(getWbits(opcode, 1, 2))
-		decodedInstr.acd = int(getWbits(opcode, 3, 2))
-		secondWord = memReadWord(pc + 1)
-		thirdWord = memReadWord(pc + 2)
-		decodedInstr.disp = decode31bitDisp(secondWord, thirdWord, decodedInstr.mode)
-		decodedInstr.disassembly += fmt.Sprintf(" %d,%d.%s [3-Word OpCode]",
-			decodedInstr.acd, decodedInstr.disp, modeToString(decodedInstr.mode))
-
-	case ONEACC_MODE_IND_2_WORD_E_FMT: // eg. ELDA
-		decodedInstr.mode = decodeMode(getWbits(opcode, 6, 2))
-		decodedInstr.acd = int(getWbits(opcode, 3, 2))
-		secondWord = memReadWord(pc + 1)
-		decodedInstr.ind = decodeIndirect(testWbit(secondWord, 0))
-		switch decodedInstr.mnemonic {
-		case "ELEF": // FIXME - more exceptions needed here...
-			decodedInstr.disp = decode15bitEclipseDisp(secondWord, decodedInstr.mode)
-		default:
-			decodedInstr.disp = decode15bitDisp(secondWord, decodedInstr.mode)
-		}
-		decodedInstr.disassembly += fmt.Sprintf(" %d,%c%d.%s [2-Word OpCode]",
-			decodedInstr.acd, decodedInstr.ind, decodedInstr.disp, modeToString(decodedInstr.mode))
-
-	case ONEACC_MODE_IND_2_WORD_X_FMT: // eg. XNLDA/XWSTA
-		decodedInstr.mode = decodeMode(getWbits(opcode, 1, 2))
-		decodedInstr.acd = int(getWbits(opcode, 3, 2))
-		secondWord = memReadWord(pc + 1)
-		decodedInstr.ind = decodeIndirect(testWbit(secondWord, 0))
-		decodedInstr.disp = decode15bitDisp(secondWord, decodedInstr.mode)
-		decodedInstr.disassembly += fmt.Sprintf(" %d,%c%d.%s [2-Word OpCode]",
-			decodedInstr.acd, decodedInstr.ind, decodedInstr.disp, modeToString(decodedInstr.mode))
-
-	case ONEACC_MODE_IND_3_WORD_FMT: // eg. LWLDA/LWSTA,LNLDA
-		decodedInstr.mode = decodeMode(getWbits(opcode, 1, 2))
-		decodedInstr.acd = int(getWbits(opcode, 3, 2))
-		secondWord = memReadWord(pc + 1)
-		decodedInstr.ind = decodeIndirect(testWbit(secondWord, 0))
-		thirdWord = memReadWord(pc + 2)
-		decodedInstr.disp = decode31bitDisp(secondWord, thirdWord, decodedInstr.mode)
-		decodedInstr.disassembly += fmt.Sprintf(" %d,%c%d.%s [3-Word OpCode]",
-			decodedInstr.acd, decodedInstr.ind, decodedInstr.disp, modeToString(decodedInstr.mode))
-
-	case ONEACC_IMM_2_WORD_FMT: // eg. ADDI, IORI, NADDI, NLDAI, WLSHI
-		decodedInstr.acd = int(getWbits(opcode, 3, 2))
-		secondWord = memReadWord(pc + 1)
-		decodedInstr.imm16b = secondWord
-		decodedInstr.disassembly += fmt.Sprintf(" %d,%d. [2-Word OpCode]", decodedInstr.acd, decodedInstr.imm16b)
-
-	case ONEACC_IMM_3_WORD_FMT:
-		decodedInstr.acd = int(getWbits(opcode, 3, 2))
-		decodedInstr.imm32b = memReadDWord(pc + 1)
-		decodedInstr.disassembly += fmt.Sprintf(" %d.,%d [3-Word OpCode]", decodedInstr.imm32b, decodedInstr.acd)
-
-	case ONEACC_IMM_IND_3_WORD_FMT:
-		decodedInstr.immVal = decode2bitImm(getWbits(opcode, 1, 2))
-		decodedInstr.acd = int(getWbits(opcode, 3, 2))
-		secondWord = memReadWord(pc + 1)
-		decodedInstr.ind = decodeIndirect(testWbit(secondWord, 0))
-		thirdWord = memReadWord(pc + 2)
-		decodedInstr.disp = decode31bitDisp(secondWord, thirdWord, decodedInstr.mode)
-		decodedInstr.disassembly += fmt.Sprintf(" %d.,%d.%c%d. [3-Word OpCode]",
-			decodedInstr.immVal, decodedInstr.acd, decodedInstr.ind, decodedInstr.disp)
-
-	case TWOACC_1_WORD_FMT: // eg. WSUB
-		decodedInstr.acs = int(getWbits(opcode, 1, 2))
-		decodedInstr.acd = int(getWbits(opcode, 3, 2))
-		decodedInstr.disassembly += fmt.Sprintf(" %d,%d", decodedInstr.acs, decodedInstr.acd)
-
-	case SPLIT_8BIT_DISP_FMT:
-		tmp8bit = dg_byte(getWbits(opcode, 1, 4) & 0xff)
-		tmp8bit = tmp8bit << 4
-		tmp8bit |= dg_byte(getWbits(opcode, 6, 4) & 0xff)
-		decodedInstr.disp = decode8bitDisp(tmp8bit, "PC")
-		decodedInstr.disassembly += fmt.Sprintf(" %d.", int32(decodedInstr.disp))
-
-	case THREE_WORD_DO_FMT: // eg. XNDO
-		decodedInstr.acd = int(getWbits(opcode, 1, 2))
-		decodedInstr.mode = decodeMode(getWbits(opcode, 3, 2))
-		secondWord = memReadWord(pc + 1)
-		decodedInstr.ind = decodeIndirect(testWbit(secondWord, 0))
-		decodedInstr.disp = decode15bitDisp(secondWord, decodedInstr.mode)
-		thirdWord = memReadWord(pc + 2)
-		decodedInstr.offset = int32(uint16(thirdWord))
-		decodedInstr.disassembly += fmt.Sprintf(" %d,%d. %c%d.%s [3-Word OpCode]",
-			decodedInstr.acd, decodedInstr.offset, decodedInstr.ind, decodedInstr.disp, modeToString(decodedInstr.mode))
-
-	case TWOACC_IMM_2_WORD_FMT:
-		decodedInstr.acs = int(getWbits(opcode, 1, 2))
-		decodedInstr.acd = int(getWbits(opcode, 3, 2))
-		decodedInstr.imm16b = memReadWord(pc + 1)
-		decodedInstr.disassembly += fmt.Sprintf(" %d.,%d,%d", decodedInstr.imm16b, decodedInstr.acs,
-			decodedInstr.acd)
-
-	case UNIQUE_1_WORD_FMT:
-		// nothing to do in this case
-
-	case UNIQUE_2_WORD_FMT:
-		decodedInstr.imm16b = memReadWord(pc + 1)
-		decodedInstr.disassembly += fmt.Sprintf(" %d. [2-Word OpCode]", int16(decodedInstr.imm16b))
-
-	case WSKB_FMT:
-		tmp8bit = dg_byte(getWbits(opcode, 1, 3) & 0xff)
-		tmp8bit = tmp8bit << 2
-		tmp8bit |= dg_byte(getWbits(opcode, 10, 2) & 0xff)
-		decodedInstr.bitNum = int(uint8(tmp8bit))
-		decodedInstr.disassembly += fmt.Sprintf(" %d.", decodedInstr.bitNum)
-
-	default:
-		logging.DebugPrint(logging.DebugLog, "ERROR: Invalid instruction format (%d) for instruction %s", decodedInstr.instrFmt, decodedInstr.mnemonic)
-		return nil, false
-	}
-	return &decodedInstr, true
-}
-
-/* decoders for (parts of) operands below here... */
-
-func decode2bitImm(i dg_word) int32 {
-	// to expand range (by 1!) 1 is subtracted from operand
-	return int32(i + 1)
-}
-
-// TODO Do we need this?
-func decode8bitDisp(d8 dg_byte, mode string) int32 {
-	var disp int32
-	if mode == "Absolute" {
-		disp = int32(d8) & 0x00ff // unsigned offset
-	} else {
-		// signed offset...
-		disp = int32(int8(d8)) // this should sign-extend
-	}
-	return disp
-}
-
-func decode15bitDisp(d15 dg_word, mode string) int32 {
-	var disp int32
-	if mode == "Absolute" {
-		disp = int32(d15 & 0x7fff) // zero extend
-	} else {
-		if testWbit(d15, 1) {
-			disp = int32(int16(d15 | 0x8000)) // sign extend
-		} else {
-			disp = int32(d15 & 0x7fff) // zero extend
-		}
-		if mode == "PC" {
-			disp++ // see p.1-12 of PoP
-		}
-	}
-	if debugLogging {
-		logging.DebugPrint(logging.DebugLog, "... decode15bitDisp got: %d, returning: %d\n", d15, disp)
-	}
-	return disp
-}
-
-func decode15bitEclipseDisp(d15 dg_word, mode string) int32 {
-	var disp int32
-	if mode == "Absolute" {
-		disp = int32(d15 & 0x7fff) // zero extend
-	} else {
-		if testWbit(d15, 1) {
-			disp = int32(int16(d15 | 0xc000)) // sign extend
-		} else {
-			disp = int32(d15 & 0x3fff) // zero extend
-		}
-		if mode == "PC" {
-			disp++ // see p.1-12 of PoP
-		}
-	}
-	if debugLogging {
-		logging.DebugPrint(logging.DebugLog, "... decode15bitEclispeDisp got: %d, returning: %d\n", d15, disp)
-	}
-	return disp
-}
-
-func decode16bitByteDisp(d16 dg_word) (int32, bool) {
-	var disp int32
-	loHi := testWbit(d16, 15)
-	disp = int32(d16 >> 1)
-	if debugLogging {
-		logging.DebugPrint(logging.DebugLog, "... decode16bitByteDisp got: %d, returning %d\n", d16, disp)
-	}
-	return disp, loHi
-}
-
-func decode31bitDisp(d1, d2 dg_word, mode string) int32 {
-	// FIXME Test this!
-	var disp int32
-	if testWbit(d1, 1) {
-		disp = int32(int16(d1 | 0x8000)) // sign extend
-	} else {
-		disp = int32(int16(d1)) & 0x00007fff // zero extend
-	}
-	disp = (disp << 16) | (int32(d2) & 0x0000ffff)
-	if mode == "PC" {
-		disp++ // see p.1-12 of PoP
-	}
-	if debugLogging {
-		logging.DebugPrint(logging.DebugLog, "... decode31bitDisp got: %d %d, returning: %d\n", d1, d2, disp)
-	}
-	return disp
-}
-
-func decodeCarry(cry dg_word) byte {
-	switch cry {
-	case 0:
-		return ' '
-	case 1:
-		return 'Z'
-	case 2:
-		return 'O' // Letter 'O' for One
-	case 3:
-		return 'C'
-	}
-	return '*'
-}
-
-func decodeIndirect(i bool) byte {
-	if i {
-		return '@'
-	}
-	return ' '
-}
-
-func decodeIOFlags(fl dg_word) byte {
-	return ioFlags[fl]
-}
-
-func decodeIOTest(t dg_word) string {
-	return ioTests[t]
-}
-
-func decodeMode(ix dg_word) string {
-	return modes[ix]
-}
-
-func decodeNoLoad(n bool) byte {
-	if n {
-		return '#'
-	}
-	return ' '
-}
-
-func decodeShift(sh dg_word) byte {
-	switch sh {
-	case 0:
-		return ' '
-	case 1:
-		return 'L'
-	case 2:
-		return 'R'
-	case 3:
-		return 'S'
-	}
-	return '*'
-}
-
-func decodeSkip(skp dg_word) string {
-	return skips[skp]
-}
-
-func loHiToByte(loHi bool) byte {
-	if loHi {
-		return 'H'
-	}
-	return 'L'
-}
-
-func modeToString(mode string) string {
-	if mode == "Absolute" {
-		return ""
-	}
-	return "," + mode
-}
-
-func skipToString(s string) string {
-	if s == "NONE" {
-		return ""
-	}
-	return s
 }

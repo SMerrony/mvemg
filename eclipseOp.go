@@ -6,7 +6,7 @@ import (
 	"mvemg/logging"
 )
 
-func eclipseOp(cpuPtr *CPU, iPtr *DecodedInstr) bool {
+func eclipseOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	var (
 		addr, offset dg_phys_addr
 		byt          dg_byte
@@ -19,10 +19,10 @@ func eclipseOp(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 
 	case "ADI": // 16-bit unsigned Add Immediate
 		wd = dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
-		if iPtr.immVal < 1 || iPtr.immVal > 4 {
+		if iPtr.immU16 < 1 || iPtr.immU16 > 4 {
 			log.Fatal("Invalid immediate value in ADI")
 		}
-		wd += dg_word(iPtr.immVal) // unsigned arithmetic does wraparound in Go
+		wd += dg_word(iPtr.immU16) // unsigned arithmetic does wraparound in Go
 		cpuPtr.ac[iPtr.acd] = dg_dword(wd)
 
 	case "BTO":
@@ -93,18 +93,18 @@ func eclipseOp(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 		cpuPtr.ac[dplus1] = dg_dword(dwordGetLowerWord(dwd))
 
 	case "ELEF":
-		cpuPtr.ac[iPtr.acd] = dg_dword(resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp))
+		cpuPtr.ac[iPtr.acd] = dg_dword(resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15))
 
 	case "ESTA":
-		addr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
+		addr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
 		memWriteWord(addr, dwordGetLowerWord(cpuPtr.ac[iPtr.acd]))
 
 	case "HXL":
-		dwd = cpuPtr.ac[iPtr.acd] << (uint32(iPtr.immVal) * 4)
+		dwd = cpuPtr.ac[iPtr.acd] << (uint32(iPtr.immU16) * 4)
 		cpuPtr.ac[iPtr.acd] = dwd & 0x0ffff
 
 	case "HXR":
-		dwd = cpuPtr.ac[iPtr.acd] >> (uint32(iPtr.immVal) * 4)
+		dwd = cpuPtr.ac[iPtr.acd] >> (uint32(iPtr.immU16) * 4)
 		cpuPtr.ac[iPtr.acd] = dwd & 0x0ffff
 
 	case "IOR":
@@ -112,7 +112,7 @@ func eclipseOp(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 		cpuPtr.ac[iPtr.acd] = dg_dword(wd)
 
 	case "IORI":
-		wd = dwordGetLowerWord(cpuPtr.ac[iPtr.acd]) | dg_word(iPtr.immVal)
+		wd = dwordGetLowerWord(cpuPtr.ac[iPtr.acd]) | iPtr.immWord
 		cpuPtr.ac[iPtr.acd] = dg_dword(wd)
 
 	case "LDB":
@@ -132,10 +132,10 @@ func eclipseOp(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 
 	case "SBI": // unsigned
 		wd = dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
-		if iPtr.immVal < 1 || iPtr.immVal > 4 {
+		if iPtr.immU16 < 1 || iPtr.immU16 > 4 {
 			log.Fatal("Invalid immediate value in SBI")
 		}
-		wd -= dg_word(iPtr.immVal)
+		wd -= dg_word(iPtr.immU16)
 		cpuPtr.ac[iPtr.acd] = dg_dword(wd)
 
 	case "STB":

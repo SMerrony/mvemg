@@ -499,7 +499,7 @@ func singleStep() {
 func run() {
 	var (
 		thisOp    dg_word
-		iPtr      *DecodedInstr
+		iPtr      *decodedInstrT
 		ok        bool
 		errDetail string
 		//b         byte

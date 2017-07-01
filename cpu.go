@@ -62,7 +62,7 @@ func cpuCompactPrintableStatus() string {
 
 // Execute a single instruction
 // A false return means failure, the VM should stop
-func cpuExecute(iPtr *DecodedInstr) bool {
+func cpuExecute(iPtr *decodedInstrT) bool {
 	rc := false
 	switch iPtr.instrType {
 	case NOVA_MEMREF:

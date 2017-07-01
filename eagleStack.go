@@ -25,7 +25,7 @@ package main
 
 import "log"
 
-func eagleStack(cpuPtr *CPU, iPtr *DecodedInstr) bool {
+func eagleStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	switch iPtr.mnemonic {
 
@@ -76,7 +76,7 @@ func eagleStack(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 }
 
 // wsav is common to WSAVR and WSAVS
-func wsav(cpuPtr *CPU, iPtr *DecodedInstr) {
+func wsav(cpuPtr *CPU, iPtr *decodedInstrT) {
 	wfpSav := memReadDWord(WFP_LOC)
 	wsPush(0, cpuPtr.ac[0]) // 1
 	wsPush(0, cpuPtr.ac[1]) // 2
@@ -87,7 +87,7 @@ func wsav(cpuPtr *CPU, iPtr *DecodedInstr) {
 		dwd |= 0x80000000
 	}
 	wsPush(0, dwd) // 5
-	dwdCnt := int(iPtr.imm16b)
+	dwdCnt := int(iPtr.immU16)
 	if dwdCnt > 0 {
 		for d := 0; d < dwdCnt; d++ {
 			wsPush(0, 0)

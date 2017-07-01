@@ -3,7 +3,7 @@ package main
 
 import "log"
 
-func novaMemRef(cpuPtr *CPU, iPtr *DecodedInstr) bool {
+func novaMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	var shifter dg_word
 	var effAddr dg_phys_addr
@@ -11,7 +11,7 @@ func novaMemRef(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 	switch iPtr.mnemonic {
 
 	case "DSZ":
-		effAddr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
+		effAddr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
 		shifter = memReadWord(effAddr)
 		shifter--
 		memWriteWord(effAddr, shifter)
@@ -20,7 +20,7 @@ func novaMemRef(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 		}
 
 	case "ISZ":
-		effAddr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
+		effAddr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
 		shifter = memReadWord(effAddr)
 		shifter++
 		memWriteWord(effAddr, shifter)
@@ -29,13 +29,13 @@ func novaMemRef(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 		}
 
 	case "LDA":
-		effAddr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
+		effAddr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
 		shifter = memReadWord(effAddr)
 		cpuPtr.ac[iPtr.acd] = 0x0000ffff & dg_dword(shifter)
 
 	case "STA":
 		shifter = dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
-		effAddr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
+		effAddr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
 		memWriteWord(effAddr, shifter)
 
 	default:

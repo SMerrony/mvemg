@@ -217,7 +217,7 @@ func dpfCreateBlank(imgName string) bool {
 }
 
 // dpfDataIn implements the DIA/B/C I/O instructions for this device
-func dpfDataIn(cpuPtr *CPU, iPtr *DecodedInstr, abc byte) {
+func dpfDataIn(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 	switch abc {
 	case 'A':
 		switch dpfData.instructionMode {
@@ -265,7 +265,7 @@ func dpfDataIn(cpuPtr *CPU, iPtr *DecodedInstr, abc byte) {
 
 // dpfDataOut implements the DOA/B/C instructions for this device
 // NIO is also routed here with a dummy abc flag value of N
-func dpfDataOut(cpuPtr *CPU, iPtr *DecodedInstr, abc byte) {
+func dpfDataOut(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 	data := dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
 	switch abc {
 	case 'A':

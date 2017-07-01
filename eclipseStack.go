@@ -6,7 +6,7 @@ import (
 	"mvemg/logging"
 )
 
-func eclipseStack(cpuPtr *CPU, iPtr *DecodedInstr) bool {
+func eclipseStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	var (
 		addr                dg_phys_addr
 		first, last, thisAc int
@@ -50,7 +50,7 @@ func eclipseStack(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 
 	case "PSHJ":
 		nsPush(0, dg_word(cpuPtr.pc)+2)
-		addr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
+		addr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
 		cpuPtr.pc = addr
 		return true // because PC set
 
@@ -95,7 +95,7 @@ func eclipseStack(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 			word &= 0x7fff
 		}
 		nsPush(0, word) // 5
-		wdCnt := int(iPtr.imm16b)
+		wdCnt := int(iPtr.immU16)
 		if wdCnt > 0 {
 			for wd := 0; wd < wdCnt; wd++ {
 				nsPush(0, 0) // ...

@@ -23,7 +23,7 @@ package main
 
 import "mvemg/logging"
 
-func resolve16bitEclipseAddr(cpuPtr *CPU, ind byte, mode string, disp int32) dg_phys_addr {
+func resolve16bitEclipseAddr(cpuPtr *CPU, ind byte, mode string, disp int16) dg_phys_addr {
 
 	var (
 		eff     dg_phys_addr
@@ -34,13 +34,13 @@ func resolve16bitEclipseAddr(cpuPtr *CPU, ind byte, mode string, disp int32) dg_
 	// handle addressing mode...
 	switch mode {
 	case "Absolute":
-		intEff = disp
+		intEff = int32(disp)
 	case "PC":
-		intEff = int32(cpuPtr.pc) + disp
+		intEff = int32(cpuPtr.pc) + int32(disp)
 	case "AC2":
-		intEff = int32(cpuPtr.ac[2]) + disp
+		intEff = int32(cpuPtr.ac[2]) + int32(disp)
 	case "AC3":
-		intEff = int32(cpuPtr.ac[3]) + disp
+		intEff = int32(cpuPtr.ac[3]) + int32(disp)
 	}
 
 	// handle indirection
@@ -62,7 +62,7 @@ func resolve16bitEclipseAddr(cpuPtr *CPU, ind byte, mode string, disp int32) dg_
 }
 
 // This is the same as resolve16bitEclipseAddr, but without the range masking at the end
-func resolve16bitEagleAddr(cpuPtr *CPU, ind byte, mode string, disp int32) dg_phys_addr {
+func resolve16bitEagleAddr(cpuPtr *CPU, ind byte, mode string, disp int16) dg_phys_addr {
 
 	var (
 		eff     dg_phys_addr
@@ -73,13 +73,13 @@ func resolve16bitEagleAddr(cpuPtr *CPU, ind byte, mode string, disp int32) dg_ph
 	// handle addressing mode...
 	switch mode {
 	case "Absolute":
-		intEff = disp
+		intEff = int32(disp)
 	case "PC":
-		intEff = int32(cpuPtr.pc) + disp
+		intEff = int32(cpuPtr.pc) + int32(disp)
 	case "AC2":
-		intEff = int32(cpuPtr.ac[2]) + disp
+		intEff = int32(cpuPtr.ac[2]) + int32(disp)
 	case "AC3":
-		intEff = int32(cpuPtr.ac[3]) + disp
+		intEff = int32(cpuPtr.ac[3]) + int32(disp)
 	}
 
 	// handle indirection

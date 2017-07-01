@@ -70,7 +70,7 @@ func ttiReset() {
 }
 
 // This is called from Bus to implement DIA from the TTI DEV_TTIice
-func ttiDataIn(cpuPtr *CPU, iPtr *DecodedInstr, abc byte) {
+func ttiDataIn(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 
 	cpuPtr.ac[iPtr.acd] = dg_dword(oneCharBuf) // grab the char from the buffer
 

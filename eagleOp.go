@@ -5,7 +5,7 @@ import (
 	"log"
 )
 
-func eagleOp(cpuPtr *CPU, iPtr *DecodedInstr) bool {
+func eagleOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	//var addr dg_phys_addr
 
 	var (
@@ -20,12 +20,12 @@ func eagleOp(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 	case "ADDI":
 		// signed 16-bit add immediate
 		s16 = int16(dwordGetLowerWord(cpuPtr.ac[iPtr.acd]))
-		s16 += int16(iPtr.imm16b)
+		s16 += int16(iPtr.immS16)
 		cpuPtr.ac[iPtr.acd] = dg_dword(s16) & 0X0000FFFF
 
 	case "ANDI":
 		wd = dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
-		cpuPtr.ac[iPtr.acd] = dg_dword(wd&iPtr.imm16b) & 0x0000ffff
+		cpuPtr.ac[iPtr.acd] = dg_dword(wd&iPtr.immWord) & 0x0000ffff
 
 	case "CRYTC":
 		cpuPtr.carry = !cpuPtr.carry
@@ -37,14 +37,14 @@ func eagleOp(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 		cpuPtr.carry = false
 
 	case "LLEF":
-		cpuPtr.ac[iPtr.acd] = dg_dword(resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp))
+		cpuPtr.ac[iPtr.acd] = dg_dword(resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31))
 
 	case "NADD": // signed add
 		s16 = int16(cpuPtr.ac[iPtr.acd]) + int16(cpuPtr.ac[iPtr.acs])
 		cpuPtr.ac[iPtr.acd] = dg_dword(s16)
 
 	case "NLDAI":
-		cpuPtr.ac[iPtr.acd] = sexWordToDWord(iPtr.imm16b)
+		cpuPtr.ac[iPtr.acd] = dg_dword(int32(iPtr.immS16))
 
 	case "NSUB": // signed subtract
 		s16 = int16(cpuPtr.ac[iPtr.acd]) - int16(cpuPtr.ac[iPtr.acs])
@@ -64,14 +64,14 @@ func eagleOp(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 		// FIXME - handle overflow and carry
 
 	case "WADI":
-		s32 = int32(cpuPtr.ac[iPtr.acd]) + iPtr.immVal
+		s32 = int32(cpuPtr.ac[iPtr.acd]) + int32(iPtr.immU16)
 		cpuPtr.ac[iPtr.acd] = dg_dword(s32)
 
 	case "WAND":
 		cpuPtr.ac[iPtr.acd] &= cpuPtr.ac[iPtr.acs]
 
 	case "WANDI":
-		cpuPtr.ac[iPtr.acd] &= iPtr.imm32b
+		cpuPtr.ac[iPtr.acd] &= iPtr.immDword
 
 	case "WCOM":
 		cpuPtr.ac[iPtr.acd] ^= cpuPtr.ac[iPtr.acs]
@@ -80,13 +80,13 @@ func eagleOp(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 		cpuPtr.ac[iPtr.acd] = cpuPtr.ac[iPtr.acs] + 1
 
 	case "WIORI":
-		cpuPtr.ac[iPtr.acd] |= iPtr.imm32b
+		cpuPtr.ac[iPtr.acd] |= iPtr.immDword
 
 	case "WLDAI":
-		cpuPtr.ac[iPtr.acd] = iPtr.imm32b
+		cpuPtr.ac[iPtr.acd] = iPtr.immDword
 
 	case "WLSHI":
-		shiftAmt8 := int8(iPtr.imm16b & 0x0ff)
+		shiftAmt8 := int8(iPtr.immS16 & 0x0ff)
 		if shiftAmt8 < 0 { // shift right
 			shiftAmt8 *= -1
 			dwd = cpuPtr.ac[iPtr.acd] >> uint(shiftAmt8)
@@ -100,9 +100,9 @@ func eagleOp(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 	case "WMOV":
 		cpuPtr.ac[iPtr.acd] = cpuPtr.ac[iPtr.acs]
 
-	case "WNADI":
+	case "WNADI": //signed 16-bit
 		//cpuPtr.ac[iPtr.acd] += sexWordToDWord(iPtr.imm16b)
-		s32 = int32(cpuPtr.ac[iPtr.acd]) + int32(sexWordToDWord(iPtr.imm16b)) // we need this sign extend, Go doesn't do it
+		s32 = int32(cpuPtr.ac[iPtr.acd]) + int32(iPtr.immS16) // we need this sign extend, Go doesn't do it
 		cpuPtr.ac[iPtr.acd] = dg_dword(s32)
 
 	case "WNEG":
@@ -111,7 +111,7 @@ func eagleOp(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 		cpuPtr.ac[iPtr.acd] = dg_dword(s32)
 
 	case "WSBI":
-		s32 = int32(cpuPtr.ac[iPtr.acd]) - iPtr.immVal
+		s32 = int32(cpuPtr.ac[iPtr.acd]) - int32(iPtr.immU16)
 		cpuPtr.ac[iPtr.acd] = dg_dword(s32)
 	// FIXME - handle overflow and carry
 

@@ -7,7 +7,7 @@ import (
 	"mvemg/logging"
 )
 
-func eclipseMemRef(cpuPtr *CPU, iPtr *DecodedInstr) bool {
+func eclipseMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	var (
 		addr dg_phys_addr
 	)
@@ -90,7 +90,7 @@ func eclipseMemRef(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 		cpuPtr.ac[3] = dg_dword(str1bp)
 
 	case "ELDA":
-		addr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
+		addr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
 		cpuPtr.ac[iPtr.acd] = dg_dword(memReadWord(addr)) & 0x0ffff
 
 	default:

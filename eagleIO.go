@@ -6,7 +6,7 @@ import (
 	"mvemg/logging"
 )
 
-func eagleIO(cpuPtr *CPU, iPtr *DecodedInstr) bool {
+func eagleIO(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	var (
 		cmd, word, dataWord dg_word
@@ -34,9 +34,9 @@ func eagleIO(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 	case "CIOI":
 		// TODO handle I/O channel
 		if iPtr.acs == iPtr.acd {
-			cmd = iPtr.imm16b
+			cmd = iPtr.immWord
 		} else {
-			cmd = iPtr.imm16b | dwordGetLowerWord(cpuPtr.ac[iPtr.acs])
+			cmd = iPtr.immWord | dwordGetLowerWord(cpuPtr.ac[iPtr.acs])
 		}
 		mapRegAddr = int(cmd & 0x0fff)
 		rw = testWbit(cmd, 0)

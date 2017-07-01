@@ -26,7 +26,7 @@ import (
 	"mvemg/logging"
 )
 
-func eagleMemRef(cpuPtr *CPU, iPtr *DecodedInstr) bool {
+func eagleMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	var (
 		addr dg_phys_addr
 		wd   dg_word
@@ -37,20 +37,20 @@ func eagleMemRef(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 	switch iPtr.mnemonic {
 
 	case "LNLDA":
-		addr = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
+		addr = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31)
 		cpuPtr.ac[iPtr.acd] = sexWordToDWord(memReadWord(addr))
 
 	case "LNSTA":
-		addr = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
+		addr = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31)
 		wd = dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
 		memWriteWord(addr, wd)
 
 	case "LWLDA":
-		addr = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
+		addr = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31)
 		cpuPtr.ac[iPtr.acd] = memReadDWord(addr)
 
 	case "LWSTA":
-		addr = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
+		addr = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31)
 		dwd = cpuPtr.ac[iPtr.acd]
 		memWriteDWord(addr, dwd)
 
@@ -88,14 +88,14 @@ func eagleMemRef(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 			cpuPtr.ac[3] = dg_dword(dest + 1)
 		}
 	case "XLDB":
-		cpuPtr.ac[iPtr.acd] = dg_dword(memReadByte(resolve16bitEagleAddr(cpuPtr, ' ', iPtr.mode, iPtr.disp), iPtr.loHiBit)) & 0x00ff
+		cpuPtr.ac[iPtr.acd] = dg_dword(memReadByte(resolve16bitEagleAddr(cpuPtr, ' ', iPtr.mode, iPtr.disp16), iPtr.bitLow)) & 0x00ff
 
 	case "XLEF":
-		cpuPtr.ac[iPtr.acd] = dg_dword(resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp))
+		cpuPtr.ac[iPtr.acd] = dg_dword(resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15))
 
 	case "XLEFB":
-		loBit := iPtr.disp & 1
-		addr = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp/2)
+		loBit := iPtr.disp16 & 1
+		addr = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp16/2)
 		addr <<= 1
 		if loBit == 1 {
 			addr++
@@ -103,29 +103,29 @@ func eagleMemRef(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 		cpuPtr.ac[iPtr.acd] = dg_dword(addr)
 
 	case "XNLDA":
-		addr = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
+		addr = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
 		wd = memReadWord(addr)
 		cpuPtr.ac[iPtr.acd] = sexWordToDWord(wd) // FIXME check this...
 
 	case "XNSTA":
-		addr = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
+		addr = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
 		wd = dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
 		memWriteWord(addr, wd)
 
 	case "XWADI":
 		// add 1-4 to signed 32-bit acc
-		addr = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
-		i32 = int32(memReadDWord(addr)) + iPtr.immVal
+		addr = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
+		i32 = int32(memReadDWord(addr)) + int32(iPtr.immU16)
 		// FIXME handle Carry and OVeRflow
 		memWriteDWord(addr, dg_dword(i32))
 
 	case "XWLDA":
-		addr = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
+		addr = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
 		dwd = memReadDWord(addr)
 		cpuPtr.ac[iPtr.acd] = dwd
 
 	case "XWSTA":
-		addr = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
+		addr = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
 		dwd = cpuPtr.ac[iPtr.acd]
 		memWriteDWord(addr, dwd)
 

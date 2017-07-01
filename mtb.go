@@ -175,7 +175,7 @@ func mtbLoadTBoot(mem memoryT) {
 }
 
 // This is called from Bus to implement DIx from the MTB device
-func mtbDataIn(cpuPtr *CPU, iPtr *DecodedInstr, abc byte) {
+func mtbDataIn(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 
 	switch iPtr.f {
 	case 'S':
@@ -209,7 +209,7 @@ func mtbDataIn(cpuPtr *CPU, iPtr *DecodedInstr, abc byte) {
 }
 
 // This is called from Bus to implement DOx from the MTB device
-func mtbDataOut(cpuPtr *CPU, iPtr *DecodedInstr, abc byte) {
+func mtbDataOut(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 
 	switch iPtr.f {
 	case 'S':

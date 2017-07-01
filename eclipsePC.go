@@ -6,7 +6,7 @@ import (
 	"mvemg/logging"
 )
 
-func eclipsePC(cpuPtr *CPU, iPtr *DecodedInstr) bool {
+func eclipsePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	var (
 		addr, inc      dg_phys_addr
 		acd, acs, h, l int16
@@ -41,7 +41,7 @@ func eclipsePC(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 		cpuPtr.pc += inc
 
 	case "DSPA":
-		tableStart := resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
+		tableStart := resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
 		offset := dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
 		lowLimit := memReadWord(tableStart - 2)
 		hiLimit := memReadWord(tableStart - 1)
@@ -61,7 +61,7 @@ func eclipsePC(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 		}
 
 	case "EISZ":
-		addr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
+		addr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
 		wd = memReadWord(addr)
 		wd++
 		memWriteWord(addr, wd)
@@ -72,12 +72,12 @@ func eclipsePC(cpuPtr *CPU, iPtr *DecodedInstr) bool {
 		}
 
 	case "EJMP":
-		addr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
+		addr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
 		cpuPtr.pc = addr
 
 	case "EJSR":
 		cpuPtr.ac[3] = dg_dword(cpuPtr.pc) + 2
-		addr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp)
+		addr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
 		cpuPtr.pc = addr
 
 	case "SGT": //16-bit signed numbers

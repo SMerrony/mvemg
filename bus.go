@@ -32,10 +32,10 @@ type (
 	ResetFunc func()
 
 	// DOx func
-	DataOutFunc func(*CPU, *DecodedInstr, byte)
+	DataOutFunc func(*CPU, *decodedInstrT, byte)
 
 	// DIx func
-	DataInFunc func(*CPU, *DecodedInstr, byte)
+	DataInFunc func(*CPU, *decodedInstrT, byte)
 )
 
 type device struct {
@@ -87,7 +87,7 @@ func busSetDataInFunc(devNum int, fn DataInFunc) {
 	logging.DebugPrint(logging.DebugLog, "INFO: Bus Data In function set for dev #0%o\n", devNum)
 }
 
-func busDataIn(cpuPtr *CPU, iPtr *DecodedInstr, abc byte) {
+func busDataIn(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 	//logging.DebugPrint(logging.DEBUG_LOG, "DEBUG: Bus Data In function called for dev #0%o\n", iPtr.ioDev)
 	if d[iPtr.ioDev].dataInFunc == nil {
 		log.Fatal("ERROR: busDataIn called with no function set")
@@ -101,7 +101,7 @@ func busSetDataOutFunc(devNum int, fn DataOutFunc) {
 	logging.DebugPrint(logging.DebugLog, "INFO: Bus Data Out function set for dev #0%o\n", devNum)
 }
 
-func busDataOut(cpuPtr *CPU, iPtr *DecodedInstr, abc byte) {
+func busDataOut(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 	if d[iPtr.ioDev].dataOutFunc == nil {
 		log.Fatal("ERROR: busDataOut called with no function set")
 	}

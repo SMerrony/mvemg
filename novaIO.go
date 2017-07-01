@@ -6,7 +6,7 @@ import (
 	"mvemg/logging"
 )
 
-func novaIO(cpuPtr *CPU, iPtr *DecodedInstr) bool {
+func novaIO(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	// a couple of special cases we need to catch
 	// First: DICC 0,077 => I/O Reset
