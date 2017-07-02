@@ -57,29 +57,29 @@ type decodedInstrT struct {
 }
 
 // InsrtructionFind looks for the opcode in the instruction map and returns
-// a struct containings its basic characteristics
-func instructionFind(opcode dg_word, lefMode bool, ioOn bool, atuOn bool) string {
+// the corresponding mnemonic
+func instructionFind(opcode dg_word, lefMode bool, ioOn bool, atuOn bool) (string, bool) {
 	var tail dg_word
-	for mn, insChar := range instructionSet {
+	for mnem, insChar := range instructionSet {
 		if (opcode & insChar.mask) == insChar.bits {
 			// there are some exceptions to the normal decoding...
-			switch mn {
+			switch mnem {
 			case "LEF":
 				if lefMode {
-					return mn
+					return "", false
 				}
 			case "ADC", "ADD", "AND", "COM", "INC", "MOV", "NEG", "SUB":
 				tail = opcode & 0x000f
 				if tail < 8 || tail > 9 {
-					return mn
+					return mnem, true
 				}
 			default:
-				return mn
+				return mnem, true
 
 			}
 		}
 	}
-	return ""
+	return "", false
 }
 
 // InstructionDecode decodes an opcode
@@ -93,8 +93,8 @@ func instructionDecode(opcode dg_word, pc dg_phys_addr, lefMode bool, ioOn bool,
 
 	decodedInstrT.disassembly = "; Unknown instruction"
 
-	mnem := instructionFind(opcode, lefMode, ioOn, autOn)
-	if mnem == "" {
+	mnem, found := instructionFind(opcode, lefMode, ioOn, autOn)
+	if !found {
 		logging.DebugPrint(logging.DebugLog, "INFO: instructionFind failed to return anything to instructionDecode for location %d.\n", pc)
 		return &decodedInstrT, false
 	}
@@ -380,6 +380,9 @@ func instructionDecode(opcode dg_word, pc dg_phys_addr, lefMode bool, ioOn bool,
 }
 
 /* decoders for (parts of) operands below here... */
+
+var disp16 int16
+
 func decode2bitImm(i dg_word) uint16 {
 	// to expand range (by 1!) 1 is subtracted from operand
 	return uint16(i + 1)
@@ -388,82 +391,78 @@ func decode2bitImm(i dg_word) uint16 {
 // Decode8BitDisp must return signed 16-bit as the result could be
 // either 8-bit signed or 8-bit unsigned
 func decode8bitDisp(d8 dg_byte, mode string) int16 {
-	var disp int16
 	if mode == "Absolute" {
-		disp = int16(d8) & 0x00ff // unsigned offset
+		disp16 = int16(d8) & 0x00ff // unsigned offset
 	} else {
 		// signed offset...
-		disp = int16(int8(d8)) // this should sign-extend
+		disp16 = int16(int8(d8)) // this should sign-extend
 	}
-	return disp
+	return disp16
 }
 
 func decode15bitDisp(d15 dg_word, mode string) int16 {
-	var disp int16
 	if mode == "Absolute" {
-		disp = int16(d15 & 0x7fff) // zero extend
+		disp16 = int16(d15 & 0x7fff) // zero extend
 	} else {
 		if testWbit(d15, 1) {
-			disp = int16(d15 | 0x8000) // sign extend
+			disp16 = int16(d15 | 0x8000) // sign extend
 		} else {
-			disp = int16(d15 & 0x7fff) // zero extend
+			disp16 = int16(d15 & 0x7fff) // zero extend
 		}
 		if mode == "PC" {
-			disp++ // see p.1-12 of PoP
+			disp16++ // see p.1-12 of PoP
 		}
 	}
 	if debugLogging {
-		logging.DebugPrint(logging.DebugLog, "... decode15bitDisp got: %d, returning: %d\n", d15, disp)
+		logging.DebugPrint(logging.DebugLog, "... decode15bitDisp got: %d, returning: %d\n", d15, disp16)
 	}
-	return disp
+	return disp16
 }
 
 func decode15bitEclipseDisp(d15 dg_word, mode string) int16 {
-	var disp int16
 	if mode == "Absolute" {
-		disp = int16(d15 & 0x7fff) // zero extend
+		disp16 = int16(d15 & 0x7fff) // zero extend
 	} else {
 		if testWbit(d15, 1) {
-			disp = int16(d15 | 0xc000) // sign extend
+			disp16 = int16(d15 | 0xc000) // sign extend
 		} else {
-			disp = int16(d15 & 0x3fff) // zero extend
+			disp16 = int16(d15 & 0x3fff) // zero extend
 		}
 		if mode == "PC" {
-			disp++ // see p.1-12 of PoP
+			disp16++ // see p.1-12 of PoP
 		}
 	}
 	if debugLogging {
-		logging.DebugPrint(logging.DebugLog, "... decode15bitEclispeDisp got: %d, returning: %d\n", d15, disp)
+		logging.DebugPrint(logging.DebugLog, "... decode15bitEclispeDisp got: %d, returning: %d\n", d15, disp16)
 	}
-	return disp
+	return disp16
 }
 
 func decode16bitByteDisp(d16 dg_word) (int16, bool) {
-	var disp int16
 	loHi := testWbit(d16, 15)
-	disp = int16(d16 >> 1)
+	disp16 = int16(d16 >> 1)
 	if debugLogging {
-		logging.DebugPrint(logging.DebugLog, "... decode16bitByteDisp got: %d, returning %d\n", d16, disp)
+		logging.DebugPrint(logging.DebugLog, "... decode16bitByteDisp got: %d, returning %d\n", d16, disp16)
 	}
-	return disp, loHi
+	return disp16, loHi
 }
 
 func decode31bitDisp(d1, d2 dg_word, mode string) int32 {
 	// FIXME Test this!
-	var disp int32
+	var disp32 int32
 	if testWbit(d1, 1) {
-		disp = int32(int16(d1 | 0x8000)) // sign extend
+		disp32 = int32(int16(d1 | 0x8000)) // sign extend
 	} else {
-		disp = int32(int16(d1)) & 0x00007fff // zero extend
+		disp32 = int32(int16(d1)) & 0x00007fff // zero extend
 	}
-	disp = (disp << 16) | (int32(d2) & 0x0000ffff)
+	disp32 = (disp32 << 16) | (int32(d2) & 0x0000ffff)
 	if mode == "PC" {
-		disp++ // see p.1-12 of PoP
+		disp32++ // see p.1-12 of PoP
 	}
 	if debugLogging {
-		logging.DebugPrint(logging.DebugLog, "... decode31bitDisp got: %d %d, returning: %d\n", d1, d2, disp)
+		logging.DebugPrint(logging.DebugLog, "... decode31bitDisp got: %d %d, returning: %d\n", d1, d2, disp32)
 	}
-	return disp
+	return disp32
 }
 
 func decodeCarry(cry dg_word) byte {
