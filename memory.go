@@ -316,15 +316,17 @@ func swapBytes(wd dg_word) dg_word {
 	return res
 }
 
+var bb uint8
+
 // does word w have bit b set?
 func testWbit(w dg_word, b int) bool {
-	bb := uint8(b)
+	bb = uint8(b)
 	return (w & (1 << (15 - bb))) != 0
 }
 
 // does dword dw have bit b set?
 func testDWbit(dw dg_dword, b int) bool {
-	bb := uint8(b)
+	bb = uint8(b)
 	return ((dw & (1 << (31 - bb))) != 0)
 }
 
