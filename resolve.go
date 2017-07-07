@@ -99,6 +99,13 @@ func resolve16bitEagleAddr(cpuPtr *CPU, ind byte, mode string, disp int16) dg_ph
 	return eff
 }
 
+// Resolve32bitByteAddr returns the word address and low-byte flag for a given 32-bit byte address
+func resolve32bitByteAddr(byteAddr dg_dword) (wordAddr dg_phys_addr, loByte bool) {
+	wa := dg_phys_addr(byteAddr) >> 1
+	lb := testDWbit(byteAddr, 31)
+	return wa, lb
+}
+
 func resolve32bitEffAddr(cpuPtr *CPU, ind byte, mode string, disp int32) dg_phys_addr {
 
 	eff := dg_phys_addr(disp)

@@ -9,6 +9,7 @@ const (
 	ASCII_FF  = 0x0C
 	ASCII_CR  = 0x0D
 	ASCII_ESC = 0x1B
+	ASCII_SPC = 0x20
 
 	DASHER_ERASE_EOL         = 013
 	DASHER_ERASE_PAGE        = 014
@@ -18,5 +19,5 @@ const (
 	DASHER_DIM_OFF           = 035
 	DASHER_UNDERLINE         = 024
 	DASHER_NORMAL            = 025
-	DASHER_DELETE            = 0x7F
+	DASHER_DELETE            = 0177
 )

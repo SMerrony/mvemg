@@ -17,6 +17,8 @@ func eclipseStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	switch iPtr.mnemonic {
 
+
+
 	case "POP":
 		first = iPtr.acs
 		last = iPtr.acd

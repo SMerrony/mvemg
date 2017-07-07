@@ -97,6 +97,21 @@ func memWriteByte(wordAddr dg_phys_addr, loByte bool, b dg_byte) {
 	memWriteWord(wordAddr, wd)
 }
 
+func memReadByteBA(ba dg_dword) dg_byte {
+	wordAddr, lowByte := resolve32bitByteAddr(ba)
+	return memReadByte(wordAddr, lowByte)
+}
+
+// MemWriteByte writes the supplied byte to the address derived from the given byte addr
+func memWriteByteBA(b dg_byte, ba dg_dword) {
+	wordAddr, lowByte := resolve32bitByteAddr(ba)
+	memWriteByte(wordAddr, lowByte, b)
+}
+
+func memCopyByte(srcBA, destBA dg_dword) {
+	memWriteByteBA(memReadByteBA(srcBA), destBA)
+}
+
 func debugCatcher() {
 	debug.PrintStack()
 }

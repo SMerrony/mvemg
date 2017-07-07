@@ -29,6 +29,9 @@ func eagleStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	switch iPtr.mnemonic {
 
+	case "LDAFP":
+		cpuPtr.ac[iPtr.acd] = memReadDWord(WFP_LOC)
+
 	case "LDASB":
 		cpuPtr.ac[iPtr.acd] = memReadDWord(WSB_LOC)
 

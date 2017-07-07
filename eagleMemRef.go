@@ -36,6 +36,7 @@ func eagleMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	switch iPtr.mnemonic {
 
+
 	case "LNLDA":
 		addr = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31)
 		cpuPtr.ac[iPtr.acd] = sexWordToDWord(memReadWord(addr))
@@ -87,6 +88,57 @@ func eagleMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 			cpuPtr.ac[2] = dg_dword(src + 1) // TODO confirm this
 			cpuPtr.ac[3] = dg_dword(dest + 1)
 		}
+
+	case "WCMV": // ACO destCount, AC1 srcCount, AC2 dest byte ptr, AC3 src byte ptr
+		var destAscend, srcAscend bool
+		destCount := int32(cpuPtr.ac[0])
+		destAscend = (destCount > 0)
+		srcCount := int32(cpuPtr.ac[1])
+		srcAscend = (srcCount > 0)
+		// set carry if length of src is greater than length of dest
+		if cpuPtr.ac[1] > cpuPtr.ac[2] {
+			cpuPtr.carry = true
+		}
+		// 1st move srcCount bytes
+		for {
+			memCopyByte(cpuPtr.ac[3], cpuPtr.ac[2])
+			if srcAscend {
+				cpuPtr.ac[3]++
+				srcCount--
+			} else {
+				cpuPtr.ac[3]--
+				srcCount++
+			}
+			if destAscend {
+				cpuPtr.ac[2]++
+				destCount--
+			} else {
+				cpuPtr.ac[2]--
+				destCount++
+			}
+			if srcCount == 0 || destCount == 0 {
+				break
+			}
+		}
+		// now fill any excess bytes with ASCII spaces
+		if destCount != 0 {
+			for {
+				memWriteByteBA(ASCII_SPC, cpuPtr.ac[2])
+				if destAscend {
+					cpuPtr.ac[2]++
+					destCount--
+				} else {
+					cpuPtr.ac[2]--
+					destCount++
+				}
+				if destCount == 0 {
+					break
+				}
+			}
+		}
+		cpuPtr.ac[0] = 0
+		cpuPtr.ac[1] = dg_dword(srcCount)
+
 	case "XLDB":
 		cpuPtr.ac[iPtr.acd] = dg_dword(memReadByte(resolve16bitEagleAddr(cpuPtr, ' ', iPtr.mode, iPtr.disp16), iPtr.bitLow)) & 0x00ff
 
