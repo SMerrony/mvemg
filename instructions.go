@@ -242,8 +242,8 @@ func instructionsInit() {
 	instructionSet["LNSTA"] = instrChars{0x83d9, 0x87ff, 3, ONEACC_MODE_IND_3_WORD_FMT, EAGLE_MEMREF}
 	instructionSet["LNSUB"] = instrChars{0x8258, 0x87ff, 3, ONEACC_MODE_IND_3_WORD_FMT, EAGLE_MEMREF}
 	instructionSet["LOB"] = instrChars{0x8508, 0x87ff, 1, TWOACC_1_WORD_FMT, NOVA_OP}
-	instructionSet["LPEF"] = instrChars{0xa6f9, 0xe7ff, 3, NOACC_MODE_IND_3_WORD_FMT, EAGLE_MEMREF}
-	instructionSet["LPEFB"] = instrChars{0xc6f9, 0xe7ff, 3, NOACC_MODE_3_WORD_FMT, EAGLE_OP}
+	instructionSet["LPEF"] = instrChars{0xa6f9, 0xe7ff, 3, NOACC_MODE_IND_3_WORD_FMT, EAGLE_STACK}
+	instructionSet["LPEFB"] = instrChars{0xc6f9, 0xe7ff, 3, NOACC_MODE_3_WORD_FMT, EAGLE_STACK}
 	instructionSet["LPHY"] = instrChars{0x87e9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
 	instructionSet["LPSHJ"] = instrChars{0xC6C9, 0xE7FF, 3, NOACC_MODE_IND_3_WORD_FMT, EAGLE_PC}
 	instructionSet["LSH"] = instrChars{0x8288, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP}
@@ -318,9 +318,12 @@ func instructionsInit() {
 	instructionSet["WLSI"] = instrChars{0x85b9, 0x87ff, 1, IMM_ONEACC_FMT, EAGLE_OP}
 	instructionSet["WMOV"] = instrChars{0x8379, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
 	instructionSet["WMOVR"] = instrChars{0xe699, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_OP}
+	instructionSet["WMSP"] = instrChars{0xe649, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_STACK}
 	instructionSet["WNADI"] = instrChars{0xE6F9, 0xE7FF, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_OP}
 	instructionSet["WNEG"] = instrChars{0x8269, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
+	instructionSet["WPOP"] = instrChars{0x8089, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_STACK}
 	instructionSet["WPOPJ"] = instrChars{0x8789, 0xFFFF, 1, UNIQUE_1_WORD_FMT, EAGLE_PC}
+	instructionSet["WPSH"] = instrChars{0x8579, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_STACK}
 	instructionSet["WRTN"] = instrChars{0x87a9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_PC}
 	instructionSet["WSAVR"] = instrChars{0xA729, 0xFFFF, 2, UNIQUE_2_WORD_FMT, EAGLE_STACK}
 	instructionSet["WSAVS"] = instrChars{0xA739, 0xFFFF, 2, UNIQUE_2_WORD_FMT, EAGLE_STACK}
@@ -355,7 +358,7 @@ func instructionsInit() {
 	instructionSet["XNSBI"] = instrChars{0x8458, 0x87ff, 2, IMM_MODE_2_WORD_FMT, EAGLE_MEMREF}
 	instructionSet["XNSTA"] = instrChars{0x8339, 0x87ff, 2, ONEACC_MODE_IND_2_WORD_X_FMT, EAGLE_MEMREF}
 	instructionSet["XNSUB"] = instrChars{0x8058, 0x87ff, 2, IMM_MODE_2_WORD_FMT, EAGLE_MEMREF}
-	instructionSet["XPEF"] = instrChars{0x8629, 0xe7ff, 2, NOACC_MODE_IND_2_WORD_X_FMT, EAGLE_MEMREF}
+	instructionSet["XPEF"] = instrChars{0x8629, 0xe7ff, 2, NOACC_MODE_IND_2_WORD_X_FMT, EAGLE_STACK}
 	instructionSet["XSTB"] = instrChars{0x8429, 0x87ff, 2, ONEACC_MODE_2_WORD_X_B_FMT, EAGLE_MEMREF}
 	instructionSet["XWADD"] = instrChars{0x8118, 0x87ff, 2, ONEACC_MODE_IND_2_WORD_X_FMT, EAGLE_MEMREF}
 	instructionSet["XWADI"] = instrChars{0x8518, 0x87ff, 2, IMM_MODE_2_WORD_FMT, EAGLE_MEMREF}
@@ -367,5 +370,5 @@ func instructionsInit() {
 	instructionSet["ZEX"] = instrChars{0x8359, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
 
 	logging.DebugPrint(logging.DebugLog, "INFO: %d Instruction Set Opcodes loaded\n", len(instructionSet))
-	//dumpCSV()
+	dumpCSV()
 }

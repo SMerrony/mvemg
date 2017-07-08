@@ -23,9 +23,18 @@
 
 package main
 
-import "log"
+import (
+	"log"
+	"mvemg/logging"
+)
 
 func eagleStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
+
+	var (
+		firstAc, lastAc, thisAc int
+		acsUp                   = [8]int{0, 1, 2, 3, 0, 1, 2, 3}
+		tmpDwd                  dg_dword
+	)
 
 	switch iPtr.mnemonic {
 
@@ -40,6 +49,9 @@ func eagleStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	case "LDASP":
 		cpuPtr.ac[iPtr.acd] = memReadDWord(WSP_LOC)
+
+	case "LPEF":
+		wsPush(0, dg_dword(resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31)))
 
 	case "STAFP":
 		// FIXME handle segments
@@ -61,6 +73,37 @@ func eagleStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		// FIXME handle segments
 		memWriteDWord(dg_phys_addr(memReadDWord(WSL_LOC)), cpuPtr.ac[iPtr.acd])
 
+	case "WMSP":
+		tmpDwd = cpuPtr.ac[iPtr.acd] << 1
+		tmpDwd += memReadDWord(WSP_LOC)
+		memWriteDWord(WSP_LOC, tmpDwd)
+
+	case "WPOP":
+		firstAc = iPtr.acs
+		lastAc = iPtr.acd
+		if lastAc > firstAc {
+			firstAc += 4
+		}
+		for thisAc = firstAc; thisAc >= lastAc; thisAc-- {
+			if debugLogging {
+				logging.DebugPrint(logging.DebugLog, "... wide popping AC%d\n", acsUp[thisAc])
+			}
+			cpuPtr.ac[acsUp[thisAc]] = wsPop(0)
+		}
+
+	case "WPSH":
+		firstAc = iPtr.acs
+		lastAc = iPtr.acd
+		if lastAc < firstAc {
+			lastAc += 4
+		}
+		for thisAc = firstAc; thisAc <= lastAc; thisAc++ {
+			if debugLogging {
+				logging.DebugPrint(logging.DebugLog, "... wide pushing AC%d\n", acsUp[thisAc])
+			}
+			wsPush(0, cpuPtr.ac[acsUp[thisAc]])
+		}
+
 	case "WSAVR":
 		wsav(cpuPtr, iPtr)
 		cpu.ovk = false
@@ -68,6 +111,10 @@ func eagleStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	case "WSAVS":
 		wsav(cpuPtr, iPtr)
 		cpu.ovk = true
+
+	case "XPEF":
+		// FIXME segment handling, check for overflow
+		wsPush(0, dg_dword(resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)))
 
 	default:
 		log.Fatalf("ERROR: EAGLE_STACK instruction <%s> not yet implemented\n", iPtr.mnemonic)

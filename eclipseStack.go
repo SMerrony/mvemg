@@ -1,4 +1,23 @@
 // eclipseStack.go
+
+// Copyright (C) 2017  Steve Merrony
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 package main
 
 import (
@@ -10,14 +29,10 @@ func eclipseStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	var (
 		addr                dg_phys_addr
 		first, last, thisAc int
-	//wd   dg_word
-	//dwd dg_dword
 	)
 	acsUp := [8]int{0, 1, 2, 3, 0, 1, 2, 3}
 
 	switch iPtr.mnemonic {
-
-
 
 	case "POP":
 		first = iPtr.acs
@@ -27,7 +42,7 @@ func eclipseStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		}
 		for thisAc = first; thisAc >= last; thisAc-- {
 			if debugLogging {
-				logging.DebugPrint(logging.DebugLog, "... popping AC%d\n", acsUp[thisAc])
+				logging.DebugPrint(logging.DebugLog, "... narrow popping AC%d\n", acsUp[thisAc])
 			}
 			cpuPtr.ac[acsUp[thisAc]] = dg_dword(nsPop(0))
 		}
@@ -45,7 +60,7 @@ func eclipseStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		}
 		for thisAc = first; thisAc <= last; thisAc++ {
 			if debugLogging {
-				logging.DebugPrint(logging.DebugLog, "... pushing AC%d\n", acsUp[thisAc])
+				logging.DebugPrint(logging.DebugLog, "... narrow pushing AC%d\n", acsUp[thisAc])
 			}
 			nsPush(0, dwordGetLowerWord(cpuPtr.ac[acsUp[thisAc]]))
 		}

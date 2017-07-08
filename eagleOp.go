@@ -117,8 +117,14 @@ func eagleOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 			cpuPtr.ac[iPtr.acd] = dwd
 		}
 
+	case "WLSI":
+		cpuPtr.ac[iPtr.acd] = cpuPtr.ac[iPtr.acd] << iPtr.immU16
+
 	case "WMOV":
 		cpuPtr.ac[iPtr.acd] = cpuPtr.ac[iPtr.acs]
+
+	case "WMOVR":
+		cpuPtr.ac[iPtr.acd] = cpuPtr.ac[iPtr.acd] >> 1
 
 	case "WNADI": //signed 16-bit
 		s32 = int32(cpuPtr.ac[iPtr.acd]) + int32(iPtr.immS16)
