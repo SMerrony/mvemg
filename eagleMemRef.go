@@ -29,13 +29,13 @@ import (
 func eagleMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	var (
 		addr dg_phys_addr
+		byt  dg_byte
 		wd   dg_word
 		dwd  dg_dword
 		i32  int32
 	)
 
 	switch iPtr.mnemonic {
-
 
 	case "LNLDA":
 		addr = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31)
@@ -92,9 +92,16 @@ func eagleMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	case "WCMV": // ACO destCount, AC1 srcCount, AC2 dest byte ptr, AC3 src byte ptr
 		var destAscend, srcAscend bool
 		destCount := int32(cpuPtr.ac[0])
+		if destCount == 0 {
+			break
+		}
 		destAscend = (destCount > 0)
 		srcCount := int32(cpuPtr.ac[1])
 		srcAscend = (srcCount > 0)
+		if debugLogging {
+			logging.DebugPrint(logging.DebugLog, "DEBUG: WCMV moving %d chars from %d to %d\n",
+				srcCount, cpuPtr.ac[3], cpuPtr.ac[2])
+		}
 		// set carry if length of src is greater than length of dest
 		if cpuPtr.ac[1] > cpuPtr.ac[2] {
 			cpuPtr.carry = true
@@ -138,6 +145,10 @@ func eagleMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		}
 		cpuPtr.ac[0] = 0
 		cpuPtr.ac[1] = dg_dword(srcCount)
+
+	case "WSTB":
+		byt = dg_byte(cpuPtr.ac[iPtr.acd] & 0x0ff)
+		memWriteByteBA(byt, cpuPtr.ac[iPtr.acs])
 
 	case "XLDB":
 		cpuPtr.ac[iPtr.acd] = dg_dword(memReadByte(resolve16bitEagleAddr(cpuPtr, ' ', iPtr.mode, iPtr.disp16), iPtr.bitLow)) & 0x00ff

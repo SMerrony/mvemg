@@ -25,7 +25,7 @@ func TestDecodeMode(t *testing.T) {
 func TestDecode8bitDisp(t *testing.T) {
 	var db dg_byte
 	var md string
-	var res int32
+	var res int16
 
 	db = 7
 	md = "Absolute"
@@ -52,7 +52,7 @@ func TestDecode8bitDisp(t *testing.T) {
 func TestDecode15bitDisp(t *testing.T) {
 	var disp15 dg_word
 	var m string
-	var res int32
+	var res int16
 
 	disp15 = 300
 	m = "Absolute"

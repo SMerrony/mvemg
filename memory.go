@@ -65,7 +65,7 @@ func memInit() {
 // read a byte from memory using word address and low-byte flag (true => lower (rightmost) byte)
 func memReadByte(wordAddr dg_phys_addr, loByte bool) dg_byte {
 	var res dg_byte
-	wd := memory.ram[wordAddr]
+	wd := memReadWord(wordAddr)
 	if loByte {
 		res = dg_byte(wd & 0xff)
 	} else {
@@ -224,20 +224,20 @@ func nsPop(seg dg_phys_addr) dg_word {
 func wsPush(seg dg_phys_addr, data dg_dword) {
 	// TODO segment handling
 	// TODO overflow/underflow handling - either here or in instruction?
-	memory.ram[WSP_LOC] += 2 // we allow this direct write to a fixed location for performance
-	addr := dg_phys_addr(memory.ram[WSP_LOC])
-	memWriteDWord(addr, data)
-	logging.DebugPrint(logging.DebugLog, "wsPush pushed %8d onto the Wide Stack at location: %d\n", data, addr)
+	wsp := memReadDWord(WSP_LOC) + 2
+	memWriteDWord(WSP_LOC, wsp)
+	memWriteDWord(dg_phys_addr(wsp), data)
+	logging.DebugPrint(logging.DebugLog, "wsPush pushed %8d onto the Wide Stack at location: %d\n", data, wsp)
 }
 
 // POP a word off the Wide Stack
 func wsPop(seg dg_phys_addr) dg_dword {
 	// TODO segment handling
 	// TODO overflow/underflow handling - either here or in instruction?
-	addr := dg_phys_addr(memory.ram[WSP_LOC])
-	dword := memReadDWord(addr)
-	memory.ram[WSP_LOC] -= 2 // we allow this direct write to a fixed location for performance
-	logging.DebugPrint(logging.DebugLog, "wsPop  popped %8d off  the Wide Stack at location: %d\n", dword, addr)
+	wsp := memReadDWord(WSP_LOC)
+	dword := memReadDWord(dg_phys_addr(wsp))
+	memWriteDWord(WSP_LOC, wsp-2)
+	logging.DebugPrint(logging.DebugLog, "wsPop  popped %8d off  the Wide Stack at location: %d\n", dword, wsp)
 	return dword
 }
 
