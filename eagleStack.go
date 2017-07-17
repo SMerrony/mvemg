@@ -104,6 +104,8 @@ func eagleStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 			wsPush(0, cpuPtr.ac[acsUp[thisAc]])
 		}
 
+	// N.B. WRTN is in eaglePC
+
 	case "WSAVR":
 		wsav(cpuPtr, iPtr)
 		cpu.ovk = false

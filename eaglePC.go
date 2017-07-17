@@ -36,6 +36,13 @@ func eaglePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	case "LCALL": // FIXME - LCALL only handling trivial case, no checking
 		cpuPtr.ac[3] = dg_dword(cpuPtr.pc) + 4
+		if iPtr.argCount > 0 {
+			dwd = dg_dword(iPtr.argCount) & 0x00007fff
+		} else {
+			// TODO PSR
+			dwd = dg_dword(iPtr.argCount)
+		}
+		wsPush(0, dwd)
 		cpuPtr.pc = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31)
 		cpuPtr.ovk = false
 
@@ -83,6 +90,20 @@ func eaglePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	case "WPOPJ":
 		dwd = wsPop(0)
 		cpuPtr.pc = dg_phys_addr(dwd) & 0x0fffffff
+
+	case "WRTN": // FIXME incomplete: handle PSR and rings
+		wspSav := memReadDWord(WSP_LOC)
+		dwd = wsPop(0) // 1
+		cpuPtr.carry = testDWbit(dwd, 0)
+		cpuPtr.pc = dg_phys_addr(dwd & 0x7fffffff)
+		cpuPtr.ac[3] = wsPop(0) // 2
+		memWriteDWord(WFP_LOC, cpuPtr.ac[3])
+		cpuPtr.ac[2] = wsPop(0) // 3
+		cpuPtr.ac[1] = wsPop(0) // 4
+		cpuPtr.ac[0] = wsPop(0) // 5
+		dwd = wsPop(0)          // 6
+		wsFramSz2 := int(dwd&0x00007fff) * 2
+		memWriteDWord(WSP_LOC, wspSav-dg_dword(wsFramSz2)-12)
 
 	case "WSEQ": // Signedness doen't matter for equality testing
 		if iPtr.acd == iPtr.acs {
@@ -185,6 +206,13 @@ func eaglePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	case "XCALL":
 		// FIXME - only handling the trivial case so far
 		cpuPtr.ac[3] = dg_dword(cpuPtr.pc) + 3
+		if iPtr.argCount > 0 {
+			dwd = dg_dword(iPtr.argCount) & 0x00007fff
+		} else {
+			// TODO PSR
+			dwd = dg_dword(iPtr.argCount)
+		}
+		wsPush(0, dwd)
 		cpuPtr.pc = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
 
 	case "XJMP":
