@@ -1,4 +1,4 @@
-// instructions_test.go
+// decoder_test.go
 package main
 
 import (
@@ -19,6 +19,23 @@ func TestDecodeMode(t *testing.T) {
 	decMode = decodeMode(modeIx)
 	if decMode != "PC" {
 		t.Error("Expected <PC>, got ", decMode)
+	}
+}
+
+func Test2bitImm(t *testing.T) {
+	ttable := []struct {
+		i dg_word
+		o uint16
+	}{
+		{0, 1},
+		{1, 2},
+		{3, 4},
+	}
+	for _, tt := range ttable {
+		res := decode2bitImm(tt.i)
+		if res != tt.o {
+			t.Errorf("Expected %d, got %d", res, tt.o)
+		}
 	}
 }
 

@@ -85,9 +85,9 @@ func memReadByteEclipseBA(byteAddr16 dg_word) dg_byte {
 }
 
 func memWriteByte(wordAddr dg_phys_addr, loByte bool, b dg_byte) {
-	if wordAddr == 2891 {
-		debug.PrintStack()
-	}
+	// if wordAddr == 2891 {
+	// 	debug.PrintStack()
+	// }
 	wd := memory.ram[wordAddr]
 	if loByte {
 		wd = (wd & 0xff00) | dg_word(b)
@@ -148,9 +148,9 @@ func memReadWordBmcChan(addr dg_phys_addr) dg_word {
 // memWriteWord - ALL memory-writing should ultimately go through this function
 // N.B. minor exceptions may be made for nsPush() and nsPop()
 func memWriteWord(wordAddr dg_phys_addr, datum dg_word) {
-	if wordAddr == 2891 {
-		debugCatcher()
-	}
+	// if wordAddr == 2891 {
+	// 	debugCatcher()
+	// }
 	if wordAddr >= MEM_SIZE_WORDS {
 		log.Fatalf("ERROR: Attempt to write word beyond end of physical memory using address: %d", wordAddr)
 	}

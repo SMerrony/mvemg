@@ -159,8 +159,8 @@ func eclipseOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 }
 
 func dlsh(acS, acDh, acDl dg_dword) dg_dword {
-	var shft int8 = int8(acS)
-	var dwd dg_dword = ((acDh & 0x0ffff) << 16) | (acDl & 0x0ffff)
+	var shft = int8(acS)
+	var dwd = ((acDh & 0x0ffff) << 16) | (acDl & 0x0ffff)
 	if shft != 0 {
 		if shft < -31 || shft > 31 {
 			dwd = 0
@@ -177,8 +177,8 @@ func dlsh(acS, acDh, acDl dg_dword) dg_dword {
 }
 
 func lsh(acS, acD dg_dword) dg_dword {
-	var shft int8 = int8(acS)
-	var wd dg_word = dwordGetLowerWord(acD)
+	var shft = int8(acS)
+	var wd = dwordGetLowerWord(acD)
 	if shft == 0 {
 		wd = dwordGetLowerWord(acD) // do nothing
 	} else {

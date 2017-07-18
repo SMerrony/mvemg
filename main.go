@@ -28,6 +28,7 @@ import (
 	"mvemg/logging"
 	"net"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -505,6 +506,9 @@ func run() {
 		//b         byte
 	)
 
+	// instruction counting...
+	instrCounts := make(map[string]uint64)
+
 	// direct console input to the VM
 	cpu.scpIO = false
 
@@ -532,7 +536,6 @@ func run() {
 		if len(breakpoints) > 0 {
 			for _, bAddr := range breakpoints {
 				if bAddr == cpu.pc {
-					//ttiStopThread(&cpu)
 					cpu.scpIO = true
 					msg := fmt.Sprintf(" *** BREAKpoint hit at physical address %d. ***", cpu.pc)
 					ttoPutNLString(msg)
@@ -547,6 +550,9 @@ func run() {
 			errDetail = " *** Console ESCape ***"
 			break
 		}
+
+		// instruction counting
+		instrCounts[iPtr.mnemonic]++
 	}
 
 	cpu.scpIO = true
@@ -567,5 +573,31 @@ func run() {
 	log.Println(errDetail)
 	ttoPutNLString(errDetail)
 
-	//ttiStopThread(&cpu)
+	// instruction counts, first by Mnemonic, then by count
+	var mnems []string
+	for m := range instrCounts {
+		mnems = append(mnems, m)
+	}
+	sort.Strings(mnems)
+	log.Println("Instruction Execution Count by Mnemonic")
+	for _, m := range mnems {
+		log.Printf("%s\t%d\n", m, instrCounts[m])
+	}
+
+	n := map[int][]string{}
+	var a []int
+	for mn, v := range instrCounts {
+		n[int(v)] = append(n[int(v)], mn)
+	}
+	for k := range n {
+		a = append(a, int(k))
+	}
+	sort.Sort(sort.Reverse(sort.IntSlice(a)))
+	log.Println("Instruction Execution Count by Count")
+	for _, k := range a {
+		for _, s := range n[k] {
+			log.Printf("%d\t%s\n", k, s)
+		}
+	}
+
 }

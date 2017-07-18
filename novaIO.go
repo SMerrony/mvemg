@@ -106,30 +106,30 @@ func novaIO(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		case "BN":
 			if busy {
 				cpuPtr.pc++
-				if debugLogging {
-					logging.DebugPrint(logging.DebugLog, "... skipping\n")
-				}
+				// if debugLogging {
+				// 	logging.DebugPrint(logging.DebugLog, "... skipping\n")
+				// }
 			}
 		case "BZ":
 			if !busy {
 				cpuPtr.pc++
-				if debugLogging {
-					logging.DebugPrint(logging.DebugLog, "... skipping\n")
-				}
+				// if debugLogging {
+				// 	logging.DebugPrint(logging.DebugLog, "... skipping\n")
+				// }
 			}
 		case "DN":
 			if done {
 				cpuPtr.pc++
-				if debugLogging {
-					logging.DebugPrint(logging.DebugLog, "... skipping\n")
-				}
+				// if debugLogging {
+				// 	logging.DebugPrint(logging.DebugLog, "... skipping\n")
+				// }
 			}
 		case "DZ":
 			if !done {
 				cpuPtr.pc++
-				if debugLogging {
-					logging.DebugPrint(logging.DebugLog, "... skipping\n")
-				}
+				// if debugLogging {
+				// 	logging.DebugPrint(logging.DebugLog, "... skipping\n")
+				// }
 			}
 		}
 

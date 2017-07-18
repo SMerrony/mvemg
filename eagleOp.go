@@ -99,6 +99,9 @@ func eagleOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	case "WINC":
 		cpuPtr.ac[iPtr.acd] = cpuPtr.ac[iPtr.acs] + 1
 
+	case "WIOR":
+		cpuPtr.ac[iPtr.acd] |= cpuPtr.ac[iPtr.acs]
+
 	case "WIORI":
 		cpuPtr.ac[iPtr.acd] |= iPtr.immDword
 
