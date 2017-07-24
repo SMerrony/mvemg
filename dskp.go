@@ -29,6 +29,7 @@ import (
 	"log"
 	"mvemg/logging"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -145,6 +146,7 @@ const (
 type dskpDataT struct {
 	// MV/Em internals...
 	debug         bool
+	dskpDataMu    sync.RWMutex
 	imageAttached bool
 	imageFileName string
 	imageFile     *os.File
@@ -177,6 +179,7 @@ var (
 // dskpInit is called once by the main routine to initialise this DSKP emulator
 func dskpInit(statsChann chan dskpStatT) {
 	logging.DebugPrint(logging.DskpLog, "DSKP Initialising via call to dskpInit()...\n")
+	dskpData.dskpDataMu.Lock()
 
 	dskpData.debug = true
 
@@ -188,6 +191,8 @@ func dskpInit(statsChann chan dskpStatT) {
 	busSetDataOutFunc(DEV_DSKP, dskpDataOut)
 
 	dskpData.imageAttached = false
+	dskpData.dskpDataMu.Unlock()
+
 	dskpReset()
 }
 
@@ -195,6 +200,8 @@ func dskpInit(statsChann chan dskpStatT) {
 func dskpAttach(dNum int, imgName string) bool {
 	// TODO Disk Number not currently used
 	logging.DebugPrint(logging.DskpLog, "dskpAttach called for disk #%d with image <%s>\n", dNum, imgName)
+	dskpData.dskpDataMu.Lock()
+	defer dskpData.dskpDataMu.Unlock()
 	dskpData.imageFile, err = os.OpenFile(imgName, os.O_RDWR, 0755)
 	if err != nil {
 		logging.DebugPrint(logging.DskpLog, "Failed to open image for attaching\n")
@@ -211,7 +218,7 @@ func dskpStatSender(sChan chan dskpStatT) {
 	var stats dskpStatT
 	fmt.Printf("dskpStatSender() started\n")
 	for {
-
+		dskpData.dskpDataMu.RLock()
 		if dskpData.imageAttached {
 			stats.imageAttached = true
 			//stats.cylinder = dskpData.cylinder
@@ -226,11 +233,10 @@ func dskpStatSender(sChan chan dskpStatT) {
 		} else {
 			stats = dskpStatT{}
 		}
-		//fmt.Printf("dskpStatSender()  before send\n")
+		dskpData.dskpDataMu.RUnlock()
+		// Non-blocking send of stats
 		select {
 		case sChan <- stats:
-			//fmt.Printf("dskpStatSender() after sending C: %d, H: %d S: %d #: %d\n",
-			//	stats.cylinder, stats.head, stats.sector, stats.sectorNo)
 		default:
 		}
 
@@ -256,6 +262,7 @@ func dskpCreateBlank(imgName string) bool {
 
 // Handle the DIA/B/C PIO commands
 func dskpDataIn(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
+	dskpData.dskpDataMu.Lock()
 	switch abc {
 	case 'A':
 		cpuPtr.ac[iPtr.acd] = dg_dword(dskpData.statusRegA)
@@ -267,11 +274,13 @@ func dskpDataIn(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 		cpuPtr.ac[iPtr.acd] = dg_dword(dskpData.statusRegC)
 		logging.DebugPrint(logging.DskpLog, "DIC [Read Status C] returning %s for DRV=%d, PC: %d\n", wordToBinStr(dskpData.statusRegC), 0, cpuPtr.pc)
 	}
+	dskpData.dskpDataMu.Unlock()
 	dskpHandleFlag(iPtr.f)
 }
 
 // Handle the DOA/B/C PIO commands
 func dskpDataOut(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
+	dskpData.dskpDataMu.Lock()
 	switch abc {
 	case 'A':
 		dskpData.commandRegA = dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
@@ -292,6 +301,7 @@ func dskpDataOut(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 				iPtr.acd, wordToBinStr(dskpData.commandRegC), cpuPtr.pc)
 		}
 	}
+	dskpData.dskpDataMu.Unlock()
 	dskpHandleFlag(iPtr.f)
 }
 
@@ -454,14 +464,17 @@ func dskpHandleFlag(f byte) {
 	case 'S':
 		busSetBusy(DEV_DSKP, true)
 		busSetDone(DEV_DSKP, false)
+		dskpData.dskpDataMu.Lock()
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... S flag set\n")
 		}
 		dskpDoPioCommand()
+		dskpData.dskpDataMu.Unlock()
 		busSetBusy(DEV_DSKP, false)
 		busSetDone(DEV_DSKP, true)
 
 	case 'C':
+		dskpData.dskpDataMu.Lock()
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... C flag set, clearing DONE flag\n")
 		}
@@ -471,7 +484,7 @@ func dskpHandleFlag(f byte) {
 			STAT_CCS_PIO_CMD_OK,
 			dg_word(dskpExtractPioCommand(dskpData.commandRegC)),
 			testWbit(dskpData.commandRegC, 15))
-
+		dskpData.dskpDataMu.Unlock()
 	case 'P':
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... P flag set\n")
@@ -644,6 +657,7 @@ func dskpProcessCB(addr dg_phys_addr) {
 }
 
 func dskpReset() {
+	dskpData.dskpDataMu.Lock()
 	dskpResetMapping()
 	dskpResetIntInfBlk()
 	dskpResetCtrlrInfBlock()
@@ -653,6 +667,7 @@ func dskpReset() {
 	if dskpData.debug {
 		logging.DebugPrint(logging.DskpLog, "DSKP Reset via call to dskpReset()\n")
 	}
+	dskpData.dskpDataMu.Unlock()
 }
 
 // setup the controller information block to power-up defaults p.2-15

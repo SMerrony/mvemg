@@ -116,6 +116,8 @@ func instructionDecode(opcode dg_word, pc dg_phys_addr, lefMode bool, ioOn bool,
 			decodedInstrT.immU16, decodedInstrT.disp15, modeToString(decodedInstrT.mode))
 
 	case IMM_ONEACC_FMT: // eg. ADI, HXL, NADI, SBI, WADI, WLSI, WSBI
+		// N.B. Immediate value is encoded by assembler to be one less than required
+		//      This is handled by decode2bitImm()
 		decodedInstrT.immU16 = decode2bitImm(getWbits(opcode, 1, 2))
 		decodedInstrT.acd = int(getWbits(opcode, 3, 2))
 		decodedInstrT.disassembly += fmt.Sprintf(" %d.,%d", decodedInstrT.immU16, decodedInstrT.acd)

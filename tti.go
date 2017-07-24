@@ -25,11 +25,13 @@ import (
 	"log"
 	"net"
 	"os"
+	"sync"
 )
 
 var (
-	tti        net.Conn
-	oneCharBuf byte
+	tti          net.Conn
+	oneCharBuf   byte
+	oneCharBufMu sync.Mutex
 )
 
 func ttiInit(c net.Conn, cpuPtr *CPU, ch chan<- byte) {
@@ -51,14 +53,21 @@ func ttiListener(cpuPtr *CPU, scpChan chan<- byte) {
 		//log.Printf("DEBUG: ttiListener() got <%c>\n", b[0])
 		for c := 0; c < n; c++ {
 			if b[c] == ASCII_ESC || b[c] == 0 {
+				cpuPtr.cpuMu.Lock()
 				cpuPtr.scpIO = true
+				cpuPtr.cpuMu.Unlock()
 			}
-			if cpuPtr.scpIO {
+			cpuPtr.cpuMu.RLock()
+			scp := cpuPtr.scpIO
+			cpuPtr.cpuMu.RUnlock()
+			if scp {
 				// to the SCP
 				scpChan <- b[c]
 			} else {
 				// to the CPU
+				oneCharBufMu.Lock()
 				oneCharBuf = b[c]
+				oneCharBufMu.Unlock()
 				busSetDone(DEV_TTI, true)
 			}
 		}
@@ -71,9 +80,9 @@ func ttiReset() {
 
 // This is called from Bus to implement DIA from the TTI DEV_TTIice
 func ttiDataIn(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
-
+	oneCharBufMu.Lock()
 	cpuPtr.ac[iPtr.acd] = dg_dword(oneCharBuf) // grab the char from the buffer
-
+	oneCharBufMu.Unlock()
 	switch abc {
 	case 'A':
 		switch iPtr.f {

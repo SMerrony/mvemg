@@ -4,6 +4,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"sync"
 	"time"
 )
 
@@ -16,6 +17,7 @@ type sbrBits struct {
 
 // CPU holds the current state of a CPU
 type CPU struct {
+	cpuMu sync.RWMutex
 	// representations of physical attributes
 	pc                           dg_phys_addr
 	ac                           [4]dg_dword
@@ -48,15 +50,19 @@ func cpuInit(statsChan chan cpuStatT) *CPU {
 }
 
 func cpuPrintableStatus() string {
+	cpu.cpuMu.RLock()
 	res := fmt.Sprintf("%c      AC0       AC1       AC2       AC3        PC CRY ATU%c", ASCII_NL, ASCII_NL)
 	res += fmt.Sprintf("%9d %9d %9d %9d %9d", cpu.ac[0], cpu.ac[1], cpu.ac[2], cpu.ac[3], cpu.pc)
 	res += fmt.Sprintf("  %d   %d", BoolToInt(cpu.carry), BoolToInt(cpu.atu))
+	cpu.cpuMu.RUnlock()
 	return res
 }
 
 func cpuCompactPrintableStatus() string {
+	cpu.cpuMu.RLock()
 	res := fmt.Sprintf("AC0: %d AC1: %d AC2: %d AC3: %d CRY: %d PC: %d",
 		cpu.ac[0], cpu.ac[1], cpu.ac[2], cpu.ac[3], BoolToInt(cpu.carry), cpu.pc)
+	cpu.cpuMu.RUnlock()
 	return res
 }
 
@@ -64,6 +70,7 @@ func cpuCompactPrintableStatus() string {
 // A false return means failure, the VM should stop
 func cpuExecute(iPtr *decodedInstrT) bool {
 	rc := false
+	cpu.cpuMu.Lock()
 	switch iPtr.instrType {
 	case NOVA_MEMREF:
 		rc = novaMemRef(&cpu, iPtr)
@@ -95,18 +102,21 @@ func cpuExecute(iPtr *decodedInstrT) bool {
 		log.Fatalln("ERROR: Unimplemented instruction type in cpuExecute()")
 	}
 	cpu.instrCount++
+	cpu.cpuMu.Unlock()
 	return rc
 }
 
 func cpuStatSender(sChan chan cpuStatT) {
 	var stats cpuStatT
 	for {
+		cpu.cpuMu.RLock()
 		stats.pc = cpu.pc
 		stats.ac[0] = cpu.ac[0]
 		stats.ac[1] = cpu.ac[1]
 		stats.ac[2] = cpu.ac[1]
 		stats.ac[3] = cpu.ac[3]
 		stats.instrCount = cpu.instrCount
+		cpu.cpuMu.RUnlock()
 		select {
 		case sChan <- stats:
 		default:

@@ -29,6 +29,7 @@ import (
 	"log"
 	"mvemg/logging"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -111,6 +112,7 @@ type dpfDataT struct {
 	// MV/Em internals...
 	debug         bool
 	imageAttached bool
+	dpfMu         sync.Mutex
 	imageFileName string
 	imageFile     *os.File
 	// DG data...
@@ -146,13 +148,15 @@ var (
 
 // initialise the emulated DPF controller
 func dpfInit(statsChann chan dpfStatT) {
+	//dpfData.dpfMu.Lock()
+	//defer dpfData.dpfMu.Unlock()
 	dpfData.debug = true
 
 	cmdDecode = [...]string{"READ", "RECAL", "SEEK", "STOP", "OFFSET FWD", "OFFSET REV",
 		"WRITE DISABLE", "RELEASE", "TRESPASS", "SET ALT MODE 1", "SET ALT MODE 2",
 		"NO OP", "VERIFY", "READ BUFFERS", "WRITE", "FORMAT"}
 
-	go dpfStatsSender(statsChann)
+	// go dpfStatsSender(statsChann)
 
 	busAddDevice(DEV_DPF, "DPF", DPF_PMB, false, true, true)
 	busSetResetFunc(DEV_DPF, dpfReset)
@@ -169,6 +173,8 @@ func dpfInit(statsChann chan dpfStatT) {
 func dpfAttach(dNum int, imgName string) bool {
 	// TODO Disk Number not currently used
 	logging.DebugPrint(logging.DpfLog, "dpfAttach called for disk #%d with image <%s>\n", dNum, imgName)
+	//dpfData.dpfMu.Lock()
+	//defer dpfData.dpfMu.Unlock()
 	dpfData.imageFile, err = os.OpenFile(imgName, os.O_RDWR, 0755)
 	if err != nil {
 		logging.DebugPrint(logging.DpfLog, "Failed to open image for attaching\n")
@@ -184,6 +190,7 @@ func dpfAttach(dNum int, imgName string) bool {
 func dpfStatsSender(sChan chan dpfStatT) {
 	var stats dpfStatT
 	for {
+		//dpfData.dpfMu.Lock()
 		if dpfData.imageAttached {
 			stats.imageAttached = true
 			stats.cylinder = dpfData.cylAddr
@@ -192,6 +199,7 @@ func dpfStatsSender(sChan chan dpfStatT) {
 		} else {
 			stats = dpfStatT{}
 		}
+		//dpfData.dpfMu.Unlock()
 		select {
 		case sChan <- stats:
 		default:
@@ -266,6 +274,8 @@ func dpfDataIn(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 // dpfDataOut implements the DOA/B/C instructions for this device
 // NIO is also routed here with a dummy abc flag value of N
 func dpfDataOut(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
+	//dpfData.dpfMu.Lock()
+	//defer dpfData.dpfMu.Unlock()
 	data := dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
 	switch abc {
 	case 'A':
@@ -347,6 +357,8 @@ func dpfDataOut(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 }
 
 func dpfDoDriveOpCommand() {
+	//dpfData.dpfMu.Lock()
+	//defer dpfData.dpfMu.Unlock()
 	dpfData.instructionMode = DPF_INS_MODE_NORMAL
 	switch dpfData.command {
 	case DPF_CMD_RECAL:
@@ -370,6 +382,8 @@ func dpfDoDriveOpCommand() {
 }
 
 func dpfDoNoOpCommand() {
+	//dpfData.dpfMu.Lock()
+	//defer dpfData.dpfMu.Unlock()
 	dpfData.instructionMode = DPF_INS_MODE_NORMAL
 	dpfData.rwStatus = 0
 	dpfData.driveStatus = DPF_READY
@@ -383,6 +397,8 @@ func dpfDoRWcommand() {
 		buffer = make([]byte, dpfBytesPerSect)
 		wd     dg_word
 	)
+	//dpfData.dpfMu.Lock()
+	//defer dpfData.dpfMu.Unlock()
 	dpfData.instructionMode = DPF_INS_MODE_NORMAL
 
 	switch dpfData.command {
@@ -480,6 +496,8 @@ func dpfDoRWcommand() {
 }
 
 func dpfCheckSectorPos() bool {
+	//dpfData.dpfMu.Lock()
+	//defer dpfData.dpfMu.Unlock()
 	ok := true
 	// end of track?
 	if dpfData.sectAddr >= dpfSectPerTrack {
@@ -491,6 +509,8 @@ func dpfCheckSectorPos() bool {
 }
 
 func dpfCheckCylPos() bool {
+	//dpfData.dpfMu.Lock()
+	//defer dpfData.dpfMu.Unlock()
 	ok := true
 	// end of cylinder?
 	if dpfData.surfAddr >= dpfSurfPerDisk {
@@ -502,6 +522,8 @@ func dpfCheckCylPos() bool {
 }
 
 func dpfHandleFlag(f byte) {
+	//dpfData.dpfMu.Lock()
+	//defer dpfData.dpfMu.Unlock()
 	switch f {
 	case 'S':
 		busSetBusy(DEV_DPF, true)
@@ -554,6 +576,8 @@ func dpfPrintableAddr() string {
 
 // reset the DPF controller
 func dpfReset() {
+	//dpfData.dpfMu.Lock()
+	//defer dpfData.dpfMu.Unlock()
 	dpfData.instructionMode = DPF_INS_MODE_NORMAL
 	dpfData.rwStatus = 0
 	dpfData.driveStatus = DPF_READY

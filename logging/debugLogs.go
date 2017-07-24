@@ -23,6 +23,7 @@ package logging
 import (
 	"fmt"
 	"os"
+	"sync"
 )
 
 const (
@@ -43,8 +44,9 @@ const (
 
 var (
 	logArr    [numDebugLogs][numDebugLogLines]string // the stored log messages
-	firstLine [numDebugLogs]int                      // pointer to the first line of each log
-	lastLine  [numDebugLogs]int                      // pointer to the last line of each log
+	logArrMu  [numDebugLogs]sync.Mutex
+	firstLine [numDebugLogs]int // pointer to the first line of each log
+	lastLine  [numDebugLogs]int // pointer to the last line of each log
 )
 
 // DebugLogsDump can be called to dump out each of the non-empty debug logs to text files
@@ -89,6 +91,8 @@ func DebugLogsDump() {
 // This func can be called very often, KISS...
 func DebugPrint(log int, aFmt string, msg ...interface{}) {
 
+	logArrMu[log].Lock()
+
 	lastLine[log]++
 
 	// end of log array?
@@ -106,4 +110,5 @@ func DebugPrint(log int, aFmt string, msg ...interface{}) {
 
 	// sprintf the given message to tail of the specified log
 	logArr[log][lastLine[log]] = fmt.Sprintf(aFmt, msg...)
+	logArrMu[log].Unlock()
 }

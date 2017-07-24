@@ -142,7 +142,9 @@ func main() {
 		}
 
 		// the main SCP/console interaction loop
+		cpu.cpuMu.Lock()
 		cpu.scpIO = true
+		cpu.cpuMu.Unlock()
 		for {
 			ttoPutNLString("SCP-CLI> ")
 			command := scpGetLine()
@@ -294,8 +296,10 @@ func boot(cmd []string) {
 	switch devNum {
 	case DEV_MTB:
 		mtbLoadTBoot(memory)
+		cpu.cpuMu.Lock()
 		cpu.ac[0] = DEV_MTB
 		cpu.pc = 10
+		cpu.cpuMu.Unlock()
 	default:
 		ttoPutNLString(" *** Booting from that device not yet implemented ***")
 	}
@@ -510,21 +514,26 @@ func run() {
 	instrCounts := make(map[string]uint64)
 
 	// direct console input to the VM
+	cpu.cpuMu.Lock()
 	cpu.scpIO = false
+	cpu.cpuMu.Unlock()
 
 	for {
 		// FETCH
+		cpu.cpuMu.RLock()
 		thisOp = memReadWord(cpu.pc)
 
 		// DECODE
 		iPtr, ok = instructionDecode(thisOp, cpu.pc, cpu.sbr[cpu.pc>>29].lef, cpu.sbr[cpu.pc>>29].io, cpu.atu)
 		if !ok {
+			cpu.cpuMu.RUnlock()
 			errDetail = " *** Error: could not decode instruction ***"
 			break
 		}
 		if debugLogging {
 			logging.DebugPrint(logging.DebugLog, "%s\t\t%s\n", iPtr.disassembly, cpuCompactPrintableStatus())
 		}
+		cpu.cpuMu.RUnlock()
 
 		// EXECUTE
 		if !cpuExecute(iPtr) {
@@ -534,6 +543,7 @@ func run() {
 
 		// BREAKPOINT?
 		if len(breakpoints) > 0 {
+			cpu.cpuMu.Lock()
 			for _, bAddr := range breakpoints {
 				if bAddr == cpu.pc {
 					cpu.scpIO = true
@@ -543,19 +553,25 @@ func run() {
 					return
 				}
 			}
+			cpu.cpuMu.Unlock()
 		}
 
 		// Console interrupt?
+		cpu.cpuMu.RLock()
 		if cpu.scpIO {
+			cpu.cpuMu.RUnlock()
 			errDetail = " *** Console ESCape ***"
 			break
 		}
+		cpu.cpuMu.RUnlock()
 
 		// instruction counting
 		instrCounts[iPtr.mnemonic]++
 	}
 
+	cpu.cpuMu.Lock()
 	cpu.scpIO = true
+	cpu.cpuMu.Unlock()
 
 	// run halted due to either error or console escape
 	log.Println(errDetail)

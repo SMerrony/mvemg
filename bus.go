@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"log"
 	"mvemg/logging"
+	"sync"
 )
 
 type (
@@ -39,6 +40,7 @@ type (
 )
 
 type device struct {
+	devMu           sync.RWMutex
 	mnemonic        string
 	priorityMaskBit int
 	resetFunc       ResetFunc
@@ -57,6 +59,7 @@ var d devices
 
 func busInit() {
 	for dev := range d {
+		d[dev].devMu.Lock()
 		d[dev].mnemonic = ""
 		d[dev].priorityMaskBit = 0
 		d[dev].dataInFunc = nil
@@ -66,6 +69,7 @@ func busInit() {
 		d[dev].bootable = false
 		d[dev].busy = false
 		d[dev].done = false
+		d[dev].devMu.Unlock()
 	}
 	bmcdchInit()
 }
@@ -74,102 +78,147 @@ func busAddDevice(devNum int, mnem string, pmb int, att bool, io bool, boot bool
 	if devNum >= MAX_DEVICES {
 		log.Fatalf("ERROR: Attempt to add device with too-high device number: 0%o", devNum)
 	}
+	d[devNum].devMu.Lock()
 	d[devNum].mnemonic = mnem
 	d[devNum].priorityMaskBit = pmb
 	d[devNum].simAttached = att
 	d[devNum].ioDevice = io
 	d[devNum].bootable = boot
 	logging.DebugPrint(logging.DebugLog, "INFO: Device 0%o added to bus\n", devNum)
+	d[devNum].devMu.Unlock()
 }
 
 func busSetDataInFunc(devNum int, fn DataInFunc) {
+	d[devNum].devMu.Lock()
 	d[devNum].dataInFunc = fn
 	logging.DebugPrint(logging.DebugLog, "INFO: Bus Data In function set for dev #0%o\n", devNum)
+	d[devNum].devMu.Unlock()
 }
 
 func busDataIn(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 	//logging.DebugPrint(logging.DEBUG_LOG, "DEBUG: Bus Data In function called for dev #0%o\n", iPtr.ioDev)
+	d[iPtr.ioDev].devMu.Lock()
 	if d[iPtr.ioDev].dataInFunc == nil {
 		log.Fatal("ERROR: busDataIn called with no function set")
 	}
+	d[iPtr.ioDev].devMu.Unlock()
 	d[iPtr.ioDev].dataInFunc(cpuPtr, iPtr, abc)
+
 	// logging.DebugPrint(logging.DEBUG_LOG, "INFO: Bus Data In function called for dev #0%o\n", iPtr.ioDev)
 }
 
 func busSetDataOutFunc(devNum int, fn DataOutFunc) {
+	d[devNum].devMu.Lock()
 	d[devNum].dataOutFunc = fn
+	d[devNum].devMu.Unlock()
 	logging.DebugPrint(logging.DebugLog, "INFO: Bus Data Out function set for dev #0%o\n", devNum)
 }
 
 func busDataOut(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
+	d[iPtr.ioDev].devMu.Lock()
 	if d[iPtr.ioDev].dataOutFunc == nil {
 		log.Fatal("ERROR: busDataOut called with no function set")
 	}
+	d[iPtr.ioDev].devMu.Unlock()
 	d[iPtr.ioDev].dataOutFunc(cpuPtr, iPtr, abc)
 	logging.DebugPrint(logging.DebugLog, "INFO: Bus Data Out function called for dev #0%o\n", iPtr.ioDev)
+
 }
 
 func busSetResetFunc(devNum int, resetFn ResetFunc) {
+	d[devNum].devMu.Lock()
 	d[devNum].resetFunc = resetFn
 	logging.DebugPrint(logging.DebugLog, "INFO: Bus reset function set for dev #0%o\n", devNum)
+	d[devNum].devMu.Unlock()
 }
 
 func busResetDevice(devNum int) {
-	if d[devNum].ioDevice {
+	d[devNum].devMu.Lock()
+	io := d[devNum].ioDevice
+	d[devNum].devMu.Unlock()
+	if io {
 		d[devNum].resetFunc()
 	} else {
 		log.Fatalf("ERROR: Attempt to reset non-I/O device #0%o\n", devNum)
 	}
+
 }
 
 func busResetAllIODevices() {
 	for dev := range d {
-		if d[dev].ioDevice {
+		d[dev].devMu.Lock()
+		io := d[dev].ioDevice
+		d[dev].devMu.Unlock()
+		if io {
 			busResetDevice(dev)
 		}
 	}
 }
 
 func busSetAttached(devNum int) {
+	d[devNum].devMu.Lock()
 	d[devNum].simAttached = true
+	d[devNum].devMu.Unlock()
 }
 func busSetDetached(devNum int) {
+	d[devNum].devMu.Lock()
 	d[devNum].simAttached = false
+	d[devNum].devMu.Unlock()
 }
 func busIsAttached(devNum int) bool {
-	return d[devNum].simAttached
+	d[devNum].devMu.RLock()
+	att := d[devNum].simAttached
+	d[devNum].devMu.RUnlock()
+	return att
 }
 
 func busSetBusy(devNum int, f bool) {
+	d[devNum].devMu.Lock()
 	d[devNum].busy = f
 	logging.DebugPrint(logging.DebugLog, "... Busy flag set to %d for device #0%o\n", BoolToInt(f), devNum)
+	d[devNum].devMu.Unlock()
 }
 
 func busSetDone(devNum int, f bool) {
+	d[devNum].devMu.Lock()
 	d[devNum].done = f
 	logging.DebugPrint(logging.DebugLog, "... Done flag set to %d for device #0%o\n", BoolToInt(f), devNum)
+	d[devNum].devMu.Unlock()
 }
 
 func busGetBusy(devNum int) bool {
-	return d[devNum].busy
+	d[devNum].devMu.RLock()
+	bz := d[devNum].busy
+	d[devNum].devMu.RUnlock()
+	return bz
 }
 
 func busGetDone(devNum int) bool {
-	return d[devNum].done
+	d[devNum].devMu.RLock()
+	dn := d[devNum].done
+	d[devNum].devMu.RUnlock()
+	return dn
 }
 
 func busIsBootable(devNum int) bool {
-	return d[devNum].bootable
+	d[devNum].devMu.RLock()
+	bt := d[devNum].bootable
+	d[devNum].devMu.RUnlock()
+	return bt
 }
 
 func busIsIODevice(devNum int) bool {
-	return d[devNum].ioDevice
+	d[devNum].devMu.RLock()
+	io := d[devNum].ioDevice
+	d[devNum].devMu.RUnlock()
+	return io
 }
 
 func busGetPrintableDevList() string {
 	lst := fmt.Sprintf(" #  Mnem   PMB  I/O Busy Done Status%c", ASCII_NL)
 	var line string
 	for dev := range d {
+		d[dev].devMu.RLock()
 		if d[dev].mnemonic != "" {
 			line = fmt.Sprintf("%#3o %-6s %2d. %3d %4d %4d  ",
 				dev, d[dev].mnemonic, d[dev].priorityMaskBit,
@@ -185,6 +234,7 @@ func busGetPrintableDevList() string {
 			line += "\012"
 			lst += line
 		}
+		d[dev].devMu.RUnlock()
 	}
 	return lst
 }
