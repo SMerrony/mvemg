@@ -529,11 +529,13 @@ func run() {
 			cpu.cpuMu.RUnlock()
 			errDetail = " *** Error: could not decode instruction ***"
 			break
+		} else {
+			cpu.cpuMu.RUnlock()
 		}
+
 		if debugLogging {
 			logging.DebugPrint(logging.DebugLog, "%s\t\t%s\n", iPtr.disassembly, cpuCompactPrintableStatus())
 		}
-		cpu.cpuMu.RUnlock()
 
 		// EXECUTE
 		if !cpuExecute(iPtr) {

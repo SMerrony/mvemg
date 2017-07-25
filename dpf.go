@@ -112,7 +112,7 @@ type dpfDataT struct {
 	// MV/Em internals...
 	debug         bool
 	imageAttached bool
-	dpfMu         sync.Mutex
+	dpfMu         sync.RWMutex
 	imageFileName string
 	imageFile     *os.File
 	// DG data...
@@ -148,15 +148,15 @@ var (
 
 // initialise the emulated DPF controller
 func dpfInit(statsChann chan dpfStatT) {
-	//dpfData.dpfMu.Lock()
-	//defer dpfData.dpfMu.Unlock()
+	dpfData.dpfMu.Lock()
+	defer dpfData.dpfMu.Unlock()
 	dpfData.debug = true
 
 	cmdDecode = [...]string{"READ", "RECAL", "SEEK", "STOP", "OFFSET FWD", "OFFSET REV",
 		"WRITE DISABLE", "RELEASE", "TRESPASS", "SET ALT MODE 1", "SET ALT MODE 2",
 		"NO OP", "VERIFY", "READ BUFFERS", "WRITE", "FORMAT"}
 
-	// go dpfStatsSender(statsChann)
+	go dpfStatsSender(statsChann)
 
 	busAddDevice(DEV_DPF, "DPF", DPF_PMB, false, true, true)
 	busSetResetFunc(DEV_DPF, dpfReset)
@@ -173,16 +173,17 @@ func dpfInit(statsChann chan dpfStatT) {
 func dpfAttach(dNum int, imgName string) bool {
 	// TODO Disk Number not currently used
 	logging.DebugPrint(logging.DpfLog, "dpfAttach called for disk #%d with image <%s>\n", dNum, imgName)
-	//dpfData.dpfMu.Lock()
-	//defer dpfData.dpfMu.Unlock()
+	dpfData.dpfMu.Lock()
 	dpfData.imageFile, err = os.OpenFile(imgName, os.O_RDWR, 0755)
 	if err != nil {
 		logging.DebugPrint(logging.DpfLog, "Failed to open image for attaching\n")
 		logging.DebugPrint(logging.DebugLog, "WARN: Failed to open DPF image <%s> for ATTach\n", imgName)
+		dpfData.dpfMu.Unlock()
 		return false
 	}
 	dpfData.imageFileName = imgName
 	dpfData.imageAttached = true
+	dpfData.dpfMu.Unlock()
 	busSetAttached(DEV_DPF)
 	return true
 }
@@ -190,7 +191,7 @@ func dpfAttach(dNum int, imgName string) bool {
 func dpfStatsSender(sChan chan dpfStatT) {
 	var stats dpfStatT
 	for {
-		//dpfData.dpfMu.Lock()
+		dpfData.dpfMu.RLock()
 		if dpfData.imageAttached {
 			stats.imageAttached = true
 			stats.cylinder = dpfData.cylAddr
@@ -199,7 +200,7 @@ func dpfStatsSender(sChan chan dpfStatT) {
 		} else {
 			stats = dpfStatT{}
 		}
-		//dpfData.dpfMu.Unlock()
+		dpfData.dpfMu.RUnlock()
 		select {
 		case sChan <- stats:
 		default:
@@ -226,6 +227,7 @@ func dpfCreateBlank(imgName string) bool {
 
 // dpfDataIn implements the DIA/B/C I/O instructions for this device
 func dpfDataIn(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
+	dpfData.dpfMu.RLock()
 	switch abc {
 	case 'A':
 		switch dpfData.instructionMode {
@@ -267,6 +269,7 @@ func dpfDataIn(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 		cpuPtr.ac[iPtr.acd] = dg_dword(ssc)
 		logging.DebugPrint(logging.DpfLog, "DPF DIC returning: %s\n", wordToBinStr(ssc))
 	}
+	dpfData.dpfMu.RUnlock()
 
 	dpfHandleFlag(iPtr.f) // TODO Is this go-able?
 }
@@ -274,8 +277,7 @@ func dpfDataIn(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 // dpfDataOut implements the DOA/B/C instructions for this device
 // NIO is also routed here with a dummy abc flag value of N
 func dpfDataOut(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
-	//dpfData.dpfMu.Lock()
-	//defer dpfData.dpfMu.Unlock()
+	dpfData.dpfMu.Lock()
 	data := dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
 	switch abc {
 	case 'A':
@@ -352,13 +354,14 @@ func dpfDataOut(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 			logging.DebugPrint(logging.DpfLog, "NIO%c received\n", iPtr.f)
 		}
 	}
+	dpfData.dpfMu.Unlock()
 
 	dpfHandleFlag(iPtr.f) // TODO Is this go-able?
 }
 
 func dpfDoDriveOpCommand() {
+	// ALREADY LOCKED BY CALLER
 	//dpfData.dpfMu.Lock()
-	//defer dpfData.dpfMu.Unlock()
 	dpfData.instructionMode = DPF_INS_MODE_NORMAL
 	switch dpfData.command {
 	case DPF_CMD_RECAL:
@@ -379,17 +382,19 @@ func dpfDoDriveOpCommand() {
 	default:
 		log.Fatalf("DPF Drive Operation command # %d not yet impelemented", dpfData.command)
 	}
+	//dpfData.dpfMu.Unlock()
 }
 
 func dpfDoNoOpCommand() {
+	// already locked by caller
 	//dpfData.dpfMu.Lock()
-	//defer dpfData.dpfMu.Unlock()
 	dpfData.instructionMode = DPF_INS_MODE_NORMAL
 	dpfData.rwStatus = 0
 	dpfData.driveStatus = DPF_READY
 	if dpfData.debug {
 		logging.DebugPrint(logging.DpfLog, "... NO OP command done\n")
 	}
+	//dpfData.dpfMu.Unlock()
 }
 
 func dpfDoRWcommand() {
@@ -397,7 +402,7 @@ func dpfDoRWcommand() {
 		buffer = make([]byte, dpfBytesPerSect)
 		wd     dg_word
 	)
-	//dpfData.dpfMu.Lock()
+	dpfData.dpfMu.Lock()
 	//defer dpfData.dpfMu.Unlock()
 	dpfData.instructionMode = DPF_INS_MODE_NORMAL
 
@@ -492,49 +497,49 @@ func dpfDoRWcommand() {
 	default:
 		log.Fatalf("DPF Disk R/W Command %d not yet implemented\n", dpfData.command)
 	}
-
+	dpfData.dpfMu.Unlock()
 }
 
 func dpfCheckSectorPos() bool {
-	//dpfData.dpfMu.Lock()
-	//defer dpfData.dpfMu.Unlock()
 	ok := true
+	//dpfData.dpfMu.Lock()
 	// end of track?
 	if dpfData.sectAddr >= dpfSectPerTrack {
 		dpfData.surfAddr++
 		dpfData.sectAddr = 0
 		ok = false
 	}
+	//dpfData.dpfMu.Unlock()
 	return ok
 }
 
 func dpfCheckCylPos() bool {
-	//dpfData.dpfMu.Lock()
-	//defer dpfData.dpfMu.Unlock()
 	ok := true
 	// end of cylinder?
+	//dpfData.dpfMu.Lock()
 	if dpfData.surfAddr >= dpfSurfPerDisk {
 		dpfData.surfAddr = 0
 		dpfData.sectAddr = 0
 		ok = false
 	}
+	//dpfData.dpfMu.Unlock()
 	return ok
 }
 
 func dpfHandleFlag(f byte) {
-	//dpfData.dpfMu.Lock()
-	//defer dpfData.dpfMu.Unlock()
 	switch f {
 	case 'S':
 		busSetBusy(DEV_DPF, true)
 		busSetDone(DEV_DPF, false)
 		// TODO stop any I/O
+		dpfData.dpfMu.Lock()
 		dpfData.rwStatus = 0
 		// TODO start I/O timeout
 		dpfData.rwCommand = dpfData.command
 		if dpfData.debug {
 			logging.DebugPrint(logging.DpfLog, "... S flag set\n")
 		}
+		dpfData.dpfMu.Unlock()
 		dpfDoRWcommand()
 		busSetBusy(DEV_DPF, false)
 		busSetDone(DEV_DPF, true)
@@ -544,13 +549,14 @@ func dpfHandleFlag(f byte) {
 
 	case 'P':
 		busSetBusy(DEV_DPF, false)
+		dpfData.dpfMu.Lock()
 		if dpfData.debug {
 			logging.DebugPrint(logging.DpfLog, "... P flag set\n")
 		}
 		dpfData.rwStatus = 0
 		dpfDoDriveOpCommand()
 		dpfData.rwStatus = DPF_DRIVE0DONE
-
+		dpfData.dpfMu.Unlock()
 	default:
 		// no/empty flag - nothing to do
 	}
@@ -559,8 +565,10 @@ func dpfHandleFlag(f byte) {
 // set the disk image file postion according to current C/H/S
 func dpfPositionDiskImage() {
 	var offset, r int64
+	//dpfData.dpfMu.Lock()
 	offset = int64(dpfData.cylAddr) * int64(dpfData.surfAddr) * int64(dpfData.sectAddr)
 	r, err = dpfData.imageFile.Seek(offset, 0)
+	//dpfData.dpfMu.Unlock()
 	if r != offset || err != nil {
 		log.Fatal("DPF could not postition disk image via seek()")
 	}
@@ -568,22 +576,25 @@ func dpfPositionDiskImage() {
 
 func dpfPrintableAddr() string {
 	var pa string
+	// MUST BE LOCKED BY CALLER
+	//dpfData.dpfMu.RLock()
 	pa = fmt.Sprintf("DRV: %d, CYL: %d, SURF: %d, SECT: %d, SECCNT: %d",
 		dpfData.drive, dpfData.cylAddr,
 		dpfData.surfAddr, dpfData.sectAddr, dpfData.sectCnt)
+	//dpfData.dpfMu.RUnlock()
 	return pa
 }
 
 // reset the DPF controller
 func dpfReset() {
-	//dpfData.dpfMu.Lock()
-	//defer dpfData.dpfMu.Unlock()
+	dpfData.dpfMu.Lock()
 	dpfData.instructionMode = DPF_INS_MODE_NORMAL
 	dpfData.rwStatus = 0
 	dpfData.driveStatus = DPF_READY
 	if dpfData.debug {
 		logging.DebugPrint(logging.DpfLog, "DPF Reset\n")
 	}
+	dpfData.dpfMu.Unlock()
 }
 
 func extractDpfCommand(word dg_word) int8 {

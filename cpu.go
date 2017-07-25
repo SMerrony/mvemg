@@ -37,7 +37,7 @@ type cpuStatT struct {
 	instrCount              uint64
 }
 
-const cpuStatPeriodMs = 125 // i.e. we send stats every 1/8th of a second
+const cpuStatPeriodMs = 1000 // 125 // i.e. we send stats every 1/8th of a second
 
 var (
 	cpu CPU
