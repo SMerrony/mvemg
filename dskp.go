@@ -357,7 +357,7 @@ func dskpDoPioCommand() {
 			logging.DebugPrint(logging.DskpLog, "... ... Destination Start Address: %d\n", addr)
 		}
 		for w = 0; w < DSKP_INT_INF_BLK_SIZE; w++ {
-			memWriteWord(addr+w, dskpData.intInfBlock[w])
+			memWriteWordBmcChan(addr+w, dskpData.intInfBlock[w])
 			if dskpData.debug {
 				logging.DebugPrint(logging.DskpLog, "... ... Word %d: %s\n", w, wordToBinStr(dskpData.intInfBlock[w]))
 			}
@@ -372,11 +372,11 @@ func dskpDoPioCommand() {
 		}
 		// only a few fields can be changed...
 		w = 5
-		dskpData.intInfBlock[w] = memReadWord(addr+w) & 0xff00
+		dskpData.intInfBlock[w] = memReadWordBmcChan(addr+w) & 0xff00
 		w = 6
-		dskpData.intInfBlock[w] = memReadWord(addr + w)
+		dskpData.intInfBlock[w] = memReadWordBmcChan(addr + w)
 		w = 7
-		dskpData.intInfBlock[w] = memReadWord(addr + w)
+		dskpData.intInfBlock[w] = memReadWordBmcChan(addr + w)
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... ... Word 5: %s\n", wordToBinStr(dskpData.intInfBlock[5]))
 			logging.DebugPrint(logging.DskpLog, "... ... Word 6: %s\n", wordToBinStr(dskpData.intInfBlock[6]))
@@ -391,7 +391,7 @@ func dskpDoPioCommand() {
 			logging.DebugPrint(logging.DskpLog, "... ... Destination Start Address: %d\n", addr)
 		}
 		for w = 0; w < DSKP_UNIT_INF_BLK_SIZE; w++ {
-			memWriteWord(addr+w, dskpData.unitInfBlock[w])
+			memWriteWordBmcChan(addr+w, dskpData.unitInfBlock[w])
 			if dskpData.debug {
 				logging.DebugPrint(logging.DskpLog, "... ... Word %d: %s\n", w, wordToBinStr(dskpData.unitInfBlock[w]))
 			}
@@ -523,7 +523,7 @@ func dskpProcessCB(addr dg_phys_addr) {
 	}
 	// copy CB contents from host memory
 	for w = 0; w < cbLength; w++ {
-		cb[w] = memReadWord(addr + dg_phys_addr(w))
+		cb[w] = memReadWordBmcChan(addr + dg_phys_addr(w))
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... CB[%d]: %d\n", w, cb[w])
 		}

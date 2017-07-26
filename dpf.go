@@ -428,11 +428,7 @@ func dpfDoRWcommand() {
 			}
 			for w := 0; w < dpfWordsPerSect; w++ {
 				wd = (dg_word(buffer[w*2]) << 8) | dg_word(buffer[(w*2)+1])
-				//if dpfData.mapEnabled {
 				memWriteWordBmcChan(dg_phys_addr(dpfData.memAddr), wd)
-				//} else {
-				// memWriteWord(dg_phys_addr(dpfData.memAddr), wd)
-				//}
 				dpfData.memAddr++
 			}
 			dpfData.sectAddr++
@@ -465,11 +461,7 @@ func dpfDoRWcommand() {
 			}
 			dpfPositionDiskImage()
 			for w := 0; w < dpfWordsPerSect; w++ {
-				//if dpfData.mapEnabled {
 				wd = memReadWordBmcChan(dg_phys_addr(dpfData.memAddr))
-				//} else {
-				//wd = memReadWord(dg_phys_addr(dpfData.memAddr))
-				//}
 				dpfData.memAddr++
 				buffer[w*2] = byte((wd & 0xff00) >> 8)
 				buffer[(w*2)+1] = byte(wd & 0x00ff)
