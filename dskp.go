@@ -20,7 +20,12 @@
 // THE SOFTWARE.
 
 // Here we are emulating the DSKP device, specifically model 6239/6240
-// controller/drive combination which provides 592MB of formatted capacity.
+// controller/drive combination with 14-inch platters which provide 592MB of formatted capacity.
+//
+// All communication with the drive is via CPU PIO instructions and memory
+// accessed via the BMC interface running at 2.2MB/sec in mapped or physical mode.
+// There is also a small set of flags and pulses shared between the controller and the CPU.
+
 package main
 
 import (
@@ -46,6 +51,8 @@ const (
 	dskpLogicalBlocksH    = dskpLogicalBlocks >> 16
 	dskpLogicalBlocksL    = dskpLogicalBlocks & 0x0ffff
 	dskpUcodeRev          = 99
+
+	dskpMaxQueuedCBs = 30 // See p.2-13
 
 	DSKP_INT_INF_BLK_SIZE   = 8
 	DSKP_CTRLR_INF_BLK_SIZE = 2
@@ -351,7 +358,7 @@ func dskpDoPioCommand() {
 		dskpSetPioStatusRegC(STAT_XEC_STATE_MAPPED, STAT_CCS_PIO_CMD_OK, DSKP_SET_MAPPING, testWbit(dskpData.commandRegC, 15))
 
 	case DSKP_GET_INTERFACE:
-		addr = dg_phys_addr(dskpData.commandRegA)<<16 | dg_phys_addr(dskpData.commandRegB)
+		addr = dg_phys_addr(dwordFromTwoWords(dskpData.commandRegA, dskpData.commandRegB))
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... GET INTERFACE INFO command\n")
 			logging.DebugPrint(logging.DskpLog, "... ... Destination Start Address: %d\n", addr)
@@ -365,7 +372,7 @@ func dskpDoPioCommand() {
 		dskpSetPioStatusRegC(0, STAT_CCS_PIO_CMD_OK, DSKP_GET_INTERFACE, testWbit(dskpData.commandRegC, 15))
 
 	case DSKP_SET_INTERFACE:
-		addr = dg_phys_addr(dskpData.commandRegA)<<16 | dg_phys_addr(dskpData.commandRegB)
+		addr = dg_phys_addr(dwordFromTwoWords(dskpData.commandRegA, dskpData.commandRegB))
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... SET INTERFACE INFO command\n")
 			logging.DebugPrint(logging.DskpLog, "... ... Origin Start Address: %d\n", addr)
@@ -385,7 +392,7 @@ func dskpDoPioCommand() {
 		dskpSetPioStatusRegC(0, STAT_CCS_PIO_CMD_OK, DSKP_SET_INTERFACE, testWbit(dskpData.commandRegC, 15))
 
 	case DSKP_GET_UNIT:
-		addr = dg_phys_addr(dskpData.commandRegA)<<16 | dg_phys_addr(dskpData.commandRegB)
+		addr = dg_phys_addr(dwordFromTwoWords(dskpData.commandRegA, dskpData.commandRegB))
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... GET UNIT INFO command\n")
 			logging.DebugPrint(logging.DskpLog, "... ... Destination Start Address: %d\n", addr)
@@ -399,7 +406,7 @@ func dskpDoPioCommand() {
 		dskpSetPioStatusRegC(0, STAT_CCS_PIO_CMD_OK, DSKP_GET_UNIT, testWbit(dskpData.commandRegC, 15))
 
 	case DSKP_SET_UNIT:
-		addr = dg_phys_addr(dskpData.commandRegA)<<16 | dg_phys_addr(dskpData.commandRegB)
+		addr = dg_phys_addr(dwordFromTwoWords(dskpData.commandRegA, dskpData.commandRegB))
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... SET UNIT INFO command\n")
 			logging.DebugPrint(logging.DskpLog, "... ... Origin Start Address: %d\n", addr)
@@ -416,7 +423,7 @@ func dskpDoPioCommand() {
 		dskpReset()
 
 	case DSKP_SET_CONTROLLER:
-		addr = dg_phys_addr(dskpData.commandRegA)<<16 | dg_phys_addr(dskpData.commandRegB)
+		addr = dg_phys_addr(dwordFromTwoWords(dskpData.commandRegA, dskpData.commandRegB))
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... SET CONTROLLER INFO command\n")
 			logging.DebugPrint(logging.DskpLog, "... ... Origin Start Address: %d\n", addr)
@@ -430,7 +437,7 @@ func dskpDoPioCommand() {
 		}
 
 	case DSKP_START_LIST:
-		addr = dg_phys_addr(dskpData.commandRegA)<<16 | dg_phys_addr(dskpData.commandRegB)
+		addr = dg_phys_addr(dwordFromTwoWords(dskpData.commandRegA, dskpData.commandRegB))
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... START LIST command\n")
 			logging.DebugPrint(logging.DskpLog, "... ..... First CB Address: %d\n", addr)
@@ -530,7 +537,7 @@ func dskpProcessCB(addr dg_phys_addr) {
 	}
 
 	opCode := cb[DSKP_CB_INA_FLAGS_OPCODE] & 0x03ff
-	nextCB = dg_phys_addr(cb[DSKP_CB_LINK_ADDR_HIGH])<<16 | dg_phys_addr(cb[DSKP_CB_LINK_ADDR_LOW])
+	nextCB = dg_phys_addr(dwordFromTwoWords(cb[DSKP_CB_LINK_ADDR_HIGH], cb[DSKP_CB_LINK_ADDR_LOW]))
 	if dskpData.debug {
 		logging.DebugPrint(logging.DskpLog, "... CB OpCode: %d\n", opCode)
 		logging.DebugPrint(logging.DskpLog, "... .. Next CB Addr: %d\n", nextCB)
@@ -558,14 +565,14 @@ func dskpProcessCB(addr dg_phys_addr) {
 		dskpSetAsyncStatusRegC(STAT_XEC_STATE_MAPPED, STAT_ASYNC_NO_ERRORS)
 
 	case DSKP_CB_OP_READ:
-		dskpData.sectorNo = (dg_dword(cb[DSKP_CB_DEV_ADDR_HIGH]) << 16) | dg_dword(cb[DSKP_CB_DEV_ADDR_LOW])
+		dskpData.sectorNo = dwordFromTwoWords(cb[DSKP_CB_DEV_ADDR_HIGH], cb[DSKP_CB_DEV_ADDR_LOW])
 		if testWbit(cb[DSKP_CB_PAGENO_LIST_ADDR_HIGH], 0) {
 			// logical premapped host address
 			physTransfers = false
 			log.Fatal("DSKP - CB READ from premapped logical addresses  Not Yet Implemented")
 		} else {
 			physTransfers = true
-			physAddr = dg_phys_addr(cb[DSKP_CB_TXFER_ADDR_HIGH])<<16 | dg_phys_addr(cb[DSKP_CB_TXFER_ADDR_LOW])
+			physAddr = dg_phys_addr(dwordFromTwoWords(cb[DSKP_CB_TXFER_ADDR_HIGH], cb[DSKP_CB_TXFER_ADDR_LOW]))
 		}
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... .. CB READ command, SECCNT: %d\n", cb[DSKP_CB_TXFER_COUNT])
@@ -601,14 +608,14 @@ func dskpProcessCB(addr dg_phys_addr) {
 		dskpSetAsyncStatusRegC(0, STAT_ASYNC_NO_ERRORS)
 
 	case DSKP_CB_OP_WRITE:
-		dskpData.sectorNo = (dg_dword(cb[DSKP_CB_DEV_ADDR_HIGH]) << 16) | dg_dword(cb[DSKP_CB_DEV_ADDR_LOW])
+		dskpData.sectorNo = dwordFromTwoWords(cb[DSKP_CB_DEV_ADDR_HIGH], cb[DSKP_CB_DEV_ADDR_LOW])
 		if testWbit(cb[DSKP_CB_PAGENO_LIST_ADDR_HIGH], 0) {
 			// logical premapped host address
 			physTransfers = false
 			log.Fatal("DSKP - CB WRITE from premapped logical addresses  Not Yet Implemented")
 		} else {
 			physTransfers = true
-			physAddr = dg_phys_addr(cb[DSKP_CB_TXFER_ADDR_HIGH])<<16 | dg_phys_addr(cb[DSKP_CB_TXFER_ADDR_LOW])
+			physAddr = dg_phys_addr(dwordFromTwoWords(cb[DSKP_CB_TXFER_ADDR_HIGH], cb[DSKP_CB_TXFER_ADDR_LOW]))
 		}
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... .. CB WRITE command, SECCNT: %d\n", cb[DSKP_CB_TXFER_COUNT])
@@ -681,7 +688,7 @@ func dskpResetIntInfBlk() {
 	dskpData.intInfBlock[0] = 0101
 	dskpData.intInfBlock[1] = dskpUcodeRev
 	dskpData.intInfBlock[2] = 3
-	dskpData.intInfBlock[3] = 8<<12 | 30
+	dskpData.intInfBlock[3] = 8<<11 | dskpMaxQueuedCBs
 	dskpData.intInfBlock[4] = 0
 	dskpData.intInfBlock[5] = 11 << 8
 	dskpData.intInfBlock[6] = 0

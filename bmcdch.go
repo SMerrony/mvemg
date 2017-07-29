@@ -85,7 +85,7 @@ func bmcdchReadReg(reg int) dg_word {
 }
 
 func bmcdchReadSlot(slot int) dg_dword {
-	return (dg_dword(regs[slot*2]) << 16) | dg_dword(regs[(slot*2)+1])
+	return dwordFromTwoWords(regs[slot*2], regs[(slot*2)+1])
 }
 
 func getBmcDchMapAddr(mAddr dg_phys_addr) (dg_phys_addr, dg_phys_addr) {

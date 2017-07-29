@@ -47,6 +47,9 @@ func eclipseOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		if iPtr.acd == iPtr.acs {
 			addr = 0
 		} else {
+			if testDWbit(cpuPtr.ac[iPtr.acs], 0) {
+				log.Fatal("ERROR: Indirect 16-bit BIT pointers not yet supported")
+			}
 			addr = dg_phys_addr(cpuPtr.ac[iPtr.acs]) & 0x7fff // mask off lower 15 bits
 		}
 		offset = (dg_phys_addr(cpuPtr.ac[iPtr.acd]) & 0x0000fff0) >> 4
@@ -90,7 +93,7 @@ func eclipseOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	case "DIV": // unsigned divide
 		uw := dwordGetLowerWord(cpuPtr.ac[0])
 		lw := dwordGetLowerWord(cpuPtr.ac[1])
-		dwd = dg_dword(uw)<<16 | dg_dword(lw)
+		dwd = dwordFromTwoWords(uw, lw)
 		quot := dwordGetLowerWord(cpuPtr.ac[2])
 		if uw > quot || quot == 0 {
 			cpuPtr.carry = true
@@ -177,7 +180,7 @@ func eclipseOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 func dlsh(acS, acDh, acDl dg_dword) dg_dword {
 	var shft = int8(acS)
-	var dwd = ((acDh & 0x0ffff) << 16) | (acDl & 0x0ffff)
+	var dwd = dwordFromTwoWords(dwordGetLowerWord(acDh), dwordGetLowerWord(acDl))
 	if shft != 0 {
 		if shft < -31 || shft > 31 {
 			dwd = 0

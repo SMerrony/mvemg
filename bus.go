@@ -39,6 +39,13 @@ type (
 	DataInFunc func(*CPU, *decodedInstrT, byte)
 )
 
+type pioMsgT struct {
+	cpuPtr *CPU
+	iPtr   *decodedInstrT
+	IO     byte // 'I' or 'O'
+	abc    byte // 'A', 'B', or 'C'
+}
+
 type device struct {
 	devMu           sync.RWMutex
 	mnemonic        string
@@ -46,6 +53,8 @@ type device struct {
 	resetFunc       ResetFunc
 	dataOutFunc     DataOutFunc
 	dataInFunc      DataInFunc
+	pioChan         chan pioMsgT
+	pioDoneChan     chan bool
 	simAttached     bool
 	ioDevice        bool
 	bootable        bool
@@ -64,6 +73,8 @@ func busInit() {
 		d[dev].priorityMaskBit = 0
 		d[dev].dataInFunc = nil
 		d[dev].dataOutFunc = nil
+		d[dev].pioChan = nil
+		d[dev].pioDoneChan = nil
 		d[dev].simAttached = false
 		d[dev].ioDevice = false
 		d[dev].bootable = false
@@ -96,14 +107,23 @@ func busSetDataInFunc(devNum int, fn DataInFunc) {
 }
 
 func busDataIn(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
+	var pio pioMsgT
 	//logging.DebugPrint(logging.DEBUG_LOG, "DEBUG: Bus Data In function called for dev #0%o\n", iPtr.ioDev)
 	d[iPtr.ioDev].devMu.Lock()
-	if d[iPtr.ioDev].dataInFunc == nil {
-		log.Fatal("ERROR: busDataIn called with no function set")
+	if d[iPtr.ioDev].dataInFunc == nil && d[iPtr.ioDev].pioChan == nil {
+		log.Fatal("ERROR: busDataIn called with no function or channel set")
 	}
 	d[iPtr.ioDev].devMu.Unlock()
-	d[iPtr.ioDev].dataInFunc(cpuPtr, iPtr, abc)
-
+	if d[iPtr.ioDev].dataInFunc != nil {
+		d[iPtr.ioDev].dataInFunc(cpuPtr, iPtr, abc)
+	} else {
+		pio.cpuPtr = cpuPtr
+		pio.iPtr = iPtr
+		pio.IO = 'I'
+		pio.abc = abc
+		d[iPtr.ioDev].pioChan <- pio
+		_ = <-d[iPtr.ioDev].pioDoneChan
+	}
 	// logging.DebugPrint(logging.DEBUG_LOG, "INFO: Bus Data In function called for dev #0%o\n", iPtr.ioDev)
 }
 
@@ -115,14 +135,31 @@ func busSetDataOutFunc(devNum int, fn DataOutFunc) {
 }
 
 func busDataOut(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
+	var pio pioMsgT
 	d[iPtr.ioDev].devMu.Lock()
-	if d[iPtr.ioDev].dataOutFunc == nil {
-		log.Fatal("ERROR: busDataOut called with no function set")
+	if d[iPtr.ioDev].dataOutFunc == nil && d[iPtr.ioDev].pioChan == nil {
+		log.Fatal("ERROR: busDataOut called with no function or channel set")
 	}
 	d[iPtr.ioDev].devMu.Unlock()
-	d[iPtr.ioDev].dataOutFunc(cpuPtr, iPtr, abc)
-	logging.DebugPrint(logging.DebugLog, "INFO: Bus Data Out function called for dev #0%o\n", iPtr.ioDev)
+	if d[iPtr.ioDev].dataOutFunc != nil {
+		d[iPtr.ioDev].dataOutFunc(cpuPtr, iPtr, abc)
+		//logging.DebugPrint(logging.DebugLog, "INFO: Bus Data Out function called for dev #0%o\n", iPtr.ioDev)
+	} else {
+		pio.cpuPtr = cpuPtr
+		pio.iPtr = iPtr
+		pio.IO = 'O'
+		pio.abc = abc
+		d[iPtr.ioDev].pioChan <- pio
+		_ = <-d[iPtr.ioDev].pioDoneChan
+		//logging.DebugPrint(logging.DebugLog, "INFO: Bus Data Out sent PIO msg to dev #0%o\n", iPtr.ioDev)
+	}
+}
 
+func busSetPioChan(devNum int, pioc chan pioMsgT) {
+	d[devNum].pioChan = pioc
+}
+func busSetPioDoneChan(devNum int, piodc chan bool) {
+	d[devNum].pioDoneChan = piodc
 }
 
 func busSetResetFunc(devNum int, resetFn ResetFunc) {

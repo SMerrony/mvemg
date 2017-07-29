@@ -518,6 +518,7 @@ func run() {
 	cpu.scpIO = false
 	cpu.cpuMu.Unlock()
 
+RunLoop:
 	for {
 		// FETCH
 		cpu.cpuMu.RLock()
@@ -549,10 +550,12 @@ func run() {
 			for _, bAddr := range breakpoints {
 				if bAddr == cpu.pc {
 					cpu.scpIO = true
+					cpu.cpuMu.Unlock()
 					msg := fmt.Sprintf(" *** BREAKpoint hit at physical address %d. ***", cpu.pc)
 					ttoPutNLString(msg)
 					log.Println(msg)
-					return
+
+					break RunLoop
 				}
 			}
 			cpu.cpuMu.Unlock()

@@ -186,8 +186,9 @@ func memReadDWord(wordAddr dg_phys_addr) dg_dword {
 		log.Fatalf("ERROR: Attempt to read doubleword beyond end of physical memory using address: %d", wordAddr)
 	}
 	var dword dg_dword
-	dword = dg_dword(memory.ram[wordAddr]) << 16
-	dword = dword | dg_dword(memory.ram[wordAddr+1])
+	//dword = dg_dword(memory.ram[wordAddr]) << 16
+	//dword = dword | dg_dword(memory.ram[wordAddr+1])
+	dword = dwordFromTwoWords(memory.ram[wordAddr], memory.ram[wordAddr+1])
 	return dword
 }
 
@@ -283,6 +284,10 @@ func dwordGetLowerWord(dwd dg_dword) dg_word {
 
 func dwordGetUpperWord(dwd dg_dword) dg_word {
 	return dg_word(dwd >> 16)
+}
+
+func dwordFromTwoWords(hw dg_word, lw dg_word) dg_dword {
+	return dg_dword(hw)<<16 | dg_dword(lw)
 }
 
 // in the DG world, the first (leftmost) bit is numbered zero...

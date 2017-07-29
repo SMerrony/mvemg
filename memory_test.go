@@ -23,11 +23,20 @@ package main
 
 import "testing"
 
+func TestDwordFromTwoWords(t *testing.T) {
+	var hi dg_word = 0x1122
+	var lo dg_word = 0x3344
+	r := dwordFromTwoWords(hi, lo)
+	if r != 0x11223344 {
+		t.Error("Expected 287454020, got ", r)
+	}
+}
+
 func TestGetWbits(t *testing.T) {
 	var w dg_word = 0xb38f
 	r := getWbits(w, 5, 3)
 	if r != 3 {
-		t.Error("Expected 3, got ", w)
+		t.Error("Expected 3, got ", r)
 	}
 
 }
@@ -36,7 +45,7 @@ func TestGetDWbits(t *testing.T) {
 	var w dg_dword = 0xb38f00ff
 	r := getDWbits(w, 15, 2)
 	if r != 2 {
-		t.Error("Expected 2, got ", w)
+		t.Error("Expected 2, got ", r)
 	}
 
 }

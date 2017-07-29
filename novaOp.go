@@ -52,7 +52,7 @@ func novaOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	// perform the operation
 	switch iPtr.mnemonic {
 	case "ADC":
-		wideShifter = dg_dword(tmpAcD + (^tmpAcS))
+		wideShifter = dg_dword(tmpAcD) + dg_dword(^tmpAcS)
 		shifter = dwordGetLowerWord(wideShifter)
 		if wideShifter > 65535 {
 			cpuPtr.carry = !cpuPtr.carry
@@ -61,7 +61,7 @@ func novaOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		}
 
 	case "ADD": // unsigned
-		wideShifter = dg_dword(tmpAcD + tmpAcS)
+		wideShifter = dg_dword(tmpAcD) + dg_dword(tmpAcS)
 		shifter = dwordGetLowerWord(wideShifter)
 		if wideShifter > 65535 {
 			cpuPtr.carry = !cpuPtr.carry

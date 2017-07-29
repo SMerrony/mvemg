@@ -494,27 +494,23 @@ func dpfDoRWcommand() {
 
 func dpfCheckSectorPos() bool {
 	ok := true
-	//dpfData.dpfMu.Lock()
 	// end of track?
 	if dpfData.sectAddr >= dpfSectPerTrack {
 		dpfData.surfAddr++
 		dpfData.sectAddr = 0
 		ok = false
 	}
-	//dpfData.dpfMu.Unlock()
 	return ok
 }
 
 func dpfCheckCylPos() bool {
 	ok := true
 	// end of cylinder?
-	//dpfData.dpfMu.Lock()
 	if dpfData.surfAddr >= dpfSurfPerDisk {
 		dpfData.surfAddr = 0
 		dpfData.sectAddr = 0
 		ok = false
 	}
-	//dpfData.dpfMu.Unlock()
 	return ok
 }
 
