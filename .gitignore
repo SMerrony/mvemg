@@ -3,6 +3,8 @@ mvemg
 
 mvemg.test
 
+debug*
+
 *.1
 *.9trk
 *.DPF

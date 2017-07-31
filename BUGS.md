@@ -1,14 +1,14 @@
 BUGS.md
 =======
 
-# DFMTR DPF Bug #1
+~~# DFMTR DPF Bug #1~~
 
-Apparent memory corruption during Pattern 1 of surface analysis.
+~~Apparent memory corruption during Pattern 1 of surface analysis.~~
 
-Instruction at 11514 STA 0,0,AC3 is overwriting code, causing a crash (JMP to location zero).
+~~Instruction at 11514 STA 0,0,AC3 is overwriting code, causing a crash (JMP to location zero).~~
 
-Looking at the code, it might just be that the BBT is overflowing, in which case the disk reading/writing is not working
-as expected.
+~~Looking at the code, it might just be that the BBT is overflowing, in which case the disk reading/writing is not working
+as expected.~~
 
 # DFMTR DPF Bug #2
 

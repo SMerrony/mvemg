@@ -220,6 +220,9 @@ func doCommand(cmd string) {
 		disassemble(words)
 	case "DO":
 		doScript(words)
+	// for convenience...
+	case "exit":
+		fallthrough
 	case "EXIT":
 		cleanExit()
 	case "NOBREAK":

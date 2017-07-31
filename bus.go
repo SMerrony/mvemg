@@ -102,18 +102,19 @@ func busAddDevice(devNum int, mnem string, pmb int, att bool, io bool, boot bool
 func busSetDataInFunc(devNum int, fn DataInFunc) {
 	d[devNum].devMu.Lock()
 	d[devNum].dataInFunc = fn
-	logging.DebugPrint(logging.DebugLog, "INFO: Bus Data In function set for dev #0%o\n", devNum)
+	logging.DebugPrint(logging.DebugLog, "INFO: Bus Data In function set for dev #0%o (%d.)\n",
+		devNum, devNum)
 	d[devNum].devMu.Unlock()
 }
 
 func busDataIn(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 	var pio pioMsgT
 	//logging.DebugPrint(logging.DEBUG_LOG, "DEBUG: Bus Data In function called for dev #0%o\n", iPtr.ioDev)
-	d[iPtr.ioDev].devMu.Lock()
+	d[iPtr.ioDev].devMu.RLock()
 	if d[iPtr.ioDev].dataInFunc == nil && d[iPtr.ioDev].pioChan == nil {
-		log.Fatal("ERROR: busDataIn called with no function or channel set")
+		log.Fatalf("ERROR: busDataIn called for device %d with no function or channel set", iPtr.ioDev)
 	}
-	d[iPtr.ioDev].devMu.Unlock()
+	d[iPtr.ioDev].devMu.RUnlock()
 	if d[iPtr.ioDev].dataInFunc != nil {
 		d[iPtr.ioDev].dataInFunc(cpuPtr, iPtr, abc)
 	} else {
@@ -124,6 +125,7 @@ func busDataIn(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 		d[iPtr.ioDev].pioChan <- pio
 		_ = <-d[iPtr.ioDev].pioDoneChan
 	}
+
 	// logging.DebugPrint(logging.DEBUG_LOG, "INFO: Bus Data In function called for dev #0%o\n", iPtr.ioDev)
 }
 
@@ -131,14 +133,17 @@ func busSetDataOutFunc(devNum int, fn DataOutFunc) {
 	d[devNum].devMu.Lock()
 	d[devNum].dataOutFunc = fn
 	d[devNum].devMu.Unlock()
-	logging.DebugPrint(logging.DebugLog, "INFO: Bus Data Out function set for dev #0%o\n", devNum)
+	logging.DebugPrint(logging.DebugLog, "INFO: Bus Data Out function set for dev #0%o (%d.)\n",
+		devNum, devNum)
 }
 
 func busDataOut(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 	var pio pioMsgT
 	d[iPtr.ioDev].devMu.Lock()
 	if d[iPtr.ioDev].dataOutFunc == nil && d[iPtr.ioDev].pioChan == nil {
-		log.Fatal("ERROR: busDataOut called with no function or channel set")
+		logging.DebugLogsDump()
+		log.Fatalf("ERROR: busDataOut called for device %d with no function or channel set",
+			iPtr.ioDev)
 	}
 	d[iPtr.ioDev].devMu.Unlock()
 	if d[iPtr.ioDev].dataOutFunc != nil {
