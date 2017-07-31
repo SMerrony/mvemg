@@ -115,6 +115,7 @@ type dpfDataT struct {
 	dpfMu         sync.RWMutex
 	imageFileName string
 	imageFile     *os.File
+	reads, writes uint64
 	// DG data...
 	cmdDrvAddr      byte // 6-bit?
 	command         int8 // 4-bit
@@ -138,6 +139,7 @@ type dpfStatT struct {
 	imageAttached bool
 	cylinder      dg_word
 	head, sector  uint8
+	reads, writes uint64
 }
 
 var (
@@ -197,6 +199,8 @@ func dpfStatsSender(sChan chan dpfStatT) {
 			stats.cylinder = dpfData.cylinder
 			stats.head = dpfData.surface
 			stats.sector = dpfData.sector
+			stats.reads = dpfData.reads
+			stats.writes = dpfData.writes
 		} else {
 			stats = dpfStatT{}
 		}
@@ -445,6 +449,7 @@ func dpfDoCommand() {
 			}
 			dpfData.sector++
 			dpfData.sectCnt++
+			dpfData.reads++
 
 			if dpfData.debug {
 				logging.DebugPrint(logging.DpfLog, "Buffer: %X\n", buffer)
@@ -505,6 +510,7 @@ func dpfDoCommand() {
 			}
 			dpfData.sector++
 			dpfData.sectCnt++
+			dpfData.writes++
 
 			if dpfData.debug {
 				logging.DebugPrint(logging.DpfLog, "Buffer: %X\n", buffer)

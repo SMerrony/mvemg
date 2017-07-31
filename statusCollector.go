@@ -52,13 +52,14 @@ func statusCollector(
 	dskpChan chan dskpStatT) {
 
 	var (
-		cpuStats                     cpuStatT
-		lastIcount, iCount           uint64
-		ips, dskpIops                float64
-		lastCPUtime, lastDskpTime    time.Time
-		thisDskpIOcnt, lastDskpIOcnt uint64
-		dpfStats                     dpfStatT
-		dskpStats                    dskpStatT
+		cpuStats                               cpuStatT
+		lastIcount, iCount                     uint64
+		ips, dpfIops, dskpIops                 float64
+		lastCPUtime, lastDpfTime, lastDskpTime time.Time
+		thisDpfIOcnt, lastDpfIOcnt             uint64
+		thisDskpIOcnt, lastDskpIOcnt           uint64
+		dpfStats                               dpfStatT
+		dskpStats                              dskpStatT
 	)
 
 	l, err := net.Listen("tcp", "localhost:"+StatPort)
@@ -100,9 +101,14 @@ func statusCollector(
 					cpuStats.ac[2],
 					cpuStats.ac[3]))
 			case dpfStats = <-dpfChan:
+				thisDpfIOcnt = dpfStats.writes + dpfStats.reads
+				dpfIops = float64(thisDpfIOcnt-lastDpfIOcnt) / time.Since(lastDpfTime).Seconds()
+				lastDpfIOcnt = thisDpfIOcnt
+				lastDpfTime = time.Now()
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", DASHER_WRITE_WINDOW_ADDR, 0, statDPFrow, DASHER_ERASE_EOL))
-				statusSendString(conn, fmt.Sprintf("DPF  - Attached: %c  CYL: %04d  HD: %02d  SECT: %03d",
+				statusSendString(conn, fmt.Sprintf("DPF  - Attached: %c  IOPS: %.f CYL: %04d  HD: %02d  SECT: %03d",
 					BoolToYN(dpfStats.imageAttached),
+					dpfIops,
 					dpfStats.cylinder,
 					dpfStats.head,
 					dpfStats.sector))
