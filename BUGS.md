@@ -1,7 +1,7 @@
 BUGS.md
 =======
 
-~~# DFMTR DPF Bug #1~~
+~~# DPF DFMTR Bug #1~~
 
 ~~Apparent memory corruption during Pattern 1 of surface analysis.~~
 
@@ -10,9 +10,11 @@ BUGS.md
 ~~Looking at the code, it might just be that the BBT is overflowing, in which case the disk reading/writing is not working
 as expected.~~
 
-# DFMTR DPF Bug #2
+Fixed on 20170731 by adding dpfPositionDiskImage() missing factor.
 
-When NOT doing a surface analysis  - very similar to DSKP Bug #1
+# DPF DFMTR Bug #2
+
+When NOT doing a surface analysis - very similar to DSKP Bug #1
 
 Crash with fatal internal error (not JMP to location zero).
 
@@ -20,7 +22,83 @@ Reports PC: 35502, AC0: 354, AC1: 111021, AC2: 5
 
 As below, several 16-sector blocks appear to be written, then a 25-sector one after which the crash occurs.
 
-# DFMTR DSKP Bug #1
+DPF Command sequence is:
+```
+NO OP
+READ DRIVE STATUS
+RECAL
+READ TXFER STATUS, READ DRIVE STATUS
+SET ALT MODE 1
+READ EMA - RETURNS 32768
+NO OP
+READ DRIVE STATUS
+SETUP SEEK CMD
+READ DRIVE STATUS
+SET MEM ADDR 5792
+SETUP SEEK CMD (again)
+READ DRIVE STATUS
+SPECIFY CYLINDER #410
+*PULSE* (seek happens)
+READ TXFER STATUS, READ DRIVE STATUS
+SETUP READ CMD
+SPECIFY SURF: 18, SECT: 23; SECCNT: -1
+*S* FLAG (read happens)
+READ TXFER STATUS
+NO OP
+READ DRIVE STATUS
+SETUP SEEK CMD
+READ DRIVE STATUS 
+SPECIFY MEM ADDR: 5792
+SPECIFY CYLINDER #411
+*PULSE* (seek happens)
+READ TXFER STATUS, READ DRIVE STATUS
+SETUP READ CMD
+SPECIFY SURF: 0, SECT: 1, SECCNT: 0 [DOC] ????????????
+SPECIFY SURF: 0, SECT: 0; SECCNT: -1
+*S* FLAG (read happens)
+READ TXFER STATUS
+NO OP
+READ DRIVE STATUS
+SET ALT MODE 1
+READ EMA - RETURNS 32768
+SPECIFY EMA: 0
+.
+[SEEK TO CYL 0, READ SECTOR 0/0/2]
+.
+[WRITE ZEROS TO SECTOR 0/0/2]
+.
+RECAL
+.
+[WRITE BUFFER FROM ADDR 5280 TO 0/0/3]
+[READ BUFFER FROM 0/0/3]
+[WRITE 16 BUFFERS FROM 5792 TO 297/6/10]
+[WRITE 16 BUFFERS FROM 5792 TO 297/7/2]
+[WRITE 16 BUFFERS FROM 5792 TO 297/7/18]
+[WRITE 16 BUFFERS FROM 5792 TO 297/8/10]
+[WRITE 16 BUFFERS FROM 5792 TO 297/9/2]
+READ TXFER STATUS
+NO OP
+READ DRIVE STATUS
+SET ALT MODE 1
+READ EMA - RETURNS 32768
+SETUP SEEK CMD
+READ DRIVE STATUS
+SPECIFY MEM ADDR: 5792
+SET ALT MODE 1
+READ EMA - RETURNS 32768
+SETUP SEEK CMD
+READ DRIVE STATUS
+SPECIFY CYLINDER #297
+*PULSE* (actions seek)
+READ TXFER STATUS, READ DRIVE STATUS
+SETUP WRITE CMD
+SPECIFY S/S/C: 0/1/0 [DOC] ?????????
+SPECIFY S/S/C: 9/18/25
+*S* FLAG SET - WRITE 25 BUFFERS FROM 5792 TO 297/9/18]
+
+```
+
+# DSKP DFMTR Bug #1
 
 Crash with fatal internal error (not JMP to location zero).
 
