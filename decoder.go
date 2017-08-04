@@ -56,9 +56,36 @@ type decodedInstrT struct {
 	disassembly       string
 }
 
+const numPosOpcodes = 65536
+
+var opCodeLookup [numPosOpcodes]string
+
+func decoderGenAllPossOpcodes() {
+	for opcode := 0; opcode < numPosOpcodes; opcode++ {
+		mnem, found := instructionFind2(dg_word(opcode), false, false, false)
+		if found {
+			opCodeLookup[opcode] = mnem
+		} else {
+			opCodeLookup[opcode] = ""
+		}
+	}
+}
+
 // InsrtructionFind looks for the opcode in the instruction map and returns
 // the corresponding mnemonic
 func instructionFind(opcode dg_word, lefMode bool, ioOn bool, atuOn bool) (string, bool) {
+	if opCodeLookup[opcode] != "" {
+		if opCodeLookup[opcode] == "LEF" && lefMode {
+			return "", false
+		}
+		return opCodeLookup[opcode], true
+	}
+	return "", false
+}
+
+// InsrtructionFind2 looks for the opcode in the instruction map and returns
+// the corresponding mnemonic
+func instructionFind2(opcode dg_word, lefMode bool, ioOn bool, atuOn bool) (string, bool) {
 	var tail dg_word
 	for mnem, insChar := range instructionSet {
 		if (opcode & insChar.mask) == insChar.bits {

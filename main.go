@@ -119,6 +119,7 @@ func main() {
 		busInit()
 		busAddDevice(DEV_SCP, "SCP", SCP_PMB, true, false, false)
 		instructionsInit()
+		decoderGenAllPossOpcodes()
 		cpuPtr := cpuInit(cpuStatsChan)
 		ttoInit(conn)
 		ttiInit(conn, cpuPtr, ttiSCPchan)
