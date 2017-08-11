@@ -19,8 +19,8 @@ type sbrBits struct {
 type CPU struct {
 	cpuMu sync.RWMutex
 	// representations of physical attributes
-	pc                           dg_phys_addr
-	ac                           [4]dg_dword
+	pc                           DgPhysAddrT
+	ac                           [4]DgDwordT
 	carry, atu, ion, pfflag, ovk bool
 	sbr                          [8]sbrBits
 
@@ -31,8 +31,8 @@ type CPU struct {
 
 // cpuStatT defines the data we will send to the statusCollector monitor
 type cpuStatT struct {
-	pc                      dg_phys_addr
-	ac                      [4]dg_dword
+	pc                      DgPhysAddrT
+	ac                      [4]DgDwordT
 	carry, atu, ion, pfflag bool
 	instrCount              uint64
 }

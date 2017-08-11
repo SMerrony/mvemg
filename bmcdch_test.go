@@ -6,7 +6,7 @@ import (
 )
 
 func TestBmcdchReset(t *testing.T) {
-	var wd dg_word
+	var wd DgWordT
 	bmcdchInit()
 	wd = regs[IOCHAN_DEF_REG]
 	if wd != IOCDR_1 {
@@ -15,7 +15,7 @@ func TestBmcdchReset(t *testing.T) {
 }
 
 func TestWriteReadMapSlot(t *testing.T) {
-	var dwd1, dwd2 dg_dword
+	var dwd1, dwd2 DgDwordT
 	dwd1 = 0x11223344
 	bmcdchWriteSlot(17, dwd1)
 	dwd2 = bmcdchReadSlot(17)
@@ -26,7 +26,7 @@ func TestWriteReadMapSlot(t *testing.T) {
 }
 
 func TestBmcDchMapAddr(t *testing.T) {
-	var addr1, addr2, page dg_phys_addr
+	var addr1, addr2, page DgPhysAddrT
 	bmcdchWriteSlot(0, 0)
 	addr1 = 1
 	addr2, page = getBmcDchMapAddr(addr1)

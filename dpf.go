@@ -122,22 +122,22 @@ type dpfDataT struct {
 	rwCommand       int8
 	drive           uint8   // 2-bit
 	mapEnabled      bool    // is the BMC addressing physical (0) or Mapped (1)
-	memAddr         dg_word // self-incrementing on DG
+	memAddr         DgWordT // self-incrementing on DG
 	ema             uint8   // 5-bit
-	cylinder        dg_word // 10-bit
+	cylinder        DgWordT // 10-bit
 	surface         uint8   // 5-bit - increments post-op
 	sector          uint8   // 5-bit - increments mid-op
 	sectCnt         int8    // 5-bit - incrememts mid-op - signed
-	ecc             dg_dword
-	driveStatus     dg_word
-	rwStatus        dg_word
+	ecc             DgDwordT
+	driveStatus     DgWordT
+	rwStatus        DgWordT
 	instructionMode int
 	lastDOAwasSeek  bool
 }
 
 type dpfStatT struct {
 	imageAttached bool
-	cylinder      dg_word
+	cylinder      DgWordT
 	head, sector  uint8
 	reads, writes uint64
 }
@@ -236,7 +236,7 @@ func dpfDataIn(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 	case 'A':
 		switch dpfData.instructionMode {
 		case DPF_INS_MODE_NORMAL:
-			cpuPtr.ac[iPtr.acd] = dg_dword(dpfData.rwStatus)
+			cpuPtr.ac[iPtr.acd] = DgDwordT(dpfData.rwStatus)
 			logging.DebugPrint(logging.DpfLog, "DIA [Read Data Txfr Status] (Normal mode) returning %s for DRV=%d\n",
 				wordToBinStr(dpfData.rwStatus), dpfData.drive)
 		case DPF_INS_MODE_ALT_1:
@@ -247,11 +247,11 @@ func dpfDataIn(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 	case 'B':
 		switch dpfData.instructionMode {
 		case DPF_INS_MODE_NORMAL:
-			cpuPtr.ac[iPtr.acd] = dg_dword(dpfData.driveStatus & 0xfeff)
+			cpuPtr.ac[iPtr.acd] = DgDwordT(dpfData.driveStatus & 0xfeff)
 			logging.DebugPrint(logging.DpfLog, "DIB [Read Drive Status] (normal mode) DRV=%d, %s to AC%d, PC: %d\n",
 				dpfData.drive, wordToBinStr(dpfData.driveStatus), iPtr.acd, cpuPtr.pc)
 		case DPF_INS_MODE_ALT_1:
-			cpuPtr.ac[iPtr.acd] = dg_dword(0x8000) | (dg_dword(dpfData.ema) & 0x01f)
+			cpuPtr.ac[iPtr.acd] = DgDwordT(0x8000) | (DgDwordT(dpfData.ema) & 0x01f)
 			//			if dpfData.mapEnabled {
 			//				cpuPtr.ac[iPtr.acd] = dg_dword(dpfData.ema&0x1f) | 0x8000
 			//			} else {
@@ -263,14 +263,14 @@ func dpfDataIn(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 			log.Fatal("DPF DIB (Alt Mode 2) not yet implemented")
 		}
 	case 'C':
-		var ssc dg_word = 0
+		var ssc DgWordT = 0
 		if dpfData.mapEnabled {
 			ssc = 1 << 15
 		}
-		ssc |= (dg_word(dpfData.surface) & 0x1f) << 10
-		ssc |= (dg_word(dpfData.sector) & 0x1f) << 5
-		ssc |= (dg_word(dpfData.sectCnt) & 0x1f)
-		cpuPtr.ac[iPtr.acd] = dg_dword(ssc)
+		ssc |= (DgWordT(dpfData.surface) & 0x1f) << 10
+		ssc |= (DgWordT(dpfData.sector) & 0x1f) << 5
+		ssc |= (DgWordT(dpfData.sectCnt) & 0x1f)
+		cpuPtr.ac[iPtr.acd] = DgDwordT(ssc)
 		logging.DebugPrint(logging.DpfLog, "DPF DIC returning: %s\n", wordToBinStr(ssc))
 	}
 	dpfData.dpfMu.RUnlock()
@@ -289,19 +289,19 @@ func dpfDataOut(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 		dpfData.drive = extractDpfDriveNo(data)
 		dpfData.ema = extractDpfEMA(data)
 		if testWbit(data, 0) {
-			dpfData.rwStatus &= ^dg_word(DPF_RWDONE)
+			dpfData.rwStatus &= ^DgWordT(DPF_RWDONE)
 		}
 		if testWbit(data, 1) {
-			dpfData.rwStatus &= ^dg_word(DPF_DRIVE0DONE)
+			dpfData.rwStatus &= ^DgWordT(DPF_DRIVE0DONE)
 		}
 		if testWbit(data, 2) {
-			dpfData.rwStatus &= ^dg_word(DPF_DRIVE1DONE)
+			dpfData.rwStatus &= ^DgWordT(DPF_DRIVE1DONE)
 		}
 		if testWbit(data, 3) {
-			dpfData.rwStatus &= ^dg_word(DPF_DRIVE2DONE)
+			dpfData.rwStatus &= ^DgWordT(DPF_DRIVE2DONE)
 		}
 		if testWbit(data, 4) {
-			dpfData.rwStatus &= ^dg_word(DPF_DRIVE3DONE)
+			dpfData.rwStatus &= ^DgWordT(DPF_DRIVE3DONE)
 		}
 		dpfData.instructionMode = DPF_INS_MODE_NORMAL
 		if dpfData.command == DPF_CMD_SET_ALT_MODE_1 {
@@ -371,7 +371,7 @@ func dpfDataOut(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 func dpfDoCommand() {
 	var (
 		buffer = make([]byte, dpfBytesPerSect)
-		wd     dg_word
+		wd     DgWordT
 	)
 	dpfData.dpfMu.Lock()
 
@@ -443,8 +443,8 @@ func dpfDoCommand() {
 				log.Fatalf("ERROR: unexpected return from DPF Image File Read: %s", err)
 			}
 			for w := 0; w < dpfWordsPerSect; w++ {
-				wd = (dg_word(buffer[w*2]) << 8) | dg_word(buffer[(w*2)+1])
-				memWriteWordBmcChan(dg_phys_addr(dpfData.memAddr), wd)
+				wd = (DgWordT(buffer[w*2]) << 8) | DgWordT(buffer[(w*2)+1])
+				memWriteWordBmcChan(DgPhysAddrT(dpfData.memAddr), wd)
 				dpfData.memAddr++
 			}
 			dpfData.sector++
@@ -499,7 +499,7 @@ func dpfDoCommand() {
 			}
 			dpfPositionDiskImage()
 			for w := 0; w < dpfWordsPerSect; w++ {
-				wd = memReadWordBmcChan(dg_phys_addr(dpfData.memAddr))
+				wd = memReadWordBmcChan(DgPhysAddrT(dpfData.memAddr))
 				dpfData.memAddr++
 				buffer[w*2] = byte((wd & 0xff00) >> 8)
 				buffer[(w*2)+1] = byte(wd & 0x00ff)
@@ -597,23 +597,23 @@ func dpfReset() {
 	dpfData.dpfMu.Unlock()
 }
 
-func extractDpfCommand(word dg_word) int8 {
+func extractDpfCommand(word DgWordT) int8 {
 	return int8((word & 0x0780) >> 7)
 }
 
-func extractDpfDriveNo(word dg_word) uint8 {
+func extractDpfDriveNo(word DgWordT) uint8 {
 	return uint8((word & 0x60) >> 5)
 }
 
-func extractDpfEMA(word dg_word) uint8 {
+func extractDpfEMA(word DgWordT) uint8 {
 	return uint8(word & 0x1f)
 }
 
-func extractSector(word dg_word) uint8 {
+func extractSector(word DgWordT) uint8 {
 	return uint8((word & 0x03e0) >> 5)
 }
 
-func extractSectCnt(word dg_word) int8 {
+func extractSectCnt(word DgWordT) int8 {
 	tmpWd := word & 0x01f
 	if tmpWd != 0 { // sign-extend
 		tmpWd |= 0xe0
@@ -621,6 +621,6 @@ func extractSectCnt(word dg_word) int8 {
 	return int8(tmpWd)
 }
 
-func extractsurface(word dg_word) uint8 {
+func extractsurface(word DgWordT) uint8 {
 	return uint8((word & 0x7c00) >> 10)
 }

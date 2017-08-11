@@ -159,23 +159,23 @@ type dskpDataT struct {
 	imageFile     *os.File
 	reads, writes uint64
 	// DG data...
-	commandRegA, commandRegB, commandRegC dg_word
-	statusRegA, statusRegB, statusRegC    dg_word
-	mappingRegA, mappingRegB              dg_word
-	intInfBlock                           [DSKP_INT_INF_BLK_SIZE]dg_word
-	ctrlInfBlock                          [DSKP_CTRLR_INF_BLK_SIZE]dg_word
-	unitInfBlock                          [DSKP_UNIT_INF_BLK_SIZE]dg_word
+	commandRegA, commandRegB, commandRegC DgWordT
+	statusRegA, statusRegB, statusRegC    DgWordT
+	mappingRegA, mappingRegB              DgWordT
+	intInfBlock                           [DSKP_INT_INF_BLK_SIZE]DgWordT
+	ctrlInfBlock                          [DSKP_CTRLR_INF_BLK_SIZE]DgWordT
+	unitInfBlock                          [DSKP_UNIT_INF_BLK_SIZE]DgWordT
 	// cylinder, head, sector                dg_word
-	sectorNo dg_dword
+	sectorNo DgDwordT
 }
 
 const dskpStatsPeriodMs = 500 // Will send status update this often
 
 type dskpStatT struct {
 	imageAttached                      bool
-	statusRegA, statusRegB, statusRegC dg_word
+	statusRegA, statusRegB, statusRegC DgWordT
 	//	cylinder, head, sector             dg_word
-	sectorNo      dg_dword
+	sectorNo      DgDwordT
 	reads, writes uint64
 }
 
@@ -272,13 +272,13 @@ func dskpDataIn(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 	dskpData.dskpDataMu.Lock()
 	switch abc {
 	case 'A':
-		cpuPtr.ac[iPtr.acd] = dg_dword(dskpData.statusRegA)
+		cpuPtr.ac[iPtr.acd] = DgDwordT(dskpData.statusRegA)
 		logging.DebugPrint(logging.DskpLog, "DIA [Read Status A] returning %s for DRV=%d, PC: %d\n", wordToBinStr(dskpData.statusRegA), 0, cpuPtr.pc)
 	case 'B':
-		cpuPtr.ac[iPtr.acd] = dg_dword(dskpData.statusRegB)
+		cpuPtr.ac[iPtr.acd] = DgDwordT(dskpData.statusRegB)
 		logging.DebugPrint(logging.DskpLog, "DIB [Read Status B] returning %s for DRV=%d, PC: %d\n", wordToBinStr(dskpData.statusRegB), 0, cpuPtr.pc)
 	case 'C':
-		cpuPtr.ac[iPtr.acd] = dg_dword(dskpData.statusRegC)
+		cpuPtr.ac[iPtr.acd] = DgDwordT(dskpData.statusRegC)
 		logging.DebugPrint(logging.DskpLog, "DIC [Read Status C] returning %s for DRV=%d, PC: %d\n", wordToBinStr(dskpData.statusRegC), 0, cpuPtr.pc)
 	}
 	dskpData.dskpDataMu.Unlock()
@@ -314,7 +314,7 @@ func dskpDataOut(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 
 func dskpDoPioCommand() {
 
-	var addr, w dg_phys_addr
+	var addr, w DgPhysAddrT
 
 	pioCmd := dskpExtractPioCommand(dskpData.commandRegC)
 	switch pioCmd {
@@ -358,7 +358,7 @@ func dskpDoPioCommand() {
 		dskpSetPioStatusRegC(STAT_XEC_STATE_MAPPED, STAT_CCS_PIO_CMD_OK, DSKP_SET_MAPPING, testWbit(dskpData.commandRegC, 15))
 
 	case DSKP_GET_INTERFACE:
-		addr = dg_phys_addr(dwordFromTwoWords(dskpData.commandRegA, dskpData.commandRegB))
+		addr = DgPhysAddrT(dwordFromTwoWords(dskpData.commandRegA, dskpData.commandRegB))
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... GET INTERFACE INFO command\n")
 			logging.DebugPrint(logging.DskpLog, "... ... Destination Start Address: %d\n", addr)
@@ -372,7 +372,7 @@ func dskpDoPioCommand() {
 		dskpSetPioStatusRegC(0, STAT_CCS_PIO_CMD_OK, DSKP_GET_INTERFACE, testWbit(dskpData.commandRegC, 15))
 
 	case DSKP_SET_INTERFACE:
-		addr = dg_phys_addr(dwordFromTwoWords(dskpData.commandRegA, dskpData.commandRegB))
+		addr = DgPhysAddrT(dwordFromTwoWords(dskpData.commandRegA, dskpData.commandRegB))
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... SET INTERFACE INFO command\n")
 			logging.DebugPrint(logging.DskpLog, "... ... Origin Start Address: %d\n", addr)
@@ -392,7 +392,7 @@ func dskpDoPioCommand() {
 		dskpSetPioStatusRegC(0, STAT_CCS_PIO_CMD_OK, DSKP_SET_INTERFACE, testWbit(dskpData.commandRegC, 15))
 
 	case DSKP_GET_UNIT:
-		addr = dg_phys_addr(dwordFromTwoWords(dskpData.commandRegA, dskpData.commandRegB))
+		addr = DgPhysAddrT(dwordFromTwoWords(dskpData.commandRegA, dskpData.commandRegB))
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... GET UNIT INFO command\n")
 			logging.DebugPrint(logging.DskpLog, "... ... Destination Start Address: %d\n", addr)
@@ -406,7 +406,7 @@ func dskpDoPioCommand() {
 		dskpSetPioStatusRegC(0, STAT_CCS_PIO_CMD_OK, DSKP_GET_UNIT, testWbit(dskpData.commandRegC, 15))
 
 	case DSKP_SET_UNIT:
-		addr = dg_phys_addr(dwordFromTwoWords(dskpData.commandRegA, dskpData.commandRegB))
+		addr = DgPhysAddrT(dwordFromTwoWords(dskpData.commandRegA, dskpData.commandRegB))
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... SET UNIT INFO command\n")
 			logging.DebugPrint(logging.DskpLog, "... ... Origin Start Address: %d\n", addr)
@@ -423,7 +423,7 @@ func dskpDoPioCommand() {
 		dskpReset()
 
 	case DSKP_SET_CONTROLLER:
-		addr = dg_phys_addr(dwordFromTwoWords(dskpData.commandRegA, dskpData.commandRegB))
+		addr = DgPhysAddrT(dwordFromTwoWords(dskpData.commandRegA, dskpData.commandRegB))
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... SET CONTROLLER INFO command\n")
 			logging.DebugPrint(logging.DskpLog, "... ... Origin Start Address: %d\n", addr)
@@ -437,15 +437,15 @@ func dskpDoPioCommand() {
 		}
 
 	case DSKP_START_LIST:
-		addr = dg_phys_addr(dwordFromTwoWords(dskpData.commandRegA, dskpData.commandRegB))
+		addr = DgPhysAddrT(dwordFromTwoWords(dskpData.commandRegA, dskpData.commandRegB))
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... START LIST command\n")
 			logging.DebugPrint(logging.DskpLog, "... ..... First CB Address: %d\n", addr)
 		}
 		// TODO should check addr validity before starting processing
 		dskpProcessCB(addr)
-		dskpData.statusRegA = dwordGetUpperWord(dg_dword(addr)) // return address of 1st CB processed
-		dskpData.statusRegB = dwordGetLowerWord(dg_dword(addr))
+		dskpData.statusRegA = dwordGetUpperWord(DgDwordT(addr)) // return address of 1st CB processed
+		dskpData.statusRegB = dwordGetLowerWord(DgDwordT(addr))
 		//dskpSetPioStatusRegC(0, STAT_CCS_PIO_CMD_OK, DSKP_START_LIST, testWbit(dskpData.commandRegC, 15))
 
 	default:
@@ -453,7 +453,7 @@ func dskpDoPioCommand() {
 	}
 }
 
-func dskpExtractPioCommand(word dg_word) uint {
+func dskpExtractPioCommand(word DgWordT) uint {
 	res := uint((word & 01776) >> 1) // mask penultimate 9 bits
 	return res
 }
@@ -489,7 +489,7 @@ func dskpHandleFlag(f byte) {
 		// TODO clear pending interrupt
 		dskpSetPioStatusRegC(STAT_XEC_STATE_MAPPED,
 			STAT_CCS_PIO_CMD_OK,
-			dg_word(dskpExtractPioCommand(dskpData.commandRegC)),
+			DgWordT(dskpExtractPioCommand(dskpData.commandRegC)),
 			testWbit(dskpData.commandRegC, 15))
 		dskpData.dskpDataMu.Unlock()
 	case 'P':
@@ -513,16 +513,16 @@ func dskpPositionDiskImage() {
 	// TODO Set C/H/S???
 }
 
-func dskpProcessCB(addr dg_phys_addr) {
+func dskpProcessCB(addr DgPhysAddrT) {
 	var (
-		cb            [DSKP_CB_MAX_SIZE]dg_word
+		cb            [DSKP_CB_MAX_SIZE]DgWordT
 		w, cbLength   int
-		nextCB        dg_phys_addr
-		sect          dg_dword
+		nextCB        DgPhysAddrT
+		sect          DgDwordT
 		physTransfers bool
-		physAddr      dg_phys_addr
+		physAddr      DgPhysAddrT
 		buffer        = make([]byte, dskpBytesPerSector)
-		tmpWd         dg_word
+		tmpWd         DgWordT
 	)
 	cbLength = DSKP_CB_MIN_SIZE + dskpGetCBextendedStatusSize()
 	if dskpData.debug {
@@ -530,14 +530,14 @@ func dskpProcessCB(addr dg_phys_addr) {
 	}
 	// copy CB contents from host memory
 	for w = 0; w < cbLength; w++ {
-		cb[w] = memReadWordBmcChan(addr + dg_phys_addr(w))
+		cb[w] = memReadWordBmcChan(addr + DgPhysAddrT(w))
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... CB[%d]: %d\n", w, cb[w])
 		}
 	}
 
 	opCode := cb[DSKP_CB_INA_FLAGS_OPCODE] & 0x03ff
-	nextCB = dg_phys_addr(dwordFromTwoWords(cb[DSKP_CB_LINK_ADDR_HIGH], cb[DSKP_CB_LINK_ADDR_LOW]))
+	nextCB = DgPhysAddrT(dwordFromTwoWords(cb[DSKP_CB_LINK_ADDR_HIGH], cb[DSKP_CB_LINK_ADDR_LOW]))
 	if dskpData.debug {
 		logging.DebugPrint(logging.DskpLog, "... CB OpCode: %d\n", opCode)
 		logging.DebugPrint(logging.DskpLog, "... .. Next CB Addr: %d\n", nextCB)
@@ -572,7 +572,7 @@ func dskpProcessCB(addr dg_phys_addr) {
 			log.Fatal("DSKP - CB READ from premapped logical addresses  Not Yet Implemented")
 		} else {
 			physTransfers = true
-			physAddr = dg_phys_addr(dwordFromTwoWords(cb[DSKP_CB_TXFER_ADDR_HIGH], cb[DSKP_CB_TXFER_ADDR_LOW]))
+			physAddr = DgPhysAddrT(dwordFromTwoWords(cb[DSKP_CB_TXFER_ADDR_HIGH], cb[DSKP_CB_TXFER_ADDR_LOW]))
 		}
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... .. CB READ command, SECCNT: %d\n", cb[DSKP_CB_TXFER_COUNT])
@@ -580,13 +580,13 @@ func dskpProcessCB(addr dg_phys_addr) {
 			logging.DebugPrint(logging.DskpLog, "... .. .. .... from phys addr:  %d\n", physAddr)
 			logging.DebugPrint(logging.DskpLog, "... .. .. .... physical txfer?: %d\n", BoolToInt(physTransfers))
 		}
-		for sect = 0; sect < dg_dword(cb[DSKP_CB_TXFER_COUNT]); sect++ {
+		for sect = 0; sect < DgDwordT(cb[DSKP_CB_TXFER_COUNT]); sect++ {
 			dskpData.sectorNo += sect
 			dskpPositionDiskImage()
 			dskpData.imageFile.Read(buffer)
 			for w = 0; w < dskpWordsPerSector; w++ {
-				tmpWd = (dg_word(buffer[w*2]) << 8) | dg_word(buffer[(w*2)+1])
-				memWriteWordBmcChan(physAddr+(dg_phys_addr(sect)*dskpWordsPerSector)+dg_phys_addr(w), tmpWd)
+				tmpWd = (DgWordT(buffer[w*2]) << 8) | DgWordT(buffer[(w*2)+1])
+				memWriteWordBmcChan(physAddr+(DgPhysAddrT(sect)*dskpWordsPerSector)+DgPhysAddrT(w), tmpWd)
 			}
 			dskpData.reads++
 		}
@@ -615,7 +615,7 @@ func dskpProcessCB(addr dg_phys_addr) {
 			log.Fatal("DSKP - CB WRITE from premapped logical addresses  Not Yet Implemented")
 		} else {
 			physTransfers = true
-			physAddr = dg_phys_addr(dwordFromTwoWords(cb[DSKP_CB_TXFER_ADDR_HIGH], cb[DSKP_CB_TXFER_ADDR_LOW]))
+			physAddr = DgPhysAddrT(dwordFromTwoWords(cb[DSKP_CB_TXFER_ADDR_HIGH], cb[DSKP_CB_TXFER_ADDR_LOW]))
 		}
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... .. CB WRITE command, SECCNT: %d\n", cb[DSKP_CB_TXFER_COUNT])
@@ -623,11 +623,11 @@ func dskpProcessCB(addr dg_phys_addr) {
 			logging.DebugPrint(logging.DskpLog, "... .. .. ..... from phys addr:  %d\n", physAddr)
 			logging.DebugPrint(logging.DskpLog, "... .. .. ..... physical txfer?: %d\n", BoolToInt(physTransfers))
 		}
-		for sect = 0; sect < dg_dword(cb[DSKP_CB_TXFER_COUNT]); sect++ {
+		for sect = 0; sect < DgDwordT(cb[DSKP_CB_TXFER_COUNT]); sect++ {
 			dskpData.sectorNo += sect
 			dskpPositionDiskImage()
 			for w = 0; w < dskpWordsPerSector; w++ {
-				tmpWd = memReadWordBmcChan(physAddr + (dg_phys_addr(sect) * dskpWordsPerSector) + dg_phys_addr(w))
+				tmpWd = memReadWordBmcChan(physAddr + (DgPhysAddrT(sect) * dskpWordsPerSector) + DgPhysAddrT(w))
 				buffer[w*2] = byte(tmpWd >> 8)
 				buffer[(w*2)+1] = byte(tmpWd & 0x00ff)
 			}
@@ -655,7 +655,7 @@ func dskpProcessCB(addr dg_phys_addr) {
 	}
 	// write back CB
 	for w = 0; w < cbLength; w++ {
-		memWriteWordBmcChan(addr+dg_phys_addr(w), cb[w])
+		memWriteWordBmcChan(addr+DgPhysAddrT(w), cb[w])
 	}
 	// chain to next CB?
 	if nextCB != 0 {
@@ -705,21 +705,21 @@ func dskpResetMapping() {
 func dskpResetUnitInfBlock() {
 	dskpData.unitInfBlock[0] = 0
 	dskpData.unitInfBlock[1] = 9<<12 | dskpUcodeRev
-	dskpData.unitInfBlock[2] = dg_word(dskpLogicalBlocksH) // 17.
-	dskpData.unitInfBlock[3] = dg_word(dskpLogicalBlocksL) // 43840.
+	dskpData.unitInfBlock[2] = DgWordT(dskpLogicalBlocksH) // 17.
+	dskpData.unitInfBlock[3] = DgWordT(dskpLogicalBlocksL) // 43840.
 	dskpData.unitInfBlock[4] = dskpBytesPerSector
 	dskpData.unitInfBlock[5] = dskpUserCylinders
 	dskpData.unitInfBlock[6] = ((dskpSurfacesPerDisk * dskpHeadsPerSurface) << 8) | (0x00ff & dskpSectorsPerTrack)
 }
 
-func dskpSetAsyncStatusRegC(stat byte, asyncIntCode dg_word) {
-	dskpData.statusRegC = dg_word(stat) << 12
+func dskpSetAsyncStatusRegC(stat byte, asyncIntCode DgWordT) {
+	dskpData.statusRegC = DgWordT(stat) << 12
 	dskpData.statusRegC |= (asyncIntCode & 0x03ff)
 }
 
-func dskpSetPioStatusRegC(stat byte, ccs byte, cmdEcho dg_word, rr bool) {
-	dskpData.statusRegC = dg_word(stat) << 12
-	dskpData.statusRegC |= (dg_word(ccs) & 3) << 10
+func dskpSetPioStatusRegC(stat byte, ccs byte, cmdEcho DgWordT, rr bool) {
+	dskpData.statusRegC = DgWordT(stat) << 12
+	dskpData.statusRegC |= (DgWordT(ccs) & 3) << 10
 	dskpData.statusRegC |= (cmdEcho & 0x01ff) << 1
 	if rr {
 		dskpData.statusRegC |= 1

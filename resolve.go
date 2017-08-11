@@ -26,12 +26,12 @@ import (
 	"mvemg/logging"
 )
 
-func resolve16bitEclipseAddr(cpuPtr *CPU, ind byte, mode string, disp int16) dg_phys_addr {
+func resolve16bitEclipseAddr(cpuPtr *CPU, ind byte, mode string, disp int16) DgPhysAddrT {
 
 	var (
-		eff     dg_phys_addr
+		eff     DgPhysAddrT
 		intEff  int32
-		indAddr dg_word
+		indAddr DgWordT
 	)
 
 	// handle addressing mode...
@@ -48,15 +48,15 @@ func resolve16bitEclipseAddr(cpuPtr *CPU, ind byte, mode string, disp int16) dg_
 
 	// handle indirection
 	if ind == '@' { // down the rabbit hole...
-		indAddr = memReadWord(dg_phys_addr(intEff))
+		indAddr = memReadWord(DgPhysAddrT(intEff))
 		for testWbit(indAddr, 0) {
-			indAddr = memReadWord(dg_phys_addr(indAddr))
+			indAddr = memReadWord(DgPhysAddrT(indAddr))
 		}
 		intEff = int32(indAddr)
 	}
 
 	// mask off to Eclipse range
-	eff = dg_phys_addr(intEff) & 0x7fff
+	eff = DgPhysAddrT(intEff) & 0x7fff
 
 	if debugLogging {
 		logging.DebugPrint(logging.DebugLog, "... resolve16bitEclipseAddr got: %d., returning %d.\n", disp, eff)
@@ -65,12 +65,12 @@ func resolve16bitEclipseAddr(cpuPtr *CPU, ind byte, mode string, disp int16) dg_
 }
 
 // This is the same as resolve16bitEclipseAddr, but without the range masking at the end
-func resolve16bitEagleAddr(cpuPtr *CPU, ind byte, mode string, disp int16) dg_phys_addr {
+func resolve16bitEagleAddr(cpuPtr *CPU, ind byte, mode string, disp int16) DgPhysAddrT {
 
 	var (
-		eff     dg_phys_addr
+		eff     DgPhysAddrT
 		intEff  int32
-		indAddr dg_dword
+		indAddr DgDwordT
 	)
 
 	// handle addressing mode...
@@ -87,14 +87,14 @@ func resolve16bitEagleAddr(cpuPtr *CPU, ind byte, mode string, disp int16) dg_ph
 
 	// handle indirection
 	if ind == '@' { // down the rabbit hole...
-		indAddr = memReadDWord(dg_phys_addr(intEff))
+		indAddr = memReadDWord(DgPhysAddrT(intEff))
 		for testDWbit(indAddr, 0) {
-			indAddr = memReadDWord(dg_phys_addr(indAddr))
+			indAddr = memReadDWord(DgPhysAddrT(indAddr))
 		}
 		intEff = int32(indAddr)
 	}
 
-	eff = dg_phys_addr(intEff)
+	eff = DgPhysAddrT(intEff)
 
 	if debugLogging {
 		logging.DebugPrint(logging.DebugLog, "... resolve16bitEagleAddr got: %d., returning %d.\n", disp, eff)
@@ -103,35 +103,35 @@ func resolve16bitEagleAddr(cpuPtr *CPU, ind byte, mode string, disp int16) dg_ph
 }
 
 // Resolve32bitByteAddr returns the word address and low-byte flag for a given 32-bit byte address
-func resolve32bitByteAddr(byteAddr dg_dword) (wordAddr dg_phys_addr, loByte bool) {
-	wa := dg_phys_addr(byteAddr) >> 1
+func resolve32bitByteAddr(byteAddr DgDwordT) (wordAddr DgPhysAddrT, loByte bool) {
+	wa := DgPhysAddrT(byteAddr) >> 1
 	lb := testDWbit(byteAddr, 31)
 	return wa, lb
 }
 
-func resolve32bitEffAddr(cpuPtr *CPU, ind byte, mode string, disp int32) dg_phys_addr {
+func resolve32bitEffAddr(cpuPtr *CPU, ind byte, mode string, disp int32) DgPhysAddrT {
 
-	eff := dg_phys_addr(disp)
+	eff := DgPhysAddrT(disp)
 
 	// handle addressing mode...
 	switch mode {
 	case "Absolute":
 		// nothing to do
 	case "PC":
-		eff += dg_phys_addr(cpuPtr.pc)
+		eff += DgPhysAddrT(cpuPtr.pc)
 	case "AC2":
-		eff += dg_phys_addr(cpuPtr.ac[2])
+		eff += DgPhysAddrT(cpuPtr.ac[2])
 	case "AC3":
-		eff += dg_phys_addr(cpuPtr.ac[3])
+		eff += DgPhysAddrT(cpuPtr.ac[3])
 	}
 
 	// handle indirection
 	if ind == '@' { // down the rabbit hole...
 		indAddr := memReadDWord(eff)
 		for testDWbit(indAddr, 0) {
-			indAddr = memReadDWord(dg_phys_addr(indAddr))
+			indAddr = memReadDWord(DgPhysAddrT(indAddr))
 		}
-		eff = dg_phys_addr(indAddr)
+		eff = DgPhysAddrT(indAddr)
 	}
 
 	if debugLogging {
@@ -142,7 +142,7 @@ func resolve32bitEffAddr(cpuPtr *CPU, ind byte, mode string, disp int32) dg_phys
 
 // resolveEclipseBitAddr as per page 10-8 of Pop
 // Used by BTO, BTZ, SNB, SZB, SZBO
-func resolveEclipseBitAddr(cpuPtr *CPU, iPtr *decodedInstrT) (wordAddr dg_phys_addr, bitNum uint) {
+func resolveEclipseBitAddr(cpuPtr *CPU, iPtr *decodedInstrT) (wordAddr DgPhysAddrT, bitNum uint) {
 	// TODO handle segments and indirection
 	if iPtr.acd == iPtr.acs {
 		wordAddr = 0
@@ -150,9 +150,9 @@ func resolveEclipseBitAddr(cpuPtr *CPU, iPtr *decodedInstrT) (wordAddr dg_phys_a
 		if testDWbit(cpuPtr.ac[iPtr.acs], 0) {
 			log.Fatal("ERROR: Indirect 16-bit BIT pointers not yet supported")
 		}
-		wordAddr = dg_phys_addr(cpuPtr.ac[iPtr.acs]) & 0x7fff // mask off lower 15 bits
+		wordAddr = DgPhysAddrT(cpuPtr.ac[iPtr.acs]) & 0x7fff // mask off lower 15 bits
 	}
-	offset := (dg_phys_addr(cpuPtr.ac[iPtr.acd]) & 0x0000fff0) >> 4
+	offset := (DgPhysAddrT(cpuPtr.ac[iPtr.acd]) & 0x0000fff0) >> 4
 	wordAddr += offset // add unsigned offset
 	bitNum = uint(cpuPtr.ac[iPtr.acd] & 0x000f)
 	return wordAddr, bitNum

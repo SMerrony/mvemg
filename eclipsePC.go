@@ -8,9 +8,9 @@ import (
 
 func eclipsePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	var (
-		addr, inc      dg_phys_addr
+		addr, inc      DgPhysAddrT
 		acd, acs, h, l int16
-		wd             dg_word
+		wd             DgWordT
 		bit            uint
 	//dwd dg_dword
 	)
@@ -28,8 +28,8 @@ func eclipsePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 				inc = 4
 			}
 		} else {
-			l = int16(memReadWord(dg_phys_addr(dwordGetLowerWord(cpuPtr.ac[iPtr.acd]))))
-			h = int16(memReadWord(dg_phys_addr(dwordGetLowerWord(cpuPtr.ac[iPtr.acd]) + 1)))
+			l = int16(memReadWord(DgPhysAddrT(dwordGetLowerWord(cpuPtr.ac[iPtr.acd]))))
+			h = int16(memReadWord(DgPhysAddrT(dwordGetLowerWord(cpuPtr.ac[iPtr.acd]) + 1)))
 			if acs < l || acs > h {
 				inc = 1
 			} else {
@@ -53,8 +53,8 @@ func eclipsePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		if offset < lowLimit || offset > hiLimit {
 			log.Fatalf("ERROR: DPSA called with out of bounds offset %d", offset)
 		}
-		entry := tableStart - dg_phys_addr(lowLimit) + dg_phys_addr(offset)
-		addr = dg_phys_addr(memReadWord(entry))
+		entry := tableStart - DgPhysAddrT(lowLimit) + DgPhysAddrT(offset)
+		addr = DgPhysAddrT(memReadWord(entry))
 		if addr == 0xffffffff {
 			cpuPtr.pc += 2
 		} else {
@@ -77,7 +77,7 @@ func eclipsePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		cpuPtr.pc = addr
 
 	case "EJSR":
-		cpuPtr.ac[3] = dg_dword(cpuPtr.pc) + 2
+		cpuPtr.ac[3] = DgDwordT(cpuPtr.pc) + 2
 		addr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
 		cpuPtr.pc = addr
 

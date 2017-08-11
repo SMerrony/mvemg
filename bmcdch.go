@@ -46,7 +46,7 @@ const (
 	IOCMR_MK6 = 1 << 1
 )
 
-var regs [BMCDCH_REGS]dg_word
+var regs [BMCDCH_REGS]DgWordT
 
 func bmcdchInit() {
 	for r, _ := range regs {
@@ -69,32 +69,32 @@ func getDchMode() bool {
 	return testWbit(regs[IOCHAN_DEF_REG], 14)
 }
 
-func bmcdchWriteReg(reg int, data dg_word) {
+func bmcdchWriteReg(reg int, data DgWordT) {
 	logging.DebugPrint(logging.DebugLog, "bmcdchWriteReg: Reg %d, Data: %d\n", reg, data)
 	regs[reg] = data
 }
 
-func bmcdchWriteSlot(slot int, data dg_dword) {
+func bmcdchWriteSlot(slot int, data DgDwordT) {
 	logging.DebugPrint(logging.DebugLog, "bmcdch*Write*Slot: Slot %d, Data: %d\n", slot, data)
 	regs[slot*2] = dwordGetUpperWord(data)
 	regs[(slot*2)+1] = dwordGetLowerWord(data)
 }
 
-func bmcdchReadReg(reg int) dg_word {
+func bmcdchReadReg(reg int) DgWordT {
 	return regs[reg]
 }
 
-func bmcdchReadSlot(slot int) dg_dword {
+func bmcdchReadSlot(slot int) DgDwordT {
 	return dwordFromTwoWords(regs[slot*2], regs[(slot*2)+1])
 }
 
-func getBmcDchMapAddr(mAddr dg_phys_addr) (dg_phys_addr, dg_phys_addr) {
-	var page, slot, pAddr dg_phys_addr
+func getBmcDchMapAddr(mAddr DgPhysAddrT) (DgPhysAddrT, DgPhysAddrT) {
+	var page, slot, pAddr DgPhysAddrT
 	slot = mAddr >> 10
 	/*** TODO: at some point between 1980 and 1987 the lower 5 bits of the even word were
 	  prepended to the even word to extend the mappable space */
 	//page = ((regs[slot] & 0x1f) << 16) + (regs[slot+1] << 10);
-	page = dg_phys_addr(regs[(slot*2)+1]) << 10
+	page = DgPhysAddrT(regs[(slot*2)+1]) << 10
 	pAddr = (mAddr & 0x3ff) | page
 	logging.DebugPrint(logging.MapLog, "getBmcDchMapAddr got: %d, slot: %d, regs[slot*2+1]: %d, page: %d, returning: %d\n",
 		mAddr, slot, regs[(slot*2)+1], page, pAddr)
@@ -105,36 +105,36 @@ type bmcAddrT struct {
 	isLogical bool // is this a Physical(f) or Logical(t) address?
 
 	// physical addresses...
-	bk  byte         // bank selection bits (3-bit)
-	xca byte         // eXtended Channel Addr bits (3-bit)
-	ca  dg_phys_addr // Channel Addr (15-bit)
+	bk  byte        // bank selection bits (3-bit)
+	xca byte        // eXtended Channel Addr bits (3-bit)
+	ca  DgPhysAddrT // Channel Addr (15-bit)
 
 	// logical addresess..
-	tt   byte         // Translation Table (5-bit)
-	ttr  byte         // TT Register (5-bit)
-	plow dg_phys_addr // Page Low Order Word (10-bit)
+	tt   byte        // Translation Table (5-bit)
+	ttr  byte        // TT Register (5-bit)
+	plow DgPhysAddrT // Page Low Order Word (10-bit)
 }
 
-func decodeBmcAddr(bmcAddr dg_phys_addr) bmcAddrT {
+func decodeBmcAddr(bmcAddr DgPhysAddrT) bmcAddrT {
 	var (
-		inAddr dg_dword
+		inAddr DgDwordT
 		res    bmcAddrT
 	)
 
-	inAddr = dg_dword(bmcAddr << 10) // shift lest so we can use documented 21-bit numbering
+	inAddr = DgDwordT(bmcAddr << 10) // shift lest so we can use documented 21-bit numbering
 	res.isLogical = testDWbit(inAddr, 0)
 	if res.isLogical {
 		// Logical, or Mapped address...
 		res.tt = byte(getDWbits(inAddr, 2, 5))
 		res.ttr = byte(getDWbits(inAddr, 7, 5))
 		// for performance use the parm directly here...
-		res.plow = dg_phys_addr(bmcAddr & 0x3ff) // mask off 10 bits
+		res.plow = DgPhysAddrT(bmcAddr & 0x3ff) // mask off 10 bits
 	} else {
 		// Physical, or unmapped address..
 		res.bk = byte(getDWbits(inAddr, 1, 3))
 		res.xca = byte(getDWbits(inAddr, 4, 3))
 		// for performance use the parm directly here...
-		res.ca = dg_phys_addr(bmcAddr & 0x7fff) // mask off 15 bits
+		res.ca = DgPhysAddrT(bmcAddr & 0x7fff) // mask off 15 bits
 	}
 
 	return res

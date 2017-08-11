@@ -9,7 +9,7 @@ import (
 
 func eclipseMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	var (
-		addr dg_phys_addr
+		addr DgPhysAddrT
 	)
 
 	switch iPtr.mnemonic {
@@ -29,21 +29,21 @@ func eclipseMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 			logging.DebugPrint(logging.DebugLog, fmt.Sprintf("BLM moving %d words from %d to %d\n", numWds, src, dest))
 		}
 		for numWds != 0 {
-			memWriteWord(dg_phys_addr(dest), memReadWord(dg_phys_addr(src)))
+			memWriteWord(DgPhysAddrT(dest), memReadWord(DgPhysAddrT(src)))
 			numWds--
 			src++
 			dest++
 		}
 		cpuPtr.ac[1] = 0
-		cpuPtr.ac[2] = dg_dword(src + 1) // TODO confirm this is right, doc ambiguous
-		cpuPtr.ac[3] = dg_dword(dest + 1)
+		cpuPtr.ac[2] = DgDwordT(src + 1) // TODO confirm this is right, doc ambiguous
+		cpuPtr.ac[3] = DgDwordT(dest + 1)
 
 	case "CMP":
 		str2len := dwordGetLowerWord(cpuPtr.ac[0])
 		str1len := dwordGetLowerWord(cpuPtr.ac[1])
 		str1bp := dwordGetLowerWord(cpuPtr.ac[3])
 		str2bp := dwordGetLowerWord(cpuPtr.ac[2])
-		var byte1, byte2 dg_byte
+		var byte1, byte2 DgByteT
 		res := 0
 		for {
 			if str1len != 0 {
@@ -84,20 +84,20 @@ func eclipseMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 				break
 			}
 		}
-		cpuPtr.ac[0] = dg_dword(str2len)
-		cpuPtr.ac[1] = dg_dword(res)
-		cpuPtr.ac[2] = dg_dword(str2bp)
-		cpuPtr.ac[3] = dg_dword(str1bp)
+		cpuPtr.ac[0] = DgDwordT(str2len)
+		cpuPtr.ac[1] = DgDwordT(res)
+		cpuPtr.ac[2] = DgDwordT(str2bp)
+		cpuPtr.ac[3] = DgDwordT(str1bp)
 
 	case "ELDA":
 		addr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
-		cpuPtr.ac[iPtr.acd] = dg_dword(memReadWord(addr)) & 0x0ffff
+		cpuPtr.ac[iPtr.acd] = DgDwordT(memReadWord(addr)) & 0x0ffff
 
 	default:
 		log.Fatalf("ERROR: ECLIPSE_MEMREF instruction <%s> not yet implemented\n", iPtr.mnemonic)
 		return false
 	}
 
-	cpuPtr.pc += dg_phys_addr(iPtr.instrLength)
+	cpuPtr.pc += DgPhysAddrT(iPtr.instrLength)
 	return true
 }

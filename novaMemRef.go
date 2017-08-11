@@ -25,8 +25,8 @@ import "log"
 
 func novaMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
-	var shifter dg_word
-	var effAddr dg_phys_addr
+	var shifter DgWordT
+	var effAddr DgPhysAddrT
 
 	switch iPtr.mnemonic {
 
@@ -51,7 +51,7 @@ func novaMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	case "LDA":
 		effAddr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
 		shifter = memReadWord(effAddr)
-		cpuPtr.ac[iPtr.acd] = 0x0000ffff & dg_dword(shifter)
+		cpuPtr.ac[iPtr.acd] = 0x0000ffff & DgDwordT(shifter)
 
 	case "STA":
 		shifter = dwordGetLowerWord(cpuPtr.ac[iPtr.acd])

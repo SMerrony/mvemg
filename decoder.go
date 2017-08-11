@@ -49,8 +49,8 @@ type decodedInstrT struct {
 	immS16            int16
 	immU32            uint32
 	immS32            int32
-	immWord           dg_word
-	immDword          dg_dword
+	immWord           DgWordT
+	immDword          DgDwordT
 	argCount          int
 	bitNum            int
 	disassembly       string
@@ -62,7 +62,7 @@ var opCodeLookup [numPosOpcodes]string
 
 func decoderGenAllPossOpcodes() {
 	for opcode := 0; opcode < numPosOpcodes; opcode++ {
-		mnem, found := instructionFind2(dg_word(opcode), false, false, false)
+		mnem, found := instructionFind2(DgWordT(opcode), false, false, false)
 		if found {
 			opCodeLookup[opcode] = mnem
 		} else {
@@ -73,7 +73,7 @@ func decoderGenAllPossOpcodes() {
 
 // InsrtructionFind looks for the opcode in the instruction map and returns
 // the corresponding mnemonic
-func instructionFind(opcode dg_word, lefMode bool, ioOn bool, atuOn bool) (string, bool) {
+func instructionFind(opcode DgWordT, lefMode bool, ioOn bool, atuOn bool) (string, bool) {
 	if opCodeLookup[opcode] != "" {
 		if opCodeLookup[opcode] == "LEF" && lefMode {
 			return "", false
@@ -85,8 +85,8 @@ func instructionFind(opcode dg_word, lefMode bool, ioOn bool, atuOn bool) (strin
 
 // InsrtructionFind2 looks for the opcode in the instruction map and returns
 // the corresponding mnemonic
-func instructionFind2(opcode dg_word, lefMode bool, ioOn bool, atuOn bool) (string, bool) {
-	var tail dg_word
+func instructionFind2(opcode DgWordT, lefMode bool, ioOn bool, atuOn bool) (string, bool) {
+	var tail DgWordT
 	for mnem, insChar := range instructionSet {
 		if (opcode & insChar.mask) == insChar.bits {
 			// there are some exceptions to the normal decoding...
@@ -114,9 +114,9 @@ func instructionFind2(opcode dg_word, lefMode bool, ioOn bool, atuOn bool) (stri
 // N.B. For the moment this function both decodes and disassembles the given instruction,
 // for performance in the future these two tasks should probably either be separated or
 // controlled by flags passed into the function.
-func instructionDecode(opcode dg_word, pc dg_phys_addr, lefMode bool, ioOn bool, autOn bool) (*decodedInstrT, bool) {
+func instructionDecode(opcode DgWordT, pc DgPhysAddrT, lefMode bool, ioOn bool, autOn bool) (*decodedInstrT, bool) {
 	var decodedInstrT decodedInstrT
-	var secondWord, thirdWord, fourthWord dg_word
+	var secondWord, thirdWord, fourthWord DgWordT
 
 	decodedInstrT.disassembly = "; Unknown instruction"
 
@@ -249,7 +249,7 @@ func instructionDecode(opcode dg_word, pc dg_phys_addr, lefMode bool, ioOn bool,
 	case NOVA_NOACC_EFF_ADDR_FMT:
 		decodedInstrT.ind = decodeIndirect(testWbit(opcode, 5))
 		decodedInstrT.mode = decodeMode(getWbits(opcode, 6, 2))
-		decodedInstrT.disp15 = decode8bitDisp(dg_byte(opcode&0x00ff), decodedInstrT.mode) // NB
+		decodedInstrT.disp15 = decode8bitDisp(DgByteT(opcode&0x00ff), decodedInstrT.mode) // NB
 		decodedInstrT.disassembly += fmt.Sprintf(" %c%d.%s",
 			decodedInstrT.ind, decodedInstrT.disp15, modeToString(decodedInstrT.mode))
 
@@ -257,7 +257,7 @@ func instructionDecode(opcode dg_word, pc dg_phys_addr, lefMode bool, ioOn bool,
 		decodedInstrT.acd = int(getWbits(opcode, 3, 2))
 		decodedInstrT.ind = decodeIndirect(testWbit(opcode, 5))
 		decodedInstrT.mode = decodeMode(getWbits(opcode, 6, 2))
-		decodedInstrT.disp15 = decode8bitDisp(dg_byte(opcode&0x00ff), decodedInstrT.mode) // NB
+		decodedInstrT.disp15 = decode8bitDisp(DgByteT(opcode&0x00ff), decodedInstrT.mode) // NB
 		decodedInstrT.disassembly += fmt.Sprintf(" %d,%c%d.%s",
 			decodedInstrT.acd, decodedInstrT.ind, decodedInstrT.disp15, modeToString(decodedInstrT.mode))
 
@@ -361,9 +361,9 @@ func instructionDecode(opcode dg_word, pc dg_phys_addr, lefMode bool, ioOn bool,
 		decodedInstrT.disassembly += fmt.Sprintf(" %d,%d", decodedInstrT.acs, decodedInstrT.acd)
 
 	case SPLIT_8BIT_DISP_FMT: // eg. WBR, always a signed disp
-		tmp8bit := dg_byte(getWbits(opcode, 1, 4) & 0xff)
+		tmp8bit := DgByteT(getWbits(opcode, 1, 4) & 0xff)
 		tmp8bit = tmp8bit << 4
-		tmp8bit |= dg_byte(getWbits(opcode, 6, 4) & 0xff)
+		tmp8bit |= DgByteT(getWbits(opcode, 6, 4) & 0xff)
 		decodedInstrT.disp8 = int8(decode8bitDisp(tmp8bit, "PC"))
 		decodedInstrT.disassembly += fmt.Sprintf(" %d.", int32(decodedInstrT.disp8))
 
@@ -393,9 +393,9 @@ func instructionDecode(opcode dg_word, pc dg_phys_addr, lefMode bool, ioOn bool,
 		decodedInstrT.disassembly += fmt.Sprintf(" %d. [2-Word OpCode]", decodedInstrT.immU16)
 
 	case WSKB_FMT:
-		tmp8bit := dg_byte(getWbits(opcode, 1, 3) & 0xff)
+		tmp8bit := DgByteT(getWbits(opcode, 1, 3) & 0xff)
 		tmp8bit = tmp8bit << 2
-		tmp8bit |= dg_byte(getWbits(opcode, 10, 2) & 0xff)
+		tmp8bit |= DgByteT(getWbits(opcode, 10, 2) & 0xff)
 		decodedInstrT.bitNum = int(uint8(tmp8bit))
 		decodedInstrT.disassembly += fmt.Sprintf(" %d.", decodedInstrT.bitNum)
 
@@ -412,14 +412,14 @@ func instructionDecode(opcode dg_word, pc dg_phys_addr, lefMode bool, ioOn bool,
 
 var disp16 int16
 
-func decode2bitImm(i dg_word) uint16 {
+func decode2bitImm(i DgWordT) uint16 {
 	// to expand range (by 1!) 1 is subtracted from operand
 	return uint16(i + 1)
 }
 
 // Decode8BitDisp must return signed 16-bit as the result could be
 // either 8-bit signed or 8-bit unsigned
-func decode8bitDisp(d8 dg_byte, mode string) int16 {
+func decode8bitDisp(d8 DgByteT, mode string) int16 {
 	if mode == "Absolute" {
 		disp16 = int16(d8) & 0x00ff // unsigned offset
 	} else {
@@ -429,7 +429,7 @@ func decode8bitDisp(d8 dg_byte, mode string) int16 {
 	return disp16
 }
 
-func decode15bitDisp(d15 dg_word, mode string) int16 {
+func decode15bitDisp(d15 DgWordT, mode string) int16 {
 	if mode == "Absolute" {
 		disp16 = int16(d15 & 0x7fff) // zero extend
 	} else {
@@ -448,7 +448,7 @@ func decode15bitDisp(d15 dg_word, mode string) int16 {
 	return disp16
 }
 
-func decode15bitEclipseDisp(d15 dg_word, mode string) int16 {
+func decode15bitEclipseDisp(d15 DgWordT, mode string) int16 {
 	if mode == "Absolute" {
 		disp16 = int16(d15 & 0x7fff) // zero extend
 	} else {
@@ -467,7 +467,7 @@ func decode15bitEclipseDisp(d15 dg_word, mode string) int16 {
 	return disp16
 }
 
-func decode16bitByteDisp(d16 dg_word) (int16, bool) {
+func decode16bitByteDisp(d16 DgWordT) (int16, bool) {
 	loHi := testWbit(d16, 15)
 	disp16 = int16(d16 >> 1)
 	if debugLogging {
@@ -476,7 +476,7 @@ func decode16bitByteDisp(d16 dg_word) (int16, bool) {
 	return disp16, loHi
 }
 
-func decode31bitDisp(d1, d2 dg_word, mode string) int32 {
+func decode31bitDisp(d1, d2 DgWordT, mode string) int32 {
 	// FIXME Test this!
 	var disp32 int32
 	if testWbit(d1, 1) {
@@ -494,7 +494,7 @@ func decode31bitDisp(d1, d2 dg_word, mode string) int32 {
 	return disp32
 }
 
-func decodeCarry(cry dg_word) byte {
+func decodeCarry(cry DgWordT) byte {
 	switch cry {
 	case 0:
 		return ' '
@@ -515,15 +515,15 @@ func decodeIndirect(i bool) byte {
 	return ' '
 }
 
-func decodeIOFlags(fl dg_word) byte {
+func decodeIOFlags(fl DgWordT) byte {
 	return ioFlags[fl]
 }
 
-func decodeIOTest(t dg_word) string {
+func decodeIOTest(t DgWordT) string {
 	return ioTests[t]
 }
 
-func decodeMode(ix dg_word) string {
+func decodeMode(ix DgWordT) string {
 	return modes[ix]
 }
 
@@ -534,7 +534,7 @@ func decodeNoLoad(n bool) byte {
 	return ' '
 }
 
-func decodeShift(sh dg_word) byte {
+func decodeShift(sh DgWordT) byte {
 	switch sh {
 	case 0:
 		return ' '
@@ -548,7 +548,7 @@ func decodeShift(sh dg_word) byte {
 	return '*'
 }
 
-func decodeSkip(skp dg_word) string {
+func decodeSkip(skp DgWordT) string {
 	return skips[skp]
 }
 

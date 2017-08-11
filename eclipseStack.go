@@ -27,7 +27,7 @@ import (
 
 func eclipseStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	var (
-		addr                dg_phys_addr
+		addr                DgPhysAddrT
 		first, last, thisAc int
 	)
 	acsUp := [8]int{0, 1, 2, 3, 0, 1, 2, 3}
@@ -44,11 +44,11 @@ func eclipseStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 			if debugLogging {
 				logging.DebugPrint(logging.DebugLog, "... narrow popping AC%d\n", acsUp[thisAc])
 			}
-			cpuPtr.ac[acsUp[thisAc]] = dg_dword(nsPop(0))
+			cpuPtr.ac[acsUp[thisAc]] = DgDwordT(nsPop(0))
 		}
 
 	case "POPJ":
-		addr = dg_phys_addr(nsPop(0))
+		addr = DgPhysAddrT(nsPop(0))
 		cpuPtr.pc = addr
 		return true // because PC set
 
@@ -66,7 +66,7 @@ func eclipseStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		}
 
 	case "PSHJ":
-		nsPush(0, dg_word(cpuPtr.pc)+2)
+		nsPush(0, DgWordT(cpuPtr.pc)+2)
 		addr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
 		cpuPtr.pc = addr
 		return true // because PC set
@@ -76,12 +76,12 @@ func eclipseStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		memWriteWord(NSP_LOC, memReadWord(NFP_LOC)) // ???
 		word := nsPop(0)
 		cpuPtr.carry = testWbit(word, 0)
-		cpuPtr.pc = dg_phys_addr(word) & 0x7fff
+		cpuPtr.pc = DgPhysAddrT(word) & 0x7fff
 		//nfpSave := nsPop(0)               // 1
-		cpuPtr.ac[3] = dg_dword(nsPop(0)) // 2
-		cpuPtr.ac[2] = dg_dword(nsPop(0)) // 3
-		cpuPtr.ac[1] = dg_dword(nsPop(0)) // 4
-		cpuPtr.ac[0] = dg_dword(nsPop(0)) // 5
+		cpuPtr.ac[3] = DgDwordT(nsPop(0)) // 2
+		cpuPtr.ac[2] = DgDwordT(nsPop(0)) // 3
+		cpuPtr.ac[1] = DgDwordT(nsPop(0)) // 4
+		cpuPtr.ac[0] = DgDwordT(nsPop(0)) // 5
 		memWriteWord(NFP_LOC, dwordGetLowerWord(cpuPtr.ac[3]))
 		return true // because PC set
 
@@ -118,8 +118,8 @@ func eclipseStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 				nsPush(0, 0) // ...
 			}
 		}
-		cpuPtr.ac[3] = dg_dword(memReadWord(NSP_LOC)) // ???
-		memWriteWord(NFP_LOC, dg_word(cpuPtr.ac[3]))  // ???
+		cpuPtr.ac[3] = DgDwordT(memReadWord(NSP_LOC)) // ???
+		memWriteWord(NFP_LOC, DgWordT(cpuPtr.ac[3]))  // ???
 		memWriteWord(NSP_LOC, nspSav+5)
 		//cpuPtr.ac[3] = dg_dword(nspSav + 5)
 
@@ -128,6 +128,6 @@ func eclipseStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		return false
 	}
 
-	cpuPtr.pc += dg_phys_addr(iPtr.instrLength)
+	cpuPtr.pc += DgPhysAddrT(iPtr.instrLength)
 	return true
 }

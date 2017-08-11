@@ -30,8 +30,8 @@ import (
 // the characteristics of each instruction
 type instrChars struct {
 	// mnemonic   string  // DG standard assembler mnemonic for opcode
-	bits      dg_word // bit-pattern for opcode
-	mask      dg_word // mask for unique bits in opcode
+	bits      DgWordT // bit-pattern for opcode
+	mask      DgWordT // mask for unique bits in opcode
 	instrLen  int     // # of words in opcode and any following args
 	instrFmt  int     // opcode layout
 	instrType int     // class of opcode (somewhat arbitrary)

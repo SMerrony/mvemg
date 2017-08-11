@@ -28,11 +28,11 @@ import (
 func novaOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	var (
-		shifter          dg_word
-		wideShifter      dg_dword
-		tmpAcS, tmpAcD   dg_word
+		shifter          DgWordT
+		wideShifter      DgDwordT
+		tmpAcS, tmpAcD   DgWordT
 		savedCry, tmpCry bool
-		pcInc            dg_phys_addr
+		pcInc            DgPhysAddrT
 	)
 
 	tmpAcS = dwordGetLowerWord(cpuPtr.ac[iPtr.acs])
@@ -52,7 +52,7 @@ func novaOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	// perform the operation
 	switch iPtr.mnemonic {
 	case "ADC":
-		wideShifter = dg_dword(tmpAcD) + dg_dword(^tmpAcS)
+		wideShifter = DgDwordT(tmpAcD) + DgDwordT(^tmpAcS)
 		shifter = dwordGetLowerWord(wideShifter)
 		if wideShifter > 65535 {
 			cpuPtr.carry = !cpuPtr.carry
@@ -61,7 +61,7 @@ func novaOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		}
 
 	case "ADD": // unsigned
-		wideShifter = dg_dword(tmpAcD) + dg_dword(tmpAcS)
+		wideShifter = DgDwordT(tmpAcD) + DgDwordT(tmpAcS)
 		shifter = dwordGetLowerWord(wideShifter)
 		if wideShifter > 65535 {
 			cpuPtr.carry = !cpuPtr.carry
@@ -85,7 +85,7 @@ func novaOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		shifter = tmpAcS
 
 	case "NEG":
-		shifter = dg_word(-int16(tmpAcS))
+		shifter = DgWordT(-int16(tmpAcS))
 		if tmpAcS == 0 {
 			cpuPtr.carry = !cpuPtr.carry
 		}
@@ -168,7 +168,7 @@ func novaOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	// No-Load?
 	if iPtr.nl != '#' {
-		cpuPtr.ac[iPtr.acd] = dg_dword(shifter) & 0x0000ffff
+		cpuPtr.ac[iPtr.acd] = DgDwordT(shifter) & 0x0000ffff
 	} else {
 		// don't load the result from the shifter, restore the Carry flag
 		cpuPtr.carry = savedCry

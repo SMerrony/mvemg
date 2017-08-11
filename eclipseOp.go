@@ -28,10 +28,10 @@ import (
 
 func eclipseOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	var (
-		addr   dg_phys_addr
-		byt    dg_byte
-		wd     dg_word
-		dwd    dg_dword
+		addr   DgPhysAddrT
+		byt    DgByteT
+		wd     DgWordT
+		dwd    DgDwordT
 		bitNum uint
 	)
 
@@ -39,8 +39,8 @@ func eclipseOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	case "ADI": // 16-bit unsigned Add Immediate
 		wd = dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
-		wd += dg_word(iPtr.immU16) // unsigned arithmetic does wraparound in Go
-		cpuPtr.ac[iPtr.acd] = dg_dword(wd)
+		wd += DgWordT(iPtr.immU16) // unsigned arithmetic does wraparound in Go
+		cpuPtr.ac[iPtr.acd] = DgDwordT(wd)
 
 	case "BTO":
 		// TODO Handle segment and indirection...
@@ -79,8 +79,8 @@ func eclipseOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 			cpuPtr.carry = true
 		} else {
 			cpuPtr.carry = false
-			cpuPtr.ac[0] = (dwd % dg_dword(quot)) & 0x0ffff
-			cpuPtr.ac[1] = (dwd / dg_dword(quot)) & 0x0ffff
+			cpuPtr.ac[0] = (dwd % DgDwordT(quot)) & 0x0ffff
+			cpuPtr.ac[1] = (dwd / DgDwordT(quot)) & 0x0ffff
 		}
 
 	case "DLSH":
@@ -89,11 +89,11 @@ func eclipseOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 			dplus1 = 0
 		}
 		dwd = dlsh(cpuPtr.ac[iPtr.acs], cpuPtr.ac[iPtr.acd], cpuPtr.ac[dplus1])
-		cpuPtr.ac[iPtr.acd] = dg_dword(dwordGetUpperWord(dwd))
-		cpuPtr.ac[dplus1] = dg_dword(dwordGetLowerWord(dwd))
+		cpuPtr.ac[iPtr.acd] = DgDwordT(dwordGetUpperWord(dwd))
+		cpuPtr.ac[dplus1] = DgDwordT(dwordGetLowerWord(dwd))
 
 	case "ELEF":
-		cpuPtr.ac[iPtr.acd] = dg_dword(resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15))
+		cpuPtr.ac[iPtr.acd] = DgDwordT(resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15))
 
 	case "ESTA":
 		addr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
@@ -109,15 +109,15 @@ func eclipseOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	case "IOR":
 		wd = dwordGetLowerWord(cpuPtr.ac[iPtr.acd]) | dwordGetLowerWord(cpuPtr.ac[iPtr.acs])
-		cpuPtr.ac[iPtr.acd] = dg_dword(wd)
+		cpuPtr.ac[iPtr.acd] = DgDwordT(wd)
 
 	case "IORI":
 		wd = dwordGetLowerWord(cpuPtr.ac[iPtr.acd]) | iPtr.immWord
-		cpuPtr.ac[iPtr.acd] = dg_dword(wd)
+		cpuPtr.ac[iPtr.acd] = DgDwordT(wd)
 
 	case "LDB":
 		byt = memReadByteEclipseBA(dwordGetLowerWord(cpuPtr.ac[iPtr.acs]))
-		cpuPtr.ac[iPtr.acd] = dg_dword(byt)
+		cpuPtr.ac[iPtr.acd] = DgDwordT(byt)
 
 	case "LSH":
 		cpuPtr.ac[iPtr.acd] = lsh(cpuPtr.ac[iPtr.acs], cpuPtr.ac[iPtr.acd])
@@ -126,22 +126,22 @@ func eclipseOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		ac0 := dwordGetLowerWord(cpuPtr.ac[0])
 		ac1 := dwordGetLowerWord(cpuPtr.ac[1])
 		ac2 := dwordGetLowerWord(cpuPtr.ac[2])
-		dwd := (dg_dword(ac1) * dg_dword(ac2)) + dg_dword(ac0)
-		cpuPtr.ac[0] = dg_dword(dwordGetUpperWord(dwd))
-		cpuPtr.ac[1] = dg_dword(dwordGetLowerWord(dwd))
+		dwd := (DgDwordT(ac1) * DgDwordT(ac2)) + DgDwordT(ac0)
+		cpuPtr.ac[0] = DgDwordT(dwordGetUpperWord(dwd))
+		cpuPtr.ac[1] = DgDwordT(dwordGetLowerWord(dwd))
 
 	case "SBI": // unsigned
 		wd = dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
 		if iPtr.immU16 < 1 || iPtr.immU16 > 4 {
 			log.Fatal("Invalid immediate value in SBI")
 		}
-		wd -= dg_word(iPtr.immU16)
-		cpuPtr.ac[iPtr.acd] = dg_dword(wd)
+		wd -= DgWordT(iPtr.immU16)
+		cpuPtr.ac[iPtr.acd] = DgDwordT(wd)
 
 	case "STB":
 		hiLo := testDWbit(cpuPtr.ac[iPtr.acs], 31)
-		addr = dg_phys_addr(dwordGetLowerWord(cpuPtr.ac[iPtr.acs])) >> 1
-		byt = dg_byte(cpuPtr.ac[iPtr.acd])
+		addr = DgPhysAddrT(dwordGetLowerWord(cpuPtr.ac[iPtr.acs])) >> 1
+		byt = DgByteT(cpuPtr.ac[iPtr.acd])
 		memWriteByte(addr, hiLo, byt)
 
 	case "XCH":
@@ -154,11 +154,11 @@ func eclipseOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		return false
 	}
 
-	cpuPtr.pc += dg_phys_addr(iPtr.instrLength)
+	cpuPtr.pc += DgPhysAddrT(iPtr.instrLength)
 	return true
 }
 
-func dlsh(acS, acDh, acDl dg_dword) dg_dword {
+func dlsh(acS, acDh, acDl DgDwordT) DgDwordT {
 	var shft = int8(acS)
 	var dwd = dwordFromTwoWords(dwordGetLowerWord(acDh), dwordGetLowerWord(acDl))
 	if shft != 0 {
@@ -176,7 +176,7 @@ func dlsh(acS, acDh, acDl dg_dword) dg_dword {
 	return dwd
 }
 
-func lsh(acS, acD dg_dword) dg_dword {
+func lsh(acS, acD DgDwordT) DgDwordT {
 	var shft = int8(acS)
 	var wd = dwordGetLowerWord(acD)
 	if shft == 0 {
@@ -193,5 +193,5 @@ func lsh(acS, acD dg_dword) dg_dword {
 			}
 		}
 	}
-	return dg_dword(wd)
+	return DgDwordT(wd)
 }

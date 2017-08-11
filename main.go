@@ -48,14 +48,14 @@ const (
 )
 
 type (
-	// a DG Word is 16-bit unsigned
-	dg_word uint16
-	// a DG Double-Word is 32-bit unsigned
-	dg_dword uint32
-	// a DG Byte is 8-bit unsigned
-	dg_byte byte
-	// a physical address is 32-bit unsigned
-	dg_phys_addr uint32
+	// DgWordT - a DG Word is 16-bit unsigned
+	DgWordT uint16
+	// DgDwordT - a DG Double-Word is 32-bit unsigned
+	DgDwordT uint32
+	// DgByteT - a DG Byte is 8-bit unsigned
+	DgByteT byte
+	// DgPhysAddrT - a physical address is 32-bit unsigned
+	DgPhysAddrT uint32
 )
 
 var p interface {
@@ -64,7 +64,7 @@ var p interface {
 
 var (
 	debugLogging  = true
-	breakpoints   []dg_phys_addr
+	breakpoints   []DgPhysAddrT
 	cpuStatsChan  chan cpuStatT
 	dpfStatsChan  chan dpfStatT
 	dskpStatsChan chan dskpStatT
@@ -319,7 +319,7 @@ func breakSet(cmd []string) {
 		ttoPutNLString(" *** BREAK command could not parse <address> argument ***")
 		return
 	}
-	breakpoints = append(breakpoints, dg_phys_addr(pAddr))
+	breakpoints = append(breakpoints, DgPhysAddrT(pAddr))
 	ttoPutNLString("BREAKpoint set")
 }
 
@@ -351,9 +351,9 @@ func createBlank(cmd []string) {
 func disassemble(cmd []string) {
 	var (
 		cmd1              = cmd[1]
-		lowAddr, highAddr dg_phys_addr
-		word              dg_word
-		byte1, byte2      dg_byte
+		lowAddr, highAddr DgPhysAddrT
+		word              DgWordT
+		byte1, byte2      DgByteT
 		display           string
 		skipDecode        int
 	)
@@ -364,9 +364,9 @@ func disassemble(cmd []string) {
 	}
 	if cmd1[0] == '+' {
 		lowAddr = cpu.pc
-		highAddr = lowAddr + dg_phys_addr(intVal1)
+		highAddr = lowAddr + DgPhysAddrT(intVal1)
 	} else {
-		lowAddr = dg_phys_addr(intVal1)
+		lowAddr = DgPhysAddrT(intVal1)
 		if len(cmd) == 2 {
 			highAddr = lowAddr
 		} else {
@@ -375,7 +375,7 @@ func disassemble(cmd []string) {
 				ttoPutNLString(" *** Invalid address ***")
 				return
 			}
-			highAddr = dg_phys_addr(intVal2)
+			highAddr = DgPhysAddrT(intVal2)
 		}
 	}
 	if highAddr < lowAddr {
@@ -384,8 +384,8 @@ func disassemble(cmd []string) {
 	}
 	for addr := lowAddr; addr <= highAddr; addr++ {
 		word = memReadWord(addr)
-		byte1 = dg_byte(word >> 8)
-		byte2 = dg_byte(word & 0x00ff)
+		byte1 = DgByteT(word >> 8)
+		byte2 = DgByteT(word & 0x00ff)
 		display = fmt.Sprintf("%09d: %02X %02X %03o %03o %s \"", addr, byte1, byte2, byte1, byte2, wordToBinStr(word))
 		if byte1 >= ' ' && byte1 <= '~' {
 			display += string(byte1)
@@ -507,7 +507,7 @@ func singleStep() {
 // The main Emulator running loop...
 func run() {
 	var (
-		thisOp    dg_word
+		thisOp    DgWordT
 		iPtr      *decodedInstrT
 		ok        bool
 		errDetail string

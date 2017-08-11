@@ -48,7 +48,7 @@ const (
 )
 
 type memoryT struct {
-	ram                 [MEM_SIZE_WORDS]dg_word
+	ram                 [MEM_SIZE_WORDS]DgWordT
 	atuEnabled          bool
 	pushCount, popCount int
 }
@@ -63,52 +63,52 @@ func memInit() {
 }
 
 // read a byte from memory using word address and low-byte flag (true => lower (rightmost) byte)
-func memReadByte(wordAddr dg_phys_addr, loByte bool) dg_byte {
-	var res dg_byte
+func memReadByte(wordAddr DgPhysAddrT, loByte bool) DgByteT {
+	var res DgByteT
 	wd := memReadWord(wordAddr)
 	if loByte {
-		res = dg_byte(wd & 0xff)
+		res = DgByteT(wd & 0xff)
 	} else {
-		res = dg_byte(wd >> 8)
+		res = DgByteT(wd >> 8)
 	}
 	return res
 }
 
-func memReadByteEclipseBA(byteAddr16 dg_word) dg_byte {
+func memReadByteEclipseBA(byteAddr16 DgWordT) DgByteT {
 	var (
 		hiLo bool
-		addr dg_phys_addr
+		addr DgPhysAddrT
 	)
 	hiLo = testWbit(byteAddr16, 15) // determine which byte to get
-	addr = dg_phys_addr(byteAddr16) >> 1
+	addr = DgPhysAddrT(byteAddr16) >> 1
 	return memReadByte(addr, hiLo)
 }
 
-func memWriteByte(wordAddr dg_phys_addr, loByte bool, b dg_byte) {
+func memWriteByte(wordAddr DgPhysAddrT, loByte bool, b DgByteT) {
 	// if wordAddr == 2891 {
 	// 	debug.PrintStack()
 	// }
 	wd := memory.ram[wordAddr]
 	if loByte {
-		wd = (wd & 0xff00) | dg_word(b)
+		wd = (wd & 0xff00) | DgWordT(b)
 	} else {
-		wd = dg_word(b)<<8 | (wd & 0x00ff)
+		wd = DgWordT(b)<<8 | (wd & 0x00ff)
 	}
 	memWriteWord(wordAddr, wd)
 }
 
-func memReadByteBA(ba dg_dword) dg_byte {
+func memReadByteBA(ba DgDwordT) DgByteT {
 	wordAddr, lowByte := resolve32bitByteAddr(ba)
 	return memReadByte(wordAddr, lowByte)
 }
 
 // MemWriteByte writes the supplied byte to the address derived from the given byte addr
-func memWriteByteBA(b dg_byte, ba dg_dword) {
+func memWriteByteBA(b DgByteT, ba DgDwordT) {
 	wordAddr, lowByte := resolve32bitByteAddr(ba)
 	memWriteByte(wordAddr, lowByte, b)
 }
 
-func memCopyByte(srcBA, destBA dg_dword) {
+func memCopyByte(srcBA, destBA DgDwordT) {
 	memWriteByteBA(memReadByteBA(srcBA), destBA)
 }
 
@@ -116,7 +116,7 @@ func debugCatcher() {
 	debug.PrintStack()
 }
 
-func memReadWord(wordAddr dg_phys_addr) dg_word {
+func memReadWord(wordAddr DgPhysAddrT) DgWordT {
 
 	if wordAddr >= MEM_SIZE_WORDS {
 		log.Fatalf("ERROR: Attempt to read word beyond end of physical memory using address: %d", wordAddr)
@@ -124,7 +124,7 @@ func memReadWord(wordAddr dg_phys_addr) dg_word {
 	return memory.ram[wordAddr]
 }
 
-func memReadWordDchChan(addr dg_phys_addr) dg_word {
+func memReadWordDchChan(addr DgPhysAddrT) DgWordT {
 	pAddr := addr
 	if getDchMode() {
 		pAddr, _ = getBmcDchMapAddr(addr)
@@ -133,8 +133,8 @@ func memReadWordDchChan(addr dg_phys_addr) dg_word {
 	return memReadWord(pAddr)
 }
 
-func memReadWordBmcChan(addr dg_phys_addr) dg_word {
-	var pAddr dg_phys_addr
+func memReadWordBmcChan(addr DgPhysAddrT) DgWordT {
+	var pAddr DgPhysAddrT
 	decodedAddr := decodeBmcAddr(addr)
 	if decodedAddr.isLogical {
 		pAddr, _ = getBmcDchMapAddr(addr) // FIXME
@@ -147,7 +147,7 @@ func memReadWordBmcChan(addr dg_phys_addr) dg_word {
 
 // memWriteWord - ALL memory-writing should ultimately go through this function
 // N.B. minor exceptions may be made for nsPush() and nsPop()
-func memWriteWord(wordAddr dg_phys_addr, datum dg_word) {
+func memWriteWord(wordAddr DgPhysAddrT, datum DgWordT) {
 	// if wordAddr == 2891 {
 	// 	debugCatcher()
 	// }
@@ -157,7 +157,7 @@ func memWriteWord(wordAddr dg_phys_addr, datum dg_word) {
 	memory.ram[wordAddr] = datum
 }
 
-func memWriteWordDchChan(addr dg_phys_addr, data dg_word) dg_phys_addr {
+func memWriteWordDchChan(addr DgPhysAddrT, data DgWordT) DgPhysAddrT {
 	pAddr := addr
 
 	if getDchMode() {
@@ -168,8 +168,8 @@ func memWriteWordDchChan(addr dg_phys_addr, data dg_word) dg_phys_addr {
 	return pAddr
 }
 
-func memWriteWordBmcChan(addr dg_phys_addr, data dg_word) dg_phys_addr {
-	var pAddr dg_phys_addr
+func memWriteWordBmcChan(addr DgPhysAddrT, data DgWordT) DgPhysAddrT {
+	var pAddr DgPhysAddrT
 	decodedAddr := decodeBmcAddr(addr)
 	if decodedAddr.isLogical {
 		pAddr, _ = getBmcDchMapAddr(addr) // FIXME
@@ -181,18 +181,18 @@ func memWriteWordBmcChan(addr dg_phys_addr, data dg_word) dg_phys_addr {
 	return pAddr
 }
 
-func memReadDWord(wordAddr dg_phys_addr) dg_dword {
+func memReadDWord(wordAddr DgPhysAddrT) DgDwordT {
 	if wordAddr >= MEM_SIZE_WORDS {
 		log.Fatalf("ERROR: Attempt to read doubleword beyond end of physical memory using address: %d", wordAddr)
 	}
-	var dword dg_dword
+	var dword DgDwordT
 	//dword = dg_dword(memory.ram[wordAddr]) << 16
 	//dword = dword | dg_dword(memory.ram[wordAddr+1])
 	dword = dwordFromTwoWords(memory.ram[wordAddr], memory.ram[wordAddr+1])
 	return dword
 }
 
-func memWriteDWord(wordAddr dg_phys_addr, dwd dg_dword) {
+func memWriteDWord(wordAddr DgPhysAddrT, dwd DgDwordT) {
 	if wordAddr >= MEM_SIZE_WORDS {
 		log.Fatalf("ERROR: Attempt to write doubleword beyond end of physical memory using address: %d", wordAddr)
 	}
@@ -201,20 +201,20 @@ func memWriteDWord(wordAddr dg_phys_addr, dwd dg_dword) {
 }
 
 // PUSH a word onto the Narrow Stack
-func nsPush(seg dg_phys_addr, data dg_word) {
+func nsPush(seg DgPhysAddrT, data DgWordT) {
 	// TODO segment handling
 	// TODO overflow/underflow handling - either here or in instruction?
 	memory.ram[NSP_LOC]++ // we allow this direct write to a fixed location for performance
-	addr := dg_phys_addr(memory.ram[NSP_LOC])
+	addr := DgPhysAddrT(memory.ram[NSP_LOC])
 	memWriteWord(addr, data)
 	logging.DebugPrint(logging.DebugLog, "... nsPush pushed %8d onto the Narrow Stack at location: %d\n", data, addr)
 }
 
 // POP a word off the Narrow Stack
-func nsPop(seg dg_phys_addr) dg_word {
+func nsPop(seg DgPhysAddrT) DgWordT {
 	// TODO segment handling
 	// TODO overflow/underflow handling - either here or in instruction?
-	addr := dg_phys_addr(memory.ram[NSP_LOC])
+	addr := DgPhysAddrT(memory.ram[NSP_LOC])
 	data := memReadWord(addr)
 	logging.DebugPrint(logging.DebugLog, "... nsPop  popped %8d off  the Narrow Stack at location: %d\n", data, addr)
 	memory.ram[NSP_LOC]-- // we allow this direct write to a fixed location for performance
@@ -222,21 +222,21 @@ func nsPop(seg dg_phys_addr) dg_word {
 }
 
 // PUSH a doubleword onto the Wide Stack
-func wsPush(seg dg_phys_addr, data dg_dword) {
+func wsPush(seg DgPhysAddrT, data DgDwordT) {
 	// TODO segment handling
 	// TODO overflow/underflow handling - either here or in instruction?
 	wsp := memReadDWord(WSP_LOC) + 2
 	memWriteDWord(WSP_LOC, wsp)
-	memWriteDWord(dg_phys_addr(wsp), data)
+	memWriteDWord(DgPhysAddrT(wsp), data)
 	logging.DebugPrint(logging.DebugLog, "... wsPush pushed %8d onto the Wide Stack at location: %d\n", data, wsp)
 }
 
 // POP a word off the Wide Stack
-func wsPop(seg dg_phys_addr) dg_dword {
+func wsPop(seg DgPhysAddrT) DgDwordT {
 	// TODO segment handling
 	// TODO overflow/underflow handling - either here or in instruction?
 	wsp := memReadDWord(WSP_LOC)
-	dword := memReadDWord(dg_phys_addr(wsp))
+	dword := memReadDWord(DgPhysAddrT(wsp))
 	memWriteDWord(WSP_LOC, wsp-2)
 	logging.DebugPrint(logging.DebugLog, "... wsPop  popped %8d off  the Wide Stack at location: %d\n", dword, wsp)
 	return dword
@@ -244,7 +244,7 @@ func wsPop(seg dg_phys_addr) dg_dword {
 
 // AdvanceWSP increases the WSP by the given amount of DWords
 func AdvanceWSP(dwdCnt uint) {
-	wsp := memReadDWord(WSP_LOC) + dg_dword(dwdCnt*2)
+	wsp := memReadDWord(WSP_LOC) + DgDwordT(dwdCnt*2)
 	memWriteDWord(WSP_LOC, wsp)
 	logging.DebugPrint(logging.DebugLog, "... WSP advanced by %d DWords to %d\n", dwdCnt, wsp)
 }
@@ -285,22 +285,22 @@ func boolToOZ(b bool) byte {
 
 // dwordGetLowerWord gets the DG-lower word of a doubleword
 // Called VERY often, hopefully inlined!
-func dwordGetLowerWord(dwd dg_dword) dg_word {
-	return dg_word(dwd) // & 0x0000ffff mask unneccessary
+func dwordGetLowerWord(dwd DgDwordT) DgWordT {
+	return DgWordT(dwd) // & 0x0000ffff mask unneccessary
 }
 
-func dwordGetUpperWord(dwd dg_dword) dg_word {
-	return dg_word(dwd >> 16)
+func dwordGetUpperWord(dwd DgDwordT) DgWordT {
+	return DgWordT(dwd >> 16)
 }
 
-func dwordFromTwoWords(hw dg_word, lw dg_word) dg_dword {
-	return dg_dword(hw)<<16 | dg_dword(lw)
+func dwordFromTwoWords(hw DgWordT, lw DgWordT) DgDwordT {
+	return DgDwordT(hw)<<16 | DgDwordT(lw)
 }
 
 // in the DG world, the first (leftmost) bit is numbered zero...
 // extract nbits from value starting at leftBit
-func getWbits(value dg_word, leftBit int, nbits int) dg_word {
-	var res dg_word
+func getWbits(value DgWordT, leftBit int, nbits int) DgWordT {
+	var res DgWordT
 	rightBit := leftBit + nbits
 	for b := leftBit; b < rightBit; b++ {
 		res = res << 1
@@ -312,19 +312,19 @@ func getWbits(value dg_word, leftBit int, nbits int) dg_word {
 }
 
 // SetWbit sets a single bit in a DG word
-func SetWbit(word dg_word, bitNum uint) dg_word {
+func SetWbit(word DgWordT, bitNum uint) DgWordT {
 	return word | 1<<(15-bitNum)
 }
 
 // ClearWbit clears a single bit in a DG word
-func ClearWbit(word dg_word, bitNum uint) dg_word {
+func ClearWbit(word DgWordT, bitNum uint) DgWordT {
 	return word ^ 1<<(15-bitNum)
 }
 
 // in the DG world, the first (leftmost) bit is numbered zero...
 // extract nbits from value starting at leftBit
-func getDWbits(value dg_dword, leftBit int, nbits int) dg_dword {
-	var res dg_dword
+func getDWbits(value DgDwordT, leftBit int, nbits int) DgDwordT {
+	var res DgDwordT
 	rightBit := leftBit + nbits
 	for b := leftBit; b < rightBit; b++ {
 		res = res << 1
@@ -336,19 +336,19 @@ func getDWbits(value dg_dword, leftBit int, nbits int) dg_dword {
 }
 
 // sign-extend a DG word to a DG DoubleWord
-func sexWordToDWord(wd dg_word) dg_dword {
-	var dwd dg_dword
+func sexWordToDWord(wd DgWordT) DgDwordT {
+	var dwd DgDwordT
 	if testWbit(wd, 0) {
-		dwd = dg_dword(wd) | 0xffff0000
+		dwd = DgDwordT(wd) | 0xffff0000
 	} else {
-		dwd = dg_dword(wd) & 0x0000ffff
+		dwd = DgDwordT(wd) & 0x0000ffff
 	}
 	return dwd
 }
 
 // swap over the two bytes in a dg_word
-func swapBytes(wd dg_word) dg_word {
-	var res dg_word
+func swapBytes(wd DgWordT) DgWordT {
+	var res DgWordT
 	res = (wd >> 8) | ((wd & 0x00ff) << 8)
 	return res
 }
@@ -356,18 +356,18 @@ func swapBytes(wd dg_word) dg_word {
 var bb uint8
 
 // does word w have bit b set?
-func testWbit(w dg_word, b int) bool {
+func testWbit(w DgWordT, b int) bool {
 	bb = uint8(b)
 	return (w & (1 << (15 - bb))) != 0
 }
 
 // does dword dw have bit b set?
-func testDWbit(dw dg_dword, b int) bool {
+func testDWbit(dw DgDwordT, b int) bool {
 	bb = uint8(b)
 	return ((dw & (1 << (31 - bb))) != 0)
 }
 
 // get a pretty-printable string of a word
-func wordToBinStr(w dg_word) string {
+func wordToBinStr(w DgWordT) string {
 	return fmt.Sprintf("%08b %08b", w>>8, w&0x0ff)
 }

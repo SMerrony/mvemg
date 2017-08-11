@@ -9,11 +9,11 @@ import (
 func eagleIO(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	var (
-		cmd, word, dataWord dg_word
-		dwd                 dg_dword
+		cmd, word, dataWord DgWordT
+		dwd                 DgDwordT
 		mapRegAddr          int
 		rw                  bool
-		wAddr               dg_phys_addr
+		wAddr               DgPhysAddrT
 	)
 
 	switch iPtr.mnemonic {
@@ -28,7 +28,7 @@ func eagleIO(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 			bmcdchWriteReg(mapRegAddr, dataWord)
 		} else { // read command
 			dataWord = bmcdchReadReg(mapRegAddr)
-			cpuPtr.ac[iPtr.acd] = dg_dword(dataWord)
+			cpuPtr.ac[iPtr.acd] = DgDwordT(dataWord)
 		}
 
 	case "CIOI":
@@ -45,7 +45,7 @@ func eagleIO(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 			bmcdchWriteReg(mapRegAddr, dataWord)
 		} else { // read command
 			dataWord = bmcdchReadReg(mapRegAddr)
-			cpuPtr.ac[iPtr.acd] = dg_dword(dataWord)
+			cpuPtr.ac[iPtr.acd] = DgDwordT(dataWord)
 		}
 
 	case "INTDS":
@@ -68,7 +68,7 @@ func eagleIO(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	case "WLMP":
 		if cpuPtr.ac[1] == 0 {
 			mapRegAddr = int(cpuPtr.ac[0] & 0x7ff)
-			wAddr = dg_phys_addr(cpuPtr.ac[2])
+			wAddr = DgPhysAddrT(cpuPtr.ac[2])
 			if debugLogging {
 				logging.DebugPrint(logging.DebugLog, "WLMP called with AC1 = 0 - MapRegAddr was %d, 1st DWord was %d\n",
 					mapRegAddr, memReadDWord(wAddr))
@@ -78,7 +78,7 @@ func eagleIO(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 			cpuPtr.ac[2] += 2
 		} else {
 			for {
-				bmcdchWriteSlot(int(cpuPtr.ac[0]&0x07ff), memReadDWord(dg_phys_addr(cpuPtr.ac[2])))
+				bmcdchWriteSlot(int(cpuPtr.ac[0]&0x07ff), memReadDWord(DgPhysAddrT(cpuPtr.ac[2])))
 				if debugLogging {
 					logging.DebugPrint(logging.DebugLog, "WLMP writing slot %d\n", 1+(cpuPtr.ac[0]&0x7ff))
 				}
@@ -96,6 +96,6 @@ func eagleIO(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		return false
 	}
 
-	cpuPtr.pc += dg_phys_addr(iPtr.instrLength)
+	cpuPtr.pc += DgPhysAddrT(iPtr.instrLength)
 	return true
 }

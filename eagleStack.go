@@ -33,7 +33,7 @@ func eagleStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	var (
 		firstAc, lastAc, thisAc int
 		acsUp                   = [8]int{0, 1, 2, 3, 0, 1, 2, 3}
-		tmpDwd                  dg_dword
+		tmpDwd                  DgDwordT
 	)
 
 	switch iPtr.mnemonic {
@@ -51,7 +51,7 @@ func eagleStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		cpuPtr.ac[iPtr.acd] = memReadDWord(WSP_LOC)
 
 	case "LPEF":
-		wsPush(0, dg_dword(resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31)))
+		wsPush(0, DgDwordT(resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31)))
 
 	case "STAFP":
 		// FIXME handle segments
@@ -74,7 +74,7 @@ func eagleStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	case "STATS":
 		// FIXME handle segments
-		memWriteDWord(dg_phys_addr(memReadDWord(WSL_LOC)), cpuPtr.ac[iPtr.acd])
+		memWriteDWord(DgPhysAddrT(memReadDWord(WSL_LOC)), cpuPtr.ac[iPtr.acd])
 
 	case "WMSP":
 		tmpDwd = cpuPtr.ac[iPtr.acd] << 1
@@ -119,14 +119,14 @@ func eagleStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	case "XPEF":
 		// FIXME segment handling, check for overflow
-		wsPush(0, dg_dword(resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)))
+		wsPush(0, DgDwordT(resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)))
 
 	default:
 		log.Fatalf("ERROR: EAGLE_STACK instruction <%s> not yet implemented\n", iPtr.mnemonic)
 		return false
 	}
 
-	cpuPtr.pc += dg_phys_addr(iPtr.instrLength)
+	cpuPtr.pc += DgPhysAddrT(iPtr.instrLength)
 	return true
 }
 

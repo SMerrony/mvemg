@@ -81,7 +81,7 @@ func ttiReset() {
 // This is called from Bus to implement DIA from the TTI DEV_TTIice
 func ttiDataIn(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 	oneCharBufMu.Lock()
-	cpuPtr.ac[iPtr.acd] = dg_dword(oneCharBuf) // grab the char from the buffer
+	cpuPtr.ac[iPtr.acd] = DgDwordT(oneCharBuf) // grab the char from the buffer
 	oneCharBufMu.Unlock()
 	switch abc {
 	case 'A':

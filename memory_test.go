@@ -24,8 +24,8 @@ package main
 import "testing"
 
 func TestDwordFromTwoWords(t *testing.T) {
-	var hi dg_word = 0x1122
-	var lo dg_word = 0x3344
+	var hi DgWordT = 0x1122
+	var lo DgWordT = 0x3344
 	r := dwordFromTwoWords(hi, lo)
 	if r != 0x11223344 {
 		t.Error("Expected 287454020, got ", r)
@@ -33,7 +33,7 @@ func TestDwordFromTwoWords(t *testing.T) {
 }
 
 func TestGetWbits(t *testing.T) {
-	var w dg_word = 0xb38f
+	var w DgWordT = 0xb38f
 	r := getWbits(w, 5, 3)
 	if r != 3 {
 		t.Error("Expected 3, got ", r)
@@ -42,7 +42,7 @@ func TestGetWbits(t *testing.T) {
 }
 
 func TestSetWbit(t *testing.T) {
-	var w dg_word = 0x0001
+	var w DgWordT = 0x0001
 	r := SetWbit(w, 1)
 	if r != 0x4001 {
 		t.Error("Expected 16385, got ", r)
@@ -55,7 +55,7 @@ func TestSetWbit(t *testing.T) {
 }
 
 func TestClearWbit(t *testing.T) {
-	var w dg_word = 0x4001
+	var w DgWordT = 0x4001
 	r := ClearWbit(w, 1)
 	if r != 1 {
 		t.Error("Expected 1, got ", r)
@@ -67,7 +67,7 @@ func TestClearWbit(t *testing.T) {
 	}
 }
 func TestGetDWbits(t *testing.T) {
-	var w dg_dword = 0xb38f00ff
+	var w DgDwordT = 0xb38f00ff
 	r := getDWbits(w, 15, 2)
 	if r != 2 {
 		t.Error("Expected 2, got ", r)
@@ -76,7 +76,7 @@ func TestGetDWbits(t *testing.T) {
 }
 
 func TestMemWriteReadWord(t *testing.T) {
-	var w dg_word
+	var w DgWordT
 	memWriteWord(78, 99)
 	w = memory.ram[78]
 	if w != 99 {
@@ -90,8 +90,8 @@ func TestMemWriteReadWord(t *testing.T) {
 }
 
 func TestWriteReadByte(t *testing.T) {
-	var w dg_word
-	var b dg_byte
+	var w DgWordT
+	var b DgByteT
 	memWriteByte(73, false, 0x58)
 	w = memory.ram[73]
 	if w != 0x5800 {
@@ -115,7 +115,7 @@ func TestWriteReadByte(t *testing.T) {
 }
 
 func TestWriteReadDWord(t *testing.T) {
-	var dwd dg_dword
+	var dwd DgDwordT
 	memWriteDWord(68, 0x11223344)
 	w := memory.ram[68]
 	if w != 0x1122 {
@@ -132,8 +132,8 @@ func TestWriteReadDWord(t *testing.T) {
 }
 
 func TestSexWordToDWord(t *testing.T) {
-	var wd dg_word
-	var dwd dg_dword
+	var wd DgWordT
+	var dwd DgDwordT
 
 	wd = 79
 	dwd = sexWordToDWord(wd)
@@ -150,7 +150,7 @@ func TestSexWordToDWord(t *testing.T) {
 }
 
 func TestSwapBytes(t *testing.T) {
-	var wd, s dg_word
+	var wd, s DgWordT
 
 	wd = 0x1234
 	s = swapBytes(wd)

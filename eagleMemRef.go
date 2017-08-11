@@ -28,10 +28,10 @@ import (
 
 func eagleMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	var (
-		addr dg_phys_addr
-		byt  dg_byte
-		wd   dg_word
-		dwd  dg_dword
+		addr DgPhysAddrT
+		byt  DgByteT
+		wd   DgWordT
+		dwd  DgDwordT
 		i32  int32
 	)
 
@@ -65,8 +65,8 @@ func eagleMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		if numWds == 0 {
 			log.Println("INFO: WBLM called with AC1 == 0, not moving anything")
 		} else {
-			src := dg_phys_addr(cpuPtr.ac[2])
-			dest := dg_phys_addr(cpuPtr.ac[3])
+			src := DgPhysAddrT(cpuPtr.ac[2])
+			dest := DgPhysAddrT(cpuPtr.ac[3])
 			if debugLogging {
 				logging.DebugPrint(logging.DebugLog, "DEBUG: WBLM moving %d words from %d to %d\n", numWds, src, dest)
 			}
@@ -85,8 +85,8 @@ func eagleMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 			//cpuPtr.ac[2] = dg_dword(dest) // TODO confirm this
 			//cpuPtr.ac[3] = dg_dword(dest)
 			// TESTING..
-			cpuPtr.ac[2] = dg_dword(src + 1) // TODO confirm this
-			cpuPtr.ac[3] = dg_dword(dest + 1)
+			cpuPtr.ac[2] = DgDwordT(src + 1) // TODO confirm this
+			cpuPtr.ac[3] = DgDwordT(dest + 1)
 		}
 
 	case "WCMV": // ACO destCount, AC1 srcCount, AC2 dest byte ptr, AC3 src byte ptr
@@ -144,17 +144,17 @@ func eagleMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 			}
 		}
 		cpuPtr.ac[0] = 0
-		cpuPtr.ac[1] = dg_dword(srcCount)
+		cpuPtr.ac[1] = DgDwordT(srcCount)
 
 	case "WSTB":
-		byt = dg_byte(cpuPtr.ac[iPtr.acd] & 0x0ff)
+		byt = DgByteT(cpuPtr.ac[iPtr.acd] & 0x0ff)
 		memWriteByteBA(byt, cpuPtr.ac[iPtr.acs])
 
 	case "XLDB":
-		cpuPtr.ac[iPtr.acd] = dg_dword(memReadByte(resolve16bitEagleAddr(cpuPtr, ' ', iPtr.mode, iPtr.disp16), iPtr.bitLow)) & 0x00ff
+		cpuPtr.ac[iPtr.acd] = DgDwordT(memReadByte(resolve16bitEagleAddr(cpuPtr, ' ', iPtr.mode, iPtr.disp16), iPtr.bitLow)) & 0x00ff
 
 	case "XLEF":
-		cpuPtr.ac[iPtr.acd] = dg_dword(resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15))
+		cpuPtr.ac[iPtr.acd] = DgDwordT(resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15))
 
 	case "XLEFB":
 		loBit := iPtr.disp16 & 1
@@ -163,7 +163,7 @@ func eagleMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		if loBit == 1 {
 			addr++
 		}
-		cpuPtr.ac[iPtr.acd] = dg_dword(addr)
+		cpuPtr.ac[iPtr.acd] = DgDwordT(addr)
 
 	case "XNLDA":
 		addr = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
@@ -180,7 +180,7 @@ func eagleMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		addr = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
 		i32 = int32(memReadDWord(addr)) + int32(iPtr.immU16)
 		// FIXME handle Carry and OVeRflow
-		memWriteDWord(addr, dg_dword(i32))
+		memWriteDWord(addr, DgDwordT(i32))
 
 	case "XWLDA":
 		addr = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
@@ -197,6 +197,6 @@ func eagleMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		return false
 	}
 
-	cpuPtr.pc += dg_phys_addr(iPtr.instrLength)
+	cpuPtr.pc += DgPhysAddrT(iPtr.instrLength)
 	return true
 }

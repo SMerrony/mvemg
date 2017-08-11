@@ -11,7 +11,7 @@ func novaPC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		cpuPtr.pc = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
 
 	case "JSR":
-		tmpPC := dg_dword(cpuPtr.pc + 1)
+		tmpPC := DgDwordT(cpuPtr.pc + 1)
 		cpuPtr.pc = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
 		cpuPtr.ac[3] = tmpPC
 
