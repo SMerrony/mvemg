@@ -207,7 +207,7 @@ func nsPush(seg dg_phys_addr, data dg_word) {
 	memory.ram[NSP_LOC]++ // we allow this direct write to a fixed location for performance
 	addr := dg_phys_addr(memory.ram[NSP_LOC])
 	memWriteWord(addr, data)
-	logging.DebugPrint(logging.DebugLog, "nsPush pushed %8d onto the Narrow Stack at location: %d\n", data, addr)
+	logging.DebugPrint(logging.DebugLog, "... nsPush pushed %8d onto the Narrow Stack at location: %d\n", data, addr)
 }
 
 // POP a word off the Narrow Stack
@@ -216,7 +216,7 @@ func nsPop(seg dg_phys_addr) dg_word {
 	// TODO overflow/underflow handling - either here or in instruction?
 	addr := dg_phys_addr(memory.ram[NSP_LOC])
 	data := memReadWord(addr)
-	logging.DebugPrint(logging.DebugLog, "nsPop  popped %8d off  the Narrow Stack at location: %d\n", data, addr)
+	logging.DebugPrint(logging.DebugLog, "... nsPop  popped %8d off  the Narrow Stack at location: %d\n", data, addr)
 	memory.ram[NSP_LOC]-- // we allow this direct write to a fixed location for performance
 	return data
 }
@@ -228,7 +228,7 @@ func wsPush(seg dg_phys_addr, data dg_dword) {
 	wsp := memReadDWord(WSP_LOC) + 2
 	memWriteDWord(WSP_LOC, wsp)
 	memWriteDWord(dg_phys_addr(wsp), data)
-	logging.DebugPrint(logging.DebugLog, "wsPush pushed %8d onto the Wide Stack at location: %d\n", data, wsp)
+	logging.DebugPrint(logging.DebugLog, "... wsPush pushed %8d onto the Wide Stack at location: %d\n", data, wsp)
 }
 
 // POP a word off the Wide Stack
@@ -238,8 +238,15 @@ func wsPop(seg dg_phys_addr) dg_dword {
 	wsp := memReadDWord(WSP_LOC)
 	dword := memReadDWord(dg_phys_addr(wsp))
 	memWriteDWord(WSP_LOC, wsp-2)
-	logging.DebugPrint(logging.DebugLog, "wsPop  popped %8d off  the Wide Stack at location: %d\n", dword, wsp)
+	logging.DebugPrint(logging.DebugLog, "... wsPop  popped %8d off  the Wide Stack at location: %d\n", dword, wsp)
 	return dword
+}
+
+// AdvanceWSP increases the WSP by the given amount of DWords
+func AdvanceWSP(dwdCnt uint) {
+	wsp := memReadDWord(WSP_LOC) + dg_dword(dwdCnt*2)
+	memWriteDWord(WSP_LOC, wsp)
+	logging.DebugPrint(logging.DebugLog, "... WSP advanced by %d DWords to %d\n", dwdCnt, wsp)
 }
 
 // utility functions
@@ -302,6 +309,16 @@ func getWbits(value dg_word, leftBit int, nbits int) dg_word {
 		}
 	}
 	return res
+}
+
+// SetWbit sets a single bit in a DG word
+func SetWbit(word dg_word, bitNum uint) dg_word {
+	return word | 1<<(15-bitNum)
+}
+
+// ClearWbit clears a single bit in a DG word
+func ClearWbit(word dg_word, bitNum uint) dg_word {
+	return word ^ 1<<(15-bitNum)
 }
 
 // in the DG world, the first (leftmost) bit is numbered zero...

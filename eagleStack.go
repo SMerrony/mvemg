@@ -68,6 +68,9 @@ func eagleStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	case "STASP":
 		// FIXME handle segments
 		memWriteDWord(WSP_LOC, cpuPtr.ac[iPtr.acd])
+		if debugLogging {
+			logging.DebugPrint(logging.DebugLog, "... STASP set WSP to %d\n", cpuPtr.ac[iPtr.acd])
+		}
 
 	case "STATS":
 		// FIXME handle segments
@@ -139,11 +142,12 @@ func wsav(cpuPtr *CPU, iPtr *decodedInstrT) {
 		dwd |= 0x80000000
 	}
 	wsPush(0, dwd) // 5
-	dwdCnt := int(iPtr.immU16)
+	dwdCnt := uint(iPtr.immU16)
 	if dwdCnt > 0 {
-		for d := 0; d < dwdCnt; d++ {
-			wsPush(0, 0)
-		}
+		// for d := 0; d < dwdCnt; d++ {
+		// 	wsPush(0, 0)
+		// }
+		AdvanceWSP(dwdCnt)
 	}
 	memWriteDWord(WFP_LOC, memReadDWord(WSP_LOC))
 	cpuPtr.ac[3] = memReadDWord(WSP_LOC)

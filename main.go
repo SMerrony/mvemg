@@ -522,20 +522,20 @@ func run() {
 	cpu.scpIO = false
 	cpu.cpuMu.Unlock()
 
-RunLoop:
+	// initial read lock taken before loop starts to eliminate one lock/unlock per cycle
+	cpu.cpuMu.RLock()
+
+RunLoop: // performance-critical section starts here
 	for {
 		// FETCH
-		cpu.cpuMu.RLock()
 		thisOp = memReadWord(cpu.pc)
 
 		// DECODE
 		iPtr, ok = instructionDecode(thisOp, cpu.pc, cpu.sbr[cpu.pc>>29].lef, cpu.sbr[cpu.pc>>29].io, cpu.atu)
+		cpu.cpuMu.RUnlock()
 		if !ok {
-			cpu.cpuMu.RUnlock()
 			errDetail = " *** Error: could not decode instruction ***"
 			break
-		} else {
-			cpu.cpuMu.RUnlock()
 		}
 
 		if debugLogging {
@@ -572,11 +572,14 @@ RunLoop:
 			errDetail = " *** Console ESCape ***"
 			break
 		}
-		cpu.cpuMu.RUnlock()
 
 		// instruction counting
 		instrCounts[iPtr.mnemonic]++
+
+		// N.B. RLock still in effect as we loop around
 	}
+
+	// end of performance-critical section
 
 	cpu.cpuMu.Lock()
 	cpu.scpIO = true

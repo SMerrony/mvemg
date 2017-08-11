@@ -28,11 +28,11 @@ import (
 
 func eclipseOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	var (
-		addr, offset dg_phys_addr
-		byt          dg_byte
-		wd           dg_word
-		dwd          dg_dword
-		bitNum       uint
+		addr   dg_phys_addr
+		byt    dg_byte
+		wd     dg_word
+		dwd    dg_dword
+		bitNum uint
 	)
 
 	switch iPtr.mnemonic {
@@ -44,23 +44,13 @@ func eclipseOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	case "BTO":
 		// TODO Handle segment and indirection...
-		if iPtr.acd == iPtr.acs {
-			addr = 0
-		} else {
-			if testDWbit(cpuPtr.ac[iPtr.acs], 0) {
-				log.Fatal("ERROR: Indirect 16-bit BIT pointers not yet supported")
-			}
-			addr = dg_phys_addr(cpuPtr.ac[iPtr.acs]) & 0x7fff // mask off lower 15 bits
-		}
-		offset = (dg_phys_addr(cpuPtr.ac[iPtr.acd]) & 0x0000fff0) >> 4
-		addr += offset // add unsigned offset
-		bitNum = uint(cpuPtr.ac[iPtr.acd] & 0x000f)
+		addr, bitNum = resolveEclipseBitAddr(cpuPtr, iPtr)
 		wd = memReadWord(addr)
 		if debugLogging {
 			logging.DebugPrint(logging.DebugLog, "... BTO Addr: %d, Bit: %d, Before: %s\n",
 				addr, bitNum, wordToBinStr(wd))
 		}
-		wd |= 1 << (15 - bitNum) // set the bit
+		wd = SetWbit(wd, bitNum)
 		memWriteWord(addr, wd)
 		if debugLogging {
 			logging.DebugPrint(logging.DebugLog, "... BTO                     Result: %s\n", wordToBinStr(wd))
@@ -68,22 +58,12 @@ func eclipseOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	case "BTZ":
 		// TODO Handle segment and indirection...
-		if iPtr.acd == iPtr.acs {
-			addr = 0
-		} else {
-			addr = dg_phys_addr(cpuPtr.ac[iPtr.acs]) & 0x7fff // mask off lower 15 bits
-		}
-		offset = (dg_phys_addr(cpuPtr.ac[iPtr.acd]) & 0x0000fff0) >> 4
-		addr += offset // add unsigned offset
-		bitNum = uint(cpuPtr.ac[iPtr.acd] & 0x000f)
+		addr, bitNum = resolveEclipseBitAddr(cpuPtr, iPtr)
 		wd = memReadWord(addr)
 		if debugLogging {
 			logging.DebugPrint(logging.DebugLog, "... BTZ Addr: %d, Bit: %d, Before: %s\n", addr, bitNum, wordToBinStr(wd))
 		}
-		//wd |= 1 << (15 - bitNum) // set the bit
-		if testWbit(wd, int(bitNum)) {
-			wd ^= 1 << (15 - bitNum) // clear the bit
-		}
+		wd = ClearWbit(wd, bitNum)
 		memWriteWord(addr, wd)
 		if debugLogging {
 			logging.DebugPrint(logging.DebugLog, "... BTZ                     Result: %s\n",

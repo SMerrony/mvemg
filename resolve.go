@@ -21,7 +21,10 @@
 
 package main
 
-import "mvemg/logging"
+import (
+	"log"
+	"mvemg/logging"
+)
 
 func resolve16bitEclipseAddr(cpuPtr *CPU, ind byte, mode string, disp int16) dg_phys_addr {
 
@@ -135,4 +138,22 @@ func resolve32bitEffAddr(cpuPtr *CPU, ind byte, mode string, disp int32) dg_phys
 		logging.DebugPrint(logging.DebugLog, "... resolve32bitEffAddr got: %d., returning %d.\n", disp, eff)
 	}
 	return eff
+}
+
+// resolveEclipseBitAddr as per page 10-8 of Pop
+// Used by BTO, BTZ, SNB, SZB, SZBO
+func resolveEclipseBitAddr(cpuPtr *CPU, iPtr *decodedInstrT) (wordAddr dg_phys_addr, bitNum uint) {
+	// TODO handle segments and indirection
+	if iPtr.acd == iPtr.acs {
+		wordAddr = 0
+	} else {
+		if testDWbit(cpuPtr.ac[iPtr.acs], 0) {
+			log.Fatal("ERROR: Indirect 16-bit BIT pointers not yet supported")
+		}
+		wordAddr = dg_phys_addr(cpuPtr.ac[iPtr.acs]) & 0x7fff // mask off lower 15 bits
+	}
+	offset := (dg_phys_addr(cpuPtr.ac[iPtr.acd]) & 0x0000fff0) >> 4
+	wordAddr += offset // add unsigned offset
+	bitNum = uint(cpuPtr.ac[iPtr.acd] & 0x000f)
+	return wordAddr, bitNum
 }

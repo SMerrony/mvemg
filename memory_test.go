@@ -41,6 +41,31 @@ func TestGetWbits(t *testing.T) {
 
 }
 
+func TestSetWbit(t *testing.T) {
+	var w dg_word = 0x0001
+	r := SetWbit(w, 1)
+	if r != 0x4001 {
+		t.Error("Expected 16385, got ", r)
+	}
+	// repeat - should have no effect
+	r = SetWbit(w, 1)
+	if r != 0x4001 {
+		t.Error("Expected 16385, got ", r)
+	}
+}
+
+func TestClearWbit(t *testing.T) {
+	var w dg_word = 0x4001
+	r := ClearWbit(w, 1)
+	if r != 1 {
+		t.Error("Expected 1, got ", r)
+	}
+	// repeat - should have no effect
+	r = ClearWbit(w, 1)
+	if r != 1 {
+		t.Error("Expected 16385, got ", r)
+	}
+}
 func TestGetDWbits(t *testing.T) {
 	var w dg_dword = 0xb38f00ff
 	r := getDWbits(w, 15, 2)

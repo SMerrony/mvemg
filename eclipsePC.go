@@ -11,6 +11,7 @@ func eclipsePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		addr, inc      dg_phys_addr
 		acd, acs, h, l int16
 		wd             dg_word
+		bit            uint
 	//dwd dg_dword
 	)
 
@@ -90,21 +91,9 @@ func eclipsePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		}
 
 	case "SNB":
-		// resolve an ECLIPSE bit address
-		if iPtr.acd == iPtr.acs {
-			addr = 0
-		} else {
-			eff := dg_word(cpuPtr.ac[iPtr.acs])
-			for testWbit(eff, 0) {
-				eff = memReadWord(dg_phys_addr(eff))
-			}
-			addr = dg_phys_addr(eff)
-		}
-		addr16 := cpuPtr.ac[iPtr.acd] >> 4
-		addr += dg_phys_addr(addr16)
+		addr, bit = resolveEclipseBitAddr(cpuPtr, iPtr)
 		wd := memReadWord(addr)
-		bit := int(cpuPtr.ac[iPtr.acd] & 0x000f)
-		if testWbit(wd, bit) {
+		if testWbit(wd, int(bit)) {
 			cpuPtr.pc += 2
 		} else {
 			cpuPtr.pc += 1
@@ -114,21 +103,9 @@ func eclipsePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		}
 
 	case "SZB":
-		// resolve an ECLIPSE bit address
-		if iPtr.acd == iPtr.acs {
-			addr = 0
-		} else {
-			eff := dg_word(cpuPtr.ac[iPtr.acs])
-			for testWbit(eff, 0) {
-				eff = memReadWord(dg_phys_addr(eff))
-			}
-			addr = dg_phys_addr(eff)
-		}
-		addr16 := cpuPtr.ac[iPtr.acd] >> 4
-		addr += dg_phys_addr(addr16)
+		addr, bit = resolveEclipseBitAddr(cpuPtr, iPtr)
 		wd := memReadWord(addr)
-		bit := int(cpuPtr.ac[iPtr.acd] & 0x000f)
-		if !testWbit(wd, bit) {
+		if !testWbit(wd, int(bit)) {
 			cpuPtr.pc += 2
 		} else {
 			cpuPtr.pc += 1

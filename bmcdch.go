@@ -101,7 +101,7 @@ func getBmcDchMapAddr(mAddr dg_phys_addr) (dg_phys_addr, dg_phys_addr) {
 	return pAddr, page // TODO page return is just for debugging
 }
 
-type bmcAddr_t struct {
+type bmcAddrT struct {
 	isLogical bool // is this a Physical(f) or Logical(t) address?
 
 	// physical addresses...
@@ -115,10 +115,10 @@ type bmcAddr_t struct {
 	plow dg_phys_addr // Page Low Order Word (10-bit)
 }
 
-func decodeBmcAddr(bmcAddr dg_phys_addr) bmcAddr_t {
+func decodeBmcAddr(bmcAddr dg_phys_addr) bmcAddrT {
 	var (
 		inAddr dg_dword
-		res    bmcAddr_t
+		res    bmcAddrT
 	)
 
 	inAddr = dg_dword(bmcAddr << 10) // shift lest so we can use documented 21-bit numbering
