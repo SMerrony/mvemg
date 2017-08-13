@@ -137,8 +137,7 @@ func eagleOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	case "WNEG":
 		// FIXME WNEG - handle CARRY/OVR
-		s32 = -int32(cpuPtr.ac[iPtr.acs])
-		cpuPtr.ac[iPtr.acd] = dg.DwordT(s32)
+		cpuPtr.ac[iPtr.acd] = (^cpuPtr.ac[iPtr.acs]) + 1
 
 	case "WSBI":
 		s32 = int32(cpuPtr.ac[iPtr.acd]) - int32(iPtr.immU16)

@@ -47,3 +47,28 @@ func TestADDI(t *testing.T) {
 		t.Errorf("Expected %x, got %x", -4, cpuPtr.ac[0])
 	}
 }
+
+func TestWNEG(t *testing.T) {
+	cpuPtr := cpuInit(nil)
+	var iPtr decodedInstrT
+	iPtr.mnemonic = "WNEG"
+	iPtr.acs = 0
+	iPtr.acd = 1
+	cpuPtr.ac[0] = 37
+	// test cpnversion to negative
+	if !eagleOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute WNEG")
+	}
+	if cpuPtr.ac[1] != 0xffffffdb {
+		t.Errorf("Expected 0xffffffdb, got %x", cpuPtr.ac[1])
+	}
+
+	// convert back to test conversion from negative
+	cpuPtr.ac[0] = cpuPtr.ac[1]
+	if !eagleOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute WNEG")
+	}
+	if cpuPtr.ac[1] != 37 {
+		t.Errorf("Expected 37, got %d", cpuPtr.ac[1])
+	}
+}
