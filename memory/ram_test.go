@@ -1,4 +1,4 @@
-// bmcdch_test.go
+// mvemg project ram_test.go
 
 // Copyright (C) 2017  Steve Merrony
 
@@ -17,48 +17,66 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
+// THE SOFTWARE.package memory
+
 package memory
 
 import (
-	"testing"
-
 	"mvemg/dg"
+	"testing"
 )
 
-func TestBmcdchReset(t *testing.T) {
-	var wd dg.WordT
-	bmcdchInit()
-	wd = regs[IOCHAN_DEF_REG]
-	if wd != IOCDR_1 {
-		t.Error("Got ", wd)
+func TestWriteReadByte(t *testing.T) {
+	var w dg.WordT
+	var b dg.ByteT
+	WriteByte(73, false, 0x58)
+	w = memory.ram[73]
+	if w != 0x5800 {
+		t.Error("Expected 0x5800, got ", w)
+	}
+	WriteByte(74, true, 0x58)
+	w = memory.ram[74]
+	if w != 0x58 {
+		t.Error("Expected 0x58, got ", w)
+	}
+
+	WriteWord(73, 0x11dd)
+	b = ReadByte(73, true)
+	if b != 0xdd {
+		t.Error("Expected 0xDD, got ", b)
+	}
+	b = ReadByte(73, false)
+	if b != 0x11 {
+		t.Error("Expected 0x11, got ", b)
 	}
 }
 
-func TestWriteReadMapSlot(t *testing.T) {
-	var dwd1, dwd2 dg.DwordT
-	dwd1 = 0x11223344
-	BmcdchWriteSlot(17, dwd1)
-	dwd2 = BmcdchReadSlot(17)
-	if dwd2 != 0x11223344 {
-		t.Error("Expected 0x11223344, got ", dwd2)
+func TestWriteReadWord(t *testing.T) {
+	var w dg.WordT
+	WriteWord(78, 99)
+	w = memory.ram[78]
+	if w != 99 {
+		t.Error("Expected 99, got ", w)
 	}
 
+	w = ReadWord(78)
+	if w != 99 {
+		t.Error("Expected 99, got ", w)
+	}
 }
-
-func TestBmcDchMapAddr(t *testing.T) {
-	var addr1, addr2, page dg.PhysAddrT
-	BmcdchWriteSlot(0, 0)
-	addr1 = 1
-	addr2, page = getBmcDchMapAddr(addr1)
-	if addr2 != 1 {
-		t.Error("Expected 1, got ", addr2, page)
+func TestWriteReadDWord(t *testing.T) {
+	var dwd dg.DwordT
+	WriteDWord(68, 0x11223344)
+	w := memory.ram[68]
+	if w != 0x1122 {
+		t.Error("Expected 0x1122, got ", w)
 	}
-	BmcdchWriteSlot(0, 3)
-	addr1 = 1
-	addr2, page = getBmcDchMapAddr(addr1)
-	// 3 << 10 is 3072
-	if addr2 != 3073 {
-		t.Error("Expected 3073, got ", addr2, page)
+	w = memory.ram[69]
+	if w != 0x3344 {
+		t.Error("Expected 0x3344, got ", w)
+	}
+	dwd = ReadDWord(68)
+	if dwd != 0x11223344 {
+		t.Error("Expected 0x11223344, got", dwd)
 	}
 }

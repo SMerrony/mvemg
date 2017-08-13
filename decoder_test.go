@@ -3,10 +3,12 @@ package main
 
 import (
 	"testing"
+
+	"mvemg/dg"
 )
 
 func TestDecodeMode(t *testing.T) {
-	var modeIxdg.WordT
+	var modeIx dg.WordT
 	var decMode string
 
 	modeIx = 0
@@ -24,7 +26,7 @@ func TestDecodeMode(t *testing.T) {
 
 func Test2bitImm(t *testing.T) {
 	ttable := []struct {
-		idg.WordT
+		i dg.WordT
 		o uint16
 	}{
 		{0, 1},
@@ -40,7 +42,7 @@ func Test2bitImm(t *testing.T) {
 }
 
 func TestDecode8bitDisp(t *testing.T) {
-	var dbdg.ByteT
+	var db dg.ByteT
 	var md string
 	var res int16
 
@@ -67,7 +69,7 @@ func TestDecode8bitDisp(t *testing.T) {
 }
 
 func TestDecode15bitDisp(t *testing.T) {
-	var disp15dg.WordT
+	var disp15 dg.WordT
 	var m string
 	var res int16
 

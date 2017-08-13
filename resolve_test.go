@@ -21,14 +21,18 @@
 
 package main
 
-import "testing"
+import (
+	"testing"
+
+	"mvemg/memory"
+)
 
 func TestResolve16bitEclipseAddr(t *testing.T) {
 	cpuPtr := cpuInit(nil)
 	cpuPtr.pc = 11
-	WriteWord(10, 9)
-	WriteWord(11, 10)
-	WriteWord(12, 12)
+	memory.WriteWord(10, 9)
+	memory.WriteWord(11, 10)
+	memory.WriteWord(12, 12)
 
 	r := resolve16bitEclipseAddr(cpuPtr, ' ', "Absolute", 11)
 	if r != 11 {
