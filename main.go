@@ -25,7 +25,10 @@ import (
 	"bufio"
 	"fmt"
 	"log"
+	"mvemg/dg"
 	"mvemg/logging"
+	"mvemg/memory"
+	"mvemg/util"
 	"net"
 	"os"
 	"sort"
@@ -47,24 +50,13 @@ const (
 	cmdNYI     = "Command Not Yet Implemented"
 )
 
-type (
-	// DgWordT - a DG Word is 16-bit unsigned
-	DgWordT uint16
-	// DgDwordT - a DG Double-Word is 32-bit unsigned
-	DgDwordT uint32
-	// DgByteT - a DG Byte is 8-bit unsigned
-	DgByteT byte
-	// DgPhysAddrT - a physical address is 32-bit unsigned
-	DgPhysAddrT uint32
-)
-
 var p interface {
 	Stop()
 }
 
 var (
 	debugLogging  = true
-	breakpoints   []DgPhysAddrT
+	breakpoints   []dg.PhysAddrT
 	cpuStatsChan  chan cpuStatT
 	dpfStatsChan  chan dpfStatT
 	dskpStatsChan chan dskpStatT
@@ -115,7 +107,7 @@ func main() {
 		 *   NO IACs, LPT or ISC
 		 ***/
 
-		memInit()
+		memory.MemInit()
 		busInit()
 		busAddDevice(DEV_SCP, "SCP", SCP_PMB, true, false, false)
 		instructionsInit()
@@ -299,7 +291,7 @@ func boot(cmd []string) {
 	}
 	switch devNum {
 	case DEV_MTB:
-		mtbLoadTBoot(memory)
+		mtbLoadTBoot()
 		cpu.cpuMu.Lock()
 		cpu.ac[0] = DEV_MTB
 		cpu.pc = 10
@@ -319,7 +311,7 @@ func breakSet(cmd []string) {
 		ttoPutNLString(" *** BREAK command could not parse <address> argument ***")
 		return
 	}
-	breakpoints = append(breakpoints, DgPhysAddrT(pAddr))
+	breakpoints = append(breakpoints, dg.PhysAddrT(pAddr))
 	ttoPutNLString("BREAKpoint set")
 }
 
@@ -351,9 +343,9 @@ func createBlank(cmd []string) {
 func disassemble(cmd []string) {
 	var (
 		cmd1              = cmd[1]
-		lowAddr, highAddr DgPhysAddrT
-		word              DgWordT
-		byte1, byte2      DgByteT
+		lowAddr, highAddr dg.PhysAddrT
+		word              dg.WordT
+		byte1, byte2      dg.ByteT
 		display           string
 		skipDecode        int
 	)
@@ -364,9 +356,9 @@ func disassemble(cmd []string) {
 	}
 	if cmd1[0] == '+' {
 		lowAddr = cpu.pc
-		highAddr = lowAddr + DgPhysAddrT(intVal1)
+		highAddr = lowAddr + dg.PhysAddrT(intVal1)
 	} else {
-		lowAddr = DgPhysAddrT(intVal1)
+		lowAddr = dg.PhysAddrT(intVal1)
 		if len(cmd) == 2 {
 			highAddr = lowAddr
 		} else {
@@ -375,7 +367,7 @@ func disassemble(cmd []string) {
 				ttoPutNLString(" *** Invalid address ***")
 				return
 			}
-			highAddr = DgPhysAddrT(intVal2)
+			highAddr = dg.PhysAddrT(intVal2)
 		}
 	}
 	if highAddr < lowAddr {
@@ -383,10 +375,11 @@ func disassemble(cmd []string) {
 		return
 	}
 	for addr := lowAddr; addr <= highAddr; addr++ {
-		word = memReadWord(addr)
-		byte1 = DgByteT(word >> 8)
-		byte2 = DgByteT(word & 0x00ff)
-		display = fmt.Sprintf("%09d: %02X %02X %03o %03o %s \"", addr, byte1, byte2, byte1, byte2, wordToBinStr(word))
+		word = memory.ReadWord(addr)
+		byte1 = dg.ByteT(word >> 8)
+		byte2 = dg.ByteT(word & 0x00ff)
+		display = fmt.Sprintf("%09d: %02X %02X %03o %03o %s \"", addr, byte1, byte2, byte1, byte2,
+			util.WordToBinStr(word))
 		if byte1 >= ' ' && byte1 <= '~' {
 			display += string(byte1)
 		} else {
@@ -489,7 +482,7 @@ func show(cmd []string) {
 func singleStep() {
 	ttoPutString(cpuPrintableStatus())
 	// FETCH
-	thisOp := memReadWord(cpu.pc)
+	thisOp := memory.ReadWord(cpu.pc)
 	// DECODE
 	if iPtr, ok := instructionDecode(thisOp, cpu.pc, cpu.sbr[cpu.pc>>29].lef, cpu.sbr[cpu.pc>>29].io, cpu.atu); ok {
 		ttoPutNLString(iPtr.disassembly)
@@ -507,7 +500,7 @@ func singleStep() {
 // The main Emulator running loop...
 func run() {
 	var (
-		thisOp    DgWordT
+		thisOp    dg.WordT
 		iPtr      *decodedInstrT
 		ok        bool
 		errDetail string
@@ -528,7 +521,7 @@ func run() {
 RunLoop: // performance-critical section starts here
 	for {
 		// FETCH
-		thisOp = memReadWord(cpu.pc)
+		thisOp = memory.ReadWord(cpu.pc)
 
 		// DECODE
 		iPtr, ok = instructionDecode(thisOp, cpu.pc, cpu.sbr[cpu.pc>>29].lef, cpu.sbr[cpu.pc>>29].io, cpu.atu)

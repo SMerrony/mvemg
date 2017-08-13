@@ -22,12 +22,15 @@ package main
 
 import (
 	"log"
+	"mvemg/dg"
 	"mvemg/logging"
+	"mvemg/memory"
+	"mvemg/util"
 )
 
 func eclipseStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	var (
-		addr                DgPhysAddrT
+		addr                dg.PhysAddrT
 		first, last, thisAc int
 	)
 	acsUp := [8]int{0, 1, 2, 3, 0, 1, 2, 3}
@@ -44,11 +47,11 @@ func eclipseStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 			if debugLogging {
 				logging.DebugPrint(logging.DebugLog, "... narrow popping AC%d\n", acsUp[thisAc])
 			}
-			cpuPtr.ac[acsUp[thisAc]] = DgDwordT(nsPop(0))
+			cpuPtr.ac[acsUp[thisAc]] = dg.DwordT(memory.NsPop(0))
 		}
 
 	case "POPJ":
-		addr = DgPhysAddrT(nsPop(0))
+		addr = dg.PhysAddrT(memory.NsPop(0))
 		cpuPtr.pc = addr
 		return true // because PC set
 
@@ -62,65 +65,65 @@ func eclipseStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 			if debugLogging {
 				logging.DebugPrint(logging.DebugLog, "... narrow pushing AC%d\n", acsUp[thisAc])
 			}
-			nsPush(0, dwordGetLowerWord(cpuPtr.ac[acsUp[thisAc]]))
+			memory.NsPush(0, util.DWordGetLowerWord(cpuPtr.ac[acsUp[thisAc]]))
 		}
 
 	case "PSHJ":
-		nsPush(0, DgWordT(cpuPtr.pc)+2)
+		memory.NsPush(0, dg.WordT(cpuPtr.pc)+2)
 		addr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
 		cpuPtr.pc = addr
 		return true // because PC set
 
 	case "RTN":
 		// complement of SAVE
-		memWriteWord(NSP_LOC, memReadWord(NFP_LOC)) // ???
-		word := nsPop(0)
-		cpuPtr.carry = testWbit(word, 0)
-		cpuPtr.pc = DgPhysAddrT(word) & 0x7fff
-		//nfpSave := nsPop(0)               // 1
-		cpuPtr.ac[3] = DgDwordT(nsPop(0)) // 2
-		cpuPtr.ac[2] = DgDwordT(nsPop(0)) // 3
-		cpuPtr.ac[1] = DgDwordT(nsPop(0)) // 4
-		cpuPtr.ac[0] = DgDwordT(nsPop(0)) // 5
-		memWriteWord(NFP_LOC, dwordGetLowerWord(cpuPtr.ac[3]))
+		memory.WriteWord(memory.NSP_LOC, memory.ReadWord(memory.NFP_LOC)) // ???
+		word := memory.NsPop(0)
+		cpuPtr.carry = util.TestWbit(word, 0)
+		cpuPtr.pc = dg.PhysAddrT(word) & 0x7fff
+		//nfpSave := memory.NsPop(0)               // 1
+		cpuPtr.ac[3] = dg.DwordT(memory.NsPop(0)) // 2
+		cpuPtr.ac[2] = dg.DwordT(memory.NsPop(0)) // 3
+		cpuPtr.ac[1] = dg.DwordT(memory.NsPop(0)) // 4
+		cpuPtr.ac[0] = dg.DwordT(memory.NsPop(0)) // 5
+		memory.WriteWord(memory.NFP_LOC, util.DWordGetLowerWord(cpuPtr.ac[3]))
 		return true // because PC set
 
-		//		nfpSav := memReadWord(NFP_LOC)
-		//		pwd1 := nsPop(0) // 1
-		//		cpuPtr.carry = testWbit(pwd1, 0)
+		//		nfpSav := memory.ReadWord(NFP_LOC)
+		//		pwd1 := memory.NsPop(0) // 1
+		//		cpuPtr.carry = util.TestWbit(pwd1, 0)
 		//		cpuPtr.pc = dg_phys_addr(pwd1 & 0x07fff)
-		//		cpuPtr.ac[3] = dg_dword(nsPop(0)) // 2
-		//		cpuPtr.ac[2] = dg_dword(nsPop(0)) // 3
-		//		cpuPtr.ac[1] = dg_dword(nsPop(0)) // 4
-		//		cpuPtr.ac[0] = dg_dword(nsPop(0)) // 5
-		//		memWriteWord(NSP_LOC, nfpSav-5)
-		//		memWriteWord(NFP_LOC, dwordGetLowerWord(cpuPtr.ac[3]))
+		//		cpuPtr.ac[3] = dg_dword(memory.NsPop(0)) // 2
+		//		cpuPtr.ac[2] = dg_dword(memory.NsPop(0)) // 3
+		//		cpuPtr.ac[1] = dg_dword(memory.NsPop(0)) // 4
+		//		cpuPtr.ac[0] = dg_dword(memory.NsPop(0)) // 5
+		//		WriteWord(NSP_LOC, nfpSav-5)
+		//		WriteWord(NFP_LOC, util.DWordGetLowerWord(cpuPtr.ac[3]))
 
 		//return true // because PC set
 
 	case "SAVE":
-		nfpSav := memReadWord(NFP_LOC)
-		nspSav := memReadWord(NSP_LOC)
-		nsPush(0, dwordGetLowerWord(cpuPtr.ac[0])) // 1
-		nsPush(0, dwordGetLowerWord(cpuPtr.ac[1])) // 2
-		nsPush(0, dwordGetLowerWord(cpuPtr.ac[2])) // 3
-		nsPush(0, nfpSav)                          // 4
-		word := dwordGetLowerWord(cpuPtr.ac[3])
+		nfpSav := memory.ReadWord(memory.NFP_LOC)
+		nspSav := memory.ReadWord(memory.NSP_LOC)
+		memory.NsPush(0, util.DWordGetLowerWord(cpuPtr.ac[0])) // 1
+		memory.NsPush(0, util.DWordGetLowerWord(cpuPtr.ac[1])) // 2
+		memory.NsPush(0, util.DWordGetLowerWord(cpuPtr.ac[2])) // 3
+		memory.NsPush(0, nfpSav)                               // 4
+		word := util.DWordGetLowerWord(cpuPtr.ac[3])
 		if cpuPtr.carry {
 			word |= 0x8000
 		} else {
 			word &= 0x7fff
 		}
-		nsPush(0, word) // 5
+		memory.NsPush(0, word) // 5
 		wdCnt := int(iPtr.immU16)
 		if wdCnt > 0 {
 			for wd := 0; wd < wdCnt; wd++ {
-				nsPush(0, 0) // ...
+				memory.NsPush(0, 0) // ...
 			}
 		}
-		cpuPtr.ac[3] = DgDwordT(memReadWord(NSP_LOC)) // ???
-		memWriteWord(NFP_LOC, DgWordT(cpuPtr.ac[3]))  // ???
-		memWriteWord(NSP_LOC, nspSav+5)
+		cpuPtr.ac[3] = dg.DwordT(memory.ReadWord(memory.NSP_LOC)) // ???
+		memory.WriteWord(memory.NFP_LOC, dg.WordT(cpuPtr.ac[3]))  // ???
+		memory.WriteWord(memory.NSP_LOC, nspSav+5)
 		//cpuPtr.ac[3] = dg_dword(nspSav + 5)
 
 	default:
@@ -128,6 +131,6 @@ func eclipseStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		return false
 	}
 
-	cpuPtr.pc += DgPhysAddrT(iPtr.instrLength)
+	cpuPtr.pc += dg.PhysAddrT(iPtr.instrLength)
 	return true
 }

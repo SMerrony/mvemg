@@ -6,7 +6,7 @@ import (
 )
 
 func TestDecodeMode(t *testing.T) {
-	var modeIx DgWordT
+	var modeIxdg.WordT
 	var decMode string
 
 	modeIx = 0
@@ -24,7 +24,7 @@ func TestDecodeMode(t *testing.T) {
 
 func Test2bitImm(t *testing.T) {
 	ttable := []struct {
-		i DgWordT
+		idg.WordT
 		o uint16
 	}{
 		{0, 1},
@@ -40,7 +40,7 @@ func Test2bitImm(t *testing.T) {
 }
 
 func TestDecode8bitDisp(t *testing.T) {
-	var db DgByteT
+	var dbdg.ByteT
 	var md string
 	var res int16
 
@@ -67,7 +67,7 @@ func TestDecode8bitDisp(t *testing.T) {
 }
 
 func TestDecode15bitDisp(t *testing.T) {
-	var disp15 DgWordT
+	var disp15dg.WordT
 	var m string
 	var res int16
 

@@ -4,6 +4,8 @@ package main
 import (
 	"fmt"
 	"log"
+	"mvemg/dg"
+	"mvemg/util"
 	"sync"
 	"time"
 )
@@ -19,8 +21,8 @@ type sbrBits struct {
 type CPU struct {
 	cpuMu sync.RWMutex
 	// representations of physical attributes
-	pc                           DgPhysAddrT
-	ac                           [4]DgDwordT
+	pc                           dg.PhysAddrT
+	ac                           [4]dg.DwordT
 	carry, atu, ion, pfflag, ovk bool
 	sbr                          [8]sbrBits
 
@@ -31,8 +33,8 @@ type CPU struct {
 
 // cpuStatT defines the data we will send to the statusCollector monitor
 type cpuStatT struct {
-	pc                      DgPhysAddrT
-	ac                      [4]DgDwordT
+	pc                      dg.PhysAddrT
+	ac                      [4]dg.DwordT
 	carry, atu, ion, pfflag bool
 	instrCount              uint64
 }
@@ -53,7 +55,7 @@ func cpuPrintableStatus() string {
 	cpu.cpuMu.RLock()
 	res := fmt.Sprintf("%c      AC0       AC1       AC2       AC3        PC CRY ATU%c", ASCII_NL, ASCII_NL)
 	res += fmt.Sprintf("%9d %9d %9d %9d %9d", cpu.ac[0], cpu.ac[1], cpu.ac[2], cpu.ac[3], cpu.pc)
-	res += fmt.Sprintf("  %d   %d", BoolToInt(cpu.carry), BoolToInt(cpu.atu))
+	res += fmt.Sprintf("  %d   %d", util.BoolToInt(cpu.carry), util.BoolToInt(cpu.atu))
 	cpu.cpuMu.RUnlock()
 	return res
 }
@@ -61,7 +63,7 @@ func cpuPrintableStatus() string {
 func cpuCompactPrintableStatus() string {
 	cpu.cpuMu.RLock()
 	res := fmt.Sprintf("AC0: %d AC1: %d AC2: %d AC3: %d CRY: %d PC: %d",
-		cpu.ac[0], cpu.ac[1], cpu.ac[2], cpu.ac[3], BoolToInt(cpu.carry), cpu.pc)
+		cpu.ac[0], cpu.ac[1], cpu.ac[2], cpu.ac[3], util.BoolToInt(cpu.carry), cpu.pc)
 	cpu.cpuMu.RUnlock()
 	return res
 }

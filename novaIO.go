@@ -24,6 +24,7 @@ package main
 import (
 	"log"
 	"mvemg/logging"
+	"mvemg/util"
 )
 
 func novaIO(cpuPtr *CPU, iPtr *decodedInstrT) bool {
@@ -94,7 +95,7 @@ func novaIO(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	case "PRTSEL":
 		logging.DebugPrint(logging.DebugLog, "INFO: PRTSEL AC0: %d, PC: %d\n", cpuPtr.ac[0], cpuPtr.pc)
 		// only handle the query mode, setting is a no-op on this 'single-channel' machine
-		if dwordGetLowerWord(cpuPtr.ac[0]) == 0xffff {
+		if util.DWordGetLowerWord(cpuPtr.ac[0]) == 0xffff {
 			// return default I/O channel if -1 passed in
 			cpuPtr.ac[0] = 0
 		}

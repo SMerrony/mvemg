@@ -7,6 +7,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"mvemg/dg"
 	"mvemg/logging"
 	"os"
 )
@@ -58,7 +59,7 @@ func (st *SimhTapes) simhTapeRewind(tNum int) bool {
 }
 
 // read a 4-byte SimH header/trailer record
-func (st *SimhTapes) simhTapeReadRecordHeader(tNum int) (DgDwordT, bool) {
+func (st *SimhTapes) simhTapeReadRecordHeader(tNum int) (dg.DwordT, bool) {
 	hdrBytes := make([]byte, 4)
 	nb, err := st[tNum].simhFile.Read(hdrBytes)
 	if err != nil {
@@ -70,11 +71,11 @@ func (st *SimhTapes) simhTapeReadRecordHeader(tNum int) (DgDwordT, bool) {
 		return 0, false
 	}
 	//logging.DebugPrint(logging.DEBUG_LOG,"Debug - Header bytes: %d %d %d %d\n", hdrBytes[0], hdrBytes[1], hdrBytes[2], hdrBytes[3])
-	var hdr DgDwordT
-	hdr = DgDwordT(hdrBytes[3]) << 24
-	hdr |= DgDwordT(hdrBytes[2]) << 16
-	hdr |= DgDwordT(hdrBytes[1]) << 8
-	hdr |= DgDwordT(hdrBytes[0])
+	var hdr dg.DwordT
+	hdr = dg.DwordT(hdrBytes[3]) << 24
+	hdr |= dg.DwordT(hdrBytes[2]) << 16
+	hdr |= dg.DwordT(hdrBytes[1]) << 8
+	hdr |= dg.DwordT(hdrBytes[0])
 	return hdr, true
 }
 
@@ -95,7 +96,7 @@ func (st *SimhTapes) simhTapeReadRecord(tNum int, byteLen int) ([]byte, bool) {
 
 func (st *SimhTapes) simhTapeSpaceFwd(tNum int, recCnt int) bool {
 
-	var hdr, trailer DgDwordT
+	var hdr, trailer dg.DwordT
 	done := false
 	logging.DebugPrint(logging.DebugLog, "DEBUG: simhTapeSpaceFwd called for %d records\n", recCnt)
 
@@ -138,7 +139,7 @@ func (st *SimhTapes) simhTapeScanImage(tNum int) string {
 	res += "done!"
 
 	var fileSize, markCount, fileCount, recNum int
-	var hdr, trailer DgDwordT
+	var hdr, trailer dg.DwordT
 	fileCount = -1
 
 loop:

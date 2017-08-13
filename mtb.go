@@ -4,7 +4,10 @@ package main
 import (
 	//"bytes"
 	"log"
+	"mvemg/dg"
 	"mvemg/logging"
+	"mvemg/memory"
+	"mvemg/util"
 	"os"
 )
 
@@ -64,8 +67,8 @@ const (
 type Mtb struct {
 	simhTapeNum            int
 	imageAttached          bool
-	statusReg1, statusReg2 DgWordT
-	memAddrReg             DgPhysAddrT
+	statusReg1, statusReg2 dg.WordT
+	memAddrReg             dg.PhysAddrT
 	negWordCntReg          int
 	currentCmd             int
 	debug                  bool
@@ -75,7 +78,7 @@ var (
 	simht SimhTapes
 
 	mtb        Mtb
-	commandSet [MTB_CMD_COUNT]DgWordT
+	commandSet [MTB_CMD_COUNT]dg.WordT
 
 	mtbLog *log.Logger
 )
@@ -147,7 +150,7 @@ Rather than copying a ROM and executing that, we simply mimic its basic actions.
 * Put the loaded code at physical location 0
 * ...
 */
-func mtbLoadTBoot(mem memoryT) {
+func mtbLoadTBoot() {
 	const (
 		TBTSIZ_B = 2048
 		TBTSIZ_W = 1024
@@ -160,13 +163,13 @@ func mtbLoadTBoot(mem memoryT) {
 	}
 	tapeData, ok := simht.simhTapeReadRecord(0, TBTSIZ_B)
 	var byte0, byte1 byte
-	var word DgWordT
-	var wdix DgPhysAddrT
+	var word dg.WordT
+	var wdix dg.PhysAddrT
 	for wdix = 0; wdix < TBTSIZ_W; wdix++ {
 		byte1 = tapeData[wdix*2]
 		byte0 = tapeData[wdix*2+1]
-		word = DgWordT(byte1)<<8 | DgWordT(byte0)
-		memWriteWord(wdix, word)
+		word = dg.WordT(byte1)<<8 | dg.WordT(byte0)
+		memory.WriteWord(wdix, word)
 	}
 	trailer, ok := simht.simhTapeReadRecordHeader(0)
 	if hdr != trailer {
@@ -188,19 +191,19 @@ func mtbDataIn(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 
 	switch abc {
 	case 'A': /* Read status register 1 - see p.IV-18 of Peripherals guide */
-		cpuPtr.ac[iPtr.acd] = DgDwordT(mtb.statusReg1)
+		cpuPtr.ac[iPtr.acd] = dg.DwordT(mtb.statusReg1)
 		mtbLog.Printf("DIA - Read Status Reg 1 %s to AC%d, PC: %d\n",
-			wordToBinStr(mtb.statusReg1), iPtr.acd, cpuPtr.pc)
+			util.WordToBinStr(mtb.statusReg1), iPtr.acd, cpuPtr.pc)
 
 	case 'B': /* Read memory addr register 1 - see p.IV-19 of Peripherals guide */
-		cpuPtr.ac[iPtr.acd] = DgDwordT(mtb.memAddrReg)
+		cpuPtr.ac[iPtr.acd] = dg.DwordT(mtb.memAddrReg)
 		mtbLog.Printf("DIB - Read Mem Addr Reg 1 <%d> to AC%d, PC: %dn",
 			mtb.memAddrReg, iPtr.acd, cpuPtr.pc)
 
 	case 'C': /* Read status register 2 - see p.IV-18 of Peripherals guide */
-		cpuPtr.ac[iPtr.acd] = DgDwordT(mtb.statusReg2)
+		cpuPtr.ac[iPtr.acd] = dg.DwordT(mtb.statusReg2)
 		mtbLog.Printf("DIC - Read Status Reg 2 %s to AC%d, PC: %d\n",
-			wordToBinStr(mtb.statusReg2), iPtr.acd, cpuPtr.pc)
+			util.WordToBinStr(mtb.statusReg2), iPtr.acd, cpuPtr.pc)
 	}
 
 	if iPtr.f == 'S' {
@@ -220,7 +223,7 @@ func mtbDataOut(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 		busSetDone(DEV_MTB, false)
 	}
 
-	ac16 := dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
+	ac16 := util.DWordGetLowerWord(cpuPtr.ac[iPtr.acd])
 
 	switch abc {
 	case 'A': // Specify Command and Drive - p.IV-17
@@ -235,7 +238,7 @@ func mtbDataOut(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 			mtb.currentCmd, cpuPtr.pc)
 
 	case 'B':
-		mtb.memAddrReg = DgPhysAddrT(ac16)
+		mtb.memAddrReg = dg.PhysAddrT(ac16)
 		mtbLog.Printf("DOB - Write Memory Address Register from AC%d, Value: %d, PC: %d\n",
 			iPtr.acd, ac16, cpuPtr.pc)
 
@@ -262,13 +265,13 @@ func mtbDoCommand() {
 			mtb.statusReg1 = SR1_HI_DENSITY | SR1_9TRACK | SR1_UNIT_READY | SR1_EOF | SR1_ERROR
 		} else {
 			mtbLog.Printf(" ----  Calling simhTapeReadRecord with length: %d\n", hdrLen)
-			var w DgDwordT
-			var wd DgWordT
-			var pAddr DgPhysAddrT
+			var w dg.DwordT
+			var wd dg.WordT
+			var pAddr dg.PhysAddrT
 			rec, _ := simht.simhTapeReadRecord(0, int(hdrLen))
 			for w = 0; w < hdrLen; w += 2 {
-				wd = (DgWordT(rec[w]) << 8) | DgWordT(rec[w+1])
-				pAddr = memWriteWordDchChan(mtb.memAddrReg, wd)
+				wd = (dg.WordT(rec[w]) << 8) | dg.WordT(rec[w+1])
+				pAddr = memory.MemWriteWordDchChan(mtb.memAddrReg, wd)
 				mtbLog.Printf(" ----  Written word (%02X | %02X := %04X) to logical address: %d, physical: %d\n", rec[w], rec[w+1], wd, mtb.memAddrReg, pAddr)
 				mtb.memAddrReg++
 				mtb.negWordCntReg++

@@ -21,28 +21,33 @@
 
 package main
 
-import "log"
+import (
+	"log"
+	"mvemg/dg"
+	"mvemg/memory"
+	"mvemg/util"
+)
 
 func eaglePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	var (
-		wd          DgWordT
-		dwd, tmp32b DgDwordT
-		tmpAddr     DgPhysAddrT
+		wd          dg.WordT
+		dwd, tmp32b dg.DwordT
+		tmpAddr     dg.PhysAddrT
 		s32a, s32b  int32
 	)
 
 	switch iPtr.mnemonic {
 
 	case "LCALL": // FIXME - LCALL only handling trivial case, no checking
-		cpuPtr.ac[3] = DgDwordT(cpuPtr.pc) + 4
+		cpuPtr.ac[3] = dg.DwordT(cpuPtr.pc) + 4
 		if iPtr.argCount > 0 {
-			dwd = DgDwordT(iPtr.argCount) & 0x00007fff
+			dwd = dg.DwordT(iPtr.argCount) & 0x00007fff
 		} else {
 			// TODO PSR
-			dwd = DgDwordT(iPtr.argCount)
+			dwd = dg.DwordT(iPtr.argCount)
 		}
-		wsPush(0, dwd)
+		memory.WsPush(0, dwd)
 		cpuPtr.pc = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31)
 		cpuPtr.ovk = false
 
@@ -50,14 +55,14 @@ func eaglePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		cpuPtr.pc = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31)
 
 	case "LJSR":
-		cpuPtr.ac[3] = DgDwordT(cpuPtr.pc) + 3
+		cpuPtr.ac[3] = dg.DwordT(cpuPtr.pc) + 3
 		cpuPtr.pc = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31)
 
 	case "LNISZ":
 		// unsigned narrow increment and skip if zero
 		tmpAddr = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31)
-		wd = memReadWord(tmpAddr) + 1
-		memWriteWord(tmpAddr, wd)
+		wd = memory.ReadWord(tmpAddr) + 1
+		memory.WriteWord(tmpAddr, wd)
 		if wd == 0 {
 			cpuPtr.pc += 4
 		} else {
@@ -65,14 +70,14 @@ func eaglePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		}
 
 	case "LPSHJ":
-		wsPush(0, DgDwordT(cpuPtr.pc)+3)
+		memory.WsPush(0, dg.DwordT(cpuPtr.pc)+3)
 		cpuPtr.pc = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31)
 
 	case "LWDSZ":
 		// unsigned wide decrement and skip if zero
 		tmpAddr = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31)
-		tmp32b = memReadDWord(tmpAddr) - 1
-		memWriteDWord(tmpAddr, tmp32b)
+		tmp32b = memory.ReadDWord(tmpAddr) - 1
+		memory.WriteDWord(tmpAddr, tmp32b)
 		if tmp32b == 0 {
 			cpuPtr.pc += 4
 		} else {
@@ -85,25 +90,25 @@ func eaglePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		//		} else {
 		//			cpuPtr.pc -= dg_phys_addr(iPtr.disp)
 		//		}
-		cpuPtr.pc += DgPhysAddrT(int32(iPtr.disp8))
+		cpuPtr.pc += dg.PhysAddrT(int32(iPtr.disp8))
 
 	case "WPOPJ":
-		dwd = wsPop(0)
-		cpuPtr.pc = DgPhysAddrT(dwd) & 0x0fffffff
+		dwd = memory.WsPop(0)
+		cpuPtr.pc = dg.PhysAddrT(dwd) & 0x0fffffff
 
 	case "WRTN": // FIXME incomplete: handle PSR and rings
-		wspSav := memReadDWord(WSP_LOC)
-		dwd = wsPop(0) // 1
-		cpuPtr.carry = testDWbit(dwd, 0)
-		cpuPtr.pc = DgPhysAddrT(dwd & 0x7fffffff)
-		cpuPtr.ac[3] = wsPop(0) // 2
-		memWriteDWord(WFP_LOC, cpuPtr.ac[3])
-		cpuPtr.ac[2] = wsPop(0) // 3
-		cpuPtr.ac[1] = wsPop(0) // 4
-		cpuPtr.ac[0] = wsPop(0) // 5
-		dwd = wsPop(0)          // 6
+		wspSav := memory.ReadDWord(memory.WSP_LOC)
+		dwd = memory.WsPop(0) // 1
+		cpuPtr.carry = util.TestDWbit(dwd, 0)
+		cpuPtr.pc = dg.PhysAddrT(dwd & 0x7fffffff)
+		cpuPtr.ac[3] = memory.WsPop(0) // 2
+		memory.WriteDWord(memory.WFP_LOC, cpuPtr.ac[3])
+		cpuPtr.ac[2] = memory.WsPop(0) // 3
+		cpuPtr.ac[1] = memory.WsPop(0) // 4
+		cpuPtr.ac[0] = memory.WsPop(0) // 5
+		dwd = memory.WsPop(0)          // 6
 		wsFramSz2 := int(dwd&0x00007fff) * 2
-		memWriteDWord(WSP_LOC, wspSav-DgDwordT(wsFramSz2)-12)
+		memory.WriteDWord(memory.WSP_LOC, wspSav-dg.DwordT(wsFramSz2)-12)
 
 	case "WSEQ": // Signedness doen't matter for equality testing
 		if iPtr.acd == iPtr.acs {
@@ -118,7 +123,7 @@ func eaglePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		}
 
 	case "WSEQI":
-		tmp32b = DgDwordT(int32(iPtr.immS16))
+		tmp32b = dg.DwordT(int32(iPtr.immS16))
 		if cpuPtr.ac[iPtr.acd] == tmp32b {
 			cpuPtr.pc += 3
 		} else {
@@ -152,14 +157,14 @@ func eaglePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		}
 
 	case "WSKBO":
-		if testDWbit(cpuPtr.ac[0], iPtr.bitNum) {
+		if util.TestDWbit(cpuPtr.ac[0], iPtr.bitNum) {
 			cpuPtr.pc += 2
 		} else {
 			cpuPtr.pc += 1
 		}
 
 	case "WSKBZ":
-		if !testDWbit(cpuPtr.ac[0], iPtr.bitNum) {
+		if !util.TestDWbit(cpuPtr.ac[0], iPtr.bitNum) {
 			cpuPtr.pc += 2
 		} else {
 			cpuPtr.pc += 1
@@ -205,28 +210,28 @@ func eaglePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	case "XCALL":
 		// FIXME - only handling the trivial case so far
-		cpuPtr.ac[3] = DgDwordT(cpuPtr.pc) + 3
+		cpuPtr.ac[3] = dg.DwordT(cpuPtr.pc) + 3
 		if iPtr.argCount > 0 {
-			dwd = DgDwordT(iPtr.argCount) & 0x00007fff
+			dwd = dg.DwordT(iPtr.argCount) & 0x00007fff
 		} else {
 			// TODO PSR
-			dwd = DgDwordT(iPtr.argCount)
+			dwd = dg.DwordT(iPtr.argCount)
 		}
-		wsPush(0, dwd)
+		memory.WsPush(0, dwd)
 		cpuPtr.pc = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
 
 	case "XJMP":
 		cpuPtr.pc = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
 
 	case "XJSR":
-		cpuPtr.ac[3] = DgDwordT(cpuPtr.pc + 2) // TODO Check this, PoP is self-contradictory on p.11-642
+		cpuPtr.ac[3] = dg.DwordT(cpuPtr.pc + 2) // TODO Check this, PoP is self-contradictory on p.11-642
 		cpuPtr.pc = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
 
 	case "XNISZ": // unsigned narrow increment and skip if zero
 		tmpAddr = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
-		wd = memReadWord(tmpAddr)
+		wd = memory.ReadWord(tmpAddr)
 		wd++ // N.B. have checked that 0xffff + 1 == 0 in Go
-		memWriteWord(tmpAddr, wd)
+		memory.WriteWord(tmpAddr, wd)
 		if wd == 0 {
 			cpuPtr.pc += 3
 		} else {
@@ -235,9 +240,9 @@ func eaglePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	case "XWDSZ":
 		tmpAddr = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
-		dwd = memReadDWord(tmpAddr)
+		dwd = memory.ReadDWord(tmpAddr)
 		dwd--
-		memWriteDWord(tmpAddr, dwd)
+		memory.WriteDWord(tmpAddr, dwd)
 		if dwd == 0 {
 			cpuPtr.pc += 3
 		} else {

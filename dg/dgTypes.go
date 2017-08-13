@@ -1,4 +1,4 @@
-// mvemg project resolve_test.go
+// dgTypes.go
 
 // Copyright (C) 2017  Steve Merrony
 
@@ -19,40 +19,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package main
+package dg
 
-import "testing"
-
-func TestResolve16bitEclipseAddr(t *testing.T) {
-	cpuPtr := cpuInit(nil)
-	cpuPtr.pc = 11
-	WriteWord(10, 9)
-	WriteWord(11, 10)
-	WriteWord(12, 12)
-
-	r := resolve16bitEclipseAddr(cpuPtr, ' ', "Absolute", 11)
-	if r != 11 {
-		t.Error("Expected 11, got ", r)
-	}
-
-	r = resolve16bitEclipseAddr(cpuPtr, ' ', "PC", 1)
-	if r != 12 {
-		t.Error("Expected 12, got ", r)
-	}
-
-	r = resolve16bitEclipseAddr(cpuPtr, ' ', "PC", -1)
-	if r != 10 {
-		t.Error("Expected 10, got ", r)
-	}
-
-	r = resolve16bitEclipseAddr(cpuPtr, '@', "PC", -1)
-	if r != 9 {
-		t.Error("Expected 9, got ", r)
-	}
-
-	cpuPtr.ac[2] = 12
-	r = resolve16bitEclipseAddr(cpuPtr, '@', "AC2", -1)
-	if r != 10 {
-		t.Error("Expected 10, got ", r)
-	}
-}
+type (
+	// WordT - a DG Word is 16-bit unsigned
+	WordT uint16
+	// DwordT - a DG Double-Word is 32-bit unsigned
+	DwordT uint32
+	// ByteT - a DG Byte is 8-bit unsigned
+	ByteT byte
+	// PhysAddrT - a physical address is 32-bit unsigned
+	PhysAddrT uint32
+)

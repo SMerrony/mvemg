@@ -25,7 +25,9 @@ package main
 
 import (
 	"log"
+	"mvemg/dg"
 	"mvemg/logging"
+	"mvemg/memory"
 )
 
 func eagleStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
@@ -33,53 +35,53 @@ func eagleStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	var (
 		firstAc, lastAc, thisAc int
 		acsUp                   = [8]int{0, 1, 2, 3, 0, 1, 2, 3}
-		tmpDwd                  DgDwordT
+		tmpDwd                  dg.DwordT
 	)
 
 	switch iPtr.mnemonic {
 
 	case "LDAFP":
-		cpuPtr.ac[iPtr.acd] = memReadDWord(WFP_LOC)
+		cpuPtr.ac[iPtr.acd] = memory.ReadDWord(memory.WFP_LOC)
 
 	case "LDASB":
-		cpuPtr.ac[iPtr.acd] = memReadDWord(WSB_LOC)
+		cpuPtr.ac[iPtr.acd] = memory.ReadDWord(memory.WSB_LOC)
 
 	case "LDASL":
-		cpuPtr.ac[iPtr.acd] = memReadDWord(WSL_LOC)
+		cpuPtr.ac[iPtr.acd] = memory.ReadDWord(memory.WSL_LOC)
 
 	case "LDASP":
-		cpuPtr.ac[iPtr.acd] = memReadDWord(WSP_LOC)
+		cpuPtr.ac[iPtr.acd] = memory.ReadDWord(memory.WSP_LOC)
 
 	case "LPEF":
-		wsPush(0, DgDwordT(resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31)))
+		memory.WsPush(0, dg.DwordT(resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31)))
 
 	case "STAFP":
 		// FIXME handle segments
-		memWriteDWord(WFP_LOC, cpuPtr.ac[iPtr.acd])
+		memory.WriteDWord(memory.WFP_LOC, cpuPtr.ac[iPtr.acd])
 
 	case "STASB":
 		// FIXME handle segments
-		memWriteDWord(WSB_LOC, cpuPtr.ac[iPtr.acd])
+		memory.WriteDWord(memory.WSB_LOC, cpuPtr.ac[iPtr.acd])
 
 	case "STASL":
 		// FIXME handle segments
-		memWriteDWord(WSL_LOC, cpuPtr.ac[iPtr.acd])
+		memory.WriteDWord(memory.WSL_LOC, cpuPtr.ac[iPtr.acd])
 
 	case "STASP":
 		// FIXME handle segments
-		memWriteDWord(WSP_LOC, cpuPtr.ac[iPtr.acd])
+		memory.WriteDWord(memory.WSP_LOC, cpuPtr.ac[iPtr.acd])
 		if debugLogging {
 			logging.DebugPrint(logging.DebugLog, "... STASP set WSP to %d\n", cpuPtr.ac[iPtr.acd])
 		}
 
 	case "STATS":
 		// FIXME handle segments
-		memWriteDWord(DgPhysAddrT(memReadDWord(WSL_LOC)), cpuPtr.ac[iPtr.acd])
+		memory.WriteDWord(dg.PhysAddrT(memory.ReadDWord(memory.WSL_LOC)), cpuPtr.ac[iPtr.acd])
 
 	case "WMSP":
 		tmpDwd = cpuPtr.ac[iPtr.acd] << 1
-		tmpDwd += memReadDWord(WSP_LOC)
-		memWriteDWord(WSP_LOC, tmpDwd)
+		tmpDwd += memory.ReadDWord(memory.WSP_LOC)
+		memory.WriteDWord(memory.WSP_LOC, tmpDwd)
 
 	case "WPOP":
 		firstAc = iPtr.acs
@@ -91,7 +93,7 @@ func eagleStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 			if debugLogging {
 				logging.DebugPrint(logging.DebugLog, "... wide popping AC%d\n", acsUp[thisAc])
 			}
-			cpuPtr.ac[acsUp[thisAc]] = wsPop(0)
+			cpuPtr.ac[acsUp[thisAc]] = memory.WsPop(0)
 		}
 
 	case "WPSH":
@@ -104,7 +106,7 @@ func eagleStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 			if debugLogging {
 				logging.DebugPrint(logging.DebugLog, "... wide pushing AC%d\n", acsUp[thisAc])
 			}
-			wsPush(0, cpuPtr.ac[acsUp[thisAc]])
+			memory.WsPush(0, cpuPtr.ac[acsUp[thisAc]])
 		}
 
 	// N.B. WRTN is in eaglePC
@@ -119,36 +121,36 @@ func eagleStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	case "XPEF":
 		// FIXME segment handling, check for overflow
-		wsPush(0, DgDwordT(resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)))
+		memory.WsPush(0, dg.DwordT(resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)))
 
 	default:
 		log.Fatalf("ERROR: EAGLE_STACK instruction <%s> not yet implemented\n", iPtr.mnemonic)
 		return false
 	}
 
-	cpuPtr.pc += DgPhysAddrT(iPtr.instrLength)
+	cpuPtr.pc += dg.PhysAddrT(iPtr.instrLength)
 	return true
 }
 
 // wsav is common to WSAVR and WSAVS
 func wsav(cpuPtr *CPU, iPtr *decodedInstrT) {
-	wfpSav := memReadDWord(WFP_LOC)
-	wsPush(0, cpuPtr.ac[0]) // 1
-	wsPush(0, cpuPtr.ac[1]) // 2
-	wsPush(0, cpuPtr.ac[2]) // 3
-	wsPush(0, wfpSav)       // 4
+	wfpSav := memory.ReadDWord(memory.WFP_LOC)
+	memory.WsPush(0, cpuPtr.ac[0]) // 1
+	memory.WsPush(0, cpuPtr.ac[1]) // 2
+	memory.WsPush(0, cpuPtr.ac[2]) // 3
+	memory.WsPush(0, wfpSav)       // 4
 	dwd := cpuPtr.ac[3] & 0x7fffffff
 	if cpuPtr.carry {
 		dwd |= 0x80000000
 	}
-	wsPush(0, dwd) // 5
+	memory.WsPush(0, dwd) // 5
 	dwdCnt := uint(iPtr.immU16)
 	if dwdCnt > 0 {
 		// for d := 0; d < dwdCnt; d++ {
-		// 	wsPush(0, 0)
+		// 	memory.WsPush(0, 0)
 		// }
-		AdvanceWSP(dwdCnt)
+		memory.AdvanceWSP(dwdCnt)
 	}
-	memWriteDWord(WFP_LOC, memReadDWord(WSP_LOC))
-	cpuPtr.ac[3] = memReadDWord(WSP_LOC)
+	memory.WriteDWord(memory.WFP_LOC, memory.ReadDWord(memory.WSP_LOC))
+	cpuPtr.ac[3] = memory.ReadDWord(memory.WSP_LOC)
 }

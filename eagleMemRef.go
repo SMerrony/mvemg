@@ -23,15 +23,18 @@ package main
 
 import (
 	"log"
+	"mvemg/dg"
 	"mvemg/logging"
+	"mvemg/memory"
+	"mvemg/util"
 )
 
 func eagleMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	var (
-		addr DgPhysAddrT
-		byt  DgByteT
-		wd   DgWordT
-		dwd  DgDwordT
+		addr dg.PhysAddrT
+		byt  dg.ByteT
+		wd   dg.WordT
+		dwd  dg.DwordT
 		i32  int32
 	)
 
@@ -39,21 +42,21 @@ func eagleMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	case "LNLDA":
 		addr = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31)
-		cpuPtr.ac[iPtr.acd] = sexWordToDWord(memReadWord(addr))
+		cpuPtr.ac[iPtr.acd] = util.SexWordToDWord(memory.ReadWord(addr))
 
 	case "LNSTA":
 		addr = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31)
-		wd = dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
-		memWriteWord(addr, wd)
+		wd = util.DWordGetLowerWord(cpuPtr.ac[iPtr.acd])
+		memory.WriteWord(addr, wd)
 
 	case "LWLDA":
 		addr = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31)
-		cpuPtr.ac[iPtr.acd] = memReadDWord(addr)
+		cpuPtr.ac[iPtr.acd] = memory.ReadDWord(addr)
 
 	case "LWSTA":
 		addr = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31)
 		dwd = cpuPtr.ac[iPtr.acd]
-		memWriteDWord(addr, dwd)
+		memory.WriteDWord(addr, dwd)
 
 	case "WBLM":
 		/* AC0 - unused, AC1 - no. wds to move (if neg then descending order), AC2 - src, AC3 - dest */
@@ -65,13 +68,13 @@ func eagleMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		if numWds == 0 {
 			log.Println("INFO: WBLM called with AC1 == 0, not moving anything")
 		} else {
-			src := DgPhysAddrT(cpuPtr.ac[2])
-			dest := DgPhysAddrT(cpuPtr.ac[3])
+			src := dg.PhysAddrT(cpuPtr.ac[2])
+			dest := dg.PhysAddrT(cpuPtr.ac[3])
 			if debugLogging {
 				logging.DebugPrint(logging.DebugLog, "DEBUG: WBLM moving %d words from %d to %d\n", numWds, src, dest)
 			}
 			for numWds != 0 {
-				memWriteWord(dest, memReadWord(src))
+				memory.WriteWord(dest, memory.ReadWord(src))
 				numWds -= order
 				if order == 1 {
 					src++
@@ -85,8 +88,8 @@ func eagleMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 			//cpuPtr.ac[2] = dg_dword(dest) // TODO confirm this
 			//cpuPtr.ac[3] = dg_dword(dest)
 			// TESTING..
-			cpuPtr.ac[2] = DgDwordT(src + 1) // TODO confirm this
-			cpuPtr.ac[3] = DgDwordT(dest + 1)
+			cpuPtr.ac[2] = dg.DwordT(src + 1) // TODO confirm this
+			cpuPtr.ac[3] = dg.DwordT(dest + 1)
 		}
 
 	case "WCMV": // ACO destCount, AC1 srcCount, AC2 dest byte ptr, AC3 src byte ptr
@@ -108,7 +111,7 @@ func eagleMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		}
 		// 1st move srcCount bytes
 		for {
-			memCopyByte(cpuPtr.ac[3], cpuPtr.ac[2])
+			copyByte(cpuPtr.ac[3], cpuPtr.ac[2])
 			if srcAscend {
 				cpuPtr.ac[3]++
 				srcCount--
@@ -144,17 +147,17 @@ func eagleMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 			}
 		}
 		cpuPtr.ac[0] = 0
-		cpuPtr.ac[1] = DgDwordT(srcCount)
+		cpuPtr.ac[1] = dg.DwordT(srcCount)
 
 	case "WSTB":
-		byt = DgByteT(cpuPtr.ac[iPtr.acd] & 0x0ff)
+		byt = dg.ByteT(cpuPtr.ac[iPtr.acd] & 0x0ff)
 		memWriteByteBA(byt, cpuPtr.ac[iPtr.acs])
 
 	case "XLDB":
-		cpuPtr.ac[iPtr.acd] = DgDwordT(memReadByte(resolve16bitEagleAddr(cpuPtr, ' ', iPtr.mode, iPtr.disp16), iPtr.bitLow)) & 0x00ff
+		cpuPtr.ac[iPtr.acd] = dg.DwordT(memory.ReadByte(resolve16bitEagleAddr(cpuPtr, ' ', iPtr.mode, iPtr.disp16), iPtr.bitLow)) & 0x00ff
 
 	case "XLEF":
-		cpuPtr.ac[iPtr.acd] = DgDwordT(resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15))
+		cpuPtr.ac[iPtr.acd] = dg.DwordT(resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15))
 
 	case "XLEFB":
 		loBit := iPtr.disp16 & 1
@@ -163,40 +166,55 @@ func eagleMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		if loBit == 1 {
 			addr++
 		}
-		cpuPtr.ac[iPtr.acd] = DgDwordT(addr)
+		cpuPtr.ac[iPtr.acd] = dg.DwordT(addr)
 
 	case "XNLDA":
 		addr = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
-		wd = memReadWord(addr)
-		cpuPtr.ac[iPtr.acd] = sexWordToDWord(wd) // FIXME check this...
+		wd = memory.ReadWord(addr)
+		cpuPtr.ac[iPtr.acd] = util.SexWordToDWord(wd) // FIXME check this...
 
 	case "XNSTA":
 		addr = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
-		wd = dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
-		memWriteWord(addr, wd)
+		wd = util.DWordGetLowerWord(cpuPtr.ac[iPtr.acd])
+		memory.WriteWord(addr, wd)
 
 	case "XWADI":
 		// add 1-4 to signed 32-bit acc
 		addr = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
-		i32 = int32(memReadDWord(addr)) + int32(iPtr.immU16)
+		i32 = int32(memory.ReadDWord(addr)) + int32(iPtr.immU16)
 		// FIXME handle Carry and OVeRflow
-		memWriteDWord(addr, DgDwordT(i32))
+		memory.WriteDWord(addr, dg.DwordT(i32))
 
 	case "XWLDA":
 		addr = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
-		dwd = memReadDWord(addr)
+		dwd = memory.ReadDWord(addr)
 		cpuPtr.ac[iPtr.acd] = dwd
 
 	case "XWSTA":
 		addr = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
 		dwd = cpuPtr.ac[iPtr.acd]
-		memWriteDWord(addr, dwd)
+		memory.WriteDWord(addr, dwd)
 
 	default:
 		log.Fatalf("ERROR: EAGLE_MEMREF instruction <%s> not yet implemented\n", iPtr.mnemonic)
 		return false
 	}
 
-	cpuPtr.pc += DgPhysAddrT(iPtr.instrLength)
+	cpuPtr.pc += dg.PhysAddrT(iPtr.instrLength)
 	return true
+}
+
+func ReadByteBA(ba dg.DwordT) dg.ByteT {
+	wordAddr, lowByte := resolve32bitByteAddr(ba)
+	return memory.ReadByte(wordAddr, lowByte)
+}
+
+// MemWriteByte writes the supplied byte to the address derived from the given byte addr
+func memWriteByteBA(b dg.ByteT, ba dg.DwordT) {
+	wordAddr, lowByte := resolve32bitByteAddr(ba)
+	memory.WriteByte(wordAddr, lowByte, b)
+}
+
+func copyByte(srcBA, destBA dg.DwordT) {
+	memWriteByteBA(ReadByteBA(srcBA), destBA)
 }

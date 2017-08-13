@@ -3,14 +3,17 @@ package main
 
 import (
 	"log"
+	"mvemg/dg"
 	"mvemg/logging"
+	"mvemg/memory"
+	"mvemg/util"
 )
 
 func eclipsePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	var (
-		addr, inc      DgPhysAddrT
+		addr, inc      dg.PhysAddrT
 		acd, acs, h, l int16
-		wd             DgWordT
+		wd             dg.WordT
 		bit            uint
 	//dwd dg_dword
 	)
@@ -18,18 +21,18 @@ func eclipsePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	switch iPtr.mnemonic {
 
 	case "CLM": // signed compare to limits
-		acs = int16(dwordGetLowerWord(cpuPtr.ac[iPtr.acs]))
+		acs = int16(util.DWordGetLowerWord(cpuPtr.ac[iPtr.acs]))
 		if iPtr.acs == iPtr.acd {
-			l = int16(memReadWord(cpuPtr.pc + 1))
-			h = int16(memReadWord(cpuPtr.pc + 2))
+			l = int16(memory.ReadWord(cpuPtr.pc + 1))
+			h = int16(memory.ReadWord(cpuPtr.pc + 2))
 			if acs < l || acs > h {
 				inc = 3
 			} else {
 				inc = 4
 			}
 		} else {
-			l = int16(memReadWord(DgPhysAddrT(dwordGetLowerWord(cpuPtr.ac[iPtr.acd]))))
-			h = int16(memReadWord(DgPhysAddrT(dwordGetLowerWord(cpuPtr.ac[iPtr.acd]) + 1)))
+			l = int16(memory.ReadWord(dg.PhysAddrT(util.DWordGetLowerWord(cpuPtr.ac[iPtr.acd]))))
+			h = int16(memory.ReadWord(dg.PhysAddrT(util.DWordGetLowerWord(cpuPtr.ac[iPtr.acd]) + 1)))
 			if acs < l || acs > h {
 				inc = 1
 			} else {
@@ -43,9 +46,9 @@ func eclipsePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	case "DSPA":
 		tableStart := resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
-		offset := dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
-		lowLimit := memReadWord(tableStart - 2)
-		hiLimit := memReadWord(tableStart - 1)
+		offset := util.DWordGetLowerWord(cpuPtr.ac[iPtr.acd])
+		lowLimit := memory.ReadWord(tableStart - 2)
+		hiLimit := memory.ReadWord(tableStart - 1)
 		if debugLogging {
 			logging.DebugPrint(logging.DebugLog, "DSPA called with table at %d, offset %d, lo %d hi %d\n",
 				tableStart, offset, lowLimit, hiLimit)
@@ -53,8 +56,8 @@ func eclipsePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		if offset < lowLimit || offset > hiLimit {
 			log.Fatalf("ERROR: DPSA called with out of bounds offset %d", offset)
 		}
-		entry := tableStart - DgPhysAddrT(lowLimit) + DgPhysAddrT(offset)
-		addr = DgPhysAddrT(memReadWord(entry))
+		entry := tableStart - dg.PhysAddrT(lowLimit) + dg.PhysAddrT(offset)
+		addr = dg.PhysAddrT(memory.ReadWord(entry))
 		if addr == 0xffffffff {
 			cpuPtr.pc += 2
 		} else {
@@ -63,9 +66,9 @@ func eclipsePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	case "EISZ":
 		addr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
-		wd = memReadWord(addr)
+		wd = memory.ReadWord(addr)
 		wd++
-		memWriteWord(addr, wd)
+		memory.WriteWord(addr, wd)
 		if wd == 0 {
 			cpuPtr.pc += 3
 		} else {
@@ -77,13 +80,13 @@ func eclipsePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		cpuPtr.pc = addr
 
 	case "EJSR":
-		cpuPtr.ac[3] = DgDwordT(cpuPtr.pc) + 2
+		cpuPtr.ac[3] = dg.DwordT(cpuPtr.pc) + 2
 		addr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
 		cpuPtr.pc = addr
 
 	case "SGT": //16-bit signed numbers
-		acs = int16(dwordGetLowerWord(cpuPtr.ac[iPtr.acs]))
-		acd = int16(dwordGetLowerWord(cpuPtr.ac[iPtr.acd]))
+		acs = int16(util.DWordGetLowerWord(cpuPtr.ac[iPtr.acs]))
+		acd = int16(util.DWordGetLowerWord(cpuPtr.ac[iPtr.acd]))
 		if acs > acd {
 			cpuPtr.pc += 2
 		} else {
@@ -92,8 +95,8 @@ func eclipsePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	case "SNB":
 		addr, bit = resolveEclipseBitAddr(cpuPtr, iPtr)
-		wd := memReadWord(addr)
-		if testWbit(wd, int(bit)) {
+		wd := memory.ReadWord(addr)
+		if util.TestWbit(wd, int(bit)) {
 			cpuPtr.pc += 2
 		} else {
 			cpuPtr.pc += 1
@@ -104,8 +107,8 @@ func eclipsePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	case "SZB":
 		addr, bit = resolveEclipseBitAddr(cpuPtr, iPtr)
-		wd := memReadWord(addr)
-		if !testWbit(wd, int(bit)) {
+		wd := memory.ReadWord(addr)
+		if !util.TestWbit(wd, int(bit)) {
 			cpuPtr.pc += 2
 		} else {
 			cpuPtr.pc += 1

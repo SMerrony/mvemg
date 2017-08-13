@@ -23,14 +23,16 @@ package main
 
 import (
 	"log"
+	"mvemg/dg"
+	"mvemg/util"
 )
 
 func eagleOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	//var addr dg_phys_addr
 
 	var (
-		wd       DgWordT
-		dwd      DgDwordT
+		wd       dg.WordT
+		dwd      dg.DwordT
 		res, s32 int32
 		s16      int16
 	)
@@ -39,13 +41,13 @@ func eagleOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	case "ADDI":
 		// signed 16-bit add immediate
-		s16 = int16(dwordGetLowerWord(cpuPtr.ac[iPtr.acd]))
+		s16 = int16(util.DWordGetLowerWord(cpuPtr.ac[iPtr.acd]))
 		s16 += int16(iPtr.immS16)
-		cpuPtr.ac[iPtr.acd] = DgDwordT(s16) & 0X0000FFFF
+		cpuPtr.ac[iPtr.acd] = dg.DwordT(s16) & 0X0000FFFF
 
 	case "ANDI":
-		wd = dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
-		cpuPtr.ac[iPtr.acd] = DgDwordT(wd&iPtr.immWord) & 0x0000ffff
+		wd = util.DWordGetLowerWord(cpuPtr.ac[iPtr.acd])
+		cpuPtr.ac[iPtr.acd] = dg.DwordT(wd&iPtr.immWord) & 0x0000ffff
 
 	case "CRYTC":
 		cpuPtr.carry = !cpuPtr.carry
@@ -57,35 +59,35 @@ func eagleOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		cpuPtr.carry = false
 
 	case "LLEF":
-		cpuPtr.ac[iPtr.acd] = DgDwordT(resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31))
+		cpuPtr.ac[iPtr.acd] = dg.DwordT(resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31))
 
 	case "NADD": // signed add
 		s16 = int16(cpuPtr.ac[iPtr.acd]) + int16(cpuPtr.ac[iPtr.acs])
-		cpuPtr.ac[iPtr.acd] = DgDwordT(s16)
+		cpuPtr.ac[iPtr.acd] = dg.DwordT(s16)
 
 	case "NLDAI":
-		cpuPtr.ac[iPtr.acd] = DgDwordT(int32(iPtr.immS16))
+		cpuPtr.ac[iPtr.acd] = dg.DwordT(int32(iPtr.immS16))
 
 	case "NSUB": // signed subtract
 		s16 = int16(cpuPtr.ac[iPtr.acd]) - int16(cpuPtr.ac[iPtr.acs])
-		cpuPtr.ac[iPtr.acd] = DgDwordT(s16)
+		cpuPtr.ac[iPtr.acd] = dg.DwordT(s16)
 
 	case "SSPT": /* NO-OP - see p.8-5 of MV/10000 Sys Func Chars */
 		log.Println("INFO: SSPT is a No-Op on this machine, continuing")
 
 	case "WADD":
 		res = int32(cpuPtr.ac[iPtr.acs]) + int32(cpuPtr.ac[iPtr.acd])
-		cpuPtr.ac[iPtr.acd] = DgDwordT(res)
+		cpuPtr.ac[iPtr.acd] = dg.DwordT(res)
 		// FIXME - handle overflow and carry
 
 	case "WADC":
 		dwd = ^cpuPtr.ac[iPtr.acs]
-		cpuPtr.ac[iPtr.acd] = DgDwordT(int32(cpuPtr.ac[iPtr.acd]) + int32(dwd))
+		cpuPtr.ac[iPtr.acd] = dg.DwordT(int32(cpuPtr.ac[iPtr.acd]) + int32(dwd))
 		// FIXME - handle overflow and carry
 
 	case "WADI":
 		s32 = int32(cpuPtr.ac[iPtr.acd]) + int32(iPtr.immU16)
-		cpuPtr.ac[iPtr.acd] = DgDwordT(s32)
+		cpuPtr.ac[iPtr.acd] = dg.DwordT(s32)
 
 	case "WAND":
 		cpuPtr.ac[iPtr.acd] &= cpuPtr.ac[iPtr.acs]
@@ -131,31 +133,31 @@ func eagleOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	case "WNADI": //signed 16-bit
 		s32 = int32(cpuPtr.ac[iPtr.acd]) + int32(iPtr.immS16)
-		cpuPtr.ac[iPtr.acd] = DgDwordT(s32)
+		cpuPtr.ac[iPtr.acd] = dg.DwordT(s32)
 
 	case "WNEG":
 		// FIXME WNEG - handle CARRY/OVR
 		s32 = -int32(cpuPtr.ac[iPtr.acs])
-		cpuPtr.ac[iPtr.acd] = DgDwordT(s32)
+		cpuPtr.ac[iPtr.acd] = dg.DwordT(s32)
 
 	case "WSBI":
 		s32 = int32(cpuPtr.ac[iPtr.acd]) - int32(iPtr.immU16)
-		cpuPtr.ac[iPtr.acd] = DgDwordT(s32)
+		cpuPtr.ac[iPtr.acd] = dg.DwordT(s32)
 		// FIXME - handle overflow and carry
 
 	case "WSUB":
 		res = int32(cpuPtr.ac[iPtr.acd]) - int32(cpuPtr.ac[iPtr.acs])
-		cpuPtr.ac[iPtr.acd] = DgDwordT(res)
+		cpuPtr.ac[iPtr.acd] = dg.DwordT(res)
 		// FIXME - handle overflow and carry
 
 	case "ZEX":
-		cpuPtr.ac[iPtr.acd] = 0 | DgDwordT(dwordGetLowerWord(cpuPtr.ac[iPtr.acs]))
+		cpuPtr.ac[iPtr.acd] = 0 | dg.DwordT(util.DWordGetLowerWord(cpuPtr.ac[iPtr.acs]))
 
 	default:
 		log.Fatalf("ERROR: EAGLE_OP instruction <%s> not yet implemented\n", iPtr.mnemonic)
 		return false
 	}
 
-	cpuPtr.pc += DgPhysAddrT(iPtr.instrLength)
+	cpuPtr.pc += dg.PhysAddrT(iPtr.instrLength)
 	return true
 }

@@ -21,42 +21,47 @@
 
 package main
 
-import "log"
+import (
+	"log"
+	"mvemg/dg"
+	"mvemg/memory"
+	"mvemg/util"
+)
 
 func novaMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
-	var shifter DgWordT
-	var effAddr DgPhysAddrT
+	var shifter dg.WordT
+	var effAddr dg.PhysAddrT
 
 	switch iPtr.mnemonic {
 
 	case "DSZ":
 		effAddr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
-		shifter = memReadWord(effAddr)
+		shifter = memory.ReadWord(effAddr)
 		shifter--
-		memWriteWord(effAddr, shifter)
+		memory.WriteWord(effAddr, shifter)
 		if shifter == 0 {
 			cpuPtr.pc++
 		}
 
 	case "ISZ":
 		effAddr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
-		shifter = memReadWord(effAddr)
+		shifter = memory.ReadWord(effAddr)
 		shifter++
-		memWriteWord(effAddr, shifter)
+		memory.WriteWord(effAddr, shifter)
 		if shifter == 0 {
 			cpuPtr.pc++
 		}
 
 	case "LDA":
 		effAddr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
-		shifter = memReadWord(effAddr)
-		cpuPtr.ac[iPtr.acd] = 0x0000ffff & DgDwordT(shifter)
+		shifter = memory.ReadWord(effAddr)
+		cpuPtr.ac[iPtr.acd] = 0x0000ffff & dg.DwordT(shifter)
 
 	case "STA":
-		shifter = dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
+		shifter = util.DWordGetLowerWord(cpuPtr.ac[iPtr.acd])
 		effAddr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
-		memWriteWord(effAddr, shifter)
+		memory.WriteWord(effAddr, shifter)
 
 	default:
 		log.Fatalf("ERROR: NOVA_MEMREF instruction <%s> not yet implemented\n", iPtr.mnemonic)

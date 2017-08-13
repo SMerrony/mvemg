@@ -1,4 +1,4 @@
-// mvemg project resolve_test.go
+// bmcdch_test.go
 
 // Copyright (C) 2017  Steve Merrony
 
@@ -18,41 +18,45 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+package memory
 
-package main
+import (
+	"testing"
+)
 
-import "testing"
+func TestBmcdchReset(t *testing.T) {
+	var wddg.WordT
+	bmcdchInit()
+	wd = regs[IOCHAN_DEF_REG]
+	if wd != IOCDR_1 {
+		t.Error("Got ", wd)
+	}
+}
 
-func TestResolve16bitEclipseAddr(t *testing.T) {
-	cpuPtr := cpuInit(nil)
-	cpuPtr.pc = 11
-	WriteWord(10, 9)
-	WriteWord(11, 10)
-	WriteWord(12, 12)
-
-	r := resolve16bitEclipseAddr(cpuPtr, ' ', "Absolute", 11)
-	if r != 11 {
-		t.Error("Expected 11, got ", r)
+func TestWriteReadMapSlot(t *testing.T) {
+	var dwd1, dwd2dg.DwordT
+	dwd1 = 0x11223344
+	bmcdchWriteSlot(17, dwd1)
+	dwd2 = bmcdchReadSlot(17)
+	if dwd2 != 0x11223344 {
+		t.Error("Expected 0x11223344, got ", dwd2)
 	}
 
-	r = resolve16bitEclipseAddr(cpuPtr, ' ', "PC", 1)
-	if r != 12 {
-		t.Error("Expected 12, got ", r)
-	}
+}
 
-	r = resolve16bitEclipseAddr(cpuPtr, ' ', "PC", -1)
-	if r != 10 {
-		t.Error("Expected 10, got ", r)
+func TestBmcDchMapAddr(t *testing.T) {
+	var addr1, addr2, pagedg.PhysAddrT
+	bmcdchWriteSlot(0, 0)
+	addr1 = 1
+	addr2, page = getBmcDchMapAddr(addr1)
+	if addr2 != 1 {
+		t.Error("Expected 1, got ", addr2, page)
 	}
-
-	r = resolve16bitEclipseAddr(cpuPtr, '@', "PC", -1)
-	if r != 9 {
-		t.Error("Expected 9, got ", r)
-	}
-
-	cpuPtr.ac[2] = 12
-	r = resolve16bitEclipseAddr(cpuPtr, '@', "AC2", -1)
-	if r != 10 {
-		t.Error("Expected 10, got ", r)
+	bmcdchWriteSlot(0, 3)
+	addr1 = 1
+	addr2, page = getBmcDchMapAddr(addr1)
+	// 3 << 10 is 3072
+	if addr2 != 3073 {
+		t.Error("Expected 3073, got ", addr2, page)
 	}
 }

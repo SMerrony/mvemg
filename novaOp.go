@@ -23,20 +23,22 @@ package main
 
 import (
 	"log"
+	"mvemg/dg"
+	"mvemg/util"
 )
 
 func novaOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	var (
-		shifter          DgWordT
-		wideShifter      DgDwordT
-		tmpAcS, tmpAcD   DgWordT
+		shifter          dg.WordT
+		wideShifter      dg.DwordT
+		tmpAcS, tmpAcD   dg.WordT
 		savedCry, tmpCry bool
-		pcInc            DgPhysAddrT
+		pcInc            dg.PhysAddrT
 	)
 
-	tmpAcS = dwordGetLowerWord(cpuPtr.ac[iPtr.acs])
-	tmpAcD = dwordGetLowerWord(cpuPtr.ac[iPtr.acd])
+	tmpAcS = util.DWordGetLowerWord(cpuPtr.ac[iPtr.acs])
+	tmpAcD = util.DWordGetLowerWord(cpuPtr.ac[iPtr.acd])
 	savedCry = cpuPtr.carry
 
 	// Preset Carry if required
@@ -52,8 +54,8 @@ func novaOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	// perform the operation
 	switch iPtr.mnemonic {
 	case "ADC":
-		wideShifter = DgDwordT(tmpAcD) + DgDwordT(^tmpAcS)
-		shifter = dwordGetLowerWord(wideShifter)
+		wideShifter = dg.DwordT(tmpAcD) + dg.DwordT(^tmpAcS)
+		shifter = util.DWordGetLowerWord(wideShifter)
 		if wideShifter > 65535 {
 			cpuPtr.carry = !cpuPtr.carry
 		} else {
@@ -61,8 +63,8 @@ func novaOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		}
 
 	case "ADD": // unsigned
-		wideShifter = DgDwordT(tmpAcD) + DgDwordT(tmpAcS)
-		shifter = dwordGetLowerWord(wideShifter)
+		wideShifter = dg.DwordT(tmpAcD) + dg.DwordT(tmpAcS)
+		shifter = util.DWordGetLowerWord(wideShifter)
 		if wideShifter > 65535 {
 			cpuPtr.carry = !cpuPtr.carry
 		} else {
@@ -85,7 +87,7 @@ func novaOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		shifter = tmpAcS
 
 	case "NEG":
-		shifter = DgWordT(-int16(tmpAcS))
+		shifter = dg.WordT(-int16(tmpAcS))
 		if tmpAcS == 0 {
 			cpuPtr.carry = !cpuPtr.carry
 		}
@@ -104,20 +106,20 @@ func novaOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	switch iPtr.sh {
 	case 'L':
 		tmpCry = cpuPtr.carry
-		cpuPtr.carry = testWbit(shifter, 0)
+		cpuPtr.carry = util.TestWbit(shifter, 0)
 		shifter <<= 1
 		if tmpCry {
 			shifter |= 0x0001
 		}
 	case 'R':
 		tmpCry = cpuPtr.carry
-		cpuPtr.carry = testWbit(shifter, 15)
+		cpuPtr.carry = util.TestWbit(shifter, 15)
 		shifter >>= 1
 		if tmpCry {
 			shifter |= 0x8000
 		}
 	case 'S':
-		shifter = swapBytes(shifter)
+		shifter = util.SwapBytes(shifter)
 	}
 
 	// Skip?
@@ -168,7 +170,7 @@ func novaOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	// No-Load?
 	if iPtr.nl != '#' {
-		cpuPtr.ac[iPtr.acd] = DgDwordT(shifter) & 0x0000ffff
+		cpuPtr.ac[iPtr.acd] = dg.DwordT(shifter) & 0x0000ffff
 	} else {
 		// don't load the result from the shifter, restore the Carry flag
 		cpuPtr.carry = savedCry

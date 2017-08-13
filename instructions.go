@@ -24,17 +24,18 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"mvemg/dg"
 	"os"
 )
 
 // the characteristics of each instruction
 type instrChars struct {
 	// mnemonic   string  // DG standard assembler mnemonic for opcode
-	bits      DgWordT // bit-pattern for opcode
-	mask      DgWordT // mask for unique bits in opcode
-	instrLen  int     // # of words in opcode and any following args
-	instrFmt  int     // opcode layout
-	instrType int     // class of opcode (somewhat arbitrary)
+	bits      dg.WordT // bit-pattern for opcode
+	mask      dg.WordT // mask for unique bits in opcode
+	instrLen  int      // # of words in opcode and any following args
+	instrFmt  int      // opcode layout
+	instrType int      // class of opcode (somewhat arbitrary)
 	//xeqCounter uint64  // count of # times instruction hit during this run
 }
 

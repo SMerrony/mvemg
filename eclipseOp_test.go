@@ -90,7 +90,7 @@ func TestHXL(t *testing.T) {
 	iPtr.acd = 0
 	cpuPtr.ac[0] = 0x0123
 	iPtr.immU16 = 2
-	expd := DgDwordT(0x2300)
+	expd :=dg.DwordT(0x2300)
 	if !eclipseOp(cpuPtr, &iPtr) {
 		t.Error("Failed to execute HXL")
 	}
@@ -100,7 +100,7 @@ func TestHXL(t *testing.T) {
 
 	cpuPtr.ac[0] = 0x0123
 	iPtr.immU16 = 4
-	expd = DgDwordT(0x0)
+	expd =dg.DwordT(0x0)
 	if !eclipseOp(cpuPtr, &iPtr) {
 		t.Error("Failed to execute HXL")
 	}
@@ -115,7 +115,7 @@ func TestHXR(t *testing.T) {
 	iPtr.acd = 0
 	cpuPtr.ac[0] = 0x0123
 	iPtr.immU16 = 2
-	expd := DgDwordT(0x0001)
+	expd :=dg.DwordT(0x0001)
 	if !eclipseOp(cpuPtr, &iPtr) {
 		t.Error("Failed to execute HXL")
 	}
@@ -125,7 +125,7 @@ func TestHXR(t *testing.T) {
 
 	cpuPtr.ac[0] = 0x0123
 	iPtr.immU16 = 4
-	expd = DgDwordT(0x0)
+	expd =dg.DwordT(0x0)
 	if !eclipseOp(cpuPtr, &iPtr) {
 		t.Error("Failed to execute HXL")
 	}

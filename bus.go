@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"log"
 	"mvemg/logging"
+	"mvemg/util"
 	"sync"
 )
 
@@ -82,7 +83,6 @@ func busInit() {
 		d[dev].done = false
 		d[dev].devMu.Unlock()
 	}
-	bmcdchInit()
 }
 
 func busAddDevice(devNum int, mnem string, pmb int, att bool, io bool, boot bool) {
@@ -217,14 +217,14 @@ func busIsAttached(devNum int) bool {
 func busSetBusy(devNum int, f bool) {
 	d[devNum].devMu.Lock()
 	d[devNum].busy = f
-	logging.DebugPrint(logging.DebugLog, "... Busy flag set to %d for device #0%o\n", BoolToInt(f), devNum)
+	logging.DebugPrint(logging.DebugLog, "... Busy flag set to %d for device #0%o\n", util.BoolToInt(f), devNum)
 	d[devNum].devMu.Unlock()
 }
 
 func busSetDone(devNum int, f bool) {
 	d[devNum].devMu.Lock()
 	d[devNum].done = f
-	logging.DebugPrint(logging.DebugLog, "... Done flag set to %d for device #0%o\n", BoolToInt(f), devNum)
+	logging.DebugPrint(logging.DebugLog, "... Done flag set to %d for device #0%o\n", util.BoolToInt(f), devNum)
 	d[devNum].devMu.Unlock()
 }
 
@@ -264,7 +264,7 @@ func busGetPrintableDevList() string {
 		if d[dev].mnemonic != "" {
 			line = fmt.Sprintf("%#3o %-6s %2d. %3d %4d %4d  ",
 				dev, d[dev].mnemonic, d[dev].priorityMaskBit,
-				BoolToInt(d[dev].ioDevice), BoolToInt(d[dev].busy), BoolToInt(d[dev].done))
+				util.BoolToInt(d[dev].ioDevice), util.BoolToInt(d[dev].busy), util.BoolToInt(d[dev].done))
 			if d[dev].simAttached {
 				line += "Attached"
 			} else {

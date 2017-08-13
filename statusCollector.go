@@ -24,6 +24,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"mvemg/util"
 	"net"
 	"os"
 	"time"
@@ -91,8 +92,8 @@ func statusCollector(
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", DASHER_WRITE_WINDOW_ADDR, 0, statCPUrow, DASHER_ERASE_EOL))
 				statusSendString(conn, fmt.Sprintf("PC:  %010d   Interrupts: %s    ATU: %s     IPS: %.fk/sec",
 					cpuStats.pc,
-					BoolToOnOff(cpuStats.ion),
-					BoolToOnOff(cpuStats.atu),
+					util.BoolToOnOff(cpuStats.ion),
+					util.BoolToOnOff(cpuStats.atu),
 					ips))
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", DASHER_WRITE_WINDOW_ADDR, 0, statCPUrow2, DASHER_ERASE_EOL))
 				statusSendString(conn, fmt.Sprintf("AC0: %010d   AC1: %010d   AC2: %010d   AC3: %010d",
@@ -107,7 +108,7 @@ func statusCollector(
 				lastDpfTime = time.Now()
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", DASHER_WRITE_WINDOW_ADDR, 0, statDPFrow, DASHER_ERASE_EOL))
 				statusSendString(conn, fmt.Sprintf("DPF  - Attached: %c  IOPS: %.f CYL: %04d  HD: %02d  SECT: %03d",
-					BoolToYN(dpfStats.imageAttached),
+					util.BoolToYN(dpfStats.imageAttached),
 					dpfIops,
 					dpfStats.cylinder,
 					dpfStats.head,
@@ -120,7 +121,7 @@ func statusCollector(
 				lastDskpTime = time.Now()
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", DASHER_WRITE_WINDOW_ADDR, 0, statDSKProw, DASHER_ERASE_EOL))
 				statusSendString(conn, fmt.Sprintf("DSKP - Attached: %c  IOPS: %.f  SECNUM: %08d",
-					BoolToYN(dskpStats.imageAttached),
+					util.BoolToYN(dskpStats.imageAttached),
 					dskpIops,
 					//dskpStats.cylinder,
 					//dskpStats.head,

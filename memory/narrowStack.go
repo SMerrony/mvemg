@@ -1,4 +1,4 @@
-// novaPC.go
+// narrowStack.go
 
 // Copyright (C) 2017  Steve Merrony
 
@@ -19,28 +19,38 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package main
+package memory
 
 import (
-	"log"
 	"mvemg/dg"
+	"mvemg/logging"
 )
 
-func novaPC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
-	switch iPtr.mnemonic {
+const (
+	// Some Page Zero special locations...
+	NSP_LOC  = 040 // 32. Narrow Stack Pointer
+	NFP_LOC  = 041
+	NSL_LOC  = 042
+	NSFA_LOC = 043
+)
 
-	case "JMP":
-		// disp is only 8-bit, but same resolution code
-		cpuPtr.pc = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
+// PUSH a word onto the Narrow Stack
+func NsPush(seg dg.PhysAddrT, data dg.WordT) {
+	// TODO segment handling
+	// TODO overflow/underflow handling - either here or in instruction?
+	memory.ram[NSP_LOC]++ // we allow this direct write to a fixed location for performance
+	addr := dg.PhysAddrT(memory.ram[NSP_LOC])
+	WriteWord(addr, data)
+	logging.DebugPrint(logging.DebugLog, "... memory.NsPush pushed %8d onto the Narrow Stack at location: %d\n", data, addr)
+}
 
-	case "JSR":
-		tmpPC := dg.DwordT(cpuPtr.pc + 1)
-		cpuPtr.pc = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
-		cpuPtr.ac[3] = tmpPC
-
-	default:
-		log.Fatalf("ERROR: NOVA_PC instruction <%s> not yet implemented\n", iPtr.mnemonic)
-		return false
-	}
-	return true
+// POP a word off the Narrow Stack
+func NsPop(seg dg.PhysAddrT) dg.WordT {
+	// TODO segment handling
+	// TODO overflow/underflow handling - either here or in instruction?
+	addr := dg.PhysAddrT(memory.ram[NSP_LOC])
+	data := ReadWord(addr)
+	logging.DebugPrint(logging.DebugLog, "... memory.NsPop  popped %8d off  the Narrow Stack at location: %d\n", data, addr)
+	memory.ram[NSP_LOC]-- // we allow this direct write to a fixed location for performance
+	return data
 }
