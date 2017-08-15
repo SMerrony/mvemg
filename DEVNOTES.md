@@ -8,13 +8,17 @@ Things to remember and general thoughts to bear in mind when working on the Go v
 DG is big-endian, Intel is litle-endian.  Bits are numbered from the left in DG, the right in Intel, so in DG-land
 bit 0 is the most significant.
 
-Make use of the dg_word, etc types where possible.
+Make use of the dg.WordT, etc types where possible.
 
 ## Emulator Structure ##
+
+### Memory ###
+Memory has been put into its own package primarily to reduce the risk of direct reads and writes to the []ram array.  Minimise what is exported from this package.
+
 ### DCH/BMC Map ###
 The map overrides memory mapping for certain I/O devices.
 We consider it to be 'owned' by the memory module rather than the bus.
-Devices which may be subject to DCH/BMC mapping should use the mem...Chan(...) functions to read and write memory.
+Devices which may be subject to DCH/BMC mapping should only use the mem...Chan(...) functions to read and write memory.
 
 ## Addressing Reminder ##
 

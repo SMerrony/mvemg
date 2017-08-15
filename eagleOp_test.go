@@ -48,6 +48,78 @@ func TestADDI(t *testing.T) {
 	}
 }
 
+func TestANDI(t *testing.T) {
+	cpuPtr := cpuInit(nil)
+	var iPtr decodedInstrT
+	iPtr.mnemonic = "ANDI"
+	iPtr.immWord = 0x00ff
+	iPtr.acd = 0
+	cpuPtr.ac[0] = 0x0101
+	if !eagleOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute ANDI")
+	}
+	if cpuPtr.ac[0] != 1 {
+		t.Errorf("Expected %x, got %x", 1, cpuPtr.ac[0])
+	}
+}
+func TestNADD(t *testing.T) {
+	cpuPtr := cpuInit(nil)
+	var iPtr decodedInstrT
+	iPtr.mnemonic = "NADD"
+	iPtr.acs = 0
+	iPtr.acd = 1
+	// test neg + neg
+	cpuPtr.ac[0] = 0xffff // -1
+	cpuPtr.ac[1] = 0xffff // -1
+
+	if !eagleOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute NADD")
+	}
+	if cpuPtr.ac[1] != 0xfffffffe {
+		t.Errorf("Expected %x, got %x", 0xfffffffe, cpuPtr.ac[1])
+	}
+
+	// test neg + pos
+	cpuPtr.ac[0] = 0x0001 // -1
+	cpuPtr.ac[1] = 0xffff // -1
+
+	if !eagleOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute NADD")
+	}
+	if cpuPtr.ac[1] != 0 {
+		t.Errorf("Expected %x, got %x", 0, cpuPtr.ac[1])
+	}
+}
+
+func TestNSUB(t *testing.T) {
+	cpuPtr := cpuInit(nil)
+	var iPtr decodedInstrT
+	iPtr.mnemonic = "NSUB"
+	iPtr.acs = 0
+	iPtr.acd = 1
+	// test neg - neg
+	cpuPtr.ac[0] = 0xffff // -1
+	cpuPtr.ac[1] = 0xffff // -1
+
+	if !eagleOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute NSUB")
+	}
+	if cpuPtr.ac[1] != 0 {
+		t.Errorf("Expected %x, got %x", 0, cpuPtr.ac[1])
+	}
+
+	// test neg - pos
+	cpuPtr.ac[0] = 0x0001 // 1
+	cpuPtr.ac[1] = 0xffff // -1
+
+	if !eagleOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute NADD")
+	}
+	if cpuPtr.ac[1] != 0xfffffffe {
+		t.Errorf("Expected %x, got %x", 0xfffffffe, cpuPtr.ac[1])
+	}
+}
+
 func TestWNEG(t *testing.T) {
 	cpuPtr := cpuInit(nil)
 	var iPtr decodedInstrT

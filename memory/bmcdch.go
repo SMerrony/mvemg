@@ -68,19 +68,33 @@ const (
 	IOCMR_MK6 = 1 << 1
 )
 
+type bmcAddrT struct {
+	isLogical bool // is this a Physical(f) or Logical(t) address?
+
+	// physical addresses...
+	bk  byte         // bank selection bits (3-bit)
+	xca byte         // eXtended Channel Addr bits (3-bit)
+	ca  dg.PhysAddrT // Channel Addr (15-bit)
+
+	// logical addresess..
+	tt   byte         // Translation Table (5-bit)
+	ttr  byte         // TT Register (5-bit)
+	plow dg.PhysAddrT // Page Low Order Word (10-bit)
+}
+
 var regs [BMCDCH_REGS]dg.WordT
 
+// bmcdchInit is only called by MemInit()...
 func bmcdchInit() {
-	for r, _ := range regs {
-		regs[r] = 0
-	}
 	bmcdchReset()
 	log.Println("INFO: BMC/DCH Maps Initialised")
 	logging.DebugPrint(logging.MapLog, "BMC/DCH Maps Initialised\n")
 }
 
 func bmcdchReset() {
-	// TODO should we clear the regs?
+	for r := range regs {
+		regs[r] = 0
+	}
 	regs[IOCHAN_DEF_REG] = IOCDR_1
 	regs[IOCHAN_STATUS_REG] = IOCSR_1A | IOCSR_1B
 	regs[IOCHAN_MASK_REG] = IOCMR_MK1 | IOCMR_MK2 | IOCMR_MK3 | IOCMR_MK4 | IOCMR_MK5 | IOCMR_MK6
@@ -122,20 +136,6 @@ func getBmcDchMapAddr(mAddr dg.PhysAddrT) (dg.PhysAddrT, dg.PhysAddrT) {
 	logging.DebugPrint(logging.MapLog, "getBmcDchMapAddr got: %d, slot: %d, regs[slot*2+1]: %d, page: %d, returning: %d\n",
 		mAddr, slot, regs[(slot*2)+1], page, pAddr)
 	return pAddr, page // TODO page return is just for debugging
-}
-
-type bmcAddrT struct {
-	isLogical bool // is this a Physical(f) or Logical(t) address?
-
-	// physical addresses...
-	bk  byte         // bank selection bits (3-bit)
-	xca byte         // eXtended Channel Addr bits (3-bit)
-	ca  dg.PhysAddrT // Channel Addr (15-bit)
-
-	// logical addresess..
-	tt   byte         // Translation Table (5-bit)
-	ttr  byte         // TT Register (5-bit)
-	plow dg.PhysAddrT // Page Low Order Word (10-bit)
 }
 
 func decodeBmcAddr(bmcAddr dg.PhysAddrT) bmcAddrT {

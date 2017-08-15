@@ -60,13 +60,13 @@ func eagleIO(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	case "LCPID":
 		dwd = CPU_MODEL_NO << 16
 		dwd |= UCODE_REV << 8
-		dwd |= memory.MEM_SIZE_LCPID
+		dwd |= memory.MemSizeLCPID
 		cpuPtr.ac[iPtr.acd] = dwd
 
 	case "NCLID":
 		cpuPtr.ac[0] = CPU_MODEL_NO
 		cpuPtr.ac[1] = UCODE_REV
-		cpuPtr.ac[2] = memory.MEM_SIZE_LCPID // TODO Check this
+		cpuPtr.ac[2] = memory.MemSizeLCPID // TODO Check this
 
 	case "WLMP":
 		if cpuPtr.ac[1] == 0 {
