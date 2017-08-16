@@ -113,12 +113,13 @@ const dpfStatsPeriodMs = 500
 
 type dpfDataT struct {
 	// MV/Em internals...
-	debug         bool
-	imageAttached bool
-	dpfMu         sync.RWMutex
-	imageFileName string
-	imageFile     *os.File
-	reads, writes uint64
+	debug               bool
+	imageAttached       bool
+	dpfMu               sync.RWMutex
+	imageFileName       string
+	imageFile           *os.File
+	reads, writes       uint64
+	readBuff, writeBuff []byte
 	// DG data...
 	cmdDrvAddr      byte // 6-bit?
 	command         int8 // 4-bit
@@ -171,7 +172,8 @@ func dpfInit(statsChann chan dpfStatT) {
 	dpfData.instructionMode = DPF_INS_MODE_NORMAL
 	dpfData.driveStatus = DPF_READY
 	dpfData.mapEnabled = false
-
+	dpfData.readBuff = make([]byte, dpfBytesPerSect)
+	dpfData.writeBuff = make([]byte, dpfBytesPerSect)
 }
 
 // attempt to attach an extant MV/Em disk image to the running emulator
@@ -373,8 +375,8 @@ func dpfDataOut(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 
 func dpfDoCommand() {
 	var (
-		buffer = make([]byte, dpfBytesPerSect)
-		wd     dg.WordT
+		//buffer = make([]byte, dpfBytesPerSect)
+		wd dg.WordT
 	)
 	dpfData.dpfMu.Lock()
 
@@ -388,7 +390,7 @@ func dpfDoCommand() {
 		dpfData.surface = 0
 		dpfPositionDiskImage()
 		dpfData.driveStatus = DPF_READY
-		dpfData.rwStatus = DPF_DRIVE0DONE
+		dpfData.rwStatus = DPF_RWDONE | DPF_DRIVE0DONE
 		if dpfData.debug {
 			logging.DebugPrint(logging.DpfLog, "... RECAL done, %s\n", dpfPrintableAddr())
 		}
@@ -398,7 +400,7 @@ func dpfDoCommand() {
 		// action the seek
 		dpfPositionDiskImage()
 		dpfData.driveStatus = DPF_READY
-		dpfData.rwStatus = DPF_DRIVE0DONE
+		dpfData.rwStatus = DPF_RWDONE | DPF_DRIVE0DONE
 		if dpfData.debug {
 			logging.DebugPrint(logging.DpfLog, "... SEEK done, %s\n", dpfPrintableAddr())
 		}
@@ -440,13 +442,13 @@ func dpfDoCommand() {
 				return
 			}
 			dpfPositionDiskImage()
-			br, err := dpfData.imageFile.Read(buffer)
+			br, err := dpfData.imageFile.Read(dpfData.readBuff)
 
 			if br != dpfBytesPerSect || err != nil {
 				log.Fatalf("ERROR: unexpected return from DPF Image File Read: %s", err)
 			}
 			for w := 0; w < dpfWordsPerSect; w++ {
-				wd = (dg.WordT(buffer[w*2]) << 8) | dg.WordT(buffer[(w*2)+1])
+				wd = (dg.WordT(dpfData.readBuff[w*2]) << 8) | dg.WordT(dpfData.readBuff[(w*2)+1])
 				memory.MemWriteWordBmcChan(dg.PhysAddrT(dpfData.memAddr), wd)
 				dpfData.memAddr++
 			}
@@ -455,7 +457,7 @@ func dpfDoCommand() {
 			dpfData.reads++
 
 			if dpfData.debug {
-				logging.DebugPrint(logging.DpfLog, "Buffer: %X\n", buffer)
+				logging.DebugPrint(logging.DpfLog, "Buffer: %X\n", dpfData.readBuff)
 			}
 
 		}
@@ -463,7 +465,7 @@ func dpfDoCommand() {
 			logging.DebugPrint(logging.DpfLog, "... .... READ command finished %s\n", dpfPrintableAddr())
 			logging.DebugPrint(logging.DpfLog, "\n... .... Last Address: %d\n", dpfData.memAddr)
 		}
-		dpfData.rwStatus = DPF_RWDONE | DPF_DRIVE0DONE
+		dpfData.rwStatus = DPF_RWDONE //| DPF_DRIVE0DONE
 
 	case DPF_CMD_WRITE:
 		if dpfData.debug {
@@ -504,10 +506,10 @@ func dpfDoCommand() {
 			for w := 0; w < dpfWordsPerSect; w++ {
 				wd = memory.MemReadWordBmcChan(dg.PhysAddrT(dpfData.memAddr))
 				dpfData.memAddr++
-				buffer[w*2] = byte((wd & 0xff00) >> 8)
-				buffer[(w*2)+1] = byte(wd & 0x00ff)
+				dpfData.writeBuff[w*2] = byte((wd & 0xff00) >> 8)
+				dpfData.writeBuff[(w*2)+1] = byte(wd & 0x00ff)
 			}
-			bw, err := dpfData.imageFile.Write(buffer)
+			bw, err := dpfData.imageFile.Write(dpfData.writeBuff)
 			if bw != dpfBytesPerSect || err != nil {
 				log.Fatalf("ERROR: unexpected return from DPF Image File Write: %s", err)
 			}
@@ -516,7 +518,7 @@ func dpfDoCommand() {
 			dpfData.writes++
 
 			if dpfData.debug {
-				logging.DebugPrint(logging.DpfLog, "Buffer: %X\n", buffer)
+				logging.DebugPrint(logging.DpfLog, "Buffer: %X\n", dpfData.writeBuff)
 			}
 		}
 		if dpfData.debug {
@@ -524,7 +526,7 @@ func dpfDoCommand() {
 			logging.DebugPrint(logging.DpfLog, "... ..... Last Address: %d\n", dpfData.memAddr)
 		}
 		dpfData.driveStatus = DPF_READY
-		dpfData.rwStatus = DPF_RWDONE | DPF_DRIVE0DONE
+		dpfData.rwStatus = DPF_RWDONE //| DPF_DRIVE0DONE
 
 	default:
 		log.Fatalf("DPF Disk R/W Command %d not yet implemented\n", dpfData.command)

@@ -26,6 +26,11 @@
 // accessed via the BMC interface running at 2.2MB/sec in mapped or physical mode.
 // There is also a small set of flags and pulses shared between the controller and the CPU.
 
+// ASYNCHRONOUS interrupts occur on completion of a CB (list), or when an error
+// occurs during CB processing.
+
+// SYNCHRONOUS interrupts occur after a PIO command executes.
+
 package main
 
 import (
@@ -524,7 +529,8 @@ func dskpProcessCB(addr dg.PhysAddrT) {
 		sect          dg.DwordT
 		physTransfers bool
 		physAddr      dg.PhysAddrT
-		buffer        = make([]byte, dskpBytesPerSector)
+		readBuff      = make([]byte, dskpBytesPerSector)
+		writeBuff     = make([]byte, dskpBytesPerSector)
 		tmpWd         dg.WordT
 	)
 	cbLength = DSKP_CB_MIN_SIZE + dskpGetCBextendedStatusSize()
@@ -586,9 +592,9 @@ func dskpProcessCB(addr dg.PhysAddrT) {
 		for sect = 0; sect < dg.DwordT(cb[DSKP_CB_TXFER_COUNT]); sect++ {
 			dskpData.sectorNo += sect
 			dskpPositionDiskImage()
-			dskpData.imageFile.Read(buffer)
+			dskpData.imageFile.Read(readBuff)
 			for w = 0; w < dskpWordsPerSector; w++ {
-				tmpWd = (dg.WordT(buffer[w*2]) << 8) | dg.WordT(buffer[(w*2)+1])
+				tmpWd = (dg.WordT(readBuff[w*2]) << 8) | dg.WordT(readBuff[(w*2)+1])
 				memory.MemWriteWordBmcChan(physAddr+(dg.PhysAddrT(sect)*dskpWordsPerSector)+dg.PhysAddrT(w), tmpWd)
 			}
 			dskpData.reads++
@@ -605,10 +611,10 @@ func dskpProcessCB(addr dg.PhysAddrT) {
 
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... .. .... READ command finished\n")
-			logging.DebugPrint(logging.DskpLog, "Last buffer: %X\n", buffer)
+			logging.DebugPrint(logging.DskpLog, "Last buffer: %X\n", readBuff)
 		}
-		//dskpSetAsyncStatusRegC(STAT_XEC_STATE_MAPPED, STAT_ASYNC_NO_ERRORS)
-		dskpSetAsyncStatusRegC(0, STAT_ASYNC_NO_ERRORS)
+		dskpSetAsyncStatusRegC(STAT_XEC_STATE_MAPPED, STAT_ASYNC_NO_ERRORS)
+		//dskpSetAsyncStatusRegC(0, STAT_ASYNC_NO_ERRORS)
 
 	case DSKP_CB_OP_WRITE:
 		dskpData.sectorNo = util.DWordFromTwoWords(cb[DSKP_CB_DEV_ADDR_HIGH], cb[DSKP_CB_DEV_ADDR_LOW])
@@ -631,12 +637,12 @@ func dskpProcessCB(addr dg.PhysAddrT) {
 			dskpPositionDiskImage()
 			for w = 0; w < dskpWordsPerSector; w++ {
 				tmpWd = memory.MemReadWordBmcChan(physAddr + (dg.PhysAddrT(sect) * dskpWordsPerSector) + dg.PhysAddrT(w))
-				buffer[w*2] = byte(tmpWd >> 8)
-				buffer[(w*2)+1] = byte(tmpWd & 0x00ff)
+				writeBuff[w*2] = byte(tmpWd >> 8)
+				writeBuff[(w*2)+1] = byte(tmpWd & 0x00ff)
 			}
-			dskpData.imageFile.Write(buffer)
+			dskpData.imageFile.Write(writeBuff)
 			if dskpData.debug {
-				logging.DebugPrint(logging.DskpLog, "Wrote buffer: %X\n", buffer)
+				logging.DebugPrint(logging.DskpLog, "Wrote buffer: %X\n", writeBuff)
 			}
 			dskpData.writes++
 		}
@@ -650,8 +656,8 @@ func dskpProcessCB(addr dg.PhysAddrT) {
 			cb[DSKP_CB_CB_STATUS] = 1 // finally, set Done bit
 		}
 
-		//dskpSetAsyncStatusRegC(STAT_XEC_STATE_MAPPED, STAT_ASYNC_NO_ERRORS)
-		dskpSetAsyncStatusRegC(0, STAT_ASYNC_NO_ERRORS)
+		dskpSetAsyncStatusRegC(STAT_XEC_STATE_MAPPED, STAT_ASYNC_NO_ERRORS)
+		//dskpSetAsyncStatusRegC(0, STAT_ASYNC_NO_ERRORS)
 
 	default:
 		log.Fatalf("DSKP CB Command %d not yet implemented\n", opCode)
@@ -718,6 +724,10 @@ func dskpResetUnitInfBlock() {
 func dskpSetAsyncStatusRegC(stat byte, asyncIntCode dg.WordT) {
 	dskpData.statusRegC = dg.WordT(stat) << 12
 	dskpData.statusRegC |= (asyncIntCode & 0x03ff)
+	if dskpData.debug {
+		logging.DebugPrint(logging.DskpLog, "DSKP PIO ASYNCHRONOUS status C set to: %s\n",
+			util.WordToBinStr(dskpData.statusRegC))
+	}
 }
 
 func dskpSetPioStatusRegC(stat byte, ccs byte, cmdEcho dg.WordT, rr bool) {
@@ -726,5 +736,9 @@ func dskpSetPioStatusRegC(stat byte, ccs byte, cmdEcho dg.WordT, rr bool) {
 	dskpData.statusRegC |= (cmdEcho & 0x01ff) << 1
 	if rr {
 		dskpData.statusRegC |= 1
+	}
+	if dskpData.debug {
+		logging.DebugPrint(logging.DskpLog, "DSKP PIO (SYNCH) status C set to: %s\n",
+			util.WordToBinStr(dskpData.statusRegC))
 	}
 }
