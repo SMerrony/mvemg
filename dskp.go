@@ -62,94 +62,94 @@ const (
 
 	dskpMaxQueuedCBs = 30 // See p.2-13
 
-	DSKP_INT_INF_BLK_SIZE   = 8
-	DSKP_CTRLR_INF_BLK_SIZE = 2
-	DSKP_UNIT_INF_BLK_SIZE  = 7
-	DSKP_CB_MAX_SIZE        = 21
-	DSKP_CB_MIN_SIZE        = 10 //12 // Was 10
+	dskpIntInfBlkSize   = 8
+	dskpCtrlrInfBlkSize = 2
+	dskpUnitInfBlkSize  = 7
+	dskpCbMaxSize       = 21
+	dskpCbMinSize       = 10 //12 // Was 10
 
-	STAT_XEC_STATE_RESETTING  = 0x00
-	STAT_XEC_STATE_RESET_DONE = 0x01
-	STAT_XEC_STATE_BEGUN      = 0x08
-	STAT_XEC_STATE_MAPPED     = 0x0c
-	STAT_XEC_STATE_DIAG_MODE  = 0x04
+	statXecStateResetting = 0x00
+	statXecStateResetDone = 0x01
+	statXecStateBegun     = 0x08
+	statXecStateMapped    = 0x0c
+	statXecStateDiagMode  = 0x04
 
-	STAT_CCS_ASYNC          = 0
-	STAT_CCS_PIO_INV_CMD    = 1
-	STAT_CCS_PIO_CMD_FAILED = 2
-	STAT_CCS_PIO_CMD_OK     = 3
+	statCcsAsync        = 0
+	statCcsPioInvCmd    = 1
+	statCcsPioCmdFailed = 2
+	statCcsPioCmdOk     = 3
 
-	STAT_ASYNC_NO_ERRORS = 5
+	statAsyncNoErrors = 5
 
 	// DSKP PIO Command Set
-	DSKP_PROG_LOAD             = 000
-	DSKP_BEGIN                 = 002
-	DSKP_SYSGEN                = 025
-	DSKP_DIAG_MODE             = 024
-	DSKP_SET_MAPPING           = 026
-	DSKP_GET_MAPPING           = 027
-	DSKP_SET_INTERFACE         = 030
-	DSKP_GET_INTERFACE         = 031
-	DSKP_SET_CONTROLLER        = 032
-	DSKP_GET_CONTROLLER        = 033
-	DSKP_SET_UNIT              = 034
-	DSKP_GET_UNIT              = 035
-	DSKP_GET_EXTENDED_STATUS_0 = 040
-	DSKP_GET_EXTENDED_STATUS_1 = 041
-	DSKP_GET_EXTENDED_STATUS_2 = 042
-	DSKP_GET_EXTENDED_STATUS_3 = 043
-	DSKP_START_LIST            = 0100
-	DSKP_START_LIST_HP         = 0103
-	DSKP_RESTART               = 0116
-	DSKP_CANCEL_LIST           = 0123
-	DSKP_UNIT_STATUS           = 0131
-	DSKP_TRESPASS              = 0132
-	DSKP_GET_LIST_STATUS       = 0133
-	DSKP_RESET                 = 0777
+	dskpPioProgLoad        = 000
+	dskpPioBegin           = 002
+	dskpPioSysgen          = 025
+	dskpDiagMode           = 024
+	dskpSetMapping         = 026
+	dskpGetMapping         = 027
+	dskpSetInterface       = 030
+	dskpGetInterface       = 031
+	dskpSetController      = 032
+	dskpGetController      = 033
+	dskpSetUnit            = 034
+	dskpGetUnit            = 035
+	dskpGetExtendedStatus0 = 040
+	dskpGetExtendedStatus1 = 041
+	dskpGetExtendedStatus2 = 042
+	dskpGetExtendedStatus3 = 043
+	dskpStartList          = 0100
+	dskpStartListHp        = 0103
+	dskpRestart            = 0116
+	dskpCancelList         = 0123
+	dskpUnitStatus         = 0131
+	dskpTrespass           = 0132
+	dskpGetListStatus      = 0133
+	dskpPioReset           = 0777
 
 	// DSKP CB Command Set/OpCodes
-	DSKP_CB_OP_NO_OP               = 0
-	DSKP_CB_OP_WRITE               = 0100
-	DSKP_CB_OP_WRITE_VERIFY        = 0101
-	DSKP_CB_OP_WRITE_1_WORD        = 0104
-	DSKP_CB_OP_WRITE_VERIFY_1_WORD = 0105
-	DSKP_CB_OP_WRITE_MOD_BITMAP    = 0142
-	DSKP_CB_OP_READ                = 0200
-	DSKP_CB_OP_READ_VERIFY         = 0201
-	DSKP_CB_OP_READ_VERIFY_1_WORD  = 0205
-	DSKP_CB_OP_READ_RAW_DATA       = 0210
-	DSKP_CB_OP_READ_HEADERS        = 0220
-	DSKP_CB_OP_READ_MOD_BITMAP     = 0242
-	DSKP_CB_OP_RECALIBRATE_DISK    = 0400
+	dskpCbOpNoOp             = 0
+	dskpCbOpWrite            = 0100
+	dskpCbOpWriteVerify      = 0101
+	dskpCbOpWrite1Word       = 0104
+	dskpCbOpWriteVerify1Word = 0105
+	dskpCbOpWriteModBitmap   = 0142
+	dskpCbOpRead             = 0200
+	dskpCbOpReadVerify       = 0201
+	dskpCbOpReadVerify1Word  = 0205
+	dskpCbOpReadRawData      = 0210
+	dskpCbOpReadHeaders      = 0220
+	dskpCbOpReadModBitmap    = 0242
+	dskpCbOpRecalibrateDisk  = 0400
 
 	// DSKP CB FIELDS
-	DSKP_CB_LINK_ADDR_HIGH        = 0
-	DSKP_CB_LINK_ADDR_LOW         = 1
-	DSKP_CB_INA_FLAGS_OPCODE      = 2
-	DSKP_CB_PAGENO_LIST_ADDR_HIGH = 3
-	DSKP_CB_PAGENO_LIST_ADDR_LOW  = 4
-	DSKP_CB_TXFER_ADDR_HIGH       = 5
-	DSKP_CB_TXFER_ADDR_LOW        = 6
-	DSKP_CB_DEV_ADDR_HIGH         = 7
-	DSKP_CB_DEV_ADDR_LOW          = 8
-	DSKP_CB_UNIT_NO               = 9
-	DSKP_CB_TXFER_COUNT           = 10
-	DSKP_CB_CB_STATUS             = 11
-	DSKP_CB_RES1                  = 12
-	DSKP_CB_RES2                  = 13
-	DSKP_CB_ERR_STATUS            = 14
-	DSKP_CB_UNIT_STATUS           = 15
-	DSKP_CB_RETRIES_DONE          = 16
-	DSKP_CB_SOFT_RTN_TXFER_COUNT  = 17
-	DSKP_CB_PHYS_CYL              = 18
-	DSKP_CB_PHYS_HEAD_SECT        = 19
-	DSKP_CB_DISK_ERR_CODE         = 20
+	dskpCbLINK_ADDR_HIGH        = 0
+	dskpCbLINK_ADDR_LOW         = 1
+	dskpCbINA_FLAGS_OPCODE      = 2
+	dskpCbPAGENO_LIST_ADDR_HIGH = 3
+	dskpCbPAGENO_LIST_ADDR_LOW  = 4
+	dskpCbTXFER_ADDR_HIGH       = 5
+	dskpCbTXFER_ADDR_LOW        = 6
+	dskpCbDEV_ADDR_HIGH         = 7
+	dskpCbDEV_ADDR_LOW          = 8
+	dskpCbUNIT_NO               = 9
+	dskpCbTXFER_COUNT           = 10
+	dskpCbCB_STATUS             = 11
+	dskpCbRES1                  = 12
+	dskpCbRES2                  = 13
+	dskpCbERR_STATUS            = 14
+	dskpCbUNIT_STATUS           = 15
+	dskpCbRETRIES_DONE          = 16
+	dskpCbSOFT_RTN_TXFER_COUNT  = 17
+	dskpCbPHYS_CYL              = 18
+	dskpCbPHYS_HEAD_SECT        = 19
+	dskpCbDISK_ERR_CODE         = 20
 
 	// Mapping bits
-	DSKP_MAP_SLOT_LOAD_INTS = 1 << 15
-	DSKP_MAP_INT_BMC_PHYS   = 1 << 14
-	DSKP_MAP_UPSTREAM_LOAD  = 1 << 13
-	DSKP_MAP_UPSTREAM_HPT   = 1 << 12
+	dskpMapSlotLoadInts = 1 << 15
+	dskpMapIntBmcPhys   = 1 << 14
+	dskpMapUpstreamLoad = 1 << 13
+	dskpMapUpstreamHpt  = 1 << 12
 
 	// calculated consts
 	// dskpPhysicalByteSize is the total  # bytes on a DSKP-type disk
@@ -170,9 +170,9 @@ type dskpDataT struct {
 	commandRegA, commandRegB, commandRegC dg.WordT
 	statusRegA, statusRegB, statusRegC    dg.WordT
 	mappingRegA, mappingRegB              dg.WordT
-	intInfBlock                           [DSKP_INT_INF_BLK_SIZE]dg.WordT
-	ctrlInfBlock                          [DSKP_CTRLR_INF_BLK_SIZE]dg.WordT
-	unitInfBlock                          [DSKP_UNIT_INF_BLK_SIZE]dg.WordT
+	intInfBlock                           [dskpIntInfBlkSize]dg.WordT
+	ctrlInfBlock                          [dskpCtrlrInfBlkSize]dg.WordT
+	unitInfBlock                          [dskpUnitInfBlkSize]dg.WordT
 	// cylinder, head, sector                dg_word
 	sectorNo dg.DwordT
 }
@@ -326,34 +326,34 @@ func dskpDoPioCommand() {
 
 	pioCmd := dskpExtractPioCommand(dskpData.commandRegC)
 	switch pioCmd {
-	case DSKP_PROG_LOAD:
-		log.Panicln("DSKP_PROG_LOAD command not yet implemented")
+	case dskpPioProgLoad:
+		log.Panicln("dskpProgLoad command not yet implemented")
 
-	case DSKP_BEGIN:
+	case dskpPioBegin:
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... BEGIN command, unit # %d\n", dskpData.commandRegA)
 		}
 		// pretend we have succesfully booted ourself
 		dskpData.statusRegB = 0
-		dskpSetPioStatusRegC(STAT_XEC_STATE_BEGUN, STAT_CCS_PIO_CMD_OK, DSKP_BEGIN, util.TestWbit(dskpData.commandRegC, 15))
+		dskpSetPioStatusRegC(statXecStateBegun, statCcsPioCmdOk, dskpPioBegin, util.TestWbit(dskpData.commandRegC, 15))
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... ..... returning %s\n", util.WordToBinStr(dskpData.statusRegC))
 		}
 
-	case DSKP_GET_MAPPING:
+	case dskpGetMapping:
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... GET MAPPING command\n")
 		}
 		dskpData.statusRegA = dskpData.mappingRegA
 		dskpData.statusRegB = dskpData.mappingRegB
-		dskpSetPioStatusRegC(0, STAT_CCS_PIO_CMD_OK, DSKP_GET_MAPPING, util.TestWbit(dskpData.commandRegC, 15))
+		dskpSetPioStatusRegC(0, statCcsPioCmdOk, dskpGetMapping, util.TestWbit(dskpData.commandRegC, 15))
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... ... Status Reg A set to %s\n", util.WordToBinStr(dskpData.statusRegA))
 			logging.DebugPrint(logging.DskpLog, "... ... Status Reg B set to %s\n", util.WordToBinStr(dskpData.statusRegB))
 		}
-		dskpSetPioStatusRegC(0, STAT_CCS_PIO_CMD_OK, DSKP_GET_MAPPING, util.TestWbit(dskpData.commandRegC, 15))
+		dskpSetPioStatusRegC(0, statCcsPioCmdOk, dskpGetMapping, util.TestWbit(dskpData.commandRegC, 15))
 
-	case DSKP_SET_MAPPING:
+	case dskpSetMapping:
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... SET MAPPING command\n")
 		}
@@ -363,23 +363,23 @@ func dskpDoPioCommand() {
 			logging.DebugPrint(logging.DskpLog, "... ... Mapping Reg A set to %s\n", util.WordToBinStr(dskpData.commandRegA))
 			logging.DebugPrint(logging.DskpLog, "... ... Mapping Reg B set to %s\n", util.WordToBinStr(dskpData.commandRegB))
 		}
-		dskpSetPioStatusRegC(STAT_XEC_STATE_MAPPED, STAT_CCS_PIO_CMD_OK, DSKP_SET_MAPPING, util.TestWbit(dskpData.commandRegC, 15))
+		dskpSetPioStatusRegC(statXecStateMapped, statCcsPioCmdOk, dskpSetMapping, util.TestWbit(dskpData.commandRegC, 15))
 
-	case DSKP_GET_INTERFACE:
+	case dskpGetInterface:
 		addr = dg.PhysAddrT(util.DWordFromTwoWords(dskpData.commandRegA, dskpData.commandRegB))
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... GET INTERFACE INFO command\n")
 			logging.DebugPrint(logging.DskpLog, "... ... Destination Start Address: %d\n", addr)
 		}
-		for w = 0; w < DSKP_INT_INF_BLK_SIZE; w++ {
+		for w = 0; w < dskpIntInfBlkSize; w++ {
 			memory.MemWriteWordBmcChan(addr+w, dskpData.intInfBlock[w])
 			if dskpData.debug {
 				logging.DebugPrint(logging.DskpLog, "... ... Word %d: %s\n", w, util.WordToBinStr(dskpData.intInfBlock[w]))
 			}
 		}
-		dskpSetPioStatusRegC(0, STAT_CCS_PIO_CMD_OK, DSKP_GET_INTERFACE, util.TestWbit(dskpData.commandRegC, 15))
+		dskpSetPioStatusRegC(0, statCcsPioCmdOk, dskpGetInterface, util.TestWbit(dskpData.commandRegC, 15))
 
-	case DSKP_SET_INTERFACE:
+	case dskpSetInterface:
 		addr = dg.PhysAddrT(util.DWordFromTwoWords(dskpData.commandRegA, dskpData.commandRegB))
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... SET INTERFACE INFO command\n")
@@ -397,23 +397,23 @@ func dskpDoPioCommand() {
 			logging.DebugPrint(logging.DskpLog, "... ... Word 6: %s\n", util.WordToBinStr(dskpData.intInfBlock[6]))
 			logging.DebugPrint(logging.DskpLog, "... ... Word 7: %s\n", util.WordToBinStr(dskpData.intInfBlock[7]))
 		}
-		dskpSetPioStatusRegC(0, STAT_CCS_PIO_CMD_OK, DSKP_SET_INTERFACE, util.TestWbit(dskpData.commandRegC, 15))
+		dskpSetPioStatusRegC(0, statCcsPioCmdOk, dskpSetInterface, util.TestWbit(dskpData.commandRegC, 15))
 
-	case DSKP_GET_UNIT:
+	case dskpGetUnit:
 		addr = dg.PhysAddrT(util.DWordFromTwoWords(dskpData.commandRegA, dskpData.commandRegB))
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... GET UNIT INFO command\n")
 			logging.DebugPrint(logging.DskpLog, "... ... Destination Start Address: %d\n", addr)
 		}
-		for w = 0; w < DSKP_UNIT_INF_BLK_SIZE; w++ {
+		for w = 0; w < dskpUnitInfBlkSize; w++ {
 			memory.MemWriteWordBmcChan(addr+w, dskpData.unitInfBlock[w])
 			if dskpData.debug {
 				logging.DebugPrint(logging.DskpLog, "... ... Word %d: %s\n", w, util.WordToBinStr(dskpData.unitInfBlock[w]))
 			}
 		}
-		dskpSetPioStatusRegC(0, STAT_CCS_PIO_CMD_OK, DSKP_GET_UNIT, util.TestWbit(dskpData.commandRegC, 15))
+		dskpSetPioStatusRegC(0, statCcsPioCmdOk, dskpGetUnit, util.TestWbit(dskpData.commandRegC, 15))
 
-	case DSKP_SET_UNIT:
+	case dskpSetUnit:
 		addr = dg.PhysAddrT(util.DWordFromTwoWords(dskpData.commandRegA, dskpData.commandRegB))
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... SET UNIT INFO command\n")
@@ -422,15 +422,15 @@ func dskpDoPioCommand() {
 		// only the first word is writable according to p.2-16
 		// TODO check no active CBs first
 		dskpData.unitInfBlock[0] = memory.ReadWord(addr)
-		dskpSetPioStatusRegC(0, STAT_CCS_PIO_CMD_OK, DSKP_SET_UNIT, util.TestWbit(dskpData.commandRegC, 15))
+		dskpSetPioStatusRegC(0, statCcsPioCmdOk, dskpSetUnit, util.TestWbit(dskpData.commandRegC, 15))
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... ... Overwrote word 0 of UIB with: %s\n", util.WordToBinStr(dskpData.unitInfBlock[0]))
 		}
 
-	case DSKP_RESET:
+	case dskpPioReset:
 		dskpReset()
 
-	case DSKP_SET_CONTROLLER:
+	case dskpSetController:
 		addr = dg.PhysAddrT(util.DWordFromTwoWords(dskpData.commandRegA, dskpData.commandRegB))
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... SET CONTROLLER INFO command\n")
@@ -438,13 +438,13 @@ func dskpDoPioCommand() {
 		}
 		dskpData.ctrlInfBlock[0] = memory.ReadWord(addr)
 		dskpData.ctrlInfBlock[1] = memory.ReadWord(addr + 1)
-		dskpSetPioStatusRegC(0, STAT_CCS_PIO_CMD_OK, DSKP_SET_CONTROLLER, util.TestWbit(dskpData.commandRegC, 15))
+		dskpSetPioStatusRegC(0, statCcsPioCmdOk, dskpSetController, util.TestWbit(dskpData.commandRegC, 15))
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... ... Word 0: %s\n", util.WordToBinStr(dskpData.ctrlInfBlock[0]))
 			logging.DebugPrint(logging.DskpLog, "... ... Word 1: %s\n", util.WordToBinStr(dskpData.ctrlInfBlock[1]))
 		}
 
-	case DSKP_START_LIST:
+	case dskpStartList:
 		addr = dg.PhysAddrT(util.DWordFromTwoWords(dskpData.commandRegA, dskpData.commandRegB))
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... START LIST command\n")
@@ -454,7 +454,7 @@ func dskpDoPioCommand() {
 		dskpProcessCB(addr)
 		dskpData.statusRegA = util.DWordGetUpperWord(dg.DwordT(addr)) // return address of 1st CB processed
 		dskpData.statusRegB = util.DWordGetLowerWord(dg.DwordT(addr))
-		//dskpSetPioStatusRegC(0, STAT_CCS_PIO_CMD_OK, DSKP_START_LIST,  util.TestWbit(dskpData.commandRegC, 15))
+		//dskpSetPioStatusRegC(0, statCcsPioCmdOk, dskpStartList,  util.TestWbit(dskpData.commandRegC, 15))
 
 	default:
 		log.Panicf("DSKP command %d not yet implemented\n", pioCmd)
@@ -495,8 +495,8 @@ func dskpHandleFlag(f byte) {
 		}
 		busSetDone(DEV_DSKP, false)
 		// TODO clear pending interrupt
-		dskpSetPioStatusRegC(STAT_XEC_STATE_MAPPED,
-			STAT_CCS_PIO_CMD_OK,
+		dskpSetPioStatusRegC(statXecStateMapped,
+			statCcsPioCmdOk,
 			dg.WordT(dskpExtractPioCommand(dskpData.commandRegC)),
 			util.TestWbit(dskpData.commandRegC, 15))
 		dskpData.dskpDataMu.Unlock()
@@ -523,7 +523,7 @@ func dskpPositionDiskImage() {
 
 func dskpProcessCB(addr dg.PhysAddrT) {
 	var (
-		cb            [DSKP_CB_MAX_SIZE]dg.WordT
+		cb            [dskpCbMaxSize]dg.WordT
 		w, cbLength   int
 		nextCB        dg.PhysAddrT
 		sect          dg.DwordT
@@ -533,7 +533,7 @@ func dskpProcessCB(addr dg.PhysAddrT) {
 		writeBuff     = make([]byte, dskpBytesPerSector)
 		tmpWd         dg.WordT
 	)
-	cbLength = DSKP_CB_MIN_SIZE + dskpGetCBextendedStatusSize()
+	cbLength = dskpCbMinSize + dskpGetCBextendedStatusSize()
 	if dskpData.debug {
 		logging.DebugPrint(logging.DskpLog, "... Processing CB, extended status size is: %d\n", dskpGetCBextendedStatusSize())
 	}
@@ -545,15 +545,15 @@ func dskpProcessCB(addr dg.PhysAddrT) {
 		}
 	}
 
-	opCode := cb[DSKP_CB_INA_FLAGS_OPCODE] & 0x03ff
-	nextCB = dg.PhysAddrT(util.DWordFromTwoWords(cb[DSKP_CB_LINK_ADDR_HIGH], cb[DSKP_CB_LINK_ADDR_LOW]))
+	opCode := cb[dskpCbINA_FLAGS_OPCODE] & 0x03ff
+	nextCB = dg.PhysAddrT(util.DWordFromTwoWords(cb[dskpCbLINK_ADDR_HIGH], cb[dskpCbLINK_ADDR_LOW]))
 	if dskpData.debug {
 		logging.DebugPrint(logging.DskpLog, "... CB OpCode: %d\n", opCode)
 		logging.DebugPrint(logging.DskpLog, "... .. Next CB Addr: %d\n", nextCB)
 	}
 	switch opCode {
 
-	case DSKP_CB_OP_RECALIBRATE_DISK:
+	case dskpCbOpRecalibrateDisk:
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... .. RECALIBRATE\n")
 		}
@@ -562,34 +562,34 @@ func dskpProcessCB(addr dg.PhysAddrT) {
 		//dskpData.sector = 0
 		dskpData.sectorNo = 0
 		dskpPositionDiskImage()
-		if cbLength >= DSKP_CB_ERR_STATUS+1 {
-			cb[DSKP_CB_ERR_STATUS] = 0
+		if cbLength >= dskpCbERR_STATUS+1 {
+			cb[dskpCbERR_STATUS] = 0
 		}
-		if cbLength >= DSKP_CB_UNIT_STATUS+1 {
-			cb[DSKP_CB_UNIT_STATUS] = 1 << 13 // b0010000000000000; // Ready
+		if cbLength >= dskpCbUNIT_STATUS+1 {
+			cb[dskpCbUNIT_STATUS] = 1 << 13 // b0010000000000000; // Ready
 		}
-		if cbLength >= DSKP_CB_CB_STATUS+1 {
-			cb[DSKP_CB_CB_STATUS] = 1 // finally, set Done bit
+		if cbLength >= dskpCbCB_STATUS+1 {
+			cb[dskpCbCB_STATUS] = 1 // finally, set Done bit
 		}
-		dskpSetAsyncStatusRegC(STAT_XEC_STATE_MAPPED, STAT_ASYNC_NO_ERRORS)
+		dskpSetAsyncStatusRegC(statXecStateMapped, statAsyncNoErrors)
 
-	case DSKP_CB_OP_READ:
-		dskpData.sectorNo = util.DWordFromTwoWords(cb[DSKP_CB_DEV_ADDR_HIGH], cb[DSKP_CB_DEV_ADDR_LOW])
-		if util.TestWbit(cb[DSKP_CB_PAGENO_LIST_ADDR_HIGH], 0) {
+	case dskpCbOpRead:
+		dskpData.sectorNo = util.DWordFromTwoWords(cb[dskpCbDEV_ADDR_HIGH], cb[dskpCbDEV_ADDR_LOW])
+		if util.TestWbit(cb[dskpCbPAGENO_LIST_ADDR_HIGH], 0) {
 			// logical premapped host address
 			physTransfers = false
 			log.Fatal("DSKP - CB READ from premapped logical addresses  Not Yet Implemented")
 		} else {
 			physTransfers = true
-			physAddr = dg.PhysAddrT(util.DWordFromTwoWords(cb[DSKP_CB_TXFER_ADDR_HIGH], cb[DSKP_CB_TXFER_ADDR_LOW]))
+			physAddr = dg.PhysAddrT(util.DWordFromTwoWords(cb[dskpCbTXFER_ADDR_HIGH], cb[dskpCbTXFER_ADDR_LOW]))
 		}
 		if dskpData.debug {
-			logging.DebugPrint(logging.DskpLog, "... .. CB READ command, SECCNT: %d\n", cb[DSKP_CB_TXFER_COUNT])
+			logging.DebugPrint(logging.DskpLog, "... .. CB READ command, SECCNT: %d\n", cb[dskpCbTXFER_COUNT])
 			logging.DebugPrint(logging.DskpLog, "... .. .. .... from sector:     %d\n", dskpData.sectorNo)
 			logging.DebugPrint(logging.DskpLog, "... .. .. .... from phys addr:  %d\n", physAddr)
 			logging.DebugPrint(logging.DskpLog, "... .. .. .... physical txfer?: %d\n", util.BoolToInt(physTransfers))
 		}
-		for sect = 0; sect < dg.DwordT(cb[DSKP_CB_TXFER_COUNT]); sect++ {
+		for sect = 0; sect < dg.DwordT(cb[dskpCbTXFER_COUNT]); sect++ {
 			dskpData.sectorNo += sect
 			dskpPositionDiskImage()
 			dskpData.imageFile.Read(readBuff)
@@ -599,40 +599,40 @@ func dskpProcessCB(addr dg.PhysAddrT) {
 			}
 			dskpData.reads++
 		}
-		if cbLength >= DSKP_CB_ERR_STATUS+1 {
-			cb[DSKP_CB_ERR_STATUS] = 0
+		if cbLength >= dskpCbERR_STATUS+1 {
+			cb[dskpCbERR_STATUS] = 0
 		}
-		if cbLength >= DSKP_CB_UNIT_STATUS+1 {
-			cb[DSKP_CB_UNIT_STATUS] = 1 << 13 // b0010000000000000; // Ready
+		if cbLength >= dskpCbUNIT_STATUS+1 {
+			cb[dskpCbUNIT_STATUS] = 1 << 13 // b0010000000000000; // Ready
 		}
-		if cbLength >= DSKP_CB_CB_STATUS+1 {
-			cb[DSKP_CB_CB_STATUS] = 1 // finally, set Done bit
+		if cbLength >= dskpCbCB_STATUS+1 {
+			cb[dskpCbCB_STATUS] = 1 // finally, set Done bit
 		}
 
 		if dskpData.debug {
 			logging.DebugPrint(logging.DskpLog, "... .. .... READ command finished\n")
 			logging.DebugPrint(logging.DskpLog, "Last buffer: %X\n", readBuff)
 		}
-		dskpSetAsyncStatusRegC(STAT_XEC_STATE_MAPPED, STAT_ASYNC_NO_ERRORS)
-		//dskpSetAsyncStatusRegC(0, STAT_ASYNC_NO_ERRORS)
+		dskpSetAsyncStatusRegC(statXecStateMapped, statAsyncNoErrors)
+		//dskpSetAsyncStatusRegC(0, statAsyncNoErrors)
 
-	case DSKP_CB_OP_WRITE:
-		dskpData.sectorNo = util.DWordFromTwoWords(cb[DSKP_CB_DEV_ADDR_HIGH], cb[DSKP_CB_DEV_ADDR_LOW])
-		if util.TestWbit(cb[DSKP_CB_PAGENO_LIST_ADDR_HIGH], 0) {
+	case dskpCbOpWrite:
+		dskpData.sectorNo = util.DWordFromTwoWords(cb[dskpCbDEV_ADDR_HIGH], cb[dskpCbDEV_ADDR_LOW])
+		if util.TestWbit(cb[dskpCbPAGENO_LIST_ADDR_HIGH], 0) {
 			// logical premapped host address
 			physTransfers = false
 			log.Fatal("DSKP - CB WRITE from premapped logical addresses  Not Yet Implemented")
 		} else {
 			physTransfers = true
-			physAddr = dg.PhysAddrT(util.DWordFromTwoWords(cb[DSKP_CB_TXFER_ADDR_HIGH], cb[DSKP_CB_TXFER_ADDR_LOW]))
+			physAddr = dg.PhysAddrT(util.DWordFromTwoWords(cb[dskpCbTXFER_ADDR_HIGH], cb[dskpCbTXFER_ADDR_LOW]))
 		}
 		if dskpData.debug {
-			logging.DebugPrint(logging.DskpLog, "... .. CB WRITE command, SECCNT: %d\n", cb[DSKP_CB_TXFER_COUNT])
+			logging.DebugPrint(logging.DskpLog, "... .. CB WRITE command, SECCNT: %d\n", cb[dskpCbTXFER_COUNT])
 			logging.DebugPrint(logging.DskpLog, "... .. .. ..... to sector:       %d\n", dskpData.sectorNo)
 			logging.DebugPrint(logging.DskpLog, "... .. .. ..... from phys addr:  %d\n", physAddr)
 			logging.DebugPrint(logging.DskpLog, "... .. .. ..... physical txfer?: %d\n", util.BoolToInt(physTransfers))
 		}
-		for sect = 0; sect < dg.DwordT(cb[DSKP_CB_TXFER_COUNT]); sect++ {
+		for sect = 0; sect < dg.DwordT(cb[dskpCbTXFER_COUNT]); sect++ {
 			dskpData.sectorNo += sect
 			dskpPositionDiskImage()
 			for w = 0; w < dskpWordsPerSector; w++ {
@@ -646,18 +646,18 @@ func dskpProcessCB(addr dg.PhysAddrT) {
 			}
 			dskpData.writes++
 		}
-		if cbLength >= DSKP_CB_ERR_STATUS+1 {
-			cb[DSKP_CB_ERR_STATUS] = 0
+		if cbLength >= dskpCbERR_STATUS+1 {
+			cb[dskpCbERR_STATUS] = 0
 		}
-		if cbLength >= DSKP_CB_UNIT_STATUS+1 {
-			cb[DSKP_CB_UNIT_STATUS] = 1 << 13 // b0010000000000000; // Ready
+		if cbLength >= dskpCbUNIT_STATUS+1 {
+			cb[dskpCbUNIT_STATUS] = 1 << 13 // b0010000000000000; // Ready
 		}
-		if cbLength >= DSKP_CB_CB_STATUS+1 {
-			cb[DSKP_CB_CB_STATUS] = 1 // finally, set Done bit
+		if cbLength >= dskpCbCB_STATUS+1 {
+			cb[dskpCbCB_STATUS] = 1 // finally, set Done bit
 		}
 
-		dskpSetAsyncStatusRegC(STAT_XEC_STATE_MAPPED, STAT_ASYNC_NO_ERRORS)
-		//dskpSetAsyncStatusRegC(0, STAT_ASYNC_NO_ERRORS)
+		dskpSetAsyncStatusRegC(statXecStateMapped, statAsyncNoErrors)
+		//dskpSetAsyncStatusRegC(0, statAsyncNoErrors)
 
 	default:
 		log.Fatalf("DSKP CB Command %d not yet implemented\n", opCode)
@@ -679,7 +679,7 @@ func dskpReset() {
 	dskpResetCtrlrInfBlock()
 	dskpResetUnitInfBlock()
 	dskpData.statusRegB = 0
-	dskpSetPioStatusRegC(STAT_XEC_STATE_RESET_DONE, 0, DSKP_RESET, util.TestWbit(dskpData.commandRegC, 15))
+	dskpSetPioStatusRegC(statXecStateResetDone, 0, dskpPioReset, util.TestWbit(dskpData.commandRegC, 15))
 	if dskpData.debug {
 		logging.DebugPrint(logging.DskpLog, "DSKP Reset via call to dskpReset()\n")
 	}
@@ -707,7 +707,7 @@ func dskpResetIntInfBlk() {
 // set mapping options after IORST, power-up or Reset
 func dskpResetMapping() {
 	dskpData.mappingRegA = 0x4000 // DMA over the BMC
-	dskpData.mappingRegB = DSKP_MAP_INT_BMC_PHYS | DSKP_MAP_UPSTREAM_LOAD | DSKP_MAP_UPSTREAM_HPT
+	dskpData.mappingRegB = dskpMapIntBmcPhys | dskpMapUpstreamLoad | dskpMapUpstreamHpt
 }
 
 // setup the unit information block to power-up defaults pp.2-16

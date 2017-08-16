@@ -26,31 +26,31 @@ import (
 	"mvemg/logging"
 )
 
+// Some Page Zero special locations for the Narrow Stack
 const (
-	// Some Page Zero special locations...
-	NSP_LOC  = 040 // 32. Narrow Stack Pointer
-	NFP_LOC  = 041
-	NSL_LOC  = 042
-	NSFA_LOC = 043
+	NspLoc  = 040 // 32. Narrow Stack Pointer
+	NfpLoc  = 041
+	NslLoc  = 042
+	NsfaLoc = 043
 )
 
-// PUSH a word onto the Narrow Stack
+// NsPush - PUSH a word onto the Narrow Stack
 func NsPush(seg dg.PhysAddrT, data dg.WordT) {
 	// TODO segment handling
 	// TODO overflow/underflow handling - either here or in instruction?
-	memory.ram[NSP_LOC]++ // we allow this direct write to a fixed location for performance
-	addr := dg.PhysAddrT(memory.ram[NSP_LOC])
+	memory.ram[NspLoc]++ // we allow this direct write to a fixed location for performance
+	addr := dg.PhysAddrT(memory.ram[NspLoc])
 	WriteWord(addr, data)
 	logging.DebugPrint(logging.DebugLog, "... memory.NsPush pushed %8d onto the Narrow Stack at location: %d\n", data, addr)
 }
 
-// POP a word off the Narrow Stack
+// NsPop - POP a word off the Narrow Stack
 func NsPop(seg dg.PhysAddrT) dg.WordT {
 	// TODO segment handling
 	// TODO overflow/underflow handling - either here or in instruction?
-	addr := dg.PhysAddrT(memory.ram[NSP_LOC])
+	addr := dg.PhysAddrT(memory.ram[NspLoc])
 	data := ReadWord(addr)
 	logging.DebugPrint(logging.DebugLog, "... memory.NsPop  popped %8d off  the Narrow Stack at location: %d\n", data, addr)
-	memory.ram[NSP_LOC]-- // we allow this direct write to a fixed location for performance
+	memory.ram[NspLoc]-- // we allow this direct write to a fixed location for performance
 	return data
 }

@@ -1,8 +1,25 @@
 // simhTape.go
-package main
 
-//"io/ioutil"
-//"os"
+// Copyright (C) 2017  Steve Merrony
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
+package main
 
 import (
 	"fmt"
@@ -13,29 +30,29 @@ import (
 )
 
 const (
-	MTR_TMK          = 0          /* tape mark */
-	MTR_EOM          = 0xFFFFFFFF /* end of medium */
-	MTR_GAP          = 0xFFFFFFFE /* primary gap */
-	MTR_MAXLEN       = 0x00FFFFFF /* max len is 24b */
-	MTR_ERF          = 0x80000000 /* error flag */
-	MAX_SIMH_TAPES   = 8
-	MAX_SIMH_REC_LEN = 32768
+	simhMtrTmk    = 0          /* tape mark */
+	simhMtrEom    = 0xFFFFFFFF /* end of medium */
+	simhMtrGap    = 0xFFFFFFFE /* primary gap */
+	simhMtrMaxlen = 0x00FFFFFF /* max len is 24b */
+	simhMtrErf    = 0x80000000 /* error flag */
+	maxSimhTapes  = 8
+	maxSimhRecLen = 32768
 )
 
-// SimhTapes contians
-type SimhTapes [MAX_SIMH_TAPES]struct {
+// SimhTapesT contians
+type SimhTapesT [maxSimhTapes]struct {
 	fileName string
 	simhFile *os.File
 }
 
-func (st *SimhTapes) simhTapeInit() {
+func (st *SimhTapesT) simhTapeInit() {
 	for t := range st {
 		st[t].simhFile = nil
 		st[t].fileName = ""
 	}
 }
 
-func (st *SimhTapes) simhTapeAttach(tNum int, imgName string) bool {
+func (st *SimhTapesT) simhTapeAttach(tNum int, imgName string) bool {
 	logging.DebugPrint(logging.DebugLog, "INFO: simhTapeAttach called for tape #%d with image <%s>\n", tNum, imgName)
 	f, err := os.Open(imgName)
 	if err != nil {
@@ -48,7 +65,7 @@ func (st *SimhTapes) simhTapeAttach(tNum int, imgName string) bool {
 }
 
 // simulate a tape rewind by seeking to start of SimH tape image file
-func (st *SimhTapes) simhTapeRewind(tNum int) bool {
+func (st *SimhTapesT) simhTapeRewind(tNum int) bool {
 	logging.DebugPrint(logging.DebugLog, "INFO: simhTapeRewind called for tape #%d\n", tNum)
 	_, err := st[tNum].simhFile.Seek(0, 0)
 	if err != nil {
@@ -59,7 +76,7 @@ func (st *SimhTapes) simhTapeRewind(tNum int) bool {
 }
 
 // read a 4-byte SimH header/trailer record
-func (st *SimhTapes) simhTapeReadRecordHeader(tNum int) (dg.DwordT, bool) {
+func (st *SimhTapesT) simhTapeReadRecordHeader(tNum int) (dg.DwordT, bool) {
 	hdrBytes := make([]byte, 4)
 	nb, err := st[tNum].simhFile.Read(hdrBytes)
 	if err != nil {
@@ -80,7 +97,7 @@ func (st *SimhTapes) simhTapeReadRecordHeader(tNum int) (dg.DwordT, bool) {
 }
 
 // attempt to read record from SimH tape image, fail if wrong number of bytes read
-func (st *SimhTapes) simhTapeReadRecord(tNum int, byteLen int) ([]byte, bool) {
+func (st *SimhTapesT) simhTapeReadRecord(tNum int, byteLen int) ([]byte, bool) {
 	rec := make([]byte, byteLen)
 	nb, err := st[tNum].simhFile.Read(rec)
 	if err != nil {
@@ -94,17 +111,18 @@ func (st *SimhTapes) simhTapeReadRecord(tNum int, byteLen int) ([]byte, bool) {
 	return rec, true
 }
 
-func (st *SimhTapes) simhTapeSpaceFwd(tNum int, recCnt int) bool {
+// SimhTapeSpaceFwd advances the virtual tape by the specifield amount (0 means 1 whole file)
+func (st *SimhTapesT) SimhTapeSpaceFwd(tNum int, recCnt int) bool {
 
 	var hdr, trailer dg.DwordT
 	done := false
-	logging.DebugPrint(logging.DebugLog, "DEBUG: simhTapeSpaceFwd called for %d records\n", recCnt)
+	logging.DebugPrint(logging.DebugLog, "DEBUG: simhTapesTpaceFwd called for %d records\n", recCnt)
 
 	// special case when recCnt == 0 which means space forward one file...
 	if recCnt == 0 {
 		for !done {
 			hdr, _ = st.simhTapeReadRecordHeader(tNum)
-			if hdr == MTR_TMK {
+			if hdr == simhMtrTmk {
 				done = true
 			} else {
 				// read record and throw it away
@@ -112,22 +130,21 @@ func (st *SimhTapes) simhTapeSpaceFwd(tNum int, recCnt int) bool {
 				// read trailer
 				trailer, _ = st.simhTapeReadRecordHeader(tNum)
 				if hdr != trailer {
-					log.Fatal("ERROR: simhTapeSpaceFwd found non-matching header/trailer")
+					log.Fatal("ERROR: simhTapesTpaceFwd found non-matching header/trailer")
 				}
 			}
 		}
 	} else {
-		log.Fatal("ERROR: simhTapeSpaceFwd called with record count != 0 - Not Yet Implemented")
+		log.Fatal("ERROR: simhTapesTpaceFwd called with record count != 0 - Not Yet Implemented")
 	}
 
 	return true
 }
 
-/* This function is available to the SCP emulator so that the user may determine if an
-   attached tape image makes any sense.  It also serves to test the simhTapeReadRecordHeader() and
-   simhTapeReadRecord() functions to some extent.
-*/
-func (st *SimhTapes) simhTapeScanImage(tNum int) string {
+// SimhTapeScanImage - This function is available to the SCP emulator so that the user may determine if an
+//   attached tape image makes any sense.  It also serves to test the simhTapeReadRecordHeader() and
+//   simhTapeReadRecord() functions to some extent.
+func (st *SimhTapesT) SimhTapeScanImage(tNum int) string {
 	var res string
 	if st[tNum].simhFile == nil {
 		return "\012 *** No Tape Image Attached ***"
@@ -147,7 +164,7 @@ loop:
 		hdr, _ = st.simhTapeReadRecordHeader(tNum)
 		//logging.DebugPrint(logging.DEBUG_LOG,"Debug: got header value: %d\n", hdr)
 		switch hdr {
-		case MTR_TMK:
+		case simhMtrTmk:
 			if fileSize > 0 {
 				fileCount++
 				res += fmt.Sprintf("\012File %d : %14d bytes in %7d block(s)",
@@ -160,10 +177,10 @@ loop:
 				res += "\012Triple Mark (old End Of Tape indicator)"
 				break loop
 			}
-		case MTR_EOM:
+		case simhMtrEom:
 			res += "\012End of Medium"
 			break loop
-		case MTR_GAP:
+		case simhMtrGap:
 			res += "\012Erase Gap"
 			markCount = 0
 		default:

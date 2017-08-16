@@ -1,4 +1,24 @@
 // mtb.go
+
+// Copyright (C) 2017  Steve Merrony
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
 package main
 
 import (
@@ -12,49 +32,49 @@ import (
 )
 
 const (
-	MTB_MAX_RECORD_SIZE = 16384
-	MTB_EOF             = 0
-	MTB_LOG_FILE        = "mtb_debug.log"
-	MTB_CMD_COUNT       = 11
-	MTB_CMD_MASK        = 0x00b8
+	mtb_MAX_RECORD_SIZE = 16384
+	mtb_EOF             = 0
+	mtb_LOG_FILE        = "mtb_debug.log"
+	mtb_cmd_COUNT       = 11
+	mtb_cmd_MASK        = 0x00b8
 
-	CMD_READ_BITS         = 0x0000
-	CMD_REWIND_BITS       = 0x0008
-	CMD_CTRL_MODE_BITS    = 0x0010
-	CMD_SPACE_FWD_BITS    = 0x0018
-	CMD_SPACE_REV_BITS    = 0x0020
-	CMD_WRITE_BITS        = 0x0028
-	CMD_WRITE_EOF_BITS    = 0x0030
-	CMD_ERASE_BITS        = 0x0038
-	CMD_READ_NONSTOP_BITS = 0x0080
-	CMD_UNLOAD_BITS       = 0x0088
-	CMD_DRIVE_MODE_BITS   = 0x0090
+	cmd_READ_BITS         = 0x0000
+	cmd_REWIND_BITS       = 0x0008
+	cmd_CTRL_MODE_BITS    = 0x0010
+	cmd_SPACE_FWD_BITS    = 0x0018
+	cmd_SPACE_REV_BITS    = 0x0020
+	cmd_WRITE_BITS        = 0x0028
+	cmd_WRITE_EOF_BITS    = 0x0030
+	cmd_ERASE_BITS        = 0x0038
+	cmd_READ_NONSTOP_BITS = 0x0080
+	cmd_UNLOAD_BITS       = 0x0088
+	cmd_DRIVE_MODE_BITS   = 0x0090
 
-	CMD_READ         = 0
-	CMD_REWIND       = 1
-	CMD_CTRL_MODE    = 2
-	CMD_SPACE_FWD    = 3
-	CMD_SPACE_REV    = 4
-	CMD_WRITE        = 5
-	CMD_WRITE_EOF    = 6
-	CMD_ERASE        = 7
-	CMD_READ_NONSTOP = 8
-	CMD_UNLOAD       = 9
-	CMD_DRIVE_MODE   = 10
+	cmd_READ         = 0
+	cmd_REWIND       = 1
+	cmd_CTRL_MODE    = 2
+	cmd_SPACE_FWD    = 3
+	cmd_SPACE_REV    = 4
+	cmd_WRITE        = 5
+	cmd_WRITE_EOF    = 6
+	cmd_ERASE        = 7
+	cmd_READ_NONSTOP = 8
+	cmd_UNLOAD       = 9
+	cmd_DRIVE_MODE   = 10
 
-	SR1_ERROR      = 0100000
-	SR1_HI_DENSITY = 04000
-	SR1_EOT        = 01000
-	SR1_EOF        = 0400
-	SR1_BOT        = 0200
-	SR1_9TRACK     = 0100
-	SR1_UNIT_READY = 0001
+	sr1_ERROR      = 0100000
+	sr1_HI_DENSITY = 04000
+	sr1_EOT        = 01000
+	sr1_EOF        = 0400
+	sr1_BOT        = 0200
+	sr1_9TRACK     = 0100
+	sr1_UNIT_READY = 0001
 
-	SR2_ERROR      = 0x8000
-	SR2_DATA_ERROR = 0x0400
-	SR2_EOT        = 0x0200
-	SR2_EOF        = 0x0100
-	SR2_PE_MODE    = 0x0001
+	sr2_ERROR      = 0x8000
+	sr2_DATA_ERROR = 0x0400
+	sr2_EOT        = 0x0200
+	sr2_EOF        = 0x0100
+	sr2_PE_MODE    = 0x0001
 )
 
 // const mtbStatsPeriodMs = 500
@@ -64,39 +84,39 @@ const (
 
 // }
 
-type Mtb struct {
+type mtbT struct {
 	simhTapeNum            int
 	imageAttached          bool
 	statusReg1, statusReg2 dg.WordT
 	memAddrReg             dg.PhysAddrT
 	negWordCntReg          int
-	currentCmd             int
+	currentcmd             int
 	debug                  bool
 }
 
 var (
-	simht SimhTapes
+	simht SimhTapesT
 
-	mtb        Mtb
-	commandSet [MTB_CMD_COUNT]dg.WordT
+	mtb        mtbT
+	commandSet [mtb_cmd_COUNT]dg.WordT
 
 	mtbLog *log.Logger
 )
 
 func mtbInit() bool {
-	commandSet[CMD_READ] = CMD_READ_BITS
-	commandSet[CMD_REWIND] = CMD_REWIND_BITS
-	commandSet[CMD_CTRL_MODE] = CMD_CTRL_MODE_BITS
-	commandSet[CMD_SPACE_FWD] = CMD_SPACE_FWD_BITS
-	commandSet[CMD_SPACE_REV] = CMD_SPACE_REV_BITS
-	commandSet[CMD_WRITE] = CMD_WRITE_BITS
-	commandSet[CMD_WRITE_EOF] = CMD_WRITE_EOF_BITS
-	commandSet[CMD_ERASE] = CMD_ERASE_BITS
-	commandSet[CMD_READ_NONSTOP] = CMD_READ_NONSTOP_BITS
-	commandSet[CMD_UNLOAD] = CMD_UNLOAD_BITS
-	commandSet[CMD_DRIVE_MODE] = CMD_DRIVE_MODE_BITS
+	commandSet[cmd_READ] = cmd_READ_BITS
+	commandSet[cmd_REWIND] = cmd_REWIND_BITS
+	commandSet[cmd_CTRL_MODE] = cmd_CTRL_MODE_BITS
+	commandSet[cmd_SPACE_FWD] = cmd_SPACE_FWD_BITS
+	commandSet[cmd_SPACE_REV] = cmd_SPACE_REV_BITS
+	commandSet[cmd_WRITE] = cmd_WRITE_BITS
+	commandSet[cmd_WRITE_EOF] = cmd_WRITE_EOF_BITS
+	commandSet[cmd_ERASE] = cmd_ERASE_BITS
+	commandSet[cmd_READ_NONSTOP] = cmd_READ_NONSTOP_BITS
+	commandSet[cmd_UNLOAD] = cmd_UNLOAD_BITS
+	commandSet[cmd_DRIVE_MODE] = cmd_DRIVE_MODE_BITS
 
-	lf, err := os.OpenFile(MTB_LOG_FILE, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0666)
+	lf, err := os.OpenFile(mtb_LOG_FILE, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		log.Fatalln("Failed to open MTB log file ", err.Error())
 	}
@@ -105,8 +125,8 @@ func mtbInit() bool {
 	busAddDevice(DEV_MTB, "MTB", MTB_PMB, false, true, true)
 	mtb.imageAttached = false
 
-	mtb.statusReg1 = SR1_HI_DENSITY | SR1_9TRACK | SR1_UNIT_READY
-	mtb.statusReg2 = SR2_PE_MODE
+	mtb.statusReg1 = sr1_HI_DENSITY | sr1_9TRACK | sr1_UNIT_READY
+	mtb.statusReg2 = sr2_PE_MODE
 
 	busSetResetFunc(DEV_MTB, mtbReset)
 	busSetDataInFunc(DEV_MTB, mtbDataIn)
@@ -119,8 +139,8 @@ func mtbInit() bool {
 // Reset the MTB to startup state
 func mtbReset() {
 	simht.simhTapeRewind(0)
-	mtb.statusReg1 = SR1_HI_DENSITY | SR1_9TRACK | SR1_BOT | SR1_UNIT_READY
-	mtb.statusReg2 = SR2_PE_MODE
+	mtb.statusReg1 = sr1_HI_DENSITY | sr1_9TRACK | sr1_BOT | sr1_UNIT_READY
+	mtb.statusReg2 = sr2_PE_MODE
 	mtbLog.Println("MTB Reset")
 }
 
@@ -130,8 +150,8 @@ func mtbAttach(tNum int, imgName string) bool {
 	if simht.simhTapeAttach(tNum, imgName) {
 		mtb.simhTapeNum = tNum
 		mtb.imageAttached = true
-		mtb.statusReg1 = SR1_HI_DENSITY | SR1_9TRACK | SR1_BOT | SR1_UNIT_READY
-		mtb.statusReg2 = SR2_PE_MODE
+		mtb.statusReg1 = sr1_HI_DENSITY | sr1_9TRACK | sr1_BOT | sr1_UNIT_READY
+		mtb.statusReg2 = sr2_PE_MODE
 		busSetAttached(DEV_MTB)
 		return true
 	}
@@ -141,7 +161,7 @@ func mtbAttach(tNum int, imgName string) bool {
 // Scan the attached SimH tape image to ensure it makes sense
 // (This is just a pass-through to the equivalent function in simhTape)
 func mtbScanImage(tNum int) string {
-	return simht.simhTapeScanImage(0)
+	return simht.SimhTapeScanImage(0)
 }
 
 /* This function fakes the ROM/SCP boot-from-tape routine.
@@ -228,14 +248,14 @@ func mtbDataOut(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 	switch abc {
 	case 'A': // Specify Command and Drive - p.IV-17
 		// which command?
-		for c := 0; c < MTB_CMD_COUNT; c++ {
-			if (ac16 & MTB_CMD_MASK) == commandSet[c] {
-				mtb.currentCmd = c
+		for c := 0; c < mtb_cmd_COUNT; c++ {
+			if (ac16 & mtb_cmd_MASK) == commandSet[c] {
+				mtb.currentcmd = c
 				break
 			}
 		}
 		mtbLog.Printf("DOA - Specify Command and Drive - internal cmd #: %d, PC: %d\n",
-			mtb.currentCmd, cpuPtr.pc)
+			mtb.currentcmd, cpuPtr.pc)
 
 	case 'B':
 		mtb.memAddrReg = dg.PhysAddrT(ac16)
@@ -255,14 +275,14 @@ func mtbDataOut(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 
 func mtbDoCommand() {
 
-	switch mtb.currentCmd {
-	case CMD_READ:
+	switch mtb.currentcmd {
+	case cmd_READ:
 		mtbLog.Printf("*READ* command\n ==== Word Count: %d Location: %d\n", mtb.negWordCntReg, mtb.memAddrReg)
 		hdrLen, _ := simht.simhTapeReadRecordHeader(0)
 		mtbLog.Printf(" ----  Header read giving length: %d\n", hdrLen)
-		if hdrLen == MTB_EOF {
+		if hdrLen == mtb_EOF {
 			mtbLog.Printf(" ----  Header is EOF indicator\n")
-			mtb.statusReg1 = SR1_HI_DENSITY | SR1_9TRACK | SR1_UNIT_READY | SR1_EOF | SR1_ERROR
+			mtb.statusReg1 = sr1_HI_DENSITY | sr1_9TRACK | sr1_UNIT_READY | sr1_EOF | sr1_ERROR
 		} else {
 			mtbLog.Printf(" ----  Calling simhTapeReadRecord with length: %d\n", hdrLen)
 			var w dg.DwordT
@@ -283,22 +303,22 @@ func mtbDoCommand() {
 			mtbLog.Printf(" ----  %d bytes loaded\n", w)
 			mtbLog.Printf(" ----  Read SimH Trailer: %d\n", trailer)
 			// TODO Need to verify how status should be set here...
-			mtb.statusReg1 = SR1_HI_DENSITY | SR1_9TRACK | SR1_UNIT_READY
+			mtb.statusReg1 = sr1_HI_DENSITY | sr1_9TRACK | sr1_UNIT_READY
 		}
 		busSetBusy(DEV_MTB, false)
 		busSetDone(DEV_MTB, true)
 
-	case CMD_REWIND:
+	case cmd_REWIND:
 		mtbLog.Printf("*REWIND* command\n")
 		simht.simhTapeRewind(0)
-		mtb.statusReg1 = SR1_HI_DENSITY | SR1_9TRACK | SR1_UNIT_READY | SR1_BOT
-		mtb.statusReg2 = SR2_PE_MODE
+		mtb.statusReg1 = sr1_HI_DENSITY | sr1_9TRACK | sr1_UNIT_READY | sr1_BOT
+		mtb.statusReg2 = sr2_PE_MODE
 		// FIXME set flags here?
 
-	case CMD_SPACE_FWD:
+	case cmd_SPACE_FWD:
 		mtbLog.Printf("*SPACE FORWARD* command\n")
-		simht.simhTapeSpaceFwd(0, 0)
-		mtb.statusReg1 = SR1_HI_DENSITY | SR1_9TRACK | SR1_UNIT_READY | SR1_EOF | SR1_ERROR
+		simht.SimhTapeSpaceFwd(0, 0)
+		mtb.statusReg1 = sr1_HI_DENSITY | sr1_9TRACK | sr1_UNIT_READY | sr1_EOF | sr1_ERROR
 		busSetBusy(DEV_MTB, false)
 		busSetDone(DEV_MTB, true)
 

@@ -30,13 +30,13 @@ import (
 )
 
 type (
-	// I/O reset func
+	// ResetFunc stores an I/O reset func pointer
 	ResetFunc func()
 
-	// DOx func
+	// DataOutFunc stores a DOx func pointer
 	DataOutFunc func(*CPU, *decodedInstrT, byte)
 
-	// DIx func
+	// DataInFunc stores a DIx func pointer
 	DataInFunc func(*CPU, *decodedInstrT, byte)
 )
 

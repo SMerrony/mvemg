@@ -41,47 +41,47 @@ func eagleStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	switch iPtr.mnemonic {
 
 	case "LDAFP":
-		cpuPtr.ac[iPtr.acd] = memory.ReadDWord(memory.WFP_LOC)
+		cpuPtr.ac[iPtr.acd] = memory.ReadDWord(memory.WfpLoc)
 
 	case "LDASB":
-		cpuPtr.ac[iPtr.acd] = memory.ReadDWord(memory.WSB_LOC)
+		cpuPtr.ac[iPtr.acd] = memory.ReadDWord(memory.WsbLoc)
 
 	case "LDASL":
-		cpuPtr.ac[iPtr.acd] = memory.ReadDWord(memory.WSL_LOC)
+		cpuPtr.ac[iPtr.acd] = memory.ReadDWord(memory.WslLoc)
 
 	case "LDASP":
-		cpuPtr.ac[iPtr.acd] = memory.ReadDWord(memory.WSP_LOC)
+		cpuPtr.ac[iPtr.acd] = memory.ReadDWord(memory.WspLoc)
 
 	case "LPEF":
 		memory.WsPush(0, dg.DwordT(resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31)))
 
 	case "STAFP":
 		// FIXME handle segments
-		memory.WriteDWord(memory.WFP_LOC, cpuPtr.ac[iPtr.acd])
+		memory.WriteDWord(memory.WfpLoc, cpuPtr.ac[iPtr.acd])
 
 	case "STASB":
 		// FIXME handle segments
-		memory.WriteDWord(memory.WSB_LOC, cpuPtr.ac[iPtr.acd])
+		memory.WriteDWord(memory.WsbLoc, cpuPtr.ac[iPtr.acd])
 
 	case "STASL":
 		// FIXME handle segments
-		memory.WriteDWord(memory.WSL_LOC, cpuPtr.ac[iPtr.acd])
+		memory.WriteDWord(memory.WslLoc, cpuPtr.ac[iPtr.acd])
 
 	case "STASP":
 		// FIXME handle segments
-		memory.WriteDWord(memory.WSP_LOC, cpuPtr.ac[iPtr.acd])
+		memory.WriteDWord(memory.WspLoc, cpuPtr.ac[iPtr.acd])
 		if debugLogging {
 			logging.DebugPrint(logging.DebugLog, "... STASP set WSP to %d\n", cpuPtr.ac[iPtr.acd])
 		}
 
 	case "STATS":
 		// FIXME handle segments
-		memory.WriteDWord(dg.PhysAddrT(memory.ReadDWord(memory.WSL_LOC)), cpuPtr.ac[iPtr.acd])
+		memory.WriteDWord(dg.PhysAddrT(memory.ReadDWord(memory.WslLoc)), cpuPtr.ac[iPtr.acd])
 
 	case "WMSP":
 		tmpDwd = cpuPtr.ac[iPtr.acd] << 1
-		tmpDwd += memory.ReadDWord(memory.WSP_LOC)
-		memory.WriteDWord(memory.WSP_LOC, tmpDwd)
+		tmpDwd += memory.ReadDWord(memory.WspLoc)
+		memory.WriteDWord(memory.WspLoc, tmpDwd)
 
 	case "WPOP":
 		firstAc = iPtr.acs
@@ -134,7 +134,7 @@ func eagleStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 // wsav is common to WSAVR and WSAVS
 func wsav(cpuPtr *CPU, iPtr *decodedInstrT) {
-	wfpSav := memory.ReadDWord(memory.WFP_LOC)
+	wfpSav := memory.ReadDWord(memory.WfpLoc)
 	memory.WsPush(0, cpuPtr.ac[0]) // 1
 	memory.WsPush(0, cpuPtr.ac[1]) // 2
 	memory.WsPush(0, cpuPtr.ac[2]) // 3
@@ -151,6 +151,6 @@ func wsav(cpuPtr *CPU, iPtr *decodedInstrT) {
 		// }
 		memory.AdvanceWSP(dwdCnt)
 	}
-	memory.WriteDWord(memory.WFP_LOC, memory.ReadDWord(memory.WSP_LOC))
-	cpuPtr.ac[3] = memory.ReadDWord(memory.WSP_LOC)
+	memory.WriteDWord(memory.WfpLoc, memory.ReadDWord(memory.WspLoc))
+	cpuPtr.ac[3] = memory.ReadDWord(memory.WspLoc)
 }

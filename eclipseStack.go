@@ -76,7 +76,7 @@ func eclipseStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	case "RTN":
 		// complement of SAVE
-		memory.WriteWord(memory.NSP_LOC, memory.ReadWord(memory.NFP_LOC)) // ???
+		memory.WriteWord(memory.NspLoc, memory.ReadWord(memory.NfpLoc)) // ???
 		word := memory.NsPop(0)
 		cpuPtr.carry = util.TestWbit(word, 0)
 		cpuPtr.pc = dg.PhysAddrT(word) & 0x7fff
@@ -85,7 +85,7 @@ func eclipseStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		cpuPtr.ac[2] = dg.DwordT(memory.NsPop(0)) // 3
 		cpuPtr.ac[1] = dg.DwordT(memory.NsPop(0)) // 4
 		cpuPtr.ac[0] = dg.DwordT(memory.NsPop(0)) // 5
-		memory.WriteWord(memory.NFP_LOC, util.DWordGetLowerWord(cpuPtr.ac[3]))
+		memory.WriteWord(memory.NfpLoc, util.DWordGetLowerWord(cpuPtr.ac[3]))
 		return true // because PC set
 
 		//		nfpSav := memory.ReadWord(NFP_LOC)
@@ -102,8 +102,8 @@ func eclipseStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		//return true // because PC set
 
 	case "SAVE":
-		nfpSav := memory.ReadWord(memory.NFP_LOC)
-		nspSav := memory.ReadWord(memory.NSP_LOC)
+		nfpSav := memory.ReadWord(memory.NfpLoc)
+		nspSav := memory.ReadWord(memory.NspLoc)
 		memory.NsPush(0, util.DWordGetLowerWord(cpuPtr.ac[0])) // 1
 		memory.NsPush(0, util.DWordGetLowerWord(cpuPtr.ac[1])) // 2
 		memory.NsPush(0, util.DWordGetLowerWord(cpuPtr.ac[2])) // 3
@@ -121,9 +121,9 @@ func eclipseStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 				memory.NsPush(0, 0) // ...
 			}
 		}
-		cpuPtr.ac[3] = dg.DwordT(memory.ReadWord(memory.NSP_LOC)) // ???
-		memory.WriteWord(memory.NFP_LOC, dg.WordT(cpuPtr.ac[3]))  // ???
-		memory.WriteWord(memory.NSP_LOC, nspSav+5)
+		cpuPtr.ac[3] = dg.DwordT(memory.ReadWord(memory.NspLoc)) // ???
+		memory.WriteWord(memory.NfpLoc, dg.WordT(cpuPtr.ac[3]))  // ???
+		memory.WriteWord(memory.NspLoc, nspSav+5)
 		//cpuPtr.ac[3] = dg_dword(nspSav + 5)
 
 	default:

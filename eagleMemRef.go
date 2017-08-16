@@ -204,17 +204,17 @@ func eagleMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	return true
 }
 
-func ReadByteBA(ba dg.DwordT) dg.ByteT {
+func readByteBA(ba dg.DwordT) dg.ByteT {
 	wordAddr, lowByte := resolve32bitByteAddr(ba)
 	return memory.ReadByte(wordAddr, lowByte)
 }
 
-// MemWriteByte writes the supplied byte to the address derived from the given byte addr
+// memWriteByte writes the supplied byte to the address derived from the given byte addr
 func memWriteByteBA(b dg.ByteT, ba dg.DwordT) {
 	wordAddr, lowByte := resolve32bitByteAddr(ba)
 	memory.WriteByte(wordAddr, lowByte, b)
 }
 
 func copyByte(srcBA, destBA dg.DwordT) {
-	memWriteByteBA(ReadByteBA(srcBA), destBA)
+	memWriteByteBA(readByteBA(srcBA), destBA)
 }

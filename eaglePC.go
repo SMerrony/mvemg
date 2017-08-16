@@ -97,18 +97,18 @@ func eaglePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		cpuPtr.pc = dg.PhysAddrT(dwd) & 0x0fffffff
 
 	case "WRTN": // FIXME incomplete: handle PSR and rings
-		wspSav := memory.ReadDWord(memory.WSP_LOC)
+		wspSav := memory.ReadDWord(memory.WspLoc)
 		dwd = memory.WsPop(0) // 1
 		cpuPtr.carry = util.TestDWbit(dwd, 0)
 		cpuPtr.pc = dg.PhysAddrT(dwd & 0x7fffffff)
 		cpuPtr.ac[3] = memory.WsPop(0) // 2
-		memory.WriteDWord(memory.WFP_LOC, cpuPtr.ac[3])
+		memory.WriteDWord(memory.WfpLoc, cpuPtr.ac[3])
 		cpuPtr.ac[2] = memory.WsPop(0) // 3
 		cpuPtr.ac[1] = memory.WsPop(0) // 4
 		cpuPtr.ac[0] = memory.WsPop(0) // 5
 		dwd = memory.WsPop(0)          // 6
 		wsFramSz2 := int(dwd&0x00007fff) * 2
-		memory.WriteDWord(memory.WSP_LOC, wspSav-dg.DwordT(wsFramSz2)-12)
+		memory.WriteDWord(memory.WspLoc, wspSav-dg.DwordT(wsFramSz2)-12)
 
 	case "WSEQ": // Signedness doen't matter for equality testing
 		if iPtr.acd == iPtr.acs {

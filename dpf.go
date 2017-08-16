@@ -47,65 +47,65 @@ const (
 )
 
 const (
-	DPF_CMD_READ = iota
-	DPF_CMD_RECAL
-	DPF_CMD_SEEK
-	DPF_CMD_STOP
-	DPF_CMD_OFFSET_FWD
-	DPF_CMD_OFFSET_REV
-	DPF_CMD_WRITE_DISABLE
-	DPF_CMD_RELEASE
-	DPF_CMD_TRESPASS
-	DPF_CMD_SET_ALT_MODE_1
-	DPF_CMD_SET_ALT_MODE_2
-	DPF_CMD_NO_OP
-	DPF_CMD_VERIFY
-	DPF_CMD_READ_BUFFS
-	DPF_CMD_WRITE
-	DPF_CMD_FORMAT
+	dpfCmdRead = iota
+	dpfCmdRecal
+	dpfCmdSeek
+	dpfCmdStop
+	dpfCmdOffsetFwd
+	dpfCmdOffsetRev
+	dpfCmdWriteDisable
+	dpfCmdRelease
+	dpfCmdTrespass
+	dpfCmdSetAltMode_1
+	dpfCmdSetAltMode_2
+	dpfCmdNoOp
+	dpfCmdVerify
+	dpfCmdReadBuffs
+	dpfCmdWrite
+	dpfCmdFormat
 )
 const (
-	DPF_INS_MODE_NORMAL = iota
-	DPF_INS_MODE_ALT_1
-	DPF_INS_MODE_ALT_2
+	dpfInsModeNormal = iota
+	dpfInsModeAlt_1
+	dpfInsModeAlt_2
 )
 const (
 	// drive statuses
-	DPF_DRIVEFAULT = 1 << iota
-	DPF_WRITEFAULT
-	DPF_CLOCKFAULT
-	DPF_POSNFAULT
-	DPF_PACKUNSAFE
-	DPF_POWERFAULT
-	DPF_ILLEGALCMD
-	DPF_INVALIDADDR
-	DPF_UNUSED
-	DPF_WRITEDIS
-	DPF_OFFSET
-	DPF_BUSY
-	DPF_READY
-	DPF_TRESPASSED
-	DPF_RESERVED
-	DPF_INVALID
+	dpfDrivefault = 1 << iota
+	dpfWritefault
+	dpfClockfault
+	dpfPosnfault
+	dpfPackunsafe
+	dpfPowerfault
+	dpfIllegalcmd
+	dpfInvalidaddr
+	dpfUnused
+	dpfWritedis
+	dpfOffset
+	dpfBusy
+	dpfReady
+	dpfTrespassed
+	dpfReserved
+	dpfInvalid
 )
 const (
 	// R/W statuses
-	DPF_RWFAULT = 1 << iota
-	DPF_DATALATE
-	DPF_RWTIMEOUT
-	DPF_VERIFY
-	DPF_SURFSECT
-	DPF_CYLINDER
-	DPF_BADSECTOR
-	DPF_ECC
-	DPF_ILLEGALSECTOR
-	DPF_PARITY
-	DPF_DRIVE3DONE
-	DPF_DRIVE2DONE
-	DPF_DRIVE1DONE
-	DPF_DRIVE0DONE
-	DPF_RWDONE
-	DPF_CONTROLFULL
+	dpfRwfault = 1 << iota
+	dpfDatalate
+	dpfRwtimeout
+	dpfVerify
+	dpfSurfsect
+	dpfCylinder
+	dpfBadsector
+	dpfEcc
+	dpfIllegalsector
+	dpfParity
+	dpfDrive3Done
+	dpfDrive2Done
+	dpfDrive1Done
+	dpfDrive0Done
+	dpfRwdone
+	dpfControlfull
 )
 
 // dpfStatsPeriodMs is the number of milliseconds between sending status updates
@@ -149,7 +149,7 @@ type dpfStatT struct {
 var (
 	dpfData   dpfDataT
 	err       error
-	cmdDecode [DPF_CMD_FORMAT + 1]string
+	cmdDecode [dpfCmdFormat + 1]string
 )
 
 // initialise the emulated DPF controller
@@ -169,8 +169,8 @@ func dpfInit(statsChann chan dpfStatT) {
 	busSetDataInFunc(DEV_DPF, dpfDataIn)
 	busSetDataOutFunc(DEV_DPF, dpfDataOut)
 	dpfData.imageAttached = false
-	dpfData.instructionMode = DPF_INS_MODE_NORMAL
-	dpfData.driveStatus = DPF_READY
+	dpfData.instructionMode = dpfInsModeNormal
+	dpfData.driveStatus = dpfReady
 	dpfData.mapEnabled = false
 	dpfData.readBuff = make([]byte, dpfBytesPerSect)
 	dpfData.writeBuff = make([]byte, dpfBytesPerSect)
@@ -240,22 +240,22 @@ func dpfDataIn(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 	switch abc {
 	case 'A':
 		switch dpfData.instructionMode {
-		case DPF_INS_MODE_NORMAL:
+		case dpfInsModeNormal:
 			cpuPtr.ac[iPtr.acd] = dg.DwordT(dpfData.rwStatus)
 			logging.DebugPrint(logging.DpfLog, "DIA [Read Data Txfr Status] (Normal mode) returning %s for DRV=%d\n",
 				util.WordToBinStr(dpfData.rwStatus), dpfData.drive)
-		case DPF_INS_MODE_ALT_1:
+		case dpfInsModeAlt_1:
 			log.Fatal("DPF DIA (Alt Mode 1) not yet implemented")
-		case DPF_INS_MODE_ALT_2:
+		case dpfInsModeAlt_2:
 			log.Fatal("DPF DIA (Alt Mode 2) not yet implemented")
 		}
 	case 'B':
 		switch dpfData.instructionMode {
-		case DPF_INS_MODE_NORMAL:
+		case dpfInsModeNormal:
 			cpuPtr.ac[iPtr.acd] = dg.DwordT(dpfData.driveStatus & 0xfeff)
 			logging.DebugPrint(logging.DpfLog, "DIB [Read Drive Status] (normal mode) DRV=%d, %s to AC%d, PC: %d\n",
 				dpfData.drive, util.WordToBinStr(dpfData.driveStatus), iPtr.acd, cpuPtr.pc)
-		case DPF_INS_MODE_ALT_1:
+		case dpfInsModeAlt_1:
 			cpuPtr.ac[iPtr.acd] = dg.DwordT(0x8000) | (dg.DwordT(dpfData.ema) & 0x01f)
 			//			if dpfData.mapEnabled {
 			//				cpuPtr.ac[iPtr.acd] = dg_dword(dpfData.ema&0x1f) | 0x8000
@@ -264,7 +264,7 @@ func dpfDataIn(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 			//			}
 			logging.DebugPrint(logging.DpfLog, "DIB [Read EMA] (Alt Mode 1) returning: %d, PC: %d\n",
 				cpuPtr.ac[iPtr.acd], cpuPtr.pc)
-		case DPF_INS_MODE_ALT_2:
+		case dpfInsModeAlt_2:
 			log.Fatal("DPF DIB (Alt Mode 2) not yet implemented")
 		}
 	case 'C':
@@ -294,36 +294,36 @@ func dpfDataOut(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 		dpfData.drive = extractDpfDriveNo(data)
 		dpfData.ema = extractDpfEMA(data)
 		if util.TestWbit(data, 0) {
-			dpfData.rwStatus &= ^dg.WordT(DPF_RWDONE)
+			dpfData.rwStatus &= ^dg.WordT(dpfRwdone)
 		}
 		if util.TestWbit(data, 1) {
-			dpfData.rwStatus &= ^dg.WordT(DPF_DRIVE0DONE)
+			dpfData.rwStatus &= ^dg.WordT(dpfDrive0Done)
 		}
 		if util.TestWbit(data, 2) {
-			dpfData.rwStatus &= ^dg.WordT(DPF_DRIVE1DONE)
+			dpfData.rwStatus &= ^dg.WordT(dpfDrive1Done)
 		}
 		if util.TestWbit(data, 3) {
-			dpfData.rwStatus &= ^dg.WordT(DPF_DRIVE2DONE)
+			dpfData.rwStatus &= ^dg.WordT(dpfDrive2Done)
 		}
 		if util.TestWbit(data, 4) {
-			dpfData.rwStatus &= ^dg.WordT(DPF_DRIVE3DONE)
+			dpfData.rwStatus &= ^dg.WordT(dpfDrive3Done)
 		}
-		dpfData.instructionMode = DPF_INS_MODE_NORMAL
-		if dpfData.command == DPF_CMD_SET_ALT_MODE_1 {
-			dpfData.instructionMode = DPF_INS_MODE_ALT_1
+		dpfData.instructionMode = dpfInsModeNormal
+		if dpfData.command == dpfCmdSetAltMode_1 {
+			dpfData.instructionMode = dpfInsModeAlt_1
 		}
-		if dpfData.command == DPF_CMD_SET_ALT_MODE_2 {
-			dpfData.instructionMode = DPF_INS_MODE_ALT_2
+		if dpfData.command == dpfCmdSetAltMode_2 {
+			dpfData.instructionMode = dpfInsModeAlt_2
 		}
-		if dpfData.command == DPF_CMD_NO_OP {
-			dpfData.instructionMode = DPF_INS_MODE_NORMAL
+		if dpfData.command == dpfCmdNoOp {
+			dpfData.instructionMode = dpfInsModeNormal
 			dpfData.rwStatus = 0
-			dpfData.driveStatus = DPF_READY
+			dpfData.driveStatus = dpfReady
 			if dpfData.debug {
 				logging.DebugPrint(logging.DpfLog, "... NO OP command done\n")
 			}
 		}
-		dpfData.lastDOAwasSeek = (dpfData.command == DPF_CMD_SEEK)
+		dpfData.lastDOAwasSeek = (dpfData.command == dpfCmdSeek)
 		if dpfData.debug {
 			logging.DebugPrint(logging.DpfLog, "DOA [Specify Cmd,Drv,EMA] to DRV=%d with data %s at PC: %d\n",
 				dpfData.drive, util.WordToBinStr(data), cpuPtr.pc)
@@ -380,33 +380,33 @@ func dpfDoCommand() {
 	)
 	dpfData.dpfMu.Lock()
 
-	dpfData.instructionMode = DPF_INS_MODE_NORMAL
+	dpfData.instructionMode = dpfInsModeNormal
 
 	switch dpfData.command {
 
 	// RECALibrate (goto pos. 0)
-	case DPF_CMD_RECAL:
+	case dpfCmdRecal:
 		dpfData.cylinder = 0
 		dpfData.surface = 0
 		dpfPositionDiskImage()
-		dpfData.driveStatus = DPF_READY
-		dpfData.rwStatus = DPF_RWDONE | DPF_DRIVE0DONE
+		dpfData.driveStatus = dpfReady
+		dpfData.rwStatus = dpfRwdone | dpfDrive0Done
 		if dpfData.debug {
 			logging.DebugPrint(logging.DpfLog, "... RECAL done, %s\n", dpfPrintableAddr())
 		}
 
 	// SEEK
-	case DPF_CMD_SEEK:
+	case dpfCmdSeek:
 		// action the seek
 		dpfPositionDiskImage()
-		dpfData.driveStatus = DPF_READY
-		dpfData.rwStatus = DPF_RWDONE | DPF_DRIVE0DONE
+		dpfData.driveStatus = dpfReady
+		dpfData.rwStatus = dpfRwdone | dpfDrive0Done
 		if dpfData.debug {
 			logging.DebugPrint(logging.DpfLog, "... SEEK done, %s\n", dpfPrintableAddr())
 		}
 
 	// ===== READ from DPF =====
-	case DPF_CMD_READ:
+	case dpfCmdRead:
 		if dpfData.debug {
 			logging.DebugPrint(logging.DpfLog, "... READ command invoked %s\n", dpfPrintableAddr())
 			logging.DebugPrint(logging.DpfLog, "... .... Start Address: %d\n", dpfData.memAddr)
@@ -416,8 +416,8 @@ func dpfDoCommand() {
 		for dpfData.sectCnt != 0 {
 			// check CYL
 			if dpfData.cylinder >= dpfPhysCyls {
-				dpfData.driveStatus = DPF_READY
-				dpfData.rwStatus = DPF_RWDONE | DPF_RWFAULT | DPF_CYLINDER
+				dpfData.driveStatus = dpfReady
+				dpfData.rwStatus = dpfRwdone | dpfRwfault | dpfCylinder
 				dpfData.dpfMu.Unlock()
 				return
 			}
@@ -429,15 +429,15 @@ func dpfDoCommand() {
 					logging.DebugPrint(logging.DpfLog, "Sector read overflow, advancing to surface %d",
 						dpfData.surface)
 				}
-				// dpfData.driveStatus = DPF_READY
-				// dpfData.rwStatus = DPF_RWDONE | DPF_RWFAULT | DPF_ILLEGALSECTOR
+				// dpfData.driveStatus = dpfReady
+				// dpfData.rwStatus = dpfRwdone | dpfRwfault | DPF_ILLEGALSECTOR
 				// dpfData.dpfMu.Unlock()
 				// return
 			}
 			// check SURF (head)
 			if dpfData.surface >= dpfSurfPerDisk {
-				dpfData.driveStatus = DPF_READY
-				dpfData.rwStatus = DPF_RWDONE | DPF_RWFAULT | DPF_ILLEGALSECTOR // FIXME is SURFSECT right?
+				dpfData.driveStatus = dpfReady
+				dpfData.rwStatus = dpfRwdone | dpfRwfault | dpfIllegalsector // FIXME is SURFSECT right?
 				dpfData.dpfMu.Unlock()
 				return
 			}
@@ -465,9 +465,9 @@ func dpfDoCommand() {
 			logging.DebugPrint(logging.DpfLog, "... .... READ command finished %s\n", dpfPrintableAddr())
 			logging.DebugPrint(logging.DpfLog, "\n... .... Last Address: %d\n", dpfData.memAddr)
 		}
-		dpfData.rwStatus = DPF_RWDONE //| DPF_DRIVE0DONE
+		dpfData.rwStatus = dpfRwdone //| dpfDrive0Done
 
-	case DPF_CMD_WRITE:
+	case dpfCmdWrite:
 		if dpfData.debug {
 			logging.DebugPrint(logging.DpfLog, "... WRITE command invoked %s\n", dpfPrintableAddr())
 			logging.DebugPrint(logging.DpfLog, "... .....  Start Address: %d\n", dpfData.memAddr)
@@ -477,8 +477,8 @@ func dpfDoCommand() {
 		for dpfData.sectCnt != 0 {
 			// check CYL
 			if dpfData.cylinder >= dpfPhysCyls {
-				dpfData.driveStatus = DPF_READY
-				dpfData.rwStatus = DPF_RWDONE | DPF_RWFAULT | DPF_CYLINDER
+				dpfData.driveStatus = dpfReady
+				dpfData.rwStatus = dpfRwdone | dpfRwfault | dpfCylinder
 				dpfData.dpfMu.Unlock()
 				return
 			}
@@ -490,15 +490,15 @@ func dpfDoCommand() {
 					logging.DebugPrint(logging.DpfLog, "Sector write overflow, advancing to surface %d",
 						dpfData.surface)
 				}
-				// dpfData.driveStatus = DPF_READY
-				// dpfData.rwStatus = DPF_RWDONE | DPF_RWFAULT | DPF_ILLEGALSECTOR
+				// dpfData.driveStatus = dpfReady
+				// dpfData.rwStatus = dpfRwdone | dpfRwfault | DPF_ILLEGALSECTOR
 				// dpfData.dpfMu.Unlock()
 				// return
 			}
 			// check SURF (head)/SECT
 			if dpfData.surface >= dpfSurfPerDisk {
-				dpfData.driveStatus = DPF_READY
-				dpfData.rwStatus = DPF_RWDONE | DPF_RWFAULT | DPF_ILLEGALSECTOR // FIXME is SURFSECT right?
+				dpfData.driveStatus = dpfReady
+				dpfData.rwStatus = dpfRwdone | dpfRwfault | dpfIllegalsector // FIXME is SURFSECT right?
 				dpfData.dpfMu.Unlock()
 				return
 			}
@@ -525,8 +525,8 @@ func dpfDoCommand() {
 			logging.DebugPrint(logging.DpfLog, "... ..... WRITE command finished %s\n", dpfPrintableAddr())
 			logging.DebugPrint(logging.DpfLog, "... ..... Last Address: %d\n", dpfData.memAddr)
 		}
-		dpfData.driveStatus = DPF_READY
-		dpfData.rwStatus = DPF_RWDONE //| DPF_DRIVE0DONE
+		dpfData.driveStatus = dpfReady
+		dpfData.rwStatus = dpfRwdone //| dpfDrive0Done
 
 	default:
 		log.Fatalf("DPF Disk R/W Command %d not yet implemented\n", dpfData.command)
@@ -564,7 +564,7 @@ func dpfHandleFlag(f byte) {
 		dpfData.rwStatus = 0
 		dpfData.dpfMu.Unlock()
 		dpfDoCommand()
-		//dpfData.rwStatus = DPF_DRIVE0DONE
+		//dpfData.rwStatus = dpfDrive0Done
 
 	default:
 		// no/empty flag - nothing to do
@@ -593,9 +593,9 @@ func dpfPrintableAddr() string {
 // reset the DPF controller
 func dpfReset() {
 	dpfData.dpfMu.Lock()
-	dpfData.instructionMode = DPF_INS_MODE_NORMAL
+	dpfData.instructionMode = dpfInsModeNormal
 	dpfData.rwStatus = 0
-	dpfData.driveStatus = DPF_READY
+	dpfData.driveStatus = dpfReady
 	if dpfData.debug {
 		logging.DebugPrint(logging.DpfLog, "DPF Reset\n")
 	}

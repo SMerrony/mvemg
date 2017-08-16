@@ -3,29 +3,30 @@ package main
 
 import "fmt"
 
+// Device IDs and PMBs
+// Standard device codes in octal, Priority Mask Bits in decimal
+// as per DG docs!
+// N.B. add to deviceToString() when new codes added here
 const (
 	MAX_DEVICES = 0100
-	// Standard device codes in octal, Priority Mask Bits in decimal
-	// as per DG docs!
-	// N.B. add to deviceToString() when new codes added here
-	DEV_PSC  = 004
-	PSC_PMB  = 13
-	DEV_TTI  = 010
-	TTI_PMB  = 14
-	DEV_TTO  = 011
-	TTO_PMB  = 15
-	DEV_RTC  = 014
-	RTC_PMB  = 13
-	DEV_MTB  = 022
-	MTB_PMB  = 10
-	DEV_DSKP = 024
-	DSKP_PMB = 7
-	DEV_DPF  = 027
-	DPF_PMB  = 7
-	DEV_SCP  = 045
-	SCP_PMB  = 15
-	DEV_CPU  = 077
-	CPU_PMB  = 0 // kinda!
+	DEV_PSC     = 004
+	PSC_PMB     = 13
+	DEV_TTI     = 010
+	TTI_PMB     = 14
+	DEV_TTO     = 011
+	TTO_PMB     = 15
+	DEV_RTC     = 014
+	RTC_PMB     = 13
+	DEV_MTB     = 022
+	MTB_PMB     = 10
+	DEV_DSKP    = 024
+	DSKP_PMB    = 7
+	DEV_DPF     = 027
+	DPF_PMB     = 7
+	DEV_SCP     = 045
+	SCP_PMB     = 15
+	DEV_CPU     = 077
+	CPU_PMB     = 0 // kinda!
 
 	CPU_MODEL_NO = 0x224C
 	UCODE_REV    = 0x04
