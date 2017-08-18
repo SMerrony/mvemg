@@ -49,7 +49,7 @@ const (
 // status as often as it sees fit.
 func statusCollector(
 	cpuChan chan cpuStatT,
-	dpfChan chan dpfStatT,
+	dpfChan chan DpfStatT,
 	dskpChan chan dskpStatT) {
 
 	var (
@@ -59,7 +59,7 @@ func statusCollector(
 		lastCPUtime, lastDpfTime, lastDskpTime time.Time
 		thisDpfIOcnt, lastDpfIOcnt             uint64
 		thisDskpIOcnt, lastDskpIOcnt           uint64
-		dpfStats                               dpfStatT
+		dpfStats                               DpfStatT
 		dskpStats                              dskpStatT
 	)
 

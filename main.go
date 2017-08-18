@@ -58,7 +58,7 @@ var (
 	debugLogging  = true
 	breakpoints   []dg.PhysAddrT
 	cpuStatsChan  chan cpuStatT
-	dpfStatsChan  chan dpfStatT
+	dpfStatsChan  chan DpfStatT
 	dskpStatsChan chan dskpStatT
 	ttiSCPchan    chan byte
 )
@@ -88,7 +88,7 @@ func main() {
 		// create the channels used for near-real-time status monitoring
 		// See statusCollector.go for details
 		cpuStatsChan = make(chan cpuStatT, 3)
-		dpfStatsChan = make(chan dpfStatT, 3)
+		dpfStatsChan = make(chan DpfStatT, 3)
 		dskpStatsChan = make(chan dskpStatT, 3)
 
 		ttiSCPchan = make(chan byte, ScpBuffSize)
@@ -116,7 +116,7 @@ func main() {
 		ttoInit(conn)
 		ttiInit(conn, cpuPtr, ttiSCPchan)
 		mtbInit()
-		dpfInit(dpfStatsChan)
+		DpfInit(dpfStatsChan)
 		dskpInit(dskpStatsChan)
 
 		// say hello...

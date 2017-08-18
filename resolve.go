@@ -155,7 +155,7 @@ func resolveEclipseBitAddr(cpuPtr *CPU, iPtr *decodedInstrT) (wordAddr dg.PhysAd
 		}
 		wordAddr = dg.PhysAddrT(cpuPtr.ac[iPtr.acs]) & 0x7fff // mask off lower 15 bits
 	}
-	offset := (dg.PhysAddrT(cpuPtr.ac[iPtr.acd]) & 0x0000fff0) >> 4
+	offset := dg.PhysAddrT(cpuPtr.ac[iPtr.acd]) >> 4
 	wordAddr += offset // add unsigned offset
 	bitNum = uint(cpuPtr.ac[iPtr.acd] & 0x000f)
 	return wordAddr, bitNum

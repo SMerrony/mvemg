@@ -139,7 +139,8 @@ type dpfDataT struct {
 	lastDOAwasSeek  bool
 }
 
-type dpfStatT struct {
+// DpfStatT holds the data reported to the status collector
+type DpfStatT struct {
 	imageAttached bool
 	cylinder      dg.WordT
 	head, sector  uint8
@@ -152,8 +153,8 @@ var (
 	cmdDecode [dpfCmdFormat + 1]string
 )
 
-// initialise the emulated DPF controller
-func dpfInit(statsChann chan dpfStatT) {
+// DpfInit must be called to initialise the emulated DPF controller
+func DpfInit(statsChann chan DpfStatT) {
 	dpfData.dpfMu.Lock()
 	defer dpfData.dpfMu.Unlock()
 	dpfData.debug = true
@@ -195,8 +196,8 @@ func dpfAttach(dNum int, imgName string) bool {
 	return true
 }
 
-func dpfStatsSender(sChan chan dpfStatT) {
-	var stats dpfStatT
+func dpfStatsSender(sChan chan DpfStatT) {
+	var stats DpfStatT
 	for {
 		dpfData.dpfMu.RLock()
 		if dpfData.imageAttached {
@@ -207,7 +208,7 @@ func dpfStatsSender(sChan chan dpfStatT) {
 			stats.reads = dpfData.reads
 			stats.writes = dpfData.writes
 		} else {
-			stats = dpfStatT{}
+			stats = DpfStatT{}
 		}
 		dpfData.dpfMu.RUnlock()
 		select {
@@ -268,7 +269,7 @@ func dpfDataIn(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 			log.Fatal("DPF DIB (Alt Mode 2) not yet implemented")
 		}
 	case 'C':
-		var ssc dg.WordT = 0
+		var ssc dg.WordT
 		if dpfData.mapEnabled {
 			ssc = 1 << 15
 		}
@@ -280,7 +281,7 @@ func dpfDataIn(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 	}
 	dpfData.dpfMu.RUnlock()
 
-	dpfHandleFlag(iPtr.f) // TODO Is this go-able?
+	dpfHandleFlag(iPtr.f)
 }
 
 // dpfDataOut implements the DOA/B/C instructions for this device
@@ -370,7 +371,7 @@ func dpfDataOut(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 	}
 	dpfData.dpfMu.Unlock()
 
-	dpfHandleFlag(iPtr.f) // TODO Is this go-able?
+	dpfHandleFlag(iPtr.f)
 }
 
 func dpfDoCommand() {
@@ -437,7 +438,7 @@ func dpfDoCommand() {
 			// check SURF (head)
 			if dpfData.surface >= dpfSurfPerDisk {
 				dpfData.driveStatus = dpfReady
-				dpfData.rwStatus = dpfRwdone | dpfRwfault | dpfIllegalsector // FIXME is SURFSECT right?
+				dpfData.rwStatus = dpfRwdone | dpfRwfault | dpfIllegalsector
 				dpfData.dpfMu.Unlock()
 				return
 			}
@@ -498,7 +499,7 @@ func dpfDoCommand() {
 			// check SURF (head)/SECT
 			if dpfData.surface >= dpfSurfPerDisk {
 				dpfData.driveStatus = dpfReady
-				dpfData.rwStatus = dpfRwdone | dpfRwfault | dpfIllegalsector // FIXME is SURFSECT right?
+				dpfData.rwStatus = dpfRwdone | dpfRwfault | dpfIllegalsector
 				dpfData.dpfMu.Unlock()
 				return
 			}
