@@ -28,10 +28,10 @@ import (
 
 // Some Page Zero special locations for the Wide Stack...
 const (
-	WfpLoc  = 020
-	WspLoc  = 022
-	WslLoc  = 024
-	WsbLoc  = 026
+	WfpLoc  = 020 // 16.
+	WspLoc  = 022 // 18.
+	WslLoc  = 024 // 20.
+	WsbLoc  = 026 // 22.
 	WpfhLoc = 030
 	CbpLoc  = 032
 )

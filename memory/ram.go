@@ -44,7 +44,6 @@ var memory memoryT // memory is NOT exported
 
 // MemInit should be called at machine start
 func MemInit() {
-	// zero ram?
 	memory.atuEnabled = false
 	bmcdchInit()
 	logging.DebugPrint(logging.DebugLog, "INFO: Initialised %d words of main memory\n", memSizeWords)
@@ -112,11 +111,7 @@ func ReadDWord(wordAddr dg.PhysAddrT) dg.DwordT {
 	if wordAddr >= memSizeWords {
 		log.Fatalf("ERROR: Attempt to read doubleword beyond end of physical memory using address: %d", wordAddr)
 	}
-	var dword dg.DwordT
-	//dword = dg_dword(memory.ram[wordAddr]) << 16
-	//dword = dword | dg_dword(memory.ram[wordAddr+1])
-	dword = util.DWordFromTwoWords(memory.ram[wordAddr], memory.ram[wordAddr+1])
-	return dword
+	return util.DWordFromTwoWords(memory.ram[wordAddr], memory.ram[wordAddr+1])
 }
 
 // WriteDWord writes a doubleword into memory at the given physical address

@@ -120,6 +120,30 @@ func TestNSUB(t *testing.T) {
 	}
 }
 
+func TestWANDI(t *testing.T) {
+	cpuPtr := cpuInit(nil)
+	var iPtr decodedInstrT
+	iPtr.mnemonic = "WANDI"
+	iPtr.immDword = 0x7fffffff
+	iPtr.acd = 0
+	cpuPtr.ac[0] = 0x3171
+	if !eagleOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute WANDI")
+	}
+	if cpuPtr.ac[0] != 0x3171 {
+		t.Errorf("Expected %x, got %x", 0x3171, cpuPtr.ac[0])
+	}
+	iPtr.immDword = 0x7fffffff
+	iPtr.acd = 0
+	cpuPtr.ac[0] = 0x20202020
+	if !eagleOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute WANDI")
+	}
+	if cpuPtr.ac[0] != 0x20202020 {
+		t.Errorf("Expected %x, got %x", 0x20202020, cpuPtr.ac[0])
+	}
+}
+
 func TestWNEG(t *testing.T) {
 	cpuPtr := cpuInit(nil)
 	var iPtr decodedInstrT
