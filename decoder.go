@@ -65,7 +65,7 @@ var opCodeLookup [numPosOpcodes]string
 
 func decoderGenAllPossOpcodes() {
 	for opcode := 0; opcode < numPosOpcodes; opcode++ {
-		mnem, found := instructionFind2(dg.WordT(opcode), false, false, false)
+		mnem, found := instructionMatch(dg.WordT(opcode), false, false, false)
 		if found {
 			opCodeLookup[opcode] = mnem
 		} else {
@@ -74,9 +74,9 @@ func decoderGenAllPossOpcodes() {
 	}
 }
 
-// InsrtructionFind looks for the opcode in the instruction map and returns
+// InstructionFind looks up an opcode in the opcode lookup table and returns
 // the corresponding mnemonic
-func instructionFind(opcode dg.WordT, lefMode bool, ioOn bool, atuOn bool) (string, bool) {
+func instructionLookup(opcode dg.WordT, lefMode bool, ioOn bool, atuOn bool) (string, bool) {
 	if opCodeLookup[opcode] != "" {
 		if opCodeLookup[opcode] == "LEF" && lefMode {
 			return "", false
@@ -86,9 +86,9 @@ func instructionFind(opcode dg.WordT, lefMode bool, ioOn bool, atuOn bool) (stri
 	return "", false
 }
 
-// InsrtructionFind2 looks for the opcode in the instruction map and returns
+// instructionMatch looks for a match for the opcode in the instruction set and returns
 // the corresponding mnemonic
-func instructionFind2(opcode dg.WordT, lefMode bool, ioOn bool, atuOn bool) (string, bool) {
+func instructionMatch(opcode dg.WordT, lefMode bool, ioOn bool, atuOn bool) (string, bool) {
 	var tail dg.WordT
 	for mnem, insChar := range instructionSet {
 		if (opcode & insChar.mask) == insChar.bits {
@@ -123,7 +123,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 
 	decodedInstrT.disassembly = "; Unknown instruction"
 
-	mnem, found := instructionFind(opcode, lefMode, ioOn, autOn)
+	mnem, found := instructionLookup(opcode, lefMode, ioOn, autOn)
 	if !found {
 		logging.DebugPrint(logging.DebugLog, "INFO: instructionFind failed to return anything to instructionDecode for location %d.\n", pc)
 		return &decodedInstrT, false
@@ -193,12 +193,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		}
 		secondWord = memory.ReadWord(pc + 1)
 		decodedInstrT.ind = decodeIndirect(util.TestWbit(secondWord, 0))
-		switch decodedInstrT.mnemonic {
-		case "EJSR", "EJMP": // FIXME - maybe more exceptions needed here
-			decodedInstrT.disp15 = decode15bitEclipseDisp(secondWord, decodedInstrT.mode)
-		default:
-			decodedInstrT.disp15 = decode15bitDisp(secondWord, decodedInstrT.mode)
-		}
+		decodedInstrT.disp15 = decode15bitDisp(secondWord, decodedInstrT.mode)
 		decodedInstrT.disassembly += fmt.Sprintf(" %c%d.%s [2-Word OpCode]",
 			decodedInstrT.ind, decodedInstrT.disp15, modeToString(decodedInstrT.mode))
 
@@ -330,12 +325,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		decodedInstrT.acd = int(util.GetWbits(opcode, 3, 2))
 		secondWord = memory.ReadWord(pc + 1)
 		decodedInstrT.ind = decodeIndirect(util.TestWbit(secondWord, 0))
-		switch decodedInstrT.mnemonic {
-		case "ELEF": // FIXME - more exceptions needed here...
-			decodedInstrT.disp15 = decode15bitEclipseDisp(secondWord, decodedInstrT.mode)
-		default:
-			decodedInstrT.disp15 = decode15bitDisp(secondWord, decodedInstrT.mode)
-		}
+		decodedInstrT.disp15 = decode15bitDisp(secondWord, decodedInstrT.mode)
 		decodedInstrT.disassembly += fmt.Sprintf(" %d,%c%d.%s [2-Word OpCode]",
 			decodedInstrT.acd, decodedInstrT.ind, decodedInstrT.disp15, modeToString(decodedInstrT.mode))
 
@@ -451,24 +441,24 @@ func decode15bitDisp(d15 dg.WordT, mode string) int16 {
 	return disp16
 }
 
-func decode15bitEclipseDisp(d15 dg.WordT, mode string) int16 {
-	if mode == "Absolute" {
-		disp16 = int16(d15 & 0x7fff) // zero extend
-	} else {
-		if util.TestWbit(d15, 1) {
-			disp16 = int16(d15 | 0xc000) // sign extend
-		} else {
-			disp16 = int16(d15 & 0x3fff) // zero extend
-		}
-		if mode == "PC" {
-			disp16++ // see p.1-12 of PoP
-		}
-	}
-	if debugLogging {
-		logging.DebugPrint(logging.DebugLog, "... decode15bitEclispeDisp got: %d, returning: %d\n", d15, disp16)
-	}
-	return disp16
-}
+// func decode15bitEclipseDisp(d15 dg.WordT, mode string) int16 {
+// 	if mode == "Absolute" {
+// 		disp16 = int16(d15 & 0x7fff) // zero extend
+// 	} else {
+// 		if util.TestWbit(d15, 1) {
+// 			disp16 = int16(d15 | 0xc000) // sign extend
+// 		} else {
+// 			disp16 = int16(d15 & 0x3fff) // zero extend
+// 		}
+// 		if mode == "PC" {
+// 			disp16++ // see p.1-12 of PoP
+// 		}
+// 	}
+// 	if debugLogging {
+// 		logging.DebugPrint(logging.DebugLog, "... decode15bitEclispeDisp got: %d, returning: %d\n", d15, disp16)
+// 	}
+// 	return disp16
+// }
 
 func decode16bitByteDisp(d16 dg.WordT) (int16, bool) {
 	loHi := util.TestWbit(d16, 15)
