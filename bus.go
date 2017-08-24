@@ -34,10 +34,10 @@ type (
 	ResetFunc func()
 
 	// DataOutFunc stores a DOx func pointer
-	DataOutFunc func(*CPU, *decodedInstrT, byte)
+	DataOutFunc func(*CPU, *novaDataIoT, byte)
 
 	// DataInFunc stores a DIx func pointer
-	DataInFunc func(*CPU, *decodedInstrT, byte)
+	DataInFunc func(*CPU, *novaDataIoT, byte)
 )
 
 type pioMsgT struct {
@@ -107,8 +107,8 @@ func busSetDataInFunc(devNum int, fn DataInFunc) {
 	d[devNum].devMu.Unlock()
 }
 
-func busDataIn(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
-	var pio pioMsgT
+func busDataIn(cpuPtr *CPU, iPtr *novaDataIoT, abc byte) {
+	//var pio pioMsgT
 	//logging.DebugPrint(logging.DEBUG_LOG, "DEBUG: Bus Data In function called for dev #0%o\n", iPtr.ioDev)
 	d[iPtr.ioDev].devMu.RLock()
 	if d[iPtr.ioDev].dataInFunc == nil && d[iPtr.ioDev].pioChan == nil {
@@ -117,14 +117,15 @@ func busDataIn(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 	d[iPtr.ioDev].devMu.RUnlock()
 	if d[iPtr.ioDev].dataInFunc != nil {
 		d[iPtr.ioDev].dataInFunc(cpuPtr, iPtr, abc)
-	} else {
-		pio.cpuPtr = cpuPtr
-		pio.iPtr = iPtr
-		pio.IO = 'I'
-		pio.abc = abc
-		d[iPtr.ioDev].pioChan <- pio
-		_ = <-d[iPtr.ioDev].pioDoneChan
 	}
+	// else {
+	// 	pio.cpuPtr = cpuPtr
+	// 	pio.iPtr = iPtr
+	// 	pio.IO = 'I'
+	// 	pio.abc = abc
+	// 	d[iPtr.ioDev].pioChan <- pio
+	// 	_ = <-d[iPtr.ioDev].pioDoneChan
+	// }
 
 	// logging.DebugPrint(logging.DEBUG_LOG, "INFO: Bus Data In function called for dev #0%o\n", iPtr.ioDev)
 }
@@ -137,8 +138,8 @@ func busSetDataOutFunc(devNum int, fn DataOutFunc) {
 		devNum, devNum)
 }
 
-func busDataOut(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
-	var pio pioMsgT
+func busDataOut(cpuPtr *CPU, iPtr *novaDataIoT, abc byte) {
+	//var pio pioMsgT
 	d[iPtr.ioDev].devMu.Lock()
 	if d[iPtr.ioDev].dataOutFunc == nil && d[iPtr.ioDev].pioChan == nil {
 		logging.DebugLogsDump()
@@ -149,15 +150,16 @@ func busDataOut(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
 	if d[iPtr.ioDev].dataOutFunc != nil {
 		d[iPtr.ioDev].dataOutFunc(cpuPtr, iPtr, abc)
 		//logging.DebugPrint(logging.DebugLog, "INFO: Bus Data Out function called for dev #0%o\n", iPtr.ioDev)
-	} else {
-		pio.cpuPtr = cpuPtr
-		pio.iPtr = iPtr
-		pio.IO = 'O'
-		pio.abc = abc
-		d[iPtr.ioDev].pioChan <- pio
-		_ = <-d[iPtr.ioDev].pioDoneChan
-		//logging.DebugPrint(logging.DebugLog, "INFO: Bus Data Out sent PIO msg to dev #0%o\n", iPtr.ioDev)
 	}
+	// else {
+	// 	pio.cpuPtr = cpuPtr
+	// 	pio.iPtr = iPtr
+	// 	pio.IO = 'O'
+	// 	pio.abc = abc
+	// 	d[iPtr.ioDev].pioChan <- pio
+	// 	_ = <-d[iPtr.ioDev].pioDoneChan
+	// 	//logging.DebugPrint(logging.DebugLog, "INFO: Bus Data Out sent PIO msg to dev #0%o\n", iPtr.ioDev)
+	// }
 }
 
 func busSetPioChan(devNum int, pioc chan pioMsgT) {

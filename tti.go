@@ -80,7 +80,7 @@ func ttiReset() {
 }
 
 // This is called from Bus to implement DIA from the TTI DEV_TTIice
-func ttiDataIn(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
+func ttiDataIn(cpuPtr *CPU, iPtr *novaDataIoT, abc byte) {
 	oneCharBufMu.Lock()
 	cpuPtr.ac[iPtr.acd] = dg.DwordT(oneCharBuf) // grab the char from the buffer
 	oneCharBufMu.Unlock()

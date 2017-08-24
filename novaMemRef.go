@@ -30,13 +30,17 @@ import (
 
 func novaMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
-	var shifter dg.WordT
-	var effAddr dg.PhysAddrT
+	var (
+		shifter          dg.WordT
+		effAddr          dg.PhysAddrT
+		novaNoAccEffAddr novaNoAccEffAddrT
+	)
 
 	switch iPtr.mnemonic {
 
 	case "DSZ":
-		effAddr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
+		novaNoAccEffAddr = iPtr.variant.(novaNoAccEffAddrT)
+		effAddr = resolve16bitEclipseAddr(cpuPtr, novaNoAccEffAddr.ind, novaNoAccEffAddr.mode, novaNoAccEffAddr.disp15)
 		shifter = memory.ReadWord(effAddr)
 		shifter--
 		memory.WriteWord(effAddr, shifter)
@@ -45,7 +49,8 @@ func novaMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		}
 
 	case "ISZ":
-		effAddr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
+		novaNoAccEffAddr = iPtr.variant.(novaNoAccEffAddrT)
+		effAddr = resolve16bitEclipseAddr(cpuPtr, novaNoAccEffAddr.ind, novaNoAccEffAddr.mode, novaNoAccEffAddr.disp15)
 		shifter = memory.ReadWord(effAddr)
 		shifter++
 		memory.WriteWord(effAddr, shifter)

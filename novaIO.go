@@ -49,12 +49,14 @@ func novaIO(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		busy, done bool
 		ioFlagsDev ioFlagsDevT
 		ioTestDev  ioTestDevT
+		novaDataIo novaDataIoT
 	)
 
 	switch iPtr.mnemonic {
 
 	case "DIA", "DIB", "DIC", "DOA", "DOB", "DOC":
-		if busIsAttached(iPtr.ioDev) && busIsIODevice(iPtr.ioDev) {
+		novaDataIo = iPtr.variant.(novaDataIoT)
+		if busIsAttached(novaDataIo.ioDev) && busIsIODevice(novaDataIo.ioDev) {
 			switch iPtr.mnemonic {
 			case "DOA", "DIA":
 				abc = 'A'
@@ -65,13 +67,13 @@ func novaIO(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 			}
 			switch iPtr.mnemonic {
 			case "DIA", "DIB", "DIC":
-				busDataIn(cpuPtr, iPtr, abc)
+				busDataIn(cpuPtr, &novaDataIo, abc)
 			case "DOA", "DOB", "DOC":
-				busDataOut(cpuPtr, iPtr, abc)
+				busDataOut(cpuPtr, &novaDataIo, abc)
 			}
 		} else {
-			logging.DebugPrint(logging.DebugLog, "WARN: I/O attempted to unattached or non-I/O capable device 0#%o\n", iPtr.ioDev)
-			if iPtr.ioDev != 2 {
+			logging.DebugPrint(logging.DebugLog, "WARN: I/O attempted to unattached or non-I/O capable device 0#%o\n", novaDataIo.ioDev)
+			if novaDataIo.ioDev != 2 {
 				//debugLogsDump()
 				log.Fatal("crash") // TODO Exception for ?MMU?
 			}
@@ -93,7 +95,10 @@ func novaIO(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		if debugLogging {
 			logging.DebugPrint(logging.DebugLog, "Sending NIO to device #%d.\n", ioFlagsDev.ioDev)
 		}
-		busDataOut(cpuPtr, iPtr, 'N') // DUMMY FLAG
+		var novaDataIo novaDataIoT
+		novaDataIo.f = ioFlagsDev.f
+		novaDataIo.ioDev = ioFlagsDev.ioDev
+		busDataOut(cpuPtr, &novaDataIo, 'N') // DUMMY FLAG
 
 	case "PRTSEL":
 		logging.DebugPrint(logging.DebugLog, "INFO: PRTSEL AC0: %d, PC: %d\n", cpuPtr.ac[0], cpuPtr.pc)

@@ -100,6 +100,34 @@ type noAccModeInd3WordT struct {
 	ind    byte
 	disp31 int32
 }
+type noAccModeInd3WordXcallT struct {
+	mode     string
+	ind      byte
+	disp15   int16
+	argCount int
+}
+type noAccModeImmInd3WordT struct {
+	immU16 uint16
+	mode   string
+	ind    byte
+	disp31 int32
+}
+type noAccModeInd4WordT struct {
+	mode     string
+	ind      byte
+	disp31   int32
+	argCount int
+}
+type novaDataIoT struct {
+	acd   int
+	f     byte
+	ioDev int
+}
+type novaNoAccEffAddrT struct {
+	mode   string
+	ind    byte
+	disp15 int16
+}
 
 const numPosOpcodes = 65536
 
@@ -225,14 +253,16 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		lndo4Word.offsetU16 = uint16(fourthWord)
 		decodedInstr.variant = lndo4Word
 		decodedInstr.disassembly += fmt.Sprintf(" %d,%d.,%c%d%s [4-Word OpCode]",
-			lndo4Word.acd, lndo4Word.offsetU16, lndo4Word.ind, lndo4Word.disp31, modeToString(lndo4Word.mode))
+			lndo4Word.acd, lndo4Word.offsetU16, lndo4Word.ind, lndo4Word.disp31,
+			modeToString(lndo4Word.mode))
 
 	case NOACC_MODE_3_WORD_FMT: // eg. LPEFB,
 		var noAccMode3Word noAccMode3WordT
 		noAccMode3Word.mode = decodeMode(util.GetWbits(opcode, 3, 2))
 		noAccMode3Word.immU32 = uint32(memory.ReadDWord(pc + 1))
 		decodedInstr.variant = noAccMode3Word
-		decodedInstr.disassembly += fmt.Sprintf(" %d.,%s [3-Word OpCode]", noAccMode3Word.immU32, modeToString(noAccMode3Word.mode))
+		decodedInstr.disassembly += fmt.Sprintf(" %d.,%s [3-Word OpCode]",
+			noAccMode3Word.immU32, modeToString(noAccMode3Word.mode))
 
 	case NOACC_MODE_IND_2_WORD_E_FMT, NOACC_MODE_IND_2_WORD_X_FMT:
 		var noAccModeInd2Word noAccModeInd2WordT
@@ -262,49 +292,62 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 			noAccModeInd3Word.ind, noAccModeInd3Word.disp31, modeToString(noAccModeInd3Word.mode))
 
 	case NOACC_MODE_IND_3_WORD_XCALL_FMT: // XCALL
-		decodedInstr.mode = decodeMode(util.GetWbits(opcode, 3, 2))
+		var noAccModeInd3WordXcall noAccModeInd3WordXcallT
+		noAccModeInd3WordXcall.mode = decodeMode(util.GetWbits(opcode, 3, 2))
 		secondWord = memory.ReadWord(pc + 1)
 		thirdWord = memory.ReadWord(pc + 2)
-		decodedInstr.ind = decodeIndirect(util.TestWbit(secondWord, 0))
-		decodedInstr.disp15 = decode15bitDisp(secondWord, decodedInstr.mode)
-		decodedInstr.argCount = int(thirdWord)
+		noAccModeInd3WordXcall.ind = decodeIndirect(util.TestWbit(secondWord, 0))
+		noAccModeInd3WordXcall.disp15 = decode15bitDisp(secondWord, noAccModeInd3WordXcall.mode)
+		noAccModeInd3WordXcall.argCount = int(thirdWord)
+		decodedInstr.variant = noAccModeInd3WordXcall
 		decodedInstr.disassembly += fmt.Sprintf(" %c%d.%s, %d [3-Word OpCode]",
-			decodedInstr.ind, decodedInstr.disp15, modeToString(decodedInstr.mode), decodedInstr.argCount)
+			noAccModeInd3WordXcall.ind, noAccModeInd3WordXcall.disp15,
+			modeToString(noAccModeInd3WordXcall.mode), noAccModeInd3WordXcall.argCount)
 
 	case NOACC_MODE_IMM_IND_3_WORD_FMT: // eg. LNADI, LNSBI
-		decodedInstr.immU16 = decode2bitImm(util.GetWbits(opcode, 1, 2))
-		decodedInstr.mode = decodeMode(util.GetWbits(opcode, 3, 2))
+		var noAccModeImmInd3Word noAccModeImmInd3WordT
+		noAccModeImmInd3Word.immU16 = decode2bitImm(util.GetWbits(opcode, 1, 2))
+		noAccModeImmInd3Word.mode = decodeMode(util.GetWbits(opcode, 3, 2))
 		secondWord = memory.ReadWord(pc + 1)
 		thirdWord = memory.ReadWord(pc + 2)
-		decodedInstr.ind = decodeIndirect(util.TestWbit(secondWord, 0))
-		decodedInstr.disp31 = decode31bitDisp(secondWord, thirdWord, decodedInstr.mode)
+		noAccModeImmInd3Word.ind = decodeIndirect(util.TestWbit(secondWord, 0))
+		noAccModeImmInd3Word.disp31 = decode31bitDisp(secondWord, thirdWord, decodedInstr.mode)
+		decodedInstr.variant = noAccModeImmInd3Word
 		decodedInstr.disassembly += fmt.Sprintf(" %d.,%c%d.%s [3-Word OpCode]",
-			decodedInstr.immU16, decodedInstr.ind, decodedInstr.disp31, modeToString(decodedInstr.mode))
+			noAccModeImmInd3Word.immU16, noAccModeImmInd3Word.ind, noAccModeImmInd3Word.disp31,
+			modeToString(noAccModeImmInd3Word.mode))
 
 	case NOACC_MODE_IND_4_WORD_FMT: // eg. LCALL
-		decodedInstr.mode = decodeMode(util.GetWbits(opcode, 3, 2))
+		var noAccModeInd4Word noAccModeInd4WordT
+		noAccModeInd4Word.mode = decodeMode(util.GetWbits(opcode, 3, 2))
 		secondWord = memory.ReadWord(pc + 1)
 		thirdWord = memory.ReadWord(pc + 2)
 		fourthWord = memory.ReadWord(pc + 3)
-		decodedInstr.ind = decodeIndirect(util.TestWbit(secondWord, 0))
-		decodedInstr.disp31 = decode31bitDisp(secondWord, thirdWord, decodedInstr.mode)
-		decodedInstr.argCount = int(fourthWord)
+		noAccModeInd4Word.ind = decodeIndirect(util.TestWbit(secondWord, 0))
+		noAccModeInd4Word.disp31 = decode31bitDisp(secondWord, thirdWord, noAccModeInd4Word.mode)
+		noAccModeInd4Word.argCount = int(fourthWord)
+		decodedInstr.variant = noAccModeInd4Word
 		decodedInstr.disassembly += fmt.Sprintf(" %c%d.%s,%d. [4-Word OpCode]",
-			decodedInstr.ind, decodedInstr.disp31, modeToString(decodedInstr.mode), decodedInstr.argCount)
+			noAccModeInd4Word.ind, noAccModeInd4Word.disp31, modeToString(noAccModeInd4Word.mode),
+			noAccModeInd4Word.argCount)
 
-	case NOVA_DATA_IO_FMT:
-		decodedInstr.acd = int(util.GetWbits(opcode, 3, 2))
-		decodedInstr.f = decodeIOFlags(util.GetWbits(opcode, 8, 2))
-		decodedInstr.ioDev = int(util.GetWbits(opcode, 10, 6))
+	case NOVA_DATA_IO_FMT: // eg. DOA/B/C, DIA/B/C
+		var novaDataIo novaDataIoT
+		novaDataIo.acd = int(util.GetWbits(opcode, 3, 2))
+		novaDataIo.f = decodeIOFlags(util.GetWbits(opcode, 8, 2))
+		novaDataIo.ioDev = int(util.GetWbits(opcode, 10, 6))
+		decodedInstr.variant = novaDataIo
 		decodedInstr.disassembly += fmt.Sprintf("%c %d,%s",
-			decodedInstr.f, decodedInstr.acd, deviceToString(decodedInstr.ioDev))
+			novaDataIo.f, novaDataIo.acd, deviceToString(novaDataIo.ioDev))
 
-	case NOVA_NOACC_EFF_ADDR_FMT:
-		decodedInstr.ind = decodeIndirect(util.TestWbit(opcode, 5))
-		decodedInstr.mode = decodeMode(util.GetWbits(opcode, 6, 2))
-		decodedInstr.disp15 = decode8bitDisp(dg.ByteT(opcode&0x00ff), decodedInstr.mode) // NB
+	case NOVA_NOACC_EFF_ADDR_FMT: // eg. JMP, JSR
+		var novaNoAccEffAddr novaNoAccEffAddrT
+		novaNoAccEffAddr.ind = decodeIndirect(util.TestWbit(opcode, 5))
+		novaNoAccEffAddr.mode = decodeMode(util.GetWbits(opcode, 6, 2))
+		novaNoAccEffAddr.disp15 = decode8bitDisp(dg.ByteT(opcode&0x00ff), novaNoAccEffAddr.mode) // NB
+		decodedInstr.variant = novaNoAccEffAddr
 		decodedInstr.disassembly += fmt.Sprintf(" %c%d.%s",
-			decodedInstr.ind, decodedInstr.disp15, modeToString(decodedInstr.mode))
+			novaNoAccEffAddr.ind, novaNoAccEffAddr.disp15, modeToString(novaNoAccEffAddr.mode))
 
 	case NOVA_ONEACC_EFF_ADDR_FMT:
 		decodedInstr.acd = int(util.GetWbits(opcode, 3, 2))

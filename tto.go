@@ -42,7 +42,7 @@ func ttoReset() {
 }
 
 // This is called from Bus to implement DOA to the TTO device
-func ttoDataOut(cpuPtr *CPU, iPtr *decodedInstrT, abc byte) {
+func ttoDataOut(cpuPtr *CPU, iPtr *novaDataIoT, abc byte) {
 	var ascii byte
 	switch abc {
 	case 'A':

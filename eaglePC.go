@@ -31,26 +31,29 @@ import (
 func eaglePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	var (
-		wd                dg.WordT
-		dwd, tmp32b       dg.DwordT
-		tmpAddr           dg.PhysAddrT
-		s32a, s32b        int32
-		noAccModeInd2Word noAccModeInd2WordT
-		noAccModeInd3Word noAccModeInd3WordT
+		wd                     dg.WordT
+		dwd, tmp32b            dg.DwordT
+		tmpAddr                dg.PhysAddrT
+		s32a, s32b             int32
+		noAccModeInd2Word      noAccModeInd2WordT
+		noAccModeInd3Word      noAccModeInd3WordT
+		noAccModeInd3WordXcall noAccModeInd3WordXcallT
+		noAccModeInd4Word      noAccModeInd4WordT
 	)
 
 	switch iPtr.mnemonic {
 
 	case "LCALL": // FIXME - LCALL only handling trivial case, no checking
+		noAccModeInd4Word = iPtr.variant.(noAccModeInd4WordT)
 		cpuPtr.ac[3] = dg.DwordT(cpuPtr.pc) + 4
-		if iPtr.argCount > 0 {
-			dwd = dg.DwordT(iPtr.argCount) & 0x00007fff
+		if noAccModeInd4Word.argCount > 0 {
+			dwd = dg.DwordT(noAccModeInd4Word.argCount) & 0x00007fff
 		} else {
 			// TODO PSR
-			dwd = dg.DwordT(iPtr.argCount)
+			dwd = dg.DwordT(noAccModeInd4Word.argCount)
 		}
 		memory.WsPush(0, dwd)
-		cpuPtr.pc = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31)
+		cpuPtr.pc = resolve32bitEffAddr(cpuPtr, noAccModeInd4Word.ind, noAccModeInd4Word.mode, noAccModeInd4Word.disp31)
 		cpuPtr.ovk = false
 
 	case "LJMP":
@@ -216,16 +219,18 @@ func eaglePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		}
 
 	case "XCALL":
+		noAccModeInd3WordXcall = iPtr.variant.(noAccModeInd3WordXcallT)
 		// FIXME - only handling the trivial case so far
 		cpuPtr.ac[3] = dg.DwordT(cpuPtr.pc) + 3
-		if iPtr.argCount > 0 {
-			dwd = dg.DwordT(iPtr.argCount) & 0x00007fff
+		if noAccModeInd3WordXcall.argCount > 0 {
+			dwd = dg.DwordT(noAccModeInd3WordXcall.argCount) & 0x00007fff
 		} else {
 			// TODO PSR
-			dwd = dg.DwordT(iPtr.argCount)
+			dwd = dg.DwordT(noAccModeInd3WordXcall.argCount)
 		}
 		memory.WsPush(0, dwd)
-		cpuPtr.pc = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
+		cpuPtr.pc = resolve16bitEagleAddr(cpuPtr, noAccModeInd3WordXcall.ind, noAccModeInd3WordXcall.mode,
+			noAccModeInd3WordXcall.disp15)
 
 	case "XJMP":
 		noAccModeInd2Word = iPtr.variant.(noAccModeInd2WordT)
