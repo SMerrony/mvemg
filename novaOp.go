@@ -35,14 +35,17 @@ func novaOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		tmpAcS, tmpAcD   dg.WordT
 		savedCry, tmpCry bool
 		pcInc            dg.PhysAddrT
+		novaTwoAccMultOp novaTwoAccMultOpT
 	)
 
-	tmpAcS = util.DWordGetLowerWord(cpuPtr.ac[iPtr.acs])
-	tmpAcD = util.DWordGetLowerWord(cpuPtr.ac[iPtr.acd])
+	novaTwoAccMultOp = iPtr.variant.(novaTwoAccMultOpT)
+
+	tmpAcS = util.DWordGetLowerWord(cpuPtr.ac[novaTwoAccMultOp.acs])
+	tmpAcD = util.DWordGetLowerWord(cpuPtr.ac[novaTwoAccMultOp.acd])
 	savedCry = cpuPtr.carry
 
 	// Preset Carry if required
-	switch iPtr.c {
+	switch novaTwoAccMultOp.c {
 	case 'Z': // zero
 		cpuPtr.carry = false
 	case 'O': // One
@@ -103,7 +106,7 @@ func novaOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	}
 
 	// shift if required
-	switch iPtr.sh {
+	switch novaTwoAccMultOp.sh {
 	case 'L':
 		tmpCry = cpuPtr.carry
 		cpuPtr.carry = util.TestWbit(shifter, 0)
@@ -123,7 +126,7 @@ func novaOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	}
 
 	// Skip?
-	switch iPtr.skip {
+	switch novaTwoAccMultOp.skip {
 	case "NONE":
 		pcInc = 1
 	case "SKP":
@@ -169,8 +172,8 @@ func novaOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	}
 
 	// No-Load?
-	if iPtr.nl != '#' {
-		cpuPtr.ac[iPtr.acd] = dg.DwordT(shifter) & 0x0000ffff
+	if novaTwoAccMultOp.nl != '#' {
+		cpuPtr.ac[novaTwoAccMultOp.acd] = dg.DwordT(shifter) & 0x0000ffff
 	} else {
 		// don't load the result from the shifter, restore the Carry flag
 		cpuPtr.carry = savedCry

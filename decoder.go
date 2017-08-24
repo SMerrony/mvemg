@@ -128,6 +128,17 @@ type novaNoAccEffAddrT struct {
 	ind    byte
 	disp15 int16
 }
+type novaOneAccEffAddrT struct {
+	acd    int
+	mode   string
+	ind    byte
+	disp15 int16
+}
+type novaTwoAccMultOpT struct {
+	acd, acs  int
+	c, sh, nl byte
+	skip      string
+}
 
 const numPosOpcodes = 65536
 
@@ -350,22 +361,28 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 			novaNoAccEffAddr.ind, novaNoAccEffAddr.disp15, modeToString(novaNoAccEffAddr.mode))
 
 	case NOVA_ONEACC_EFF_ADDR_FMT:
-		decodedInstr.acd = int(util.GetWbits(opcode, 3, 2))
-		decodedInstr.ind = decodeIndirect(util.TestWbit(opcode, 5))
-		decodedInstr.mode = decodeMode(util.GetWbits(opcode, 6, 2))
-		decodedInstr.disp15 = decode8bitDisp(dg.ByteT(opcode&0x00ff), decodedInstr.mode) // NB
+		var novaOneAccEffAddr novaOneAccEffAddrT
+		novaOneAccEffAddr.acd = int(util.GetWbits(opcode, 3, 2))
+		novaOneAccEffAddr.ind = decodeIndirect(util.TestWbit(opcode, 5))
+		novaOneAccEffAddr.mode = decodeMode(util.GetWbits(opcode, 6, 2))
+		novaOneAccEffAddr.disp15 = decode8bitDisp(dg.ByteT(opcode&0x00ff), novaOneAccEffAddr.mode) // NB
+		decodedInstr.variant = novaOneAccEffAddr
 		decodedInstr.disassembly += fmt.Sprintf(" %d,%c%d.%s",
-			decodedInstr.acd, decodedInstr.ind, decodedInstr.disp15, modeToString(decodedInstr.mode))
+			novaOneAccEffAddr.acd, novaOneAccEffAddr.ind, novaOneAccEffAddr.disp15,
+			modeToString(novaOneAccEffAddr.mode))
 
-	case NOVA_TWOACC_MULT_OP_FMT:
-		decodedInstr.acs = int(util.GetWbits(opcode, 1, 2))
-		decodedInstr.acd = int(util.GetWbits(opcode, 3, 2))
-		decodedInstr.sh = decodeShift(util.GetWbits(opcode, 8, 2))
-		decodedInstr.c = decodeCarry(util.GetWbits(opcode, 10, 2))
-		decodedInstr.nl = decodeNoLoad(util.TestWbit(opcode, 12))
-		decodedInstr.skip = decodeSkip(util.GetWbits(opcode, 13, 3))
+	case NOVA_TWOACC_MULT_OP_FMT: // eg. ADC, ADD, AND, COM
+		var novaTwoAccMultOp novaTwoAccMultOpT
+		novaTwoAccMultOp.acs = int(util.GetWbits(opcode, 1, 2))
+		novaTwoAccMultOp.acd = int(util.GetWbits(opcode, 3, 2))
+		novaTwoAccMultOp.sh = decodeShift(util.GetWbits(opcode, 8, 2))
+		novaTwoAccMultOp.c = decodeCarry(util.GetWbits(opcode, 10, 2))
+		novaTwoAccMultOp.nl = decodeNoLoad(util.TestWbit(opcode, 12))
+		novaTwoAccMultOp.skip = decodeSkip(util.GetWbits(opcode, 13, 3))
+		decodedInstr.variant = novaTwoAccMultOp
 		decodedInstr.disassembly += fmt.Sprintf("%c%c%c %d,%d %s",
-			decodedInstr.c, decodedInstr.sh, decodedInstr.nl, decodedInstr.acs, decodedInstr.acd, skipToString(decodedInstr.skip))
+			novaTwoAccMultOp.c, novaTwoAccMultOp.sh, novaTwoAccMultOp.nl, novaTwoAccMultOp.acs,
+			novaTwoAccMultOp.acd, skipToString(novaTwoAccMultOp.skip))
 
 	case ONEACC_1_WORD_FMT:
 		decodedInstr.acd = int(util.GetWbits(opcode, 3, 2))
