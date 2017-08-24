@@ -31,10 +31,12 @@ import (
 func eaglePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	var (
-		wd          dg.WordT
-		dwd, tmp32b dg.DwordT
-		tmpAddr     dg.PhysAddrT
-		s32a, s32b  int32
+		wd                dg.WordT
+		dwd, tmp32b       dg.DwordT
+		tmpAddr           dg.PhysAddrT
+		s32a, s32b        int32
+		noAccModeInd2Word noAccModeInd2WordT
+		noAccModeInd3Word noAccModeInd3WordT
 	)
 
 	switch iPtr.mnemonic {
@@ -52,15 +54,18 @@ func eaglePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		cpuPtr.ovk = false
 
 	case "LJMP":
-		cpuPtr.pc = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31)
+		noAccModeInd3Word = iPtr.variant.(noAccModeInd3WordT)
+		cpuPtr.pc = resolve32bitEffAddr(cpuPtr, noAccModeInd3Word.ind, noAccModeInd3Word.mode, noAccModeInd3Word.disp31)
 
 	case "LJSR":
+		noAccModeInd3Word = iPtr.variant.(noAccModeInd3WordT)
 		cpuPtr.ac[3] = dg.DwordT(cpuPtr.pc) + 3
-		cpuPtr.pc = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31)
+		cpuPtr.pc = resolve32bitEffAddr(cpuPtr, noAccModeInd3Word.ind, noAccModeInd3Word.mode, noAccModeInd3Word.disp31)
 
 	case "LNISZ":
+		noAccModeInd3Word = iPtr.variant.(noAccModeInd3WordT)
 		// unsigned narrow increment and skip if zero
-		tmpAddr = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31)
+		tmpAddr = resolve32bitEffAddr(cpuPtr, noAccModeInd3Word.ind, noAccModeInd3Word.mode, noAccModeInd3Word.disp31)
 		wd = memory.ReadWord(tmpAddr) + 1
 		memory.WriteWord(tmpAddr, wd)
 		if wd == 0 {
@@ -70,12 +75,14 @@ func eaglePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		}
 
 	case "LPSHJ":
+		noAccModeInd3Word = iPtr.variant.(noAccModeInd3WordT)
 		memory.WsPush(0, dg.DwordT(cpuPtr.pc)+3)
-		cpuPtr.pc = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31)
+		cpuPtr.pc = resolve32bitEffAddr(cpuPtr, noAccModeInd3Word.ind, noAccModeInd3Word.mode, noAccModeInd3Word.disp31)
 
 	case "LWDSZ":
+		noAccModeInd3Word = iPtr.variant.(noAccModeInd3WordT)
 		// unsigned wide decrement and skip if zero
-		tmpAddr = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31)
+		tmpAddr = resolve32bitEffAddr(cpuPtr, noAccModeInd3Word.ind, noAccModeInd3Word.mode, noAccModeInd3Word.disp31)
 		tmp32b = memory.ReadDWord(tmpAddr) - 1
 		memory.WriteDWord(tmpAddr, tmp32b)
 		if tmp32b == 0 {
@@ -221,14 +228,17 @@ func eaglePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		cpuPtr.pc = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
 
 	case "XJMP":
-		cpuPtr.pc = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
+		noAccModeInd2Word = iPtr.variant.(noAccModeInd2WordT)
+		cpuPtr.pc = resolve16bitEagleAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15)
 
 	case "XJSR":
+		noAccModeInd2Word = iPtr.variant.(noAccModeInd2WordT)
 		cpuPtr.ac[3] = dg.DwordT(cpuPtr.pc + 2) // TODO Check this, PoP is self-contradictory on p.11-642
-		cpuPtr.pc = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
+		cpuPtr.pc = resolve16bitEagleAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15)
 
 	case "XNISZ": // unsigned narrow increment and skip if zero
-		tmpAddr = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
+		noAccModeInd2Word = iPtr.variant.(noAccModeInd2WordT)
+		tmpAddr = resolve16bitEagleAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15)
 		wd = memory.ReadWord(tmpAddr)
 		wd++ // N.B. have checked that 0xffff + 1 == 0 in Go
 		memory.WriteWord(tmpAddr, wd)
@@ -239,7 +249,8 @@ func eaglePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		}
 
 	case "XWDSZ":
-		tmpAddr = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
+		noAccModeInd2Word = iPtr.variant.(noAccModeInd2WordT)
+		tmpAddr = resolve16bitEagleAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15)
 		dwd = memory.ReadDWord(tmpAddr)
 		dwd--
 		memory.WriteDWord(tmpAddr, dwd)

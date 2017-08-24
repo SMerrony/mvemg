@@ -36,6 +36,8 @@ func eagleStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		firstAc, lastAc, thisAc int
 		acsUp                   = [8]int{0, 1, 2, 3, 0, 1, 2, 3}
 		tmpDwd                  dg.DwordT
+		noAccModeInd2Word       noAccModeInd2WordT
+		noAccModeInd3Word       noAccModeInd3WordT
 	)
 
 	switch iPtr.mnemonic {
@@ -53,7 +55,8 @@ func eagleStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		cpuPtr.ac[iPtr.acd] = memory.ReadDWord(memory.WspLoc)
 
 	case "LPEF":
-		memory.WsPush(0, dg.DwordT(resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31)))
+		noAccModeInd3Word = iPtr.variant.(noAccModeInd3WordT)
+		memory.WsPush(0, dg.DwordT(resolve32bitEffAddr(cpuPtr, noAccModeInd3Word.ind, noAccModeInd3Word.mode, noAccModeInd3Word.disp31)))
 
 	case "STAFP":
 		// FIXME handle segments
@@ -120,8 +123,9 @@ func eagleStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		cpu.ovk = true
 
 	case "XPEF":
+		noAccModeInd2Word = iPtr.variant.(noAccModeInd2WordT)
 		// FIXME segment handling, check for overflow
-		memory.WsPush(0, dg.DwordT(resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)))
+		memory.WsPush(0, dg.DwordT(resolve16bitEagleAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15)))
 
 	default:
 		log.Fatalf("ERROR: EAGLE_STACK instruction <%s> not yet implemented\n", iPtr.mnemonic)

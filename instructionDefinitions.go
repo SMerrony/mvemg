@@ -44,7 +44,6 @@ const (
 	IMM_MODE_2_WORD_FMT
 	IMM_ONEACC_FMT
 	IO_FLAGS_DEV_FMT
-	IO_RESET_FMT
 	IO_TEST_DEV_FMT
 	LNDO_4_WORD_FMT
 	NOACC_MODE_3_WORD_FMT
@@ -151,7 +150,7 @@ func instructionsInit() {
 	instructionSet["INTEN"] = instrChars{0x607f, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_IO}
 	instructionSet["IOR"] = instrChars{0x8108, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP}
 	instructionSet["IORI"] = instrChars{0x87f8, 0xe7ff, 2, ONEACC_IMMWD_2_WORD_FMT, ECLIPSE_OP}
-	instructionSet["IORST"] = instrChars{0x653f, 0xe73f, 1, IO_RESET_FMT, NOVA_IO}
+	instructionSet["IORST"] = instrChars{0x653f, 0xe73f, 1, ONEACC_1_WORD_FMT, NOVA_IO}
 	instructionSet["ISZ"] = instrChars{0x1000, 0xf800, 1, NOVA_NOACC_EFF_ADDR_FMT, NOVA_MEMREF}
 	instructionSet["ISZTS"] = instrChars{0xc7c9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
 	instructionSet["JMP"] = instrChars{0x0, 0xf800, 1, NOVA_NOACC_EFF_ADDR_FMT, NOVA_PC}

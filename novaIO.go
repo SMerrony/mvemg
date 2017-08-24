@@ -48,6 +48,7 @@ func novaIO(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		abc        byte
 		busy, done bool
 		ioFlagsDev ioFlagsDevT
+		ioTestDev  ioTestDevT
 	)
 
 	switch iPtr.mnemonic {
@@ -103,9 +104,10 @@ func novaIO(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		}
 
 	case "SKP":
-		busy = busGetBusy(iPtr.ioDev)
-		done = busGetDone(iPtr.ioDev)
-		switch iPtr.t {
+		ioTestDev = iPtr.variant.(ioTestDevT)
+		busy = busGetBusy(ioTestDev.ioDev)
+		done = busGetDone(ioTestDev.ioDev)
+		switch ioTestDev.t {
 		case "BN":
 			if busy {
 				cpuPtr.pc++

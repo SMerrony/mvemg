@@ -11,11 +11,11 @@ import (
 
 func eclipsePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	var (
-		addr, inc      dg.PhysAddrT
-		acd, acs, h, l int16
-		wd             dg.WordT
-		bit            uint
-	//dwd dg_dword
+		addr, inc         dg.PhysAddrT
+		acd, acs, h, l    int16
+		wd                dg.WordT
+		bit               uint
+		noAccModeInd2Word noAccModeInd2WordT
 	)
 
 	switch iPtr.mnemonic {
@@ -65,7 +65,8 @@ func eclipsePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		}
 
 	case "EISZ":
-		addr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
+		noAccModeInd2Word = iPtr.variant.(noAccModeInd2WordT)
+		addr = resolve16bitEclipseAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15)
 		wd = memory.ReadWord(addr)
 		wd++
 		memory.WriteWord(addr, wd)
@@ -76,12 +77,14 @@ func eclipsePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		}
 
 	case "EJMP":
-		addr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
+		noAccModeInd2Word = iPtr.variant.(noAccModeInd2WordT)
+		addr = resolve16bitEclipseAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15)
 		cpuPtr.pc = addr
 
 	case "EJSR":
+		noAccModeInd2Word = iPtr.variant.(noAccModeInd2WordT)
 		cpuPtr.ac[3] = dg.DwordT(cpuPtr.pc) + 2
-		addr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
+		addr = resolve16bitEclipseAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15)
 		cpuPtr.pc = addr
 
 	case "SGT": //16-bit signed numbers
