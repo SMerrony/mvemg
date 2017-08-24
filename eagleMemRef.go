@@ -180,8 +180,9 @@ func eagleMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	case "XWADI":
 		// add 1-4 to signed 32-bit acc
-		addr = resolve16bitEagleAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
-		i32 = int32(memory.ReadDWord(addr)) + int32(iPtr.immU16)
+		variant := iPtr.variant.(immMode2WordT)
+		addr = resolve16bitEagleAddr(cpuPtr, variant.ind, variant.mode, variant.disp15)
+		i32 = int32(memory.ReadDWord(addr)) + int32(variant.immU16)
 		// FIXME handle Carry and OVeRflow
 		memory.WriteDWord(addr, dg.DwordT(i32))
 

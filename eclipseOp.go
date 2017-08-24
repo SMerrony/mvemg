@@ -31,19 +31,21 @@ import (
 
 func eclipseOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	var (
-		addr   dg.PhysAddrT
-		byt    dg.ByteT
-		wd     dg.WordT
-		dwd    dg.DwordT
-		bitNum uint
+		addr      dg.PhysAddrT
+		byt       dg.ByteT
+		wd        dg.WordT
+		dwd       dg.DwordT
+		bitNum    uint
+		immOneAcc immOneAccT
 	)
 
 	switch iPtr.mnemonic {
 
 	case "ADI": // 16-bit unsigned Add Immediate
-		wd = util.DWordGetLowerWord(cpuPtr.ac[iPtr.acd])
-		wd += dg.WordT(iPtr.immU16) // unsigned arithmetic does wraparound in Go
-		cpuPtr.ac[iPtr.acd] = dg.DwordT(wd)
+		immOneAcc = iPtr.variant.(immOneAccT)
+		wd = util.DWordGetLowerWord(cpuPtr.ac[immOneAcc.acd])
+		wd += dg.WordT(immOneAcc.immU16) // unsigned arithmetic does wraparound in Go
+		cpuPtr.ac[immOneAcc.acd] = dg.DwordT(wd)
 
 	case "BTO":
 		// TODO Handle segment and indirection...
@@ -103,12 +105,14 @@ func eclipseOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		memory.WriteWord(addr, util.DWordGetLowerWord(cpuPtr.ac[iPtr.acd]))
 
 	case "HXL":
-		dwd = cpuPtr.ac[iPtr.acd] << (uint32(iPtr.immU16) * 4)
-		cpuPtr.ac[iPtr.acd] = dwd & 0x0ffff
+		immOneAcc = iPtr.variant.(immOneAccT)
+		dwd = cpuPtr.ac[immOneAcc.acd] << (uint32(immOneAcc.immU16) * 4)
+		cpuPtr.ac[immOneAcc.acd] = dwd & 0x0ffff
 
 	case "HXR":
-		dwd = cpuPtr.ac[iPtr.acd] >> (uint32(iPtr.immU16) * 4)
-		cpuPtr.ac[iPtr.acd] = dwd & 0x0ffff
+		immOneAcc = iPtr.variant.(immOneAccT)
+		dwd = cpuPtr.ac[immOneAcc.acd] >> (uint32(immOneAcc.immU16) * 4)
+		cpuPtr.ac[immOneAcc.acd] = dwd & 0x0ffff
 
 	case "IOR":
 		wd = util.DWordGetLowerWord(cpuPtr.ac[iPtr.acd]) | util.DWordGetLowerWord(cpuPtr.ac[iPtr.acs])
@@ -134,12 +138,13 @@ func eclipseOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		cpuPtr.ac[1] = dg.DwordT(util.DWordGetLowerWord(dwd))
 
 	case "SBI": // unsigned
-		wd = util.DWordGetLowerWord(cpuPtr.ac[iPtr.acd])
-		if iPtr.immU16 < 1 || iPtr.immU16 > 4 {
+		immOneAcc = iPtr.variant.(immOneAccT)
+		wd = util.DWordGetLowerWord(cpuPtr.ac[immOneAcc.acd])
+		if immOneAcc.immU16 < 1 || immOneAcc.immU16 > 4 {
 			log.Fatal("Invalid immediate value in SBI")
 		}
-		wd -= dg.WordT(iPtr.immU16)
-		cpuPtr.ac[iPtr.acd] = dg.DwordT(wd)
+		wd -= dg.WordT(immOneAcc.immU16)
+		cpuPtr.ac[immOneAcc.acd] = dg.DwordT(wd)
 
 	case "STB":
 		hiLo := util.TestDWbit(cpuPtr.ac[iPtr.acs], 31)

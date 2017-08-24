@@ -47,6 +47,7 @@ func novaIO(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	var (
 		abc        byte
 		busy, done bool
+		ioFlagsDev ioFlagsDevT
 	)
 
 	switch iPtr.mnemonic {
@@ -81,14 +82,15 @@ func novaIO(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		// TODO More to do for SMP support - HaHa!
 
 	case "NIO":
+		ioFlagsDev = iPtr.variant.(ioFlagsDevT)
 		// special case: NIOC CPU => INTDS
-		if iPtr.f == 'C' && iPtr.ioDev == DEV_CPU {
+		if ioFlagsDev.f == 'C' && ioFlagsDev.ioDev == DEV_CPU {
 			// same as INTDS
 			cpu.ion = false
 			break
 		}
 		if debugLogging {
-			logging.DebugPrint(logging.DebugLog, "Sending NIO to device #%d.\n", iPtr.ioDev)
+			logging.DebugPrint(logging.DebugLog, "Sending NIO to device #%d.\n", ioFlagsDev.ioDev)
 		}
 		busDataOut(cpuPtr, iPtr, 'N') // DUMMY FLAG
 

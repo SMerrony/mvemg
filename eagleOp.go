@@ -31,10 +31,11 @@ func eagleOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	//var addr dg_phys_addr
 
 	var (
-		wd       dg.WordT
-		dwd      dg.DwordT
-		res, s32 int32
-		s16      int16
+		wd        dg.WordT
+		dwd       dg.DwordT
+		res, s32  int32
+		s16       int16
+		immOneAcc immOneAccT
 	)
 
 	switch iPtr.mnemonic {
@@ -86,8 +87,9 @@ func eagleOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		// FIXME - handle overflow and carry
 
 	case "WADI":
-		s32 = int32(cpuPtr.ac[iPtr.acd]) + int32(iPtr.immU16)
-		cpuPtr.ac[iPtr.acd] = dg.DwordT(s32)
+		immOneAcc = iPtr.variant.(immOneAccT)
+		s32 = int32(cpuPtr.ac[immOneAcc.acd]) + int32(immOneAcc.immU16)
+		cpuPtr.ac[immOneAcc.acd] = dg.DwordT(s32)
 
 	case "WAND":
 		cpuPtr.ac[iPtr.acd] &= cpuPtr.ac[iPtr.acs]
@@ -123,7 +125,8 @@ func eagleOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		}
 
 	case "WLSI":
-		cpuPtr.ac[iPtr.acd] = cpuPtr.ac[iPtr.acd] << iPtr.immU16
+		immOneAcc = iPtr.variant.(immOneAccT)
+		cpuPtr.ac[immOneAcc.acd] = cpuPtr.ac[immOneAcc.acd] << immOneAcc.immU16
 
 	case "WMOV":
 		cpuPtr.ac[iPtr.acd] = cpuPtr.ac[iPtr.acs]
