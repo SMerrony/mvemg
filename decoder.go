@@ -142,6 +142,39 @@ type novaTwoAccMultOpT struct {
 type oneAcc1WordT struct {
 	acd int
 }
+type oneAccImm2WordT struct {
+	acd    int
+	immS16 int16
+}
+type oneAccImmWd2WordT struct {
+	acd     int
+	immWord dg.WordT
+}
+type oneAccImm3WordT struct {
+	acd    int
+	immS32 int32
+}
+type oneAccImmDwd3WordT struct {
+	acd      int
+	immDword dg.DwordT
+}
+type oneAccMode2WordT struct {
+	acd    int
+	mode   string
+	disp16 int16
+	bitLow bool
+}
+type oneAccMode3WordT struct {
+	acd    int
+	mode   string
+	disp31 int32
+}
+type oneAccModeInd2WordT struct {
+	acd    int
+	mode   string
+	ind    byte
+	disp15 int16
+}
 
 const numPosOpcodes = 65536
 
@@ -388,75 +421,94 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 			novaTwoAccMultOp.acd, skipToString(novaTwoAccMultOp.skip))
 
 	case ONEACC_1_WORD_FMT: // eg. CVWN, HLV, LDAFP
-		var  oneAcc1Word oneAcc1WordT
+		var oneAcc1Word oneAcc1WordT
 		oneAcc1Word.acd = int(util.GetWbits(opcode, 3, 2))
 		decodedInstr.variant = oneAcc1Word
 		decodedInstr.disassembly += fmt.Sprintf(" %d", oneAcc1Word.acd)
 
 	case ONEACC_IMM_2_WORD_FMT: // eg. ADDI, NADDI, NLDAI, , WSEQI, WLSHI, WNADI
-		decodedInstr.acd = int(util.GetWbits(opcode, 3, 2))
+		var oneAccImm2Word oneAccImm2WordT
+		oneAccImm2Word.acd = int(util.GetWbits(opcode, 3, 2))
 		secondWord = memory.ReadWord(pc + 1)
-		decodedInstr.immS16 = int16(secondWord)
-		decodedInstr.disassembly += fmt.Sprintf(" %d,%d. [2-Word OpCode]", decodedInstr.immS16, decodedInstr.acd)
+		oneAccImm2Word.immS16 = int16(secondWord)
+		decodedInstr.variant = oneAccImm2Word
+		decodedInstr.disassembly += fmt.Sprintf(" %d,%d. [2-Word OpCode]", oneAccImm2Word.immS16, oneAccImm2Word.acd)
 
 	case ONEACC_IMMWD_2_WORD_FMT: // eg. ANDI, IORI
-		decodedInstr.acd = int(util.GetWbits(opcode, 3, 2))
+		var oneAccImmWd2Word oneAccImmWd2WordT
+		oneAccImmWd2Word.acd = int(util.GetWbits(opcode, 3, 2))
 		secondWord = memory.ReadWord(pc + 1)
-		decodedInstr.immWord = secondWord
-		decodedInstr.disassembly += fmt.Sprintf(" %d.,%d [2-Word OpCode]", decodedInstr.immWord, decodedInstr.acd)
+		oneAccImmWd2Word.immWord = secondWord
+		decodedInstr.variant = oneAccImmWd2Word
+		decodedInstr.disassembly += fmt.Sprintf(" %d.,%d [2-Word OpCode]", oneAccImmWd2Word.immWord, oneAccImmWd2Word.acd)
 
 	case ONEACC_IMM_3_WORD_FMT: // eg. WADDI
-		decodedInstr.acd = int(util.GetWbits(opcode, 3, 2))
-		decodedInstr.immS32 = int32(memory.ReadDWord(pc + 1))
-		decodedInstr.disassembly += fmt.Sprintf(" %d.,%d [3-Word OpCode]", decodedInstr.immS32, decodedInstr.acd)
+		var oneAccImm3Word oneAccImm3WordT
+		oneAccImm3Word.acd = int(util.GetWbits(opcode, 3, 2))
+		oneAccImm3Word.immS32 = int32(memory.ReadDWord(pc + 1))
+		decodedInstr.variant = oneAccImm3Word
+		decodedInstr.disassembly += fmt.Sprintf(" %d.,%d [3-Word OpCode]", oneAccImm3Word.immS32, oneAccImm3Word.acd)
 
 	case ONEACC_IMMDWD_3_WORD_FMT: // eg. WANDI, WIORI, WLDAI
-		decodedInstr.acd = int(util.GetWbits(opcode, 3, 2))
-		decodedInstr.immDword = memory.ReadDWord(pc + 1)
-		decodedInstr.disassembly += fmt.Sprintf(" %d.,%d [3-Word OpCode]", decodedInstr.immDword, decodedInstr.acd)
+		var oneAccImmDwd3Word oneAccImmDwd3WordT
+		oneAccImmDwd3Word.acd = int(util.GetWbits(opcode, 3, 2))
+		oneAccImmDwd3Word.immDword = memory.ReadDWord(pc + 1)
+		decodedInstr.variant = oneAccImmDwd3Word
+		decodedInstr.disassembly += fmt.Sprintf(" %d.,%d [3-Word OpCode]", oneAccImmDwd3Word.immDword, oneAccImmDwd3Word.acd)
 
 	case ONEACC_MODE_2_WORD_X_B_FMT: // eg. XLDB, XLEFB, XSTB
-		decodedInstr.mode = decodeMode(util.GetWbits(opcode, 1, 2))
-		decodedInstr.acd = int(util.GetWbits(opcode, 3, 2))
+		var oneAccMode2Word oneAccMode2WordT
+		oneAccMode2Word.mode = decodeMode(util.GetWbits(opcode, 1, 2))
+		oneAccMode2Word.acd = int(util.GetWbits(opcode, 3, 2))
 		secondWord = memory.ReadWord(pc + 1)
-		decodedInstr.disp16, decodedInstr.bitLow = decode16bitByteDisp(secondWord)
+		oneAccMode2Word.disp16, oneAccMode2Word.bitLow = decode16bitByteDisp(secondWord)
+		decodedInstr.variant = oneAccMode2Word
 		decodedInstr.disassembly += fmt.Sprintf(" %d,%d.+%c%s [2-Word OpCode]",
-			decodedInstr.acd, decodedInstr.disp16*2, loHiToByte(decodedInstr.bitLow), modeToString(decodedInstr.mode))
+			oneAccMode2Word.acd, oneAccMode2Word.disp16*2, loHiToByte(oneAccMode2Word.bitLow), modeToString(oneAccMode2Word.mode))
 
 	case ONEACC_MODE_2_WORD_E_FMT: // eg. ELDB, ESTB
-		decodedInstr.mode = decodeMode(util.GetWbits(opcode, 6, 2))
-		decodedInstr.acd = int(util.GetWbits(opcode, 3, 2))
+		var oneAccMode2Word oneAccMode2WordT
+		oneAccMode2Word.mode = decodeMode(util.GetWbits(opcode, 6, 2))
+		oneAccMode2Word.acd = int(util.GetWbits(opcode, 3, 2))
 		secondWord = memory.ReadWord(pc + 1)
-		decodedInstr.disp16, decodedInstr.bitLow = decode16bitByteDisp(secondWord)
+		oneAccMode2Word.disp16, oneAccMode2Word.bitLow = decode16bitByteDisp(secondWord)
+		decodedInstr.variant = oneAccMode2Word
 		decodedInstr.disassembly += fmt.Sprintf(" %d,%d.+%c%s [2-Word OpCode]",
-			decodedInstr.acd, decodedInstr.disp16*2, loHiToByte(decodedInstr.bitLow), modeToString(decodedInstr.mode))
+			oneAccMode2Word.acd, oneAccMode2Word.disp16*2, loHiToByte(oneAccMode2Word.bitLow), modeToString(oneAccMode2Word.mode))
 
 	case ONEACC_MODE_3_WORD_FMT: // eg. LLDB, LLEFB
-		decodedInstr.mode = decodeMode(util.GetWbits(opcode, 1, 2))
-		decodedInstr.acd = int(util.GetWbits(opcode, 3, 2))
+		var oneAccMode3Word oneAccMode3WordT
+		oneAccMode3Word.mode = decodeMode(util.GetWbits(opcode, 1, 2))
+		oneAccMode3Word.acd = int(util.GetWbits(opcode, 3, 2))
 		secondWord = memory.ReadWord(pc + 1)
 		thirdWord = memory.ReadWord(pc + 2)
-		decodedInstr.disp31 = decode31bitDisp(secondWord, thirdWord, decodedInstr.mode)
+		oneAccMode3Word.disp31 = decode31bitDisp(secondWord, thirdWord, oneAccMode3Word.mode)
+		decodedInstr.variant = oneAccMode3Word
 		decodedInstr.disassembly += fmt.Sprintf(" %d,%d.%s [3-Word OpCode]",
-			decodedInstr.acd, decodedInstr.disp31, modeToString(decodedInstr.mode))
+			oneAccMode3Word.acd, oneAccMode3Word.disp31, modeToString(oneAccMode3Word.mode))
 
-	case ONEACC_MODE_IND_2_WORD_E_FMT: // eg. ELDA
-		decodedInstr.mode = decodeMode(util.GetWbits(opcode, 6, 2))
-		decodedInstr.acd = int(util.GetWbits(opcode, 3, 2))
+	case ONEACC_MODE_IND_2_WORD_E_FMT: // eg. DSPA, ELDA, ELDB, ELEF, ESTA
+		var oneAccModeInd2Word oneAccModeInd2WordT
+		oneAccModeInd2Word.mode = decodeMode(util.GetWbits(opcode, 6, 2))
+		oneAccModeInd2Word.acd = int(util.GetWbits(opcode, 3, 2))
 		secondWord = memory.ReadWord(pc + 1)
-		decodedInstr.ind = decodeIndirect(util.TestWbit(secondWord, 0))
-		decodedInstr.disp15 = decode15bitDisp(secondWord, decodedInstr.mode)
+		oneAccModeInd2Word.ind = decodeIndirect(util.TestWbit(secondWord, 0))
+		oneAccModeInd2Word.disp15 = decode15bitDisp(secondWord, oneAccModeInd2Word.mode)
+		decodedInstr.variant = oneAccModeInd2Word
 		decodedInstr.disassembly += fmt.Sprintf(" %d,%c%d.%s [2-Word OpCode]",
-			decodedInstr.acd, decodedInstr.ind, decodedInstr.disp15, modeToString(decodedInstr.mode))
+			oneAccModeInd2Word.acd, oneAccModeInd2Word.ind, oneAccModeInd2Word.disp15,
+			modeToString(oneAccModeInd2Word.mode))
 
-	case ONEACC_MODE_IND_2_WORD_X_FMT: // eg. XNLDA/XWSTA, XLEF
-		decodedInstr.mode = decodeMode(util.GetWbits(opcode, 1, 2))
-		decodedInstr.acd = int(util.GetWbits(opcode, 3, 2))
+	case ONEACC_MODE_IND_2_WORD_X_FMT: // eg. XNADD, XNLDA/XWSTA, XLEF
+		var oneAccModeInd2Word oneAccModeInd2WordT
+		oneAccModeInd2Word.mode = decodeMode(util.GetWbits(opcode, 1, 2))
+		oneAccModeInd2Word.acd = int(util.GetWbits(opcode, 3, 2))
 		secondWord = memory.ReadWord(pc + 1)
-		decodedInstr.ind = decodeIndirect(util.TestWbit(secondWord, 0))
-		decodedInstr.disp15 = decode15bitDisp(secondWord, decodedInstr.mode)
+		oneAccModeInd2Word.ind = decodeIndirect(util.TestWbit(secondWord, 0))
+		oneAccModeInd2Word.disp15 = decode15bitDisp(secondWord, oneAccModeInd2Word.mode)
+		decodedInstr.variant = oneAccModeInd2Word
 		decodedInstr.disassembly += fmt.Sprintf(" %d,%c%d.%s [2-Word OpCode]",
-			decodedInstr.acd, decodedInstr.ind, decodedInstr.disp15, modeToString(decodedInstr.mode))
+			oneAccModeInd2Word.acd, oneAccModeInd2Word.ind, oneAccModeInd2Word.disp15, modeToString(oneAccModeInd2Word.mode))
 
 	case ONEACC_MODE_IND_3_WORD_FMT: // eg. LWLDA/LWSTA,LNLDA
 		decodedInstr.mode = decodeMode(util.GetWbits(opcode, 1, 2))

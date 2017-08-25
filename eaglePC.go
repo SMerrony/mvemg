@@ -39,6 +39,7 @@ func eaglePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		noAccModeInd3Word      noAccModeInd3WordT
 		noAccModeInd3WordXcall noAccModeInd3WordXcallT
 		noAccModeInd4Word      noAccModeInd4WordT
+		oneAccImm2Word         oneAccImm2WordT
 	)
 
 	switch iPtr.mnemonic {
@@ -133,8 +134,9 @@ func eaglePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		}
 
 	case "WSEQI":
-		tmp32b = dg.DwordT(int32(iPtr.immS16))
-		if cpuPtr.ac[iPtr.acd] == tmp32b {
+		oneAccImm2Word = iPtr.variant.(oneAccImm2WordT)
+		tmp32b = dg.DwordT(int32(oneAccImm2Word.immS16))
+		if cpuPtr.ac[oneAccImm2Word.acd] == tmp32b {
 			cpuPtr.pc += 3
 		} else {
 			cpuPtr.pc += 2

@@ -12,7 +12,8 @@ import (
 
 func eclipseMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	var (
-		addr dg.PhysAddrT
+		addr               dg.PhysAddrT
+		oneAccModeInt2Word oneAccModeInd2WordT
 	)
 
 	switch iPtr.mnemonic {
@@ -93,8 +94,9 @@ func eclipseMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		cpuPtr.ac[3] = dg.DwordT(str1bp)
 
 	case "ELDA":
-		addr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
-		cpuPtr.ac[iPtr.acd] = dg.DwordT(memory.ReadWord(addr)) & 0x0ffff
+		oneAccModeInt2Word = iPtr.variant.(oneAccModeInd2WordT)
+		addr = resolve16bitEclipseAddr(cpuPtr, oneAccModeInt2Word.ind, oneAccModeInt2Word.mode, oneAccModeInt2Word.disp15)
+		cpuPtr.ac[oneAccModeInt2Word.acd] = dg.DwordT(memory.ReadWord(addr)) & 0x0ffff
 
 	default:
 		log.Fatalf("ERROR: ECLIPSE_MEMREF instruction <%s> not yet implemented\n", iPtr.mnemonic)

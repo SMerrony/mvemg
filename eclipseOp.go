@@ -31,12 +31,14 @@ import (
 
 func eclipseOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	var (
-		addr      dg.PhysAddrT
-		byt       dg.ByteT
-		wd        dg.WordT
-		dwd       dg.DwordT
-		bitNum    uint
-		immOneAcc immOneAccT
+		addr               dg.PhysAddrT
+		byt                dg.ByteT
+		wd                 dg.WordT
+		dwd                dg.DwordT
+		bitNum             uint
+		immOneAcc          immOneAccT
+		oneAccImmWd2Word   oneAccImmWd2WordT
+		oneAccModeInt2Word oneAccModeInd2WordT
 	)
 
 	switch iPtr.mnemonic {
@@ -98,11 +100,13 @@ func eclipseOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		cpuPtr.ac[dplus1] = dg.DwordT(util.DWordGetLowerWord(dwd))
 
 	case "ELEF":
-		cpuPtr.ac[iPtr.acd] = dg.DwordT(resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15))
+		oneAccModeInt2Word = iPtr.variant.(oneAccModeInd2WordT)
+		cpuPtr.ac[oneAccModeInt2Word.acd] = dg.DwordT(resolve16bitEclipseAddr(cpuPtr, oneAccModeInt2Word.ind, oneAccModeInt2Word.mode, oneAccModeInt2Word.disp15))
 
 	case "ESTA":
-		addr = resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
-		memory.WriteWord(addr, util.DWordGetLowerWord(cpuPtr.ac[iPtr.acd]))
+		oneAccModeInt2Word = iPtr.variant.(oneAccModeInd2WordT)
+		addr = resolve16bitEclipseAddr(cpuPtr, oneAccModeInt2Word.ind, oneAccModeInt2Word.mode, oneAccModeInt2Word.disp15)
+		memory.WriteWord(addr, util.DWordGetLowerWord(cpuPtr.ac[oneAccModeInt2Word.acd]))
 
 	case "HXL":
 		immOneAcc = iPtr.variant.(immOneAccT)
@@ -119,8 +123,9 @@ func eclipseOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		cpuPtr.ac[iPtr.acd] = dg.DwordT(wd)
 
 	case "IORI":
-		wd = util.DWordGetLowerWord(cpuPtr.ac[iPtr.acd]) | iPtr.immWord
-		cpuPtr.ac[iPtr.acd] = dg.DwordT(wd)
+		oneAccImmWd2Word = iPtr.variant.(oneAccImmWd2WordT)
+		wd = util.DWordGetLowerWord(cpuPtr.ac[oneAccImmWd2Word.acd]) | oneAccImmWd2Word.immWord
+		cpuPtr.ac[oneAccImmWd2Word.acd] = dg.DwordT(wd)
 
 	case "LDB":
 		byt = memory.ReadByteEclipseBA(util.DWordGetLowerWord(cpuPtr.ac[iPtr.acs]))

@@ -26,6 +26,7 @@ import (
 	"mvemg/dg"
 	"mvemg/logging"
 	"mvemg/util"
+	"runtime/debug"
 	"sync"
 )
 
@@ -108,6 +109,7 @@ func WriteWord(wordAddr dg.PhysAddrT, datum dg.WordT) {
 	// 	debugCatcher()
 	// }
 	if wordAddr >= memSizeWords {
+		debug.PrintStack()
 		log.Fatalf("ERROR: Attempt to write word beyond end of physical memory using address: %d", wordAddr)
 	}
 	memory.ramMu.Lock()
@@ -119,6 +121,7 @@ func WriteWord(wordAddr dg.PhysAddrT, datum dg.WordT) {
 func ReadDWord(wordAddr dg.PhysAddrT) dg.DwordT {
 	var hiWd, loWd dg.WordT
 	if wordAddr >= memSizeWords {
+		debug.PrintStack()
 		log.Fatalf("ERROR: Attempt to read doubleword beyond end of physical memory using address: %d", wordAddr)
 	}
 	memory.ramMu.RLock()

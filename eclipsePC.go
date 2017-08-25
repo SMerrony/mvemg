@@ -11,11 +11,12 @@ import (
 
 func eclipsePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	var (
-		addr, inc         dg.PhysAddrT
-		acd, acs, h, l    int16
-		wd                dg.WordT
-		bit               uint
-		noAccModeInd2Word noAccModeInd2WordT
+		addr, inc          dg.PhysAddrT
+		acd, acs, h, l     int16
+		wd                 dg.WordT
+		bit                uint
+		noAccModeInd2Word  noAccModeInd2WordT
+		oneAccModeInt2Word oneAccModeInd2WordT
 	)
 
 	switch iPtr.mnemonic {
@@ -45,8 +46,9 @@ func eclipsePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		cpuPtr.pc += inc
 
 	case "DSPA":
-		tableStart := resolve16bitEclipseAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp15)
-		offset := util.DWordGetLowerWord(cpuPtr.ac[iPtr.acd])
+		oneAccModeInt2Word = iPtr.variant.(oneAccModeInd2WordT)
+		tableStart := resolve16bitEclipseAddr(cpuPtr, oneAccModeInt2Word.ind, oneAccModeInt2Word.mode, oneAccModeInt2Word.disp15)
+		offset := util.DWordGetLowerWord(cpuPtr.ac[oneAccModeInt2Word.acd])
 		lowLimit := memory.ReadWord(tableStart - 2)
 		hiLimit := memory.ReadWord(tableStart - 1)
 		if debugLogging {
