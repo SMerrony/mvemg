@@ -26,6 +26,7 @@ import (
 	"mvemg/dg"
 	"mvemg/logging"
 	"mvemg/util"
+	"sync"
 )
 
 const (
@@ -37,6 +38,7 @@ const (
 // It is not exported and should not be directly accessed other than within this package.
 type memoryT struct {
 	ram        [memSizeWords]dg.WordT
+	ramMu      sync.RWMutex
 	atuEnabled bool
 }
 
@@ -76,7 +78,9 @@ func WriteByte(wordAddr dg.PhysAddrT, loByte bool, b dg.ByteT) {
 	// if wordAddr == 2891 {
 	// 	debug.PrintStack()
 	// }
+	memory.ramMu.RLock()
 	wd := memory.ram[wordAddr]
+	memory.ramMu.RUnlock()
 	if loByte {
 		wd = (wd & 0xff00) | dg.WordT(b)
 	} else {
@@ -87,11 +91,14 @@ func WriteByte(wordAddr dg.PhysAddrT, loByte bool, b dg.ByteT) {
 
 // ReadWord returns the DG Word at the specified physical address
 func ReadWord(wordAddr dg.PhysAddrT) dg.WordT {
-
+	var wd dg.WordT
 	if wordAddr >= memSizeWords {
 		log.Fatalf("ERROR: Attempt to read word beyond end of physical memory using address: %d", wordAddr)
 	}
-	return memory.ram[wordAddr]
+	memory.ramMu.RLock()
+	wd = memory.ram[wordAddr]
+	memory.ramMu.RUnlock()
+	return wd
 }
 
 // WriteWord - ALL memory-writing should ultimately go through this function
@@ -103,15 +110,22 @@ func WriteWord(wordAddr dg.PhysAddrT, datum dg.WordT) {
 	if wordAddr >= memSizeWords {
 		log.Fatalf("ERROR: Attempt to write word beyond end of physical memory using address: %d", wordAddr)
 	}
+	memory.ramMu.Lock()
 	memory.ram[wordAddr] = datum
+	memory.ramMu.Unlock()
 }
 
 // ReadDWord returns the doubleword at the given physical address
 func ReadDWord(wordAddr dg.PhysAddrT) dg.DwordT {
+	var hiWd, loWd dg.WordT
 	if wordAddr >= memSizeWords {
 		log.Fatalf("ERROR: Attempt to read doubleword beyond end of physical memory using address: %d", wordAddr)
 	}
-	return util.DWordFromTwoWords(memory.ram[wordAddr], memory.ram[wordAddr+1])
+	memory.ramMu.RLock()
+	hiWd = memory.ram[wordAddr]
+	loWd = memory.ram[wordAddr+1]
+	memory.ramMu.RUnlock()
+	return util.DWordFromTwoWords(hiWd, loWd)
 }
 
 // WriteDWord writes a doubleword into memory at the given physical address

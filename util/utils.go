@@ -113,16 +113,16 @@ func GetDWbits(value dg.DwordT, leftBit int, nbits int) dg.DwordT {
 	return res
 }
 
-var bb uint8
-
 // TestWbit - does word w have bit b set?
 func TestWbit(w dg.WordT, b int) bool {
+	var bb uint8
 	bb = uint8(b)
 	return (w & (1 << (15 - bb))) != 0
 }
 
 // TestDWbit - does dword dw have bit b set?
 func TestDWbit(dw dg.DwordT, b int) bool {
+	var bb uint8
 	bb = uint8(b)
 	return ((dw & (1 << (31 - bb))) != 0)
 }

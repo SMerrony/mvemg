@@ -38,51 +38,62 @@ func eagleStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		tmpDwd                  dg.DwordT
 		noAccModeInd2Word       noAccModeInd2WordT
 		noAccModeInd3Word       noAccModeInd3WordT
+		oneAcc1Word             oneAcc1WordT
 	)
 
 	switch iPtr.mnemonic {
 
 	case "LDAFP":
-		cpuPtr.ac[iPtr.acd] = memory.ReadDWord(memory.WfpLoc)
+		oneAcc1Word = iPtr.variant.(oneAcc1WordT)
+		cpuPtr.ac[oneAcc1Word.acd] = memory.ReadDWord(memory.WfpLoc)
 
 	case "LDASB":
-		cpuPtr.ac[iPtr.acd] = memory.ReadDWord(memory.WsbLoc)
+		oneAcc1Word = iPtr.variant.(oneAcc1WordT)
+		cpuPtr.ac[oneAcc1Word.acd] = memory.ReadDWord(memory.WsbLoc)
 
 	case "LDASL":
-		cpuPtr.ac[iPtr.acd] = memory.ReadDWord(memory.WslLoc)
+		oneAcc1Word = iPtr.variant.(oneAcc1WordT)
+		cpuPtr.ac[oneAcc1Word.acd] = memory.ReadDWord(memory.WslLoc)
 
 	case "LDASP":
-		cpuPtr.ac[iPtr.acd] = memory.ReadDWord(memory.WspLoc)
+		oneAcc1Word = iPtr.variant.(oneAcc1WordT)
+		cpuPtr.ac[oneAcc1Word.acd] = memory.ReadDWord(memory.WspLoc)
 
 	case "LPEF":
 		noAccModeInd3Word = iPtr.variant.(noAccModeInd3WordT)
 		memory.WsPush(0, dg.DwordT(resolve32bitEffAddr(cpuPtr, noAccModeInd3Word.ind, noAccModeInd3Word.mode, noAccModeInd3Word.disp31)))
 
 	case "STAFP":
+		oneAcc1Word = iPtr.variant.(oneAcc1WordT)
 		// FIXME handle segments
-		memory.WriteDWord(memory.WfpLoc, cpuPtr.ac[iPtr.acd])
+		memory.WriteDWord(memory.WfpLoc, cpuPtr.ac[oneAcc1Word.acd])
 
 	case "STASB":
+		oneAcc1Word = iPtr.variant.(oneAcc1WordT)
 		// FIXME handle segments
-		memory.WriteDWord(memory.WsbLoc, cpuPtr.ac[iPtr.acd])
+		memory.WriteDWord(memory.WsbLoc, cpuPtr.ac[oneAcc1Word.acd])
 
 	case "STASL":
+		oneAcc1Word = iPtr.variant.(oneAcc1WordT)
 		// FIXME handle segments
-		memory.WriteDWord(memory.WslLoc, cpuPtr.ac[iPtr.acd])
+		memory.WriteDWord(memory.WslLoc, cpuPtr.ac[oneAcc1Word.acd])
 
 	case "STASP":
+		oneAcc1Word = iPtr.variant.(oneAcc1WordT)
 		// FIXME handle segments
-		memory.WriteDWord(memory.WspLoc, cpuPtr.ac[iPtr.acd])
+		memory.WriteDWord(memory.WspLoc, cpuPtr.ac[oneAcc1Word.acd])
 		if debugLogging {
-			logging.DebugPrint(logging.DebugLog, "... STASP set WSP to %d\n", cpuPtr.ac[iPtr.acd])
+			logging.DebugPrint(logging.DebugLog, "... STASP set WSP to %d\n", cpuPtr.ac[oneAcc1Word.acd])
 		}
 
 	case "STATS":
+		oneAcc1Word = iPtr.variant.(oneAcc1WordT)
 		// FIXME handle segments
-		memory.WriteDWord(dg.PhysAddrT(memory.ReadDWord(memory.WslLoc)), cpuPtr.ac[iPtr.acd])
+		memory.WriteDWord(dg.PhysAddrT(memory.ReadDWord(memory.WslLoc)), cpuPtr.ac[oneAcc1Word.acd])
 
 	case "WMSP":
-		tmpDwd = cpuPtr.ac[iPtr.acd] << 1
+		oneAcc1Word = iPtr.variant.(oneAcc1WordT)
+		tmpDwd = cpuPtr.ac[oneAcc1Word.acd] << 1
 		tmpDwd += memory.ReadDWord(memory.WspLoc)
 		memory.WriteDWord(memory.WspLoc, tmpDwd)
 

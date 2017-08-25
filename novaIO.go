@@ -29,33 +29,32 @@ import (
 
 func novaIO(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
-	// a couple of special cases we need to catch
-	// First: DICC 0,077 => I/O Reset
-	if iPtr.mnemonic == "DIC" && iPtr.f == 'C' && iPtr.acd == 0 && iPtr.ioDev == DEV_CPU {
-		logging.DebugPrint(logging.DebugLog, "INFO: I/O Reset due to DICC 0,CPU instruction\n")
-		busResetAllIODevices()
-		cpuPtr.pc++
-		return true
-	}
-	// Second: DOC 0-3,077 => Halt
-	if iPtr.mnemonic == "DOC" && iPtr.ioDev == DEV_CPU {
-		logging.DebugPrint(logging.DebugLog, "INFO: CPU Halting due to DOC %d,CPU instruction\n", iPtr.acs)
-		// do not advance PC
-		return false
-	}
-
 	var (
 		abc        byte
 		busy, done bool
 		ioFlagsDev ioFlagsDevT
 		ioTestDev  ioTestDevT
 		novaDataIo novaDataIoT
+		//oneAcc1Word oneAcc1WordT
 	)
 
 	switch iPtr.mnemonic {
 
 	case "DIA", "DIB", "DIC", "DOA", "DOB", "DOC":
 		novaDataIo = iPtr.variant.(novaDataIoT)
+		// Special Case: DICC 0,077 => I/O Reset
+		if iPtr.mnemonic == "DIC" && novaDataIo.f == 'C' && novaDataIo.acd == 0 && novaDataIo.ioDev == DEV_CPU {
+			logging.DebugPrint(logging.DebugLog, "INFO: I/O Reset due to DICC 0,CPU instruction\n")
+			busResetAllIODevices()
+			cpuPtr.pc++
+			return true
+		}
+		// Special Case: DOC 0-3,077 => Halt
+		if iPtr.mnemonic == "DOC" && novaDataIo.ioDev == DEV_CPU {
+			logging.DebugPrint(logging.DebugLog, "INFO: CPU Halting due to DOC %d,CPU instruction\n", iPtr.acs)
+			// do not advance PC
+			return false
+		}
 		if busIsAttached(novaDataIo.ioDev) && busIsIODevice(novaDataIo.ioDev) {
 			switch iPtr.mnemonic {
 			case "DOA", "DIA":
@@ -74,12 +73,13 @@ func novaIO(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		} else {
 			logging.DebugPrint(logging.DebugLog, "WARN: I/O attempted to unattached or non-I/O capable device 0#%o\n", novaDataIo.ioDev)
 			if novaDataIo.ioDev != 2 {
-				//debugLogsDump()
-				log.Fatal("crash") // TODO Exception for ?MMU?
+				logging.DebugLogsDump()
+				log.Fatal("Illegal I/O device crash") // TODO Exception for ?MMU?
 			}
 		}
 
 	case "IORST":
+		// oneAcc1Word = iPtr.variant.(oneAcc1WordT) // <== this is just an assertion really
 		busResetAllIODevices()
 		cpuPtr.ion = false
 		// TODO More to do for SMP support - HaHa!

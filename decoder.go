@@ -139,6 +139,9 @@ type novaTwoAccMultOpT struct {
 	c, sh, nl byte
 	skip      string
 }
+type oneAcc1WordT struct {
+	acd int
+}
 
 const numPosOpcodes = 65536
 
@@ -384,9 +387,11 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 			novaTwoAccMultOp.c, novaTwoAccMultOp.sh, novaTwoAccMultOp.nl, novaTwoAccMultOp.acs,
 			novaTwoAccMultOp.acd, skipToString(novaTwoAccMultOp.skip))
 
-	case ONEACC_1_WORD_FMT:
-		decodedInstr.acd = int(util.GetWbits(opcode, 3, 2))
-		decodedInstr.disassembly += fmt.Sprintf(" %d", decodedInstr.acd)
+	case ONEACC_1_WORD_FMT: // eg. CVWN, HLV, LDAFP
+		var  oneAcc1Word oneAcc1WordT
+		oneAcc1Word.acd = int(util.GetWbits(opcode, 3, 2))
+		decodedInstr.variant = oneAcc1Word
+		decodedInstr.disassembly += fmt.Sprintf(" %d", oneAcc1Word.acd)
 
 	case ONEACC_IMM_2_WORD_FMT: // eg. ADDI, NADDI, NLDAI, , WSEQI, WLSHI, WNADI
 		decodedInstr.acd = int(util.GetWbits(opcode, 3, 2))

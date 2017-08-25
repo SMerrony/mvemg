@@ -31,11 +31,12 @@ func eagleOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	//var addr dg_phys_addr
 
 	var (
-		wd        dg.WordT
-		dwd       dg.DwordT
-		res, s32  int32
-		s16       int16
-		immOneAcc immOneAccT
+		wd          dg.WordT
+		dwd         dg.DwordT
+		res, s32    int32
+		s16         int16
+		immOneAcc   immOneAccT
+		oneAcc1Word oneAcc1WordT
 	)
 
 	switch iPtr.mnemonic {
@@ -132,7 +133,8 @@ func eagleOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		cpuPtr.ac[iPtr.acd] = cpuPtr.ac[iPtr.acs]
 
 	case "WMOVR":
-		cpuPtr.ac[iPtr.acd] = cpuPtr.ac[iPtr.acd] >> 1
+		oneAcc1Word = iPtr.variant.(oneAcc1WordT)
+		cpuPtr.ac[oneAcc1Word.acd] = cpuPtr.ac[oneAcc1Word.acd] >> 1
 
 	case "WNADI": //signed 16-bit
 		s32 = int32(cpuPtr.ac[iPtr.acd]) + int32(iPtr.immS16)

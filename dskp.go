@@ -567,6 +567,7 @@ func dskpCBprocessor(dataPtr *dskpDataT) {
 		switch opCode {
 
 		case dskpCbOpRecalibrateDisk:
+			dataPtr.dskpDataMu.Lock()
 			if dataPtr.debug {
 				logging.DebugPrint(logging.DskpLog, "... .. RECALIBRATE\n")
 			}
@@ -575,6 +576,7 @@ func dskpCBprocessor(dataPtr *dskpDataT) {
 			//dataPtr.sector = 0
 			dataPtr.sectorNo = 0
 			dskpPositionDiskImage()
+			dataPtr.dskpDataMu.Unlock()
 			if cbLength >= dskpCbERR_STATUS+1 {
 				cb[dskpCbERR_STATUS] = 0
 			}
@@ -584,9 +586,9 @@ func dskpCBprocessor(dataPtr *dskpDataT) {
 			if cbLength >= dskpCbCB_STATUS+1 {
 				cb[dskpCbCB_STATUS] = 1 // finally, set Done bit
 			}
-			//dskpSetAsyncStatusRegC(statXecStateMapped, statAsyncNoErrors)
 
 		case dskpCbOpRead:
+			dataPtr.dskpDataMu.Lock()
 			dataPtr.sectorNo = util.DWordFromTwoWords(cb[dskpCbDEV_ADDR_HIGH], cb[dskpCbDEV_ADDR_LOW])
 			if util.TestWbit(cb[dskpCbPAGENO_LIST_ADDR_HIGH], 0) {
 				// logical premapped host address
@@ -626,10 +628,10 @@ func dskpCBprocessor(dataPtr *dskpDataT) {
 				logging.DebugPrint(logging.DskpLog, "... .. .... READ command finished\n")
 				logging.DebugPrint(logging.DskpLog, "Last buffer: %X\n", readBuff)
 			}
-			//dskpSetAsyncStatusRegC(statXecStateMapped, statAsyncNoErrors)
-			//dskpSetAsyncStatusRegC(0, statAsyncNoErrors)
+			dataPtr.dskpDataMu.Unlock()
 
 		case dskpCbOpWrite:
+			dataPtr.dskpDataMu.Lock()
 			dataPtr.sectorNo = util.DWordFromTwoWords(cb[dskpCbDEV_ADDR_HIGH], cb[dskpCbDEV_ADDR_LOW])
 			if util.TestWbit(cb[dskpCbPAGENO_LIST_ADDR_HIGH], 0) {
 				// logical premapped host address
@@ -668,9 +670,7 @@ func dskpCBprocessor(dataPtr *dskpDataT) {
 			if cbLength >= dskpCbCB_STATUS+1 {
 				cb[dskpCbCB_STATUS] = 1 // finally, set Done bit
 			}
-
-			//dskpSetAsyncStatusRegC(statXecStateMapped, statAsyncNoErrors)
-			//dskpSetAsyncStatusRegC(0, statAsyncNoErrors)
+			dataPtr.dskpDataMu.Unlock()
 
 		default:
 			log.Fatalf("DSKP CB Command %d not yet implemented\n", opCode)
@@ -687,12 +687,14 @@ func dskpCBprocessor(dataPtr *dskpDataT) {
 			for busGetBusy(DEV_DSKP) || busGetDone(DEV_DSKP) {
 				time.Sleep(dskpAsynchStatRetryInterval)
 			}
+			dataPtr.dskpDataMu.Lock()
 			dataPtr.statusRegC = dg.WordT(statXecStateMapped) << 12
 			dataPtr.statusRegC |= (statAsyncNoErrors & 0x03ff)
 			if dataPtr.debug {
 				logging.DebugPrint(logging.DskpLog, "DSKP ASYNCHRONOUS status C set to: %s\n",
 					util.WordToBinStr(dataPtr.statusRegC))
 			}
+			dataPtr.dskpDataMu.Unlock()
 			logging.DebugPrint(logging.DskpLog, "...sent ASYNC status\n")
 			busSetDone(DEV_DSKP, true)
 		} else {
@@ -704,6 +706,7 @@ func dskpCBprocessor(dataPtr *dskpDataT) {
 }
 
 func dskpReset() {
+	dskpData.dskpDataMu.Lock()
 	dskpResetMapping()
 	dskpResetIntInfBlk()
 	dskpResetCtrlrInfBlock()
@@ -713,6 +716,7 @@ func dskpReset() {
 	if dskpData.debug {
 		logging.DebugPrint(logging.DskpLog, "DSKP ***Reset*** via call to dskpReset()\n")
 	}
+	dskpData.dskpDataMu.Unlock()
 }
 
 // setup the controller information block to power-up defaults p.2-15
