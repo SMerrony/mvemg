@@ -179,8 +179,9 @@ func eagleOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		cpuPtr.ac[twoAcc1Word.acd] = (^cpuPtr.ac[twoAcc1Word.acs]) + 1
 
 	case "WSBI":
-		s32 = int32(cpuPtr.ac[iPtr.acd]) - int32(iPtr.immU16)
-		cpuPtr.ac[iPtr.acd] = dg.DwordT(s32)
+		immOneAcc = iPtr.variant.(immOneAccT)
+		s32 = int32(cpuPtr.ac[immOneAcc.acd]) - int32(immOneAcc.immU16)
+		cpuPtr.ac[immOneAcc.acd] = dg.DwordT(s32)
 		// FIXME - handle overflow and carry
 
 	case "WSUB":

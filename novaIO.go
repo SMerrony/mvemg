@@ -51,7 +51,7 @@ func novaIO(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		}
 		// Special Case: DOC 0-3,077 => Halt
 		if iPtr.mnemonic == "DOC" && novaDataIo.ioDev == DEV_CPU {
-			logging.DebugPrint(logging.DebugLog, "INFO: CPU Halting due to DOC %d,CPU instruction\n", iPtr.acs)
+			logging.DebugPrint(logging.DebugLog, "INFO: CPU Halting due to DOC %d,CPU instruction\n", novaDataIo.acd)
 			// do not advance PC
 			return false
 		}

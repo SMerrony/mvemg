@@ -32,32 +32,12 @@ import (
 // decodedInstrT defines the MV/Em internal decode of an opcode and any
 // parameters.
 type decodedInstrT struct {
-	mnemonic          string
-	instrFmt          int
-	instrType         int
-	instrLength       int
-	disassembly       string
-	c, ind, sh, nl, f byte
-	t                 string
-	ioDev             int
-	acs, acd          int
-	skip              string
-	mode              string
-	disp8             int8
-	disp15            int16
-	disp16            int16
-	disp31            int32
-	offsetU16         uint16
-	bitLow            bool
-	immU16            uint16
-	immS16            int16
-	immU32            uint32
-	immS32            int32
-	immWord           dg.WordT
-	immDword          dg.DwordT
-	argCount          int
-	bitNum            int
-	variant           interface{}
+	mnemonic    string
+	instrFmt    int
+	instrType   int
+	instrLength int
+	disassembly string
+	variant     interface{}
 }
 
 // here are the types for the variant portion of the decoded instruction...
@@ -181,8 +161,28 @@ type oneAccModeInd3WordT struct {
 	ind    byte
 	disp31 int32
 }
+type split8bitDispT struct {
+	disp8 int8
+}
+type threeWordDoT struct {
+	acd       int
+	mode      string
+	ind       byte
+	disp15    int16
+	offsetU16 uint16
+}
 type twoAcc1WordT struct {
 	acd, acs int
+}
+type twoAccImm2WordT struct {
+	acd, acs int
+	immWord  dg.WordT
+}
+type unique2WordT struct {
+	immU16 uint16
+}
+type wskbT struct {
+	bitNum int
 }
 
 const numPosOpcodes = 65536
@@ -539,43 +539,54 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		decodedInstr.disassembly += fmt.Sprintf(" %d,%d", twoAcc1Word.acs, twoAcc1Word.acd)
 
 	case SPLIT_8BIT_DISP_FMT: // eg. WBR, always a signed disp
+		var split8bitDisp split8bitDispT
 		tmp8bit := dg.ByteT(util.GetWbits(opcode, 1, 4) & 0xff)
 		tmp8bit = tmp8bit << 4
 		tmp8bit |= dg.ByteT(util.GetWbits(opcode, 6, 4) & 0xff)
-		decodedInstr.disp8 = int8(decode8bitDisp(tmp8bit, "PC"))
-		decodedInstr.disassembly += fmt.Sprintf(" %d.", int32(decodedInstr.disp8))
+		split8bitDisp.disp8 = int8(decode8bitDisp(tmp8bit, "PC"))
+		decodedInstr.variant = split8bitDisp
+		decodedInstr.disassembly += fmt.Sprintf(" %d.", int32(split8bitDisp.disp8))
 
 	case THREE_WORD_DO_FMT: // eg. XNDO
-		decodedInstr.acd = int(util.GetWbits(opcode, 1, 2))
-		decodedInstr.mode = decodeMode(util.GetWbits(opcode, 3, 2))
+		var threeWordDo threeWordDoT
+		threeWordDo.acd = int(util.GetWbits(opcode, 1, 2))
+		threeWordDo.mode = decodeMode(util.GetWbits(opcode, 3, 2))
 		secondWord = memory.ReadWord(pc + 1)
-		decodedInstr.ind = decodeIndirect(util.TestWbit(secondWord, 0))
-		decodedInstr.disp15 = decode15bitDisp(secondWord, decodedInstr.mode)
+		threeWordDo.ind = decodeIndirect(util.TestWbit(secondWord, 0))
+		threeWordDo.disp15 = decode15bitDisp(secondWord, threeWordDo.mode)
 		thirdWord = memory.ReadWord(pc + 2)
-		decodedInstr.offsetU16 = uint16(thirdWord)
+		threeWordDo.offsetU16 = uint16(thirdWord)
+		decodedInstr.variant = threeWordDo
 		decodedInstr.disassembly += fmt.Sprintf(" %d,%d. %c%d.%s [3-Word OpCode]",
-			decodedInstr.acd, decodedInstr.offsetU16, decodedInstr.ind, decodedInstr.disp15, modeToString(decodedInstr.mode))
+			threeWordDo.acd, threeWordDo.offsetU16, threeWordDo.ind, threeWordDo.disp15,
+			modeToString(threeWordDo.mode))
 
 	case TWOACC_IMM_2_WORD_FMT: // eg. CIOI
-		decodedInstr.acs = int(util.GetWbits(opcode, 1, 2))
-		decodedInstr.acd = int(util.GetWbits(opcode, 3, 2))
-		decodedInstr.immWord = memory.ReadWord(pc + 1)
-		decodedInstr.disassembly += fmt.Sprintf(" %d.,%d,%d", decodedInstr.immWord, decodedInstr.acs,
-			decodedInstr.acd)
+		var twoAccImm2Word twoAccImm2WordT
+		twoAccImm2Word.acs = int(util.GetWbits(opcode, 1, 2))
+		twoAccImm2Word.acd = int(util.GetWbits(opcode, 3, 2))
+		twoAccImm2Word.immWord = memory.ReadWord(pc + 1)
+		decodedInstr.variant = twoAccImm2Word
+		decodedInstr.disassembly += fmt.Sprintf(" %d.,%d,%d", twoAccImm2Word.immWord, twoAccImm2Word.acs,
+			twoAccImm2Word.acd)
 
 	case UNIQUE_1_WORD_FMT:
-		// nothing to do in this case
+		// nothing to do in this case, no associated variant
 
 	case UNIQUE_2_WORD_FMT: // eg.SAVE, WSAVR, WSAVS
-		decodedInstr.immU16 = uint16(memory.ReadWord(pc + 1))
-		decodedInstr.disassembly += fmt.Sprintf(" %d. [2-Word OpCode]", decodedInstr.immU16)
+		var unique2Word unique2WordT
+		unique2Word.immU16 = uint16(memory.ReadWord(pc + 1))
+		decodedInstr.variant = unique2Word
+		decodedInstr.disassembly += fmt.Sprintf(" %d. [2-Word OpCode]", unique2Word.immU16)
 
-	case WSKB_FMT:
+	case WSKB_FMT: // eg. WSKBO/Z
+		var wskb wskbT
 		tmp8bit := dg.ByteT(util.GetWbits(opcode, 1, 3) & 0xff)
 		tmp8bit = tmp8bit << 2
 		tmp8bit |= dg.ByteT(util.GetWbits(opcode, 10, 2) & 0xff)
-		decodedInstr.bitNum = int(uint8(tmp8bit))
-		decodedInstr.disassembly += fmt.Sprintf(" %d.", decodedInstr.bitNum)
+		wskb.bitNum = int(uint8(tmp8bit))
+		decodedInstr.variant = wskb
+		decodedInstr.disassembly += fmt.Sprintf(" %d.", wskb.bitNum)
 
 	default:
 		logging.DebugPrint(logging.DebugLog, "ERROR: Invalid instruction format (%d) for instruction %s",

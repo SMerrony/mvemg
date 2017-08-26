@@ -34,6 +34,7 @@ func eclipseStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		first, last, thisAc int
 		noAccModeInd2Word   noAccModeInd2WordT
 		twoAcc1Word         twoAcc1WordT
+		unique2Word         unique2WordT
 	)
 	acsUp := [8]int{0, 1, 2, 3, 0, 1, 2, 3}
 
@@ -107,6 +108,7 @@ func eclipseStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		//return true // because PC set
 
 	case "SAVE":
+		unique2Word = iPtr.variant.(unique2WordT)
 		nfpSav := memory.ReadWord(memory.NfpLoc)
 		nspSav := memory.ReadWord(memory.NspLoc)
 		memory.NsPush(0, util.DWordGetLowerWord(cpuPtr.ac[0])) // 1
@@ -120,7 +122,7 @@ func eclipseStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 			word &= 0x7fff
 		}
 		memory.NsPush(0, word) // 5
-		wdCnt := int(iPtr.immU16)
+		wdCnt := int(unique2Word.immU16)
 		if wdCnt > 0 {
 			for wd := 0; wd < wdCnt; wd++ {
 				memory.NsPush(0, 0) // ...

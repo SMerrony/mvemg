@@ -18,6 +18,7 @@ func eagleIO(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		rw                  bool
 		wAddr               dg.PhysAddrT
 		twoAcc1Word         twoAcc1WordT
+		twoAccImm2Word      twoAccImm2WordT
 	)
 
 	switch iPtr.mnemonic {
@@ -38,19 +39,20 @@ func eagleIO(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	case "CIOI":
 		// TODO handle I/O channel
-		if iPtr.acs == iPtr.acd {
-			cmd = iPtr.immWord
+		twoAccImm2Word = iPtr.variant.(twoAccImm2WordT)
+		if twoAccImm2Word.acs == twoAccImm2Word.acd {
+			cmd = twoAccImm2Word.immWord
 		} else {
-			cmd = iPtr.immWord | util.DWordGetLowerWord(cpuPtr.ac[iPtr.acs])
+			cmd = twoAccImm2Word.immWord | util.DWordGetLowerWord(cpuPtr.ac[twoAccImm2Word.acs])
 		}
 		mapRegAddr = int(cmd & 0x0fff)
 		rw = util.TestWbit(cmd, 0)
 		if rw { // write command
-			dataWord = util.DWordGetLowerWord(cpuPtr.ac[iPtr.acd])
+			dataWord = util.DWordGetLowerWord(cpuPtr.ac[twoAccImm2Word.acd])
 			memory.BmcdchWriteReg(mapRegAddr, dataWord)
 		} else { // read command
 			dataWord = memory.BmcdchReadReg(mapRegAddr)
-			cpuPtr.ac[iPtr.acd] = dg.DwordT(dataWord)
+			cpuPtr.ac[twoAccImm2Word.acd] = dg.DwordT(dataWord)
 		}
 
 	case "INTDS":
@@ -63,7 +65,7 @@ func eagleIO(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		dwd = CPU_MODEL_NO << 16
 		dwd |= UCODE_REV << 8
 		dwd |= memory.MemSizeLCPID
-		cpuPtr.ac[iPtr.acd] = dwd
+		cpuPtr.ac[0] = dwd
 
 	case "NCLID":
 		cpuPtr.ac[0] = CPU_MODEL_NO

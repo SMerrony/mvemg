@@ -40,6 +40,7 @@ func eagleStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		noAccModeInd3Word       noAccModeInd3WordT
 		oneAcc1Word             oneAcc1WordT
 		twoAcc1Word             twoAcc1WordT
+		unique2Word             unique2WordT
 	)
 
 	switch iPtr.mnemonic {
@@ -129,11 +130,13 @@ func eagleStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 	// N.B. WRTN is in eaglePC
 
 	case "WSAVR":
-		wsav(cpuPtr, iPtr)
+		unique2Word = iPtr.variant.(unique2WordT)
+		wsav(cpuPtr, &unique2Word)
 		cpu.ovk = false
 
 	case "WSAVS":
-		wsav(cpuPtr, iPtr)
+		unique2Word = iPtr.variant.(unique2WordT)
+		wsav(cpuPtr, &unique2Word)
 		cpu.ovk = true
 
 	case "XPEF":
@@ -151,7 +154,7 @@ func eagleStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 }
 
 // wsav is common to WSAVR and WSAVS
-func wsav(cpuPtr *CPU, iPtr *decodedInstrT) {
+func wsav(cpuPtr *CPU, u2wd *unique2WordT) {
 	wfpSav := memory.ReadDWord(memory.WfpLoc)
 	memory.WsPush(0, cpuPtr.ac[0]) // 1
 	memory.WsPush(0, cpuPtr.ac[1]) // 2
@@ -162,7 +165,7 @@ func wsav(cpuPtr *CPU, iPtr *decodedInstrT) {
 		dwd |= 0x80000000
 	}
 	memory.WsPush(0, dwd) // 5
-	dwdCnt := uint(iPtr.immU16)
+	dwdCnt := uint(u2wd.immU16)
 	if dwdCnt > 0 {
 		// for d := 0; d < dwdCnt; d++ {
 		// 	memory.WsPush(0, 0)

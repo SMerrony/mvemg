@@ -41,6 +41,8 @@ func eaglePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		noAccModeInd4Word      noAccModeInd4WordT
 		oneAccImm2Word         oneAccImm2WordT
 		twoAcc1Word            twoAcc1WordT
+		split8bitDisp          split8bitDispT
+		wskb                   wskbT
 	)
 
 	switch iPtr.mnemonic {
@@ -102,7 +104,8 @@ func eaglePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		//		} else {
 		//			cpuPtr.pc -= dg_phys_addr(iPtr.disp)
 		//		}
-		cpuPtr.pc += dg.PhysAddrT(int32(iPtr.disp8))
+		split8bitDisp = iPtr.variant.(split8bitDispT)
+		cpuPtr.pc += dg.PhysAddrT(int32(split8bitDisp.disp8))
 
 	case "WPOPJ":
 		dwd = memory.WsPop(0)
@@ -173,14 +176,16 @@ func eaglePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		}
 
 	case "WSKBO":
-		if util.TestDWbit(cpuPtr.ac[0], iPtr.bitNum) {
+		wskb = iPtr.variant.(wskbT)
+		if util.TestDWbit(cpuPtr.ac[0], wskb.bitNum) {
 			cpuPtr.pc += 2
 		} else {
 			cpuPtr.pc += 1
 		}
 
 	case "WSKBZ":
-		if !util.TestDWbit(cpuPtr.ac[0], iPtr.bitNum) {
+		wskb = iPtr.variant.(wskbT)
+		if !util.TestDWbit(cpuPtr.ac[0], wskb.bitNum) {
 			cpuPtr.pc += 2
 		} else {
 			cpuPtr.pc += 1
