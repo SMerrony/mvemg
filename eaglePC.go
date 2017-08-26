@@ -40,6 +40,7 @@ func eaglePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		noAccModeInd3WordXcall noAccModeInd3WordXcallT
 		noAccModeInd4Word      noAccModeInd4WordT
 		oneAccImm2Word         oneAccImm2WordT
+		twoAcc1Word            twoAcc1WordT
 	)
 
 	switch iPtr.mnemonic {
@@ -122,12 +123,13 @@ func eaglePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		memory.WriteDWord(memory.WspLoc, wspSav-dg.DwordT(wsFramSz2)-12)
 
 	case "WSEQ": // Signedness doen't matter for equality testing
-		if iPtr.acd == iPtr.acs {
+		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
+		if twoAcc1Word.acd == twoAcc1Word.acs {
 			tmp32b = 0
 		} else {
-			tmp32b = cpuPtr.ac[iPtr.acd]
+			tmp32b = cpuPtr.ac[twoAcc1Word.acd]
 		}
-		if cpuPtr.ac[iPtr.acs] == tmp32b {
+		if cpuPtr.ac[twoAcc1Word.acs] == tmp32b {
 			cpuPtr.pc += 2
 		} else {
 			cpuPtr.pc += 1
@@ -143,12 +145,13 @@ func eaglePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		}
 
 	case "WSGE": // wide signed
-		if iPtr.acd == iPtr.acs {
+		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
+		if twoAcc1Word.acd == twoAcc1Word.acs {
 			s32a = 0
 		} else {
-			s32a = int32(cpuPtr.ac[iPtr.acd]) // this does the right thing in Go
+			s32a = int32(cpuPtr.ac[twoAcc1Word.acd]) // this does the right thing in Go
 		}
-		s32b = int32(cpuPtr.ac[iPtr.acs])
+		s32b = int32(cpuPtr.ac[twoAcc1Word.acs])
 		if s32b >= s32a {
 			cpuPtr.pc += 2
 		} else {
@@ -156,12 +159,13 @@ func eaglePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		}
 
 	case "WSGT":
-		if iPtr.acd == iPtr.acs {
+		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
+		if twoAcc1Word.acd == twoAcc1Word.acs {
 			s32a = 0
 		} else {
-			s32a = int32(cpuPtr.ac[iPtr.acd]) // this does the right thing in Go
+			s32a = int32(cpuPtr.ac[twoAcc1Word.acd]) // this does the right thing in Go
 		}
-		s32b = int32(cpuPtr.ac[iPtr.acs])
+		s32b = int32(cpuPtr.ac[twoAcc1Word.acs])
 		if s32b > s32a {
 			cpuPtr.pc += 2
 		} else {
@@ -183,12 +187,13 @@ func eaglePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		}
 
 	case "WSLE":
-		if iPtr.acd == iPtr.acs {
+		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
+		if twoAcc1Word.acd == twoAcc1Word.acs {
 			s32a = 0
 		} else {
-			s32a = int32(cpuPtr.ac[iPtr.acd]) // this does the right thing in Go
+			s32a = int32(cpuPtr.ac[twoAcc1Word.acd]) // this does the right thing in Go
 		}
-		s32b = int32(cpuPtr.ac[iPtr.acs])
+		s32b = int32(cpuPtr.ac[twoAcc1Word.acs])
 		if s32b <= s32a {
 			cpuPtr.pc += 2
 		} else {
@@ -196,12 +201,13 @@ func eaglePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		}
 
 	case "WSLT":
-		if iPtr.acd == iPtr.acs {
+		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
+		if twoAcc1Word.acd == twoAcc1Word.acs {
 			s32a = 0
 		} else {
-			s32a = int32(cpuPtr.ac[iPtr.acd]) // this does the right thing in Go
+			s32a = int32(cpuPtr.ac[twoAcc1Word.acd]) // this does the right thing in Go
 		}
-		s32b = int32(cpuPtr.ac[iPtr.acs])
+		s32b = int32(cpuPtr.ac[twoAcc1Word.acs])
 		if s32b < s32a {
 			cpuPtr.pc += 2
 		} else {
@@ -209,12 +215,13 @@ func eaglePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		}
 
 	case "WSNE":
-		if iPtr.acd == iPtr.acs {
+		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
+		if twoAcc1Word.acd == twoAcc1Word.acs {
 			tmp32b = 0
 		} else {
-			tmp32b = cpuPtr.ac[iPtr.acd]
+			tmp32b = cpuPtr.ac[twoAcc1Word.acd]
 		}
-		if cpuPtr.ac[iPtr.acs] != tmp32b {
+		if cpuPtr.ac[twoAcc1Word.acs] != tmp32b {
 			cpuPtr.pc += 2
 		} else {
 			cpuPtr.pc += 1

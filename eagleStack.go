@@ -39,6 +39,7 @@ func eagleStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		noAccModeInd2Word       noAccModeInd2WordT
 		noAccModeInd3Word       noAccModeInd3WordT
 		oneAcc1Word             oneAcc1WordT
+		twoAcc1Word             twoAcc1WordT
 	)
 
 	switch iPtr.mnemonic {
@@ -98,8 +99,9 @@ func eagleStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		memory.WriteDWord(memory.WspLoc, tmpDwd)
 
 	case "WPOP":
-		firstAc = iPtr.acs
-		lastAc = iPtr.acd
+		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
+		firstAc = twoAcc1Word.acs
+		lastAc = twoAcc1Word.acd
 		if lastAc > firstAc {
 			firstAc += 4
 		}
@@ -111,8 +113,9 @@ func eagleStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		}
 
 	case "WPSH":
-		firstAc = iPtr.acs
-		lastAc = iPtr.acd
+		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
+		firstAc = twoAcc1Word.acs
+		lastAc = twoAcc1Word.acd
 		if lastAc < firstAc {
 			lastAc += 4
 		}

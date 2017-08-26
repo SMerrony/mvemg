@@ -17,13 +17,15 @@ func eclipsePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		bit                uint
 		noAccModeInd2Word  noAccModeInd2WordT
 		oneAccModeInt2Word oneAccModeInd2WordT
+		twoAcc1Word        twoAcc1WordT
 	)
 
 	switch iPtr.mnemonic {
 
 	case "CLM": // signed compare to limits
-		acs = int16(util.DWordGetLowerWord(cpuPtr.ac[iPtr.acs]))
-		if iPtr.acs == iPtr.acd {
+		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
+		acs = int16(util.DWordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs]))
+		if twoAcc1Word.acs == twoAcc1Word.acd {
 			l = int16(memory.ReadWord(cpuPtr.pc + 1))
 			h = int16(memory.ReadWord(cpuPtr.pc + 2))
 			if acs < l || acs > h {
@@ -32,8 +34,8 @@ func eclipsePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 				inc = 4
 			}
 		} else {
-			l = int16(memory.ReadWord(dg.PhysAddrT(util.DWordGetLowerWord(cpuPtr.ac[iPtr.acd]))))
-			h = int16(memory.ReadWord(dg.PhysAddrT(util.DWordGetLowerWord(cpuPtr.ac[iPtr.acd]) + 1)))
+			l = int16(memory.ReadWord(dg.PhysAddrT(util.DWordGetLowerWord(cpuPtr.ac[twoAcc1Word.acd]))))
+			h = int16(memory.ReadWord(dg.PhysAddrT(util.DWordGetLowerWord(cpuPtr.ac[twoAcc1Word.acd]) + 1)))
 			if acs < l || acs > h {
 				inc = 1
 			} else {
@@ -90,8 +92,9 @@ func eclipsePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		cpuPtr.pc = addr
 
 	case "SGT": //16-bit signed numbers
-		acs = int16(util.DWordGetLowerWord(cpuPtr.ac[iPtr.acs]))
-		acd = int16(util.DWordGetLowerWord(cpuPtr.ac[iPtr.acd]))
+		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
+		acs = int16(util.DWordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs]))
+		acd = int16(util.DWordGetLowerWord(cpuPtr.ac[twoAcc1Word.acd]))
 		if acs > acd {
 			cpuPtr.pc += 2
 		} else {
@@ -99,7 +102,8 @@ func eclipsePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		}
 
 	case "SNB":
-		addr, bit = resolveEclipseBitAddr(cpuPtr, iPtr)
+		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
+		addr, bit = resolveEclipseBitAddr(cpuPtr, &twoAcc1Word)
 		wd := memory.ReadWord(addr)
 		if util.TestWbit(wd, int(bit)) {
 			cpuPtr.pc += 2
@@ -111,7 +115,8 @@ func eclipsePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		}
 
 	case "SZB":
-		addr, bit = resolveEclipseBitAddr(cpuPtr, iPtr)
+		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
+		addr, bit = resolveEclipseBitAddr(cpuPtr, &twoAcc1Word)
 		wd := memory.ReadWord(addr)
 		if !util.TestWbit(wd, int(bit)) {
 			cpuPtr.pc += 2

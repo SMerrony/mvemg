@@ -39,6 +39,7 @@ func eclipseOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		immOneAcc          immOneAccT
 		oneAccImmWd2Word   oneAccImmWd2WordT
 		oneAccModeInt2Word oneAccModeInd2WordT
+		twoAcc1Word        twoAcc1WordT
 	)
 
 	switch iPtr.mnemonic {
@@ -51,7 +52,8 @@ func eclipseOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	case "BTO":
 		// TODO Handle segment and indirection...
-		addr, bitNum = resolveEclipseBitAddr(cpuPtr, iPtr)
+		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
+		addr, bitNum = resolveEclipseBitAddr(cpuPtr, &twoAcc1Word)
 		wd = memory.ReadWord(addr)
 		if debugLogging {
 			logging.DebugPrint(logging.DebugLog, "... BTO Addr: %d, Bit: %d, Before: %s\n",
@@ -65,7 +67,8 @@ func eclipseOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 
 	case "BTZ":
 		// TODO Handle segment and indirection...
-		addr, bitNum = resolveEclipseBitAddr(cpuPtr, iPtr)
+		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
+		addr, bitNum = resolveEclipseBitAddr(cpuPtr, &twoAcc1Word)
 		wd = memory.ReadWord(addr)
 		if debugLogging {
 			logging.DebugPrint(logging.DebugLog, "... BTZ Addr: %d, Bit: %d, Before: %s\n", addr, bitNum, util.WordToBinStr(wd))
@@ -91,12 +94,13 @@ func eclipseOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		}
 
 	case "DLSH":
-		dplus1 := iPtr.acd + 1
+		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
+		dplus1 := twoAcc1Word.acd + 1
 		if dplus1 == 4 {
 			dplus1 = 0
 		}
-		dwd = dlsh(cpuPtr.ac[iPtr.acs], cpuPtr.ac[iPtr.acd], cpuPtr.ac[dplus1])
-		cpuPtr.ac[iPtr.acd] = dg.DwordT(util.DWordGetUpperWord(dwd))
+		dwd = dlsh(cpuPtr.ac[twoAcc1Word.acs], cpuPtr.ac[twoAcc1Word.acd], cpuPtr.ac[dplus1])
+		cpuPtr.ac[twoAcc1Word.acd] = dg.DwordT(util.DWordGetUpperWord(dwd))
 		cpuPtr.ac[dplus1] = dg.DwordT(util.DWordGetLowerWord(dwd))
 
 	case "ELEF":
@@ -119,8 +123,9 @@ func eclipseOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		cpuPtr.ac[immOneAcc.acd] = dwd & 0x0ffff
 
 	case "IOR":
-		wd = util.DWordGetLowerWord(cpuPtr.ac[iPtr.acd]) | util.DWordGetLowerWord(cpuPtr.ac[iPtr.acs])
-		cpuPtr.ac[iPtr.acd] = dg.DwordT(wd)
+		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
+		wd = util.DWordGetLowerWord(cpuPtr.ac[twoAcc1Word.acd]) | util.DWordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs])
+		cpuPtr.ac[twoAcc1Word.acd] = dg.DwordT(wd)
 
 	case "IORI":
 		oneAccImmWd2Word = iPtr.variant.(oneAccImmWd2WordT)
@@ -128,11 +133,13 @@ func eclipseOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		cpuPtr.ac[oneAccImmWd2Word.acd] = dg.DwordT(wd)
 
 	case "LDB":
-		byt = memory.ReadByteEclipseBA(util.DWordGetLowerWord(cpuPtr.ac[iPtr.acs]))
-		cpuPtr.ac[iPtr.acd] = dg.DwordT(byt)
+		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
+		byt = memory.ReadByteEclipseBA(util.DWordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs]))
+		cpuPtr.ac[twoAcc1Word.acd] = dg.DwordT(byt)
 
 	case "LSH":
-		cpuPtr.ac[iPtr.acd] = lsh(cpuPtr.ac[iPtr.acs], cpuPtr.ac[iPtr.acd])
+		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
+		cpuPtr.ac[twoAcc1Word.acd] = lsh(cpuPtr.ac[twoAcc1Word.acs], cpuPtr.ac[twoAcc1Word.acd])
 
 	case "MUL": // unsigned 16-bit multiply with add: (AC1 * AC2) + AC0 => AC0(h) and AC1(l)
 		ac0 := util.DWordGetLowerWord(cpuPtr.ac[0])
@@ -152,15 +159,17 @@ func eclipseOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		cpuPtr.ac[immOneAcc.acd] = dg.DwordT(wd)
 
 	case "STB":
-		hiLo := util.TestDWbit(cpuPtr.ac[iPtr.acs], 31)
-		addr = dg.PhysAddrT(util.DWordGetLowerWord(cpuPtr.ac[iPtr.acs])) >> 1
-		byt = dg.ByteT(cpuPtr.ac[iPtr.acd])
+		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
+		hiLo := util.TestDWbit(cpuPtr.ac[twoAcc1Word.acs], 31)
+		addr = dg.PhysAddrT(util.DWordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs])) >> 1
+		byt = dg.ByteT(cpuPtr.ac[twoAcc1Word.acd])
 		memory.WriteByte(addr, hiLo, byt)
 
 	case "XCH":
-		dwd = cpuPtr.ac[iPtr.acs]
-		cpuPtr.ac[iPtr.acs] = cpuPtr.ac[iPtr.acd] & 0x0ffff
-		cpuPtr.ac[iPtr.acd] = dwd & 0x0ffff
+		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
+		dwd = cpuPtr.ac[twoAcc1Word.acs]
+		cpuPtr.ac[twoAcc1Word.acs] = cpuPtr.ac[twoAcc1Word.acd] & 0x0ffff
+		cpuPtr.ac[twoAcc1Word.acd] = dwd & 0x0ffff
 
 	default:
 		log.Fatalf("ERROR: ECLIPSE_OP instruction <%s> not yet implemented\n", iPtr.mnemonic)

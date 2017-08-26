@@ -88,10 +88,12 @@ func TestDIV(t *testing.T) {
 func TestHXL(t *testing.T) {
 	cpuPtr := cpuInit(nil)
 	var iPtr decodedInstrT
+	var immOneAcc immOneAccT
 	iPtr.mnemonic = "HXL"
-	iPtr.acd = 0
+	immOneAcc.acd = 0
 	cpuPtr.ac[0] = 0x0123
-	iPtr.immU16 = 2
+	immOneAcc.immU16 = 2
+	iPtr.variant = immOneAcc
 	expd := dg.DwordT(0x2300)
 	if !eclipseOp(cpuPtr, &iPtr) {
 		t.Error("Failed to execute HXL")
@@ -101,8 +103,9 @@ func TestHXL(t *testing.T) {
 	}
 
 	cpuPtr.ac[0] = 0x0123
-	iPtr.immU16 = 4
+	immOneAcc.immU16 = 4
 	expd = dg.DwordT(0x0)
+	iPtr.variant = immOneAcc
 	if !eclipseOp(cpuPtr, &iPtr) {
 		t.Error("Failed to execute HXL")
 	}
@@ -113,10 +116,12 @@ func TestHXL(t *testing.T) {
 func TestHXR(t *testing.T) {
 	cpuPtr := cpuInit(nil)
 	var iPtr decodedInstrT
+	var immOneAcc immOneAccT
 	iPtr.mnemonic = "HXR"
-	iPtr.acd = 0
+	immOneAcc.acd = 0
 	cpuPtr.ac[0] = 0x0123
-	iPtr.immU16 = 2
+	immOneAcc.immU16 = 2
+	iPtr.variant = immOneAcc
 	expd := dg.DwordT(0x0001)
 	if !eclipseOp(cpuPtr, &iPtr) {
 		t.Error("Failed to execute HXL")
@@ -126,7 +131,8 @@ func TestHXR(t *testing.T) {
 	}
 
 	cpuPtr.ac[0] = 0x0123
-	iPtr.immU16 = 4
+	immOneAcc.immU16 = 4
+	iPtr.variant = immOneAcc
 	expd = dg.DwordT(0x0)
 	if !eclipseOp(cpuPtr, &iPtr) {
 		t.Error("Failed to execute HXL")
@@ -139,9 +145,11 @@ func TestHXR(t *testing.T) {
 func TestSBI(t *testing.T) {
 	cpuPtr := cpuInit(nil)
 	var iPtr decodedInstrT
+	var immOneAcc immOneAccT
 	iPtr.mnemonic = "SBI"
-	iPtr.immU16 = 3
-	iPtr.acd = 0
+	immOneAcc.immU16 = 3
+	immOneAcc.acd = 0
+	iPtr.variant = immOneAcc
 	cpuPtr.ac[0] = 0xffff // 65535
 	if !eclipseOp(cpuPtr, &iPtr) {
 		t.Error("Failed to execute SBI")
@@ -151,8 +159,9 @@ func TestSBI(t *testing.T) {
 	}
 
 	// test 'negative' wraparound
-	iPtr.immU16 = 3
-	iPtr.acd = 0
+	immOneAcc.immU16 = 3
+	immOneAcc.acd = 0
+	iPtr.variant = immOneAcc
 	cpuPtr.ac[0] = 2
 	if !eclipseOp(cpuPtr, &iPtr) {
 		t.Error("Failed to execute SBI")

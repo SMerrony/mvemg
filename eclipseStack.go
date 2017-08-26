@@ -33,14 +33,16 @@ func eclipseStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		addr                dg.PhysAddrT
 		first, last, thisAc int
 		noAccModeInd2Word   noAccModeInd2WordT
+		twoAcc1Word         twoAcc1WordT
 	)
 	acsUp := [8]int{0, 1, 2, 3, 0, 1, 2, 3}
 
 	switch iPtr.mnemonic {
 
 	case "POP":
-		first = iPtr.acs
-		last = iPtr.acd
+		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
+		first = twoAcc1Word.acs
+		last = twoAcc1Word.acd
 		if last > first {
 			first += 4
 		}
@@ -57,8 +59,9 @@ func eclipseStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		return true // because PC set
 
 	case "PSH":
-		first = iPtr.acs
-		last = iPtr.acd
+		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
+		first = twoAcc1Word.acs
+		last = twoAcc1Word.acd
 		if last < first {
 			last += 4
 		}

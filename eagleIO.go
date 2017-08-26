@@ -17,21 +17,23 @@ func eagleIO(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		mapRegAddr          int
 		rw                  bool
 		wAddr               dg.PhysAddrT
+		twoAcc1Word         twoAcc1WordT
 	)
 
 	switch iPtr.mnemonic {
 
 	case "CIO":
 		// TODO handle I/O channel
-		word = util.DWordGetLowerWord(cpuPtr.ac[iPtr.acs])
+		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
+		word = util.DWordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs])
 		mapRegAddr = int(word & 0x0fff)
 		rw = util.TestWbit(word, 0)
 		if rw { // write command
-			dataWord = util.DWordGetLowerWord(cpuPtr.ac[iPtr.acd])
+			dataWord = util.DWordGetLowerWord(cpuPtr.ac[twoAcc1Word.acd])
 			memory.BmcdchWriteReg(mapRegAddr, dataWord)
 		} else { // read command
 			dataWord = memory.BmcdchReadReg(mapRegAddr)
-			cpuPtr.ac[iPtr.acd] = dg.DwordT(dataWord)
+			cpuPtr.ac[twoAcc1Word.acd] = dg.DwordT(dataWord)
 		}
 
 	case "CIOI":

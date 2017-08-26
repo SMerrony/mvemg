@@ -39,26 +39,32 @@ func eagleMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		immMode2Word       immMode2WordT
 		oneAccMode2Word    oneAccMode2WordT
 		oneAccModeInt2Word oneAccModeInd2WordT
+		oneAccModeInd3Word oneAccModeInd3WordT
+		twoAcc1Word        twoAcc1WordT
 	)
 
 	switch iPtr.mnemonic {
 
 	case "LNLDA":
-		addr = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31)
-		cpuPtr.ac[iPtr.acd] = util.SexWordToDWord(memory.ReadWord(addr))
+		oneAccModeInd3Word = iPtr.variant.(oneAccModeInd3WordT)
+		addr = resolve32bitEffAddr(cpuPtr, oneAccModeInd3Word.ind, oneAccModeInd3Word.mode, oneAccModeInd3Word.disp31)
+		cpuPtr.ac[oneAccModeInd3Word.acd] = util.SexWordToDWord(memory.ReadWord(addr))
 
 	case "LNSTA":
-		addr = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31)
-		wd = util.DWordGetLowerWord(cpuPtr.ac[iPtr.acd])
+		oneAccModeInd3Word = iPtr.variant.(oneAccModeInd3WordT)
+		addr = resolve32bitEffAddr(cpuPtr, oneAccModeInd3Word.ind, oneAccModeInd3Word.mode, oneAccModeInd3Word.disp31)
+		wd = util.DWordGetLowerWord(cpuPtr.ac[oneAccModeInd3Word.acd])
 		memory.WriteWord(addr, wd)
 
 	case "LWLDA":
-		addr = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31)
-		cpuPtr.ac[iPtr.acd] = memory.ReadDWord(addr)
+		oneAccModeInd3Word = iPtr.variant.(oneAccModeInd3WordT)
+		addr = resolve32bitEffAddr(cpuPtr, oneAccModeInd3Word.ind, oneAccModeInd3Word.mode, oneAccModeInd3Word.disp31)
+		cpuPtr.ac[oneAccModeInd3Word.acd] = memory.ReadDWord(addr)
 
 	case "LWSTA":
-		addr = resolve32bitEffAddr(cpuPtr, iPtr.ind, iPtr.mode, iPtr.disp31)
-		dwd = cpuPtr.ac[iPtr.acd]
+		oneAccModeInd3Word = iPtr.variant.(oneAccModeInd3WordT)
+		addr = resolve32bitEffAddr(cpuPtr, oneAccModeInd3Word.ind, oneAccModeInd3Word.mode, oneAccModeInd3Word.disp31)
+		dwd = cpuPtr.ac[oneAccModeInd3Word.acd]
 		memory.WriteDWord(addr, dwd)
 
 	case "WBLM":
@@ -153,8 +159,9 @@ func eagleMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 		cpuPtr.ac[1] = dg.DwordT(srcCount)
 
 	case "WSTB":
-		byt = dg.ByteT(cpuPtr.ac[iPtr.acd] & 0x0ff)
-		memWriteByteBA(byt, cpuPtr.ac[iPtr.acs])
+		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
+		byt = dg.ByteT(cpuPtr.ac[twoAcc1Word.acd] & 0x0ff)
+		memWriteByteBA(byt, cpuPtr.ac[twoAcc1Word.acs])
 
 	case "XLDB":
 		oneAccMode2Word = iPtr.variant.(oneAccMode2WordT)

@@ -145,18 +145,18 @@ func resolve32bitEffAddr(cpuPtr *CPU, ind byte, mode string, disp int32) dg.Phys
 
 // resolveEclipseBitAddr as per page 10-8 of Pop
 // Used by BTO, BTZ, SNB, SZB, SZBO
-func resolveEclipseBitAddr(cpuPtr *CPU, iPtr *decodedInstrT) (wordAddr dg.PhysAddrT, bitNum uint) {
+func resolveEclipseBitAddr(cpuPtr *CPU, twoAcc1Word *twoAcc1WordT) (wordAddr dg.PhysAddrT, bitNum uint) {
 	// TODO handle segments and indirection
-	if iPtr.acd == iPtr.acs {
+	if twoAcc1Word.acd == twoAcc1Word.acs {
 		wordAddr = 0
 	} else {
-		if util.TestDWbit(cpuPtr.ac[iPtr.acs], 0) {
+		if util.TestDWbit(cpuPtr.ac[twoAcc1Word.acs], 0) {
 			log.Fatal("ERROR: Indirect 16-bit BIT pointers not yet supported")
 		}
-		wordAddr = dg.PhysAddrT(cpuPtr.ac[iPtr.acs]) & 0x7fff // mask off lower 15 bits
+		wordAddr = dg.PhysAddrT(cpuPtr.ac[twoAcc1Word.acs]) & 0x7fff // mask off lower 15 bits
 	}
-	offset := dg.PhysAddrT(cpuPtr.ac[iPtr.acd]) >> 4
+	offset := dg.PhysAddrT(cpuPtr.ac[twoAcc1Word.acd]) >> 4
 	wordAddr += offset // add unsigned offset
-	bitNum = uint(cpuPtr.ac[iPtr.acd] & 0x000f)
+	bitNum = uint(cpuPtr.ac[twoAcc1Word.acd] & 0x000f)
 	return wordAddr, bitNum
 }

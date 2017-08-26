@@ -26,10 +26,12 @@ import "testing"
 func TestADDI(t *testing.T) {
 	cpuPtr := cpuInit(nil)
 	var iPtr decodedInstrT
+	var oneAccImm2Word oneAccImm2WordT
 	iPtr.mnemonic = "ADDI"
-	iPtr.immS16 = 3
-	iPtr.acd = 0
+	oneAccImm2Word.immS16 = 3
+	oneAccImm2Word.acd = 0
 	cpuPtr.ac[0] = 0xffff // -1
+	iPtr.variant = oneAccImm2Word
 	if !eagleOp(cpuPtr, &iPtr) {
 		t.Error("Failed to execute ADDI")
 	}
@@ -37,9 +39,10 @@ func TestADDI(t *testing.T) {
 		t.Errorf("Expected %x, got %x", 2, cpuPtr.ac[0])
 	}
 
-	iPtr.immS16 = -3
-	iPtr.acd = 0
+	oneAccImm2Word.immS16 = -3
+	oneAccImm2Word.acd = 0
 	cpuPtr.ac[0] = 0xffff // -1
+	iPtr.variant = oneAccImm2Word
 	if !eagleOp(cpuPtr, &iPtr) {
 		t.Error("Failed to execute ADDI")
 	}
@@ -51,10 +54,12 @@ func TestADDI(t *testing.T) {
 func TestANDI(t *testing.T) {
 	cpuPtr := cpuInit(nil)
 	var iPtr decodedInstrT
+	var oneAccImmWd2Word oneAccImmWd2WordT
 	iPtr.mnemonic = "ANDI"
-	iPtr.immWord = 0x00ff
-	iPtr.acd = 0
+	oneAccImmWd2Word.immWord = 0x00ff
+	oneAccImmWd2Word.acd = 0
 	cpuPtr.ac[0] = 0x0101
+	iPtr.variant = oneAccImmWd2Word
 	if !eagleOp(cpuPtr, &iPtr) {
 		t.Error("Failed to execute ANDI")
 	}
@@ -65,13 +70,14 @@ func TestANDI(t *testing.T) {
 func TestNADD(t *testing.T) {
 	cpuPtr := cpuInit(nil)
 	var iPtr decodedInstrT
+	var twoAcc1Word twoAcc1WordT
 	iPtr.mnemonic = "NADD"
-	iPtr.acs = 0
-	iPtr.acd = 1
+	twoAcc1Word.acs = 0
+	twoAcc1Word.acd = 1
 	// test neg + neg
 	cpuPtr.ac[0] = 0xffff // -1
 	cpuPtr.ac[1] = 0xffff // -1
-
+	iPtr.variant = twoAcc1Word
 	if !eagleOp(cpuPtr, &iPtr) {
 		t.Error("Failed to execute NADD")
 	}
@@ -94,9 +100,11 @@ func TestNADD(t *testing.T) {
 func TestNSUB(t *testing.T) {
 	cpuPtr := cpuInit(nil)
 	var iPtr decodedInstrT
+	var twoAcc1Word twoAcc1WordT
 	iPtr.mnemonic = "NSUB"
-	iPtr.acs = 0
-	iPtr.acd = 1
+	twoAcc1Word.acs = 0
+	twoAcc1Word.acd = 1
+	iPtr.variant = twoAcc1Word
 	// test neg - neg
 	cpuPtr.ac[0] = 0xffff // -1
 	cpuPtr.ac[1] = 0xffff // -1
@@ -123,9 +131,11 @@ func TestNSUB(t *testing.T) {
 func TestWANDI(t *testing.T) {
 	cpuPtr := cpuInit(nil)
 	var iPtr decodedInstrT
+	var oneAccImmDwd3Word oneAccImmDwd3WordT
 	iPtr.mnemonic = "WANDI"
-	iPtr.immDword = 0x7fffffff
-	iPtr.acd = 0
+	oneAccImmDwd3Word.immDword = 0x7fffffff
+	oneAccImmDwd3Word.acd = 0
+	iPtr.variant = oneAccImmDwd3Word
 	cpuPtr.ac[0] = 0x3171
 	if !eagleOp(cpuPtr, &iPtr) {
 		t.Error("Failed to execute WANDI")
@@ -133,8 +143,9 @@ func TestWANDI(t *testing.T) {
 	if cpuPtr.ac[0] != 0x3171 {
 		t.Errorf("Expected %x, got %x", 0x3171, cpuPtr.ac[0])
 	}
-	iPtr.immDword = 0x7fffffff
-	iPtr.acd = 0
+	oneAccImmDwd3Word.immDword = 0x7fffffff
+	oneAccImmDwd3Word.acd = 0
+	iPtr.variant = oneAccImmDwd3Word
 	cpuPtr.ac[0] = 0x20202020
 	if !eagleOp(cpuPtr, &iPtr) {
 		t.Error("Failed to execute WANDI")
@@ -147,9 +158,11 @@ func TestWANDI(t *testing.T) {
 func TestWNEG(t *testing.T) {
 	cpuPtr := cpuInit(nil)
 	var iPtr decodedInstrT
+	var twoAcc1Word twoAcc1WordT
 	iPtr.mnemonic = "WNEG"
-	iPtr.acs = 0
-	iPtr.acd = 1
+	twoAcc1Word.acs = 0
+	twoAcc1Word.acd = 1
+	iPtr.variant = twoAcc1Word
 	cpuPtr.ac[0] = 37
 	// test cpnversion to negative
 	if !eagleOp(cpuPtr, &iPtr) {
