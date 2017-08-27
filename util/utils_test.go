@@ -41,7 +41,16 @@ func TestGetWbits(t *testing.T) {
 	if r != 3 {
 		t.Error("Expected 3, got ", r)
 	}
-
+	w = 0xb38f
+	r = GetWbits(w, 2, 2)
+	if r != 3 {
+		t.Error("Expected 3, got ", r)
+	}
+	w = 0xbeef
+	r = GetWbits(w, 8, 8)
+	if r != 0xef {
+		t.Error("Expected 0xEF, got ", r)
+	}
 }
 
 func TestSetWbit(t *testing.T) {

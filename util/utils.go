@@ -23,6 +23,7 @@ package util
 
 import (
 	"fmt"
+	"math/bits"
 	"mvemg/dg"
 )
 
@@ -77,16 +78,23 @@ func DWordFromTwoWords(hw dg.WordT, lw dg.WordT) dg.DwordT {
 
 // GetWbits - in the DG world, the first (leftmost) bit is numbered zero...
 // extract nbits from value starting at leftBit
-func GetWbits(value dg.WordT, leftBit int, nbits int) dg.WordT {
-	var res dg.WordT
-	rightBit := leftBit + nbits
-	for b := leftBit; b < rightBit; b++ {
-		res = res << 1
-		if TestWbit(value, b) {
-			res++
-		}
+func GetWbits(value dg.WordT, leftBit uint, nbits uint) dg.WordT {
+	var mask dg.WordT
+	// rightBit := leftBit + nbits
+	// for b := leftBit; b < rightBit; b++ {
+	// 	res = res << 1
+	// 	if TestWbit(value, b) {
+	// 		res++
+	// 	}
+	// }
+	// return res
+
+	if leftBit >= 16 {
+		return 0
 	}
-	return res
+	value >>= 16 - (leftBit + nbits)
+	mask = (1 << nbits) - 1
+	return value & mask
 }
 
 // SetWbit sets a single bit in a DG word
@@ -145,7 +153,8 @@ func SexWordToDWord(wd dg.WordT) dg.DwordT {
 
 // SwapBytes - swap over the two bytes in a dg_word
 func SwapBytes(wd dg.WordT) dg.WordT {
-	var res dg.WordT
-	res = (wd >> 8) | ((wd & 0x00ff) << 8)
-	return res
+	// var res dg.WordT
+	// res = (wd >> 8) | ((wd & 0x00ff) << 8)
+	// return res
+	return dg.WordT(bits.ReverseBytes16(uint16(wd)))
 }
