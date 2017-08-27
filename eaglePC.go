@@ -28,7 +28,7 @@ import (
 	"mvemg/util"
 )
 
-func eaglePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
+func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	var (
 		wd                     dg.WordT

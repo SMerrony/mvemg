@@ -35,7 +35,7 @@ var (
 	oneCharBufMu sync.Mutex
 )
 
-func ttiInit(c net.Conn, cpuPtr *CPU, ch chan<- byte) {
+func ttiInit(c net.Conn, cpuPtr *CPUT, ch chan<- byte) {
 	tti = c
 	busAddDevice(DEV_TTI, "TTI", TTI_PMB, true, true, false)
 	busSetResetFunc(DEV_TTI, ttiReset)
@@ -43,7 +43,7 @@ func ttiInit(c net.Conn, cpuPtr *CPU, ch chan<- byte) {
 	go ttiListener(cpuPtr, ch)
 }
 
-func ttiListener(cpuPtr *CPU, scpChan chan<- byte) {
+func ttiListener(cpuPtr *CPUT, scpChan chan<- byte) {
 	b := make([]byte, 80)
 	for {
 		n, err := tti.Read(b)
@@ -80,7 +80,7 @@ func ttiReset() {
 }
 
 // This is called from Bus to implement DIA from the TTI DEV_TTIice
-func ttiDataIn(cpuPtr *CPU, iPtr *novaDataIoT, abc byte) {
+func ttiDataIn(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 	oneCharBufMu.Lock()
 	cpuPtr.ac[iPtr.acd] = dg.DwordT(oneCharBuf) // grab the char from the buffer
 	oneCharBufMu.Unlock()

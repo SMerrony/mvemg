@@ -9,7 +9,7 @@ import (
 	"mvemg/util"
 )
 
-func eagleIO(cpuPtr *CPU, iPtr *decodedInstrT) bool {
+func eagleIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	var (
 		cmd, word, dataWord dg.WordT

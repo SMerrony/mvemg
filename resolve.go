@@ -29,7 +29,7 @@ import (
 	"mvemg/util"
 )
 
-func resolve16bitEclipseAddr(cpuPtr *CPU, ind byte, mode string, disp int16) dg.PhysAddrT {
+func resolve16bitEclipseAddr(cpuPtr *CPUT, ind byte, mode string, disp int16) dg.PhysAddrT {
 
 	var (
 		eff     dg.PhysAddrT
@@ -68,7 +68,7 @@ func resolve16bitEclipseAddr(cpuPtr *CPU, ind byte, mode string, disp int16) dg.
 }
 
 // This is the same as resolve16bitEclipseAddr, but without the range masking at the end
-func resolve16bitEagleAddr(cpuPtr *CPU, ind byte, mode string, disp int16) dg.PhysAddrT {
+func resolve16bitEagleAddr(cpuPtr *CPUT, ind byte, mode string, disp int16) dg.PhysAddrT {
 
 	var (
 		eff     dg.PhysAddrT
@@ -112,7 +112,7 @@ func resolve32bitByteAddr(byteAddr dg.DwordT) (wordAddr dg.PhysAddrT, loByte boo
 	return wa, lb
 }
 
-func resolve32bitEffAddr(cpuPtr *CPU, ind byte, mode string, disp int32) dg.PhysAddrT {
+func resolve32bitEffAddr(cpuPtr *CPUT, ind byte, mode string, disp int32) dg.PhysAddrT {
 
 	eff := dg.PhysAddrT(disp)
 
@@ -145,7 +145,7 @@ func resolve32bitEffAddr(cpuPtr *CPU, ind byte, mode string, disp int32) dg.Phys
 
 // resolveEclipseBitAddr as per page 10-8 of Pop
 // Used by BTO, BTZ, SNB, SZB, SZBO
-func resolveEclipseBitAddr(cpuPtr *CPU, twoAcc1Word *twoAcc1WordT) (wordAddr dg.PhysAddrT, bitNum uint) {
+func resolveEclipseBitAddr(cpuPtr *CPUT, twoAcc1Word *twoAcc1WordT) (wordAddr dg.PhysAddrT, bitNum uint) {
 	// TODO handle segments and indirection
 	if twoAcc1Word.acd == twoAcc1Word.acs {
 		wordAddr = 0

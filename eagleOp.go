@@ -27,7 +27,7 @@ import (
 	"mvemg/util"
 )
 
-func eagleOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
+func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	//var addr dg_phys_addr
 
 	var (

@@ -26,7 +26,7 @@ import (
 	"mvemg/dg"
 )
 
-func novaPC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
+func novaPC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	var novaNoAccEffAddr novaNoAccEffAddrT
 

@@ -28,7 +28,7 @@ import (
 	"mvemg/util"
 )
 
-func novaMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
+func novaMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	var (
 		shifter           dg.WordT

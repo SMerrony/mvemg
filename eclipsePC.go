@@ -9,7 +9,7 @@ import (
 	"mvemg/util"
 )
 
-func eclipsePC(cpuPtr *CPU, iPtr *decodedInstrT) bool {
+func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	var (
 		addr, inc          dg.PhysAddrT
 		acd, acs, h, l     int16

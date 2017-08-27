@@ -27,7 +27,7 @@ import (
 	"mvemg/util"
 )
 
-func novaIO(cpuPtr *CPU, iPtr *decodedInstrT) bool {
+func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	var (
 		abc        byte

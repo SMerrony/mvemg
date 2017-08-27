@@ -29,7 +29,7 @@ import (
 	"mvemg/util"
 )
 
-func eclipseOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
+func eclipseOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	var (
 		addr               dg.PhysAddrT
 		byt                dg.ByteT

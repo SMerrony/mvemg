@@ -27,7 +27,7 @@ import (
 	"mvemg/util"
 )
 
-func novaOp(cpuPtr *CPU, iPtr *decodedInstrT) bool {
+func novaOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	var (
 		shifter          dg.WordT

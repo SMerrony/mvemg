@@ -236,7 +236,7 @@ func dpfCreateBlank(imgName string) bool {
 }
 
 // dpfDataIn implements the DIA/B/C I/O instructions for this device
-func dpfDataIn(cpuPtr *CPU, iPtr *novaDataIoT, abc byte) {
+func dpfDataIn(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 	dpfData.dpfMu.RLock()
 	switch abc {
 	case 'A':
@@ -286,7 +286,7 @@ func dpfDataIn(cpuPtr *CPU, iPtr *novaDataIoT, abc byte) {
 
 // dpfDataOut implements the DOA/B/C instructions for this device
 // NIO is also routed here with a dummy abc flag value of N
-func dpfDataOut(cpuPtr *CPU, iPtr *novaDataIoT, abc byte) {
+func dpfDataOut(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 	dpfData.dpfMu.Lock()
 	data := util.DWordGetLowerWord(cpuPtr.ac[iPtr.acd])
 	switch abc {

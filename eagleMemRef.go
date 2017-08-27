@@ -29,7 +29,7 @@ import (
 	"mvemg/util"
 )
 
-func eagleMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
+func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	var (
 		addr               dg.PhysAddrT
 		byt                dg.ByteT

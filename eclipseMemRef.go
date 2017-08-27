@@ -10,7 +10,7 @@ import (
 	"mvemg/util"
 )
 
-func eclipseMemRef(cpuPtr *CPU, iPtr *decodedInstrT) bool {
+func eclipseMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	var (
 		addr               dg.PhysAddrT
 		oneAccModeInt2Word oneAccModeInd2WordT

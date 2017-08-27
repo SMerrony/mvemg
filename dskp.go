@@ -283,7 +283,7 @@ func dskpCreateBlank(imgName string) bool {
 }
 
 // Handle the DIA/B/C PIO commands
-func dskpDataIn(cpuPtr *CPU, iPtr *novaDataIoT, abc byte) {
+func dskpDataIn(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 	dskpData.dskpDataMu.Lock()
 	switch abc {
 	case 'A':
@@ -301,7 +301,7 @@ func dskpDataIn(cpuPtr *CPU, iPtr *novaDataIoT, abc byte) {
 }
 
 // Handle the DOA/B/C PIO commands
-func dskpDataOut(cpuPtr *CPU, iPtr *novaDataIoT, abc byte) {
+func dskpDataOut(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 	dskpData.dskpDataMu.Lock()
 	switch abc {
 	case 'A':

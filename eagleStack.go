@@ -30,7 +30,7 @@ import (
 	"mvemg/memory"
 )
 
-func eagleStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
+func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	var (
 		firstAc, lastAc, thisAc int
@@ -154,7 +154,7 @@ func eagleStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
 }
 
 // wsav is common to WSAVR and WSAVS
-func wsav(cpuPtr *CPU, u2wd *unique2WordT) {
+func wsav(cpuPtr *CPUT, u2wd *unique2WordT) {
 	wfpSav := memory.ReadDWord(memory.WfpLoc)
 	memory.WsPush(0, cpuPtr.ac[0]) // 1
 	memory.WsPush(0, cpuPtr.ac[1]) // 2

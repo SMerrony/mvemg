@@ -34,14 +34,14 @@ type (
 	ResetFunc func()
 
 	// DataOutFunc stores a DOx func pointer
-	DataOutFunc func(*CPU, *novaDataIoT, byte)
+	DataOutFunc func(*CPUT, *novaDataIoT, byte)
 
 	// DataInFunc stores a DIx func pointer
-	DataInFunc func(*CPU, *novaDataIoT, byte)
+	DataInFunc func(*CPUT, *novaDataIoT, byte)
 )
 
 type pioMsgT struct {
-	cpuPtr *CPU
+	cpuPtr *CPUT
 	iPtr   *decodedInstrT
 	IO     byte // 'I' or 'O'
 	abc    byte // 'A', 'B', or 'C'
@@ -107,7 +107,7 @@ func busSetDataInFunc(devNum int, fn DataInFunc) {
 	d[devNum].devMu.Unlock()
 }
 
-func busDataIn(cpuPtr *CPU, iPtr *novaDataIoT, abc byte) {
+func busDataIn(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 	//var pio pioMsgT
 	//logging.DebugPrint(logging.DEBUG_LOG, "DEBUG: Bus Data In function called for dev #0%o\n", iPtr.ioDev)
 	d[iPtr.ioDev].devMu.RLock()
@@ -138,7 +138,7 @@ func busSetDataOutFunc(devNum int, fn DataOutFunc) {
 		devNum, devNum)
 }
 
-func busDataOut(cpuPtr *CPU, iPtr *novaDataIoT, abc byte) {
+func busDataOut(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 	//var pio pioMsgT
 	d[iPtr.ioDev].devMu.Lock()
 	if d[iPtr.ioDev].dataOutFunc == nil && d[iPtr.ioDev].pioChan == nil {

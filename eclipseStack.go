@@ -28,7 +28,7 @@ import (
 	"mvemg/util"
 )
 
-func eclipseStack(cpuPtr *CPU, iPtr *decodedInstrT) bool {
+func eclipseStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	var (
 		addr                dg.PhysAddrT
 		first, last, thisAc int

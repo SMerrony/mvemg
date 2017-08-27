@@ -198,7 +198,7 @@ func mtbLoadTBoot() {
 }
 
 // This is called from Bus to implement DIx from the MTB device
-func mtbDataIn(cpuPtr *CPU, iPtr *novaDataIoT, abc byte) {
+func mtbDataIn(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 
 	switch iPtr.f {
 	case 'S':
@@ -232,7 +232,7 @@ func mtbDataIn(cpuPtr *CPU, iPtr *novaDataIoT, abc byte) {
 }
 
 // This is called from Bus to implement DOx from the MTB device
-func mtbDataOut(cpuPtr *CPU, iPtr *novaDataIoT, abc byte) {
+func mtbDataOut(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 
 	switch iPtr.f {
 	case 'S':

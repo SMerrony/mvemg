@@ -1,4 +1,24 @@
 // cpu.go
+
+// Copyright (C) 2017  Steve Merrony
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
 package main
 
 import (
@@ -17,18 +37,18 @@ type sbrBits struct {
 	physAddr        uint32 // 19 bits used
 }
 
-// CPU holds the current state of a CPU
-type CPU struct {
+// CPUT holds the current state of a CPUT
+type CPUT struct {
 	cpuMu sync.RWMutex
 	// representations of physical attributes
-	pc                           dg.PhysAddrT
-	ac                           [4]dg.DwordT
-	carry, atu, ion, pfflag, ovk bool
-	sbr                          [8]sbrBits
+	pc                           dg.PhysAddrT // 32-bit PC
+	ac                           [4]dg.DwordT // 4 x 32-bit Accumulators
+	carry, atu, ion, pfflag, ovk bool         // flag bits
+	sbr                          [8]sbrBits   // SBRs (see above)
 
 	// emulator internals
-	instrCount uint64
-	scpIO      bool
+	instrCount uint64 // how many instructions executed during the current run
+	scpIO      bool   // true if console I/O is directed to the SCP
 }
 
 // cpuStatT defines the data we will send to the statusCollector monitor
@@ -41,11 +61,9 @@ type cpuStatT struct {
 
 const cpuStatPeriodMs = 500 // 125 // i.e. we send stats every 1/8th of a second
 
-var (
-	cpu CPU
-)
+var cpu CPUT
 
-func cpuInit(statsChan chan cpuStatT) *CPU {
+func cpuInit(statsChan chan cpuStatT) *CPUT {
 	busAddDevice(DEV_CPU, "CPU", CPU_PMB, true, false, false)
 	go cpuStatSender(statsChan)
 	return &cpu
