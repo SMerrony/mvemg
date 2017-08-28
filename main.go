@@ -55,7 +55,7 @@ var p interface {
 }
 
 var (
-	debugLogging  = true
+	debugLogging  = false //true N.B. CPU runs about 3x faster without debugLogging
 	breakpoints   []dg.PhysAddrT
 	cpuStatsChan  chan cpuStatT
 	dpfStatsChan  chan DpfStatT
@@ -392,7 +392,7 @@ func disassemble(cmd []string) {
 		}
 		display += "\" "
 		if skipDecode == 0 {
-			instrTmp, _ := instructionDecode(word, addr, cpu.sbr[cpu.pc>>29].lef, cpu.sbr[cpu.pc>>29].io, cpu.atu)
+			instrTmp, _ := instructionDecode(word, addr, cpu.sbr[cpu.pc>>29].lef, cpu.sbr[cpu.pc>>29].io, cpu.atu, true)
 			display += instrTmp.disassembly
 			if instrTmp.instrLength > 1 {
 				skipDecode = instrTmp.instrLength - 1
@@ -484,7 +484,7 @@ func singleStep() {
 	// FETCH
 	thisOp := memory.ReadWord(cpu.pc)
 	// DECODE
-	if iPtr, ok := instructionDecode(thisOp, cpu.pc, cpu.sbr[cpu.pc>>29].lef, cpu.sbr[cpu.pc>>29].io, cpu.atu); ok {
+	if iPtr, ok := instructionDecode(thisOp, cpu.pc, cpu.sbr[cpu.pc>>29].lef, cpu.sbr[cpu.pc>>29].io, cpu.atu, true); ok {
 		ttoPutNLString(iPtr.disassembly)
 		// EXECUTE
 		if cpuExecute(iPtr) {
@@ -510,6 +510,10 @@ func run() {
 	// instruction counting...
 	instrCounts := make(map[string]uint64)
 
+	// instruction disassembly slows CPU down by about 3x, for the moment it seems to make sense
+	// for it to follow the debugLogging setting...
+	disassembly := debugLogging
+
 	// direct console input to the VM
 	cpu.cpuMu.Lock()
 	cpu.scpIO = false
@@ -524,7 +528,7 @@ RunLoop: // performance-critical section starts here
 		thisOp = memory.ReadWord(cpu.pc)
 
 		// DECODE
-		iPtr, ok = instructionDecode(thisOp, cpu.pc, cpu.sbr[cpu.pc>>29].lef, cpu.sbr[cpu.pc>>29].io, cpu.atu)
+		iPtr, ok = instructionDecode(thisOp, cpu.pc, cpu.sbr[cpu.pc>>29].lef, cpu.sbr[cpu.pc>>29].io, cpu.atu, disassembly)
 		cpu.cpuMu.RUnlock()
 		if !ok {
 			errDetail = " *** Error: could not decode instruction ***"
