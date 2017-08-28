@@ -200,7 +200,7 @@ func doCommand(cmd string) {
 	case "SS":
 		singleStep()
 	case "ST":
-		ttoPutNLString(cmdNYI)
+		start(words)
 
 	// emulator commands
 	case "ATT":
@@ -558,6 +558,17 @@ func singleStep() {
 	} else {
 		ttoPutNLString(" *** Error: could not decode opcode")
 	}
+}
+
+// start running at user-provided PC
+func start(cmd []string) {
+	newPc, err := strconv.Atoi(cmd[1])
+	if err != nil || newPc < 0 {
+		ttoPutNLString(" *** Could not parse new PC value ***")
+		return
+	}
+	cpu.pc = dg.PhysAddrT(newPc)
+	run()
 }
 
 // The main Emulator running loop...
