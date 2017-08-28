@@ -55,7 +55,9 @@ var p interface {
 }
 
 var (
-	debugLogging  = false //true N.B. CPU runs about 3x faster without debugLogging
+	// debugLogging - CPU runs about 3x faster without debugLogging
+	// (and another 3x faster without disassembly, linked to this)
+	debugLogging  = true
 	breakpoints   []dg.PhysAddrT
 	cpuStatsChan  chan cpuStatT
 	dpfStatsChan  chan DpfStatT
@@ -192,7 +194,7 @@ func doCommand(cmd string) {
 	case "CO":
 		run()
 	case "E":
-		ttoPutNLString(cmdNYI)
+		examine(words)
 	case "HE":
 		showHelp()
 	case "SS":
@@ -424,6 +426,67 @@ func doScript(cmd []string) {
 		}
 	}
 
+}
+
+// examine mimics the E command from later SCP-CLIs
+func examine(cmd []string) {
+	switch cmd[1] {
+	case "A":
+		exAc, err := strconv.Atoi(cmd[2])
+		if err != nil || exAc < 0 || exAc > 3 {
+			ttoPutNLString(" *** Examine Accumulator - invalid AC number ***")
+			return
+		}
+		prompt := fmt.Sprintf("AC%d = %d - Enter new val or just ENTER> ", exAc, cpu.ac[exAc])
+		ttoPutNLString(prompt)
+		resp := scpGetLine()
+		if len(resp) > 0 {
+			newVal, err := strconv.Atoi(resp)
+			if err != nil {
+				ttoPutNLString(" *** Could not parse new AC value ***")
+				return
+			}
+			cpu.ac[exAc] = dg.DwordT(newVal)
+			prompt = fmt.Sprintf("AC%d = %d", exAc, cpu.ac[exAc])
+			ttoPutNLString(prompt)
+		}
+	case "M":
+		exMem, err := strconv.Atoi(cmd[2])
+		if err != nil || exMem < 0 || exMem > memory.MemSizeWords {
+			ttoPutNLString(" *** Examine Memory - invalid address ***")
+			return
+		}
+		prompt := fmt.Sprintf("Location %d contains %d - Enter new val or just ENTER> ", exMem, memory.ReadWord(dg.PhysAddrT(exMem)))
+		ttoPutNLString(prompt)
+		resp := scpGetLine()
+		if len(resp) > 0 {
+			newVal, err := strconv.Atoi(resp)
+			if err != nil {
+				ttoPutNLString(" *** Could not parse new value ***")
+				return
+			}
+			memory.WriteWord(dg.PhysAddrT(exMem), dg.WordT(newVal))
+			prompt = fmt.Sprintf("Location %d = %d", exMem, memory.ReadWord(dg.PhysAddrT(exMem)))
+			ttoPutNLString(prompt)
+		}
+	case "P":
+		prompt := fmt.Sprintf("PC = %d - Enter new val or just ENTER> ", cpu.pc)
+		ttoPutNLString(prompt)
+		resp := scpGetLine()
+		if len(resp) > 0 {
+			newVal, err := strconv.Atoi(resp)
+			if err != nil {
+				ttoPutNLString(" *** Could not parse new PC value ***")
+				return
+			}
+			cpu.pc = dg.PhysAddrT(newVal)
+			prompt = fmt.Sprintf("PC = %d", cpu.pc)
+			ttoPutNLString(prompt)
+		}
+	default:
+		ttoPutNLString(" *** Expecting A, M, or P for E(xamine) command ***")
+		return
+	}
 }
 
 func printableBreakpointList() string {

@@ -31,14 +31,14 @@ import (
 )
 
 const (
-	memSizeWords = 8388608
+	MemSizeWords = 8388608
 	MemSizeLCPID = 0x3F
 )
 
 // The memoryT structure holds our representation of system RAM.
 // It is not exported and should not be directly accessed other than within this package.
 type memoryT struct {
-	ram        [memSizeWords]dg.WordT
+	ram        [MemSizeWords]dg.WordT
 	ramMu      sync.RWMutex
 	atuEnabled bool
 }
@@ -49,7 +49,7 @@ var memory memoryT // memory is NOT exported
 func MemInit() {
 	memory.atuEnabled = false
 	bmcdchInit()
-	logging.DebugPrint(logging.DebugLog, "INFO: Initialised %d words of main memory\n", memSizeWords)
+	logging.DebugPrint(logging.DebugLog, "INFO: Initialised %d words of main memory\n", MemSizeWords)
 }
 
 // ReadByte - read a byte from memory using word address and low-byte flag (true => lower (rightmost) byte)
@@ -93,7 +93,7 @@ func WriteByte(wordAddr dg.PhysAddrT, loByte bool, b dg.ByteT) {
 // ReadWord returns the DG Word at the specified physical address
 func ReadWord(wordAddr dg.PhysAddrT) dg.WordT {
 	var wd dg.WordT
-	if wordAddr >= memSizeWords {
+	if wordAddr >= MemSizeWords {
 		log.Fatalf("ERROR: Attempt to read word beyond end of physical memory using address: %d", wordAddr)
 	}
 	memory.ramMu.RLock()
@@ -108,7 +108,7 @@ func WriteWord(wordAddr dg.PhysAddrT, datum dg.WordT) {
 	// if wordAddr == 2891 {
 	// 	debugCatcher()
 	// }
-	if wordAddr >= memSizeWords {
+	if wordAddr >= MemSizeWords {
 		debug.PrintStack()
 		log.Fatalf("ERROR: Attempt to write word beyond end of physical memory using address: %d", wordAddr)
 	}
@@ -120,7 +120,7 @@ func WriteWord(wordAddr dg.PhysAddrT, datum dg.WordT) {
 // ReadDWord returns the doubleword at the given physical address
 func ReadDWord(wordAddr dg.PhysAddrT) dg.DwordT {
 	var hiWd, loWd dg.WordT
-	if wordAddr >= memSizeWords {
+	if wordAddr >= MemSizeWords {
 		debug.PrintStack()
 		log.Fatalf("ERROR: Attempt to read doubleword beyond end of physical memory using address: %d", wordAddr)
 	}
@@ -133,7 +133,7 @@ func ReadDWord(wordAddr dg.PhysAddrT) dg.DwordT {
 
 // WriteDWord writes a doubleword into memory at the given physical address
 func WriteDWord(wordAddr dg.PhysAddrT, dwd dg.DwordT) {
-	if wordAddr >= memSizeWords {
+	if wordAddr >= MemSizeWords {
 		log.Fatalf("ERROR: Attempt to write doubleword beyond end of physical memory using address: %d", wordAddr)
 	}
 	WriteWord(wordAddr, util.DWordGetUpperWord(dwd))
