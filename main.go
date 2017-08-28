@@ -197,6 +197,8 @@ func doCommand(cmd string) {
 		examine(words)
 	case "HE":
 		showHelp()
+	case "RE":
+		ttoPutNLString(cmdNYI)
 	case "SS":
 		singleStep()
 	case "ST":
@@ -222,8 +224,12 @@ func doCommand(cmd string) {
 		cleanExit()
 	case "NOBREAK":
 		ttoPutNLString(cmdNYI)
+	case "RESTORE":
+		ttoPutNLString(cmdNYI)
 	case "SAVE":
 		ttoPutNLString(cmdNYI)
+	case "SET":
+		set(words)
 	case "SHOW":
 		show(words)
 	default:
@@ -500,7 +506,27 @@ func printableBreakpointList() string {
 	return res
 }
 
-// Display SCP and Emulator help on the DASHER-compatible console
+func set(cmd []string) {
+	if len(cmd) < 3 {
+		ttoPutNLString(" *** Expecting SET subcommand ***")
+		return
+	}
+	switch cmd[1] {
+	case "LOGGING":
+		switch cmd[2] {
+		case "ON":
+			debugLogging = true
+		case "OFF":
+			debugLogging = false
+		}
+
+	default:
+		ttoPutNLString(" *** Unknown SET subcommand ***")
+	}
+}
+
+// showHelp - Display SCP and Emulator help on the DASHER-compatible console
+// N.B. Ensure this fits on a 24x80 screen
 func showHelp() {
 	ttoPutString("\014                          \024SCP-CLI Commands\025" +
 		"                          \034MV/Emulator\035\012" +
@@ -519,10 +545,11 @@ func showHelp() {
 		" CREATE DPF|DSKP <file> - CREATE an empty/unformatted disk image\012" +
 		" DET <dev>              - DETach any image file from the device\012" +
 		" DIS <from> <to>|+<#>   - DISassemble physical memory range or # from PC\012" +
-		" DO <file>              - Run (DO) emulator commands from <file>\012" +
+		" DO <file>              - DO (i.e. run) emulator commands from script <file>\012" +
 		" EXIT                   - EXIT the emulator\012" +
-		" GET/SAVE <file>        - GET (restore)/SAVE emulator state from/to file\012" +
-		" SHOW BREAK/DEV         - SHOW list of BREAKpoints/DEVices configured\012")
+		" RESTORE/SAVE <file>    - RESTORE (get)/SAVE emulator state from/to file\012" +
+		" SET LOGGING ON|OFF     - Turn on or off debug logging (logs dumped end of run)\012" +
+		" SHOW BREAK/DEV/LOGGING - SHOW list of BREAKpoints/DEVices configured\012")
 }
 
 // Show various emulator states to the user
@@ -536,6 +563,9 @@ func show(cmd []string) {
 		ttoPutNLString(busGetPrintableDevList())
 	case "BREAK":
 		ttoPutNLString(printableBreakpointList())
+	case "LOGGING":
+		resp := fmt.Sprintf("Logging is currently turned %s", util.BoolToOnOff(debugLogging))
+		ttoPutNLString(resp)
 	default:
 		ttoPutNLString(" *** Invalid SHOW type ***")
 	}
