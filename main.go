@@ -50,10 +50,6 @@ const (
 	cmdNYI     = "Command Not Yet Implemented"
 )
 
-var p interface {
-	Stop()
-}
-
 var (
 	// debugLogging - CPU runs about 3x faster without debugLogging
 	// (and another 3x faster without disassembly, linked to this)

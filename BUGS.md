@@ -159,3 +159,5 @@ Exactly the same crash occurs after (apparently succesfully) running a surface a
 
 Looking at the disassembly of DFMTR, it appears that there is only space reserved for 16 (or 17) 512B blocks, so why is DFMTR trying to write 25???  Something is going wrong before the final WRITE.
 
+If the format is run without specifying that we reserve space for the Diagnostic error, then on the final write 27 blocks are written, then the exact same error.
+
