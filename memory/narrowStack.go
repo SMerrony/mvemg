@@ -35,22 +35,26 @@ const (
 )
 
 // NsPush - PUSH a word onto the Narrow Stack
-func NsPush(seg dg.PhysAddrT, data dg.WordT) {
+func NsPush(seg dg.PhysAddrT, data dg.WordT, debugging bool) {
 	// TODO segment handling
 	// TODO overflow/underflow handling - either here or in instruction?
 	memory.ram[NspLoc]++ // we allow this direct write to a fixed location for performance
 	addr := dg.PhysAddrT(memory.ram[NspLoc])
 	WriteWord(addr, data)
-	logging.DebugPrint(logging.DebugLog, "... memory.NsPush pushed %8d onto the Narrow Stack at location: %d\n", data, addr)
+	if debugging {
+		logging.DebugPrint(logging.DebugLog, "... memory.NsPush pushed %8d onto the Narrow Stack at location: %d\n", data, addr)
+	}
 }
 
 // NsPop - POP a word off the Narrow Stack
-func NsPop(seg dg.PhysAddrT) dg.WordT {
+func NsPop(seg dg.PhysAddrT, debugging bool) dg.WordT {
 	// TODO segment handling
 	// TODO overflow/underflow handling - either here or in instruction?
 	addr := dg.PhysAddrT(memory.ram[NspLoc])
 	data := ReadWord(addr)
-	logging.DebugPrint(logging.DebugLog, "... memory.NsPop  popped %8d off  the Narrow Stack at location: %d\n", data, addr)
+	if debugging {
+		logging.DebugPrint(logging.DebugLog, "... memory.NsPop  popped %8d off  the Narrow Stack at location: %d\n", data, addr)
+	}
 	memory.ram[NspLoc]-- // we allow this direct write to a fixed location for performance
 	return data
 }

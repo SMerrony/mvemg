@@ -21,7 +21,7 @@ package main
 
 // ASCII and DASHER special characters
 const (
-	ASCII_BEL = 0x07
+	ASCIIBEL  = 0x07
 	ASCII_BS  = 0x08
 	ASCII_TAB = 0x09
 	ASCII_NL  = 0x0A

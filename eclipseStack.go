@@ -51,11 +51,11 @@ func eclipseStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			if debugLogging {
 				logging.DebugPrint(logging.DebugLog, "... narrow popping AC%d\n", acsUp[thisAc])
 			}
-			cpuPtr.ac[acsUp[thisAc]] = dg.DwordT(memory.NsPop(0))
+			cpuPtr.ac[acsUp[thisAc]] = dg.DwordT(memory.NsPop(0, debugLogging))
 		}
 
 	case "POPJ":
-		addr = dg.PhysAddrT(memory.NsPop(0))
+		addr = dg.PhysAddrT(memory.NsPop(0, debugLogging))
 		cpuPtr.pc = addr
 		return true // because PC set
 
@@ -70,12 +70,12 @@ func eclipseStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			if debugLogging {
 				logging.DebugPrint(logging.DebugLog, "... narrow pushing AC%d\n", acsUp[thisAc])
 			}
-			memory.NsPush(0, util.DWordGetLowerWord(cpuPtr.ac[acsUp[thisAc]]))
+			memory.NsPush(0, util.DWordGetLowerWord(cpuPtr.ac[acsUp[thisAc]]), debugLogging)
 		}
 
 	case "PSHJ":
 		noAccModeInd2Word = iPtr.variant.(noAccModeInd2WordT)
-		memory.NsPush(0, dg.WordT(cpuPtr.pc)+2)
+		memory.NsPush(0, dg.WordT(cpuPtr.pc)+2, debugLogging)
 		addr = resolve16bitEclipseAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15)
 		cpuPtr.pc = addr
 		return true // because PC set
@@ -83,14 +83,14 @@ func eclipseStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case "RTN":
 		// complement of SAVE
 		memory.WriteWord(memory.NspLoc, memory.ReadWord(memory.NfpLoc)) // ???
-		word := memory.NsPop(0)
+		word := memory.NsPop(0, debugLogging)
 		cpuPtr.carry = util.TestWbit(word, 0)
 		cpuPtr.pc = dg.PhysAddrT(word) & 0x7fff
 		//nfpSave := memory.NsPop(0)               // 1
-		cpuPtr.ac[3] = dg.DwordT(memory.NsPop(0)) // 2
-		cpuPtr.ac[2] = dg.DwordT(memory.NsPop(0)) // 3
-		cpuPtr.ac[1] = dg.DwordT(memory.NsPop(0)) // 4
-		cpuPtr.ac[0] = dg.DwordT(memory.NsPop(0)) // 5
+		cpuPtr.ac[3] = dg.DwordT(memory.NsPop(0, debugLogging)) // 2
+		cpuPtr.ac[2] = dg.DwordT(memory.NsPop(0, debugLogging)) // 3
+		cpuPtr.ac[1] = dg.DwordT(memory.NsPop(0, debugLogging)) // 4
+		cpuPtr.ac[0] = dg.DwordT(memory.NsPop(0, debugLogging)) // 5
 		memory.WriteWord(memory.NfpLoc, util.DWordGetLowerWord(cpuPtr.ac[3]))
 		return true // because PC set
 
@@ -111,21 +111,21 @@ func eclipseStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		unique2Word = iPtr.variant.(unique2WordT)
 		nfpSav := memory.ReadWord(memory.NfpLoc)
 		nspSav := memory.ReadWord(memory.NspLoc)
-		memory.NsPush(0, util.DWordGetLowerWord(cpuPtr.ac[0])) // 1
-		memory.NsPush(0, util.DWordGetLowerWord(cpuPtr.ac[1])) // 2
-		memory.NsPush(0, util.DWordGetLowerWord(cpuPtr.ac[2])) // 3
-		memory.NsPush(0, nfpSav)                               // 4
+		memory.NsPush(0, util.DWordGetLowerWord(cpuPtr.ac[0]), debugLogging) // 1
+		memory.NsPush(0, util.DWordGetLowerWord(cpuPtr.ac[1]), debugLogging) // 2
+		memory.NsPush(0, util.DWordGetLowerWord(cpuPtr.ac[2]), debugLogging) // 3
+		memory.NsPush(0, nfpSav, debugLogging)                               // 4
 		word := util.DWordGetLowerWord(cpuPtr.ac[3])
 		if cpuPtr.carry {
 			word |= 0x8000
 		} else {
 			word &= 0x7fff
 		}
-		memory.NsPush(0, word) // 5
+		memory.NsPush(0, word, debugLogging) // 5
 		wdCnt := int(unique2Word.immU16)
 		if wdCnt > 0 {
 			for wd := 0; wd < wdCnt; wd++ {
-				memory.NsPush(0, 0) // ...
+				memory.NsPush(0, 0, debugLogging) // ...
 			}
 		}
 		cpuPtr.ac[3] = dg.DwordT(memory.ReadWord(memory.NspLoc)) // ???

@@ -641,7 +641,9 @@ RunLoop: // performance-critical section starts here
 
 		if debugLogging {
 			logging.DebugPrint(logging.DebugLog, "%s\t\t%s\n", iPtr.disassembly, cpuCompactPrintableStatus())
-		}
+		} // else {
+		// 	logging.DebugPrint(logging.DebugLog, "%d %s\n", cpu.pc, iPtr.mnemonic)
+		// }
 
 		// EXECUTE
 		if !cpuExecute(iPtr) {

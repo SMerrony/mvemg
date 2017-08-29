@@ -219,14 +219,18 @@ func busIsAttached(devNum int) bool {
 func busSetBusy(devNum int, f bool) {
 	d[devNum].devMu.Lock()
 	d[devNum].busy = f
-	logging.DebugPrint(logging.DebugLog, "... Busy flag set to %d for device #0%o\n", util.BoolToInt(f), devNum)
+	if debugLogging {
+		logging.DebugPrint(logging.DebugLog, "... Busy flag set to %d for device #0%o\n", util.BoolToInt(f), devNum)
+	}
 	d[devNum].devMu.Unlock()
 }
 
 func busSetDone(devNum int, f bool) {
 	d[devNum].devMu.Lock()
 	d[devNum].done = f
-	logging.DebugPrint(logging.DebugLog, "... Done flag set to %d for device #0%o\n", util.BoolToInt(f), devNum)
+	if debugLogging {
+		logging.DebugPrint(logging.DebugLog, "... Done flag set to %d for device #0%o\n", util.BoolToInt(f), devNum)
+	}
 	d[devNum].devMu.Unlock()
 }
 

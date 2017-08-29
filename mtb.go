@@ -227,7 +227,7 @@ func mtbDataIn(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 	}
 
 	if iPtr.f == 'S' {
-		mtbDoCommand() // TODO Can this be a goroutine?
+		mtbDoCommand()
 	}
 }
 
@@ -269,7 +269,7 @@ func mtbDataOut(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 	}
 
 	if iPtr.f == 'S' {
-		mtbDoCommand() // TODO Can this be a goroutine?
+		mtbDoCommand()
 	}
 }
 

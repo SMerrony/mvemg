@@ -101,7 +101,9 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		busDataOut(cpuPtr, &novaDataIo, 'N') // DUMMY FLAG
 
 	case "PRTSEL":
-		logging.DebugPrint(logging.DebugLog, "INFO: PRTSEL AC0: %d, PC: %d\n", cpuPtr.ac[0], cpuPtr.pc)
+		if debugLogging {
+			logging.DebugPrint(logging.DebugLog, "INFO: PRTSEL AC0: %d, PC: %d\n", cpuPtr.ac[0], cpuPtr.pc)
+		}
 		// only handle the query mode, setting is a no-op on this 'single-channel' machine
 		if util.DWordGetLowerWord(cpuPtr.ac[0]) == 0xffff {
 			// return default I/O channel if -1 passed in

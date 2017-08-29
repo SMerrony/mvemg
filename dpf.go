@@ -56,8 +56,8 @@ const (
 	dpfCmdWriteDisable
 	dpfCmdRelease
 	dpfCmdTrespass
-	dpfCmdSetAltMode_1
-	dpfCmdSetAltMode_2
+	dpfCmdSetAltMode1
+	dpfCmdSetAltMode2
 	dpfCmdNoOp
 	dpfCmdVerify
 	dpfCmdReadBuffs
@@ -66,8 +66,8 @@ const (
 )
 const (
 	dpfInsModeNormal = iota
-	dpfInsModeAlt_1
-	dpfInsModeAlt_2
+	dpfInsModeAlt1
+	dpfInsModeAlt2
 )
 const (
 	// drive statuses
@@ -113,7 +113,6 @@ const dpfStatsPeriodMs = 500
 
 type dpfDataT struct {
 	// MV/Em internals...
-	debug               bool
 	imageAttached       bool
 	dpfMu               sync.RWMutex
 	imageFileName       string
@@ -157,7 +156,6 @@ var (
 func DpfInit(statsChann chan DpfStatT) {
 	dpfData.dpfMu.Lock()
 	defer dpfData.dpfMu.Unlock()
-	dpfData.debug = true
 
 	cmdDecode = [...]string{"READ", "RECAL", "SEEK", "STOP", "OFFSET FWD", "OFFSET REV",
 		"WRITE DISABLE", "RELEASE", "TRESPASS", "SET ALT MODE 1", "SET ALT MODE 2",
@@ -243,29 +241,35 @@ func dpfDataIn(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 		switch dpfData.instructionMode {
 		case dpfInsModeNormal:
 			cpuPtr.ac[iPtr.acd] = dg.DwordT(dpfData.rwStatus)
-			logging.DebugPrint(logging.DpfLog, "DIA [Read Data Txfr Status] (Normal mode) returning %s for DRV=%d\n",
-				util.WordToBinStr(dpfData.rwStatus), dpfData.drive)
-		case dpfInsModeAlt_1:
+			if debugLogging {
+				logging.DebugPrint(logging.DpfLog, "DIA [Read Data Txfr Status] (Normal mode) returning %s for DRV=%d\n",
+					util.WordToBinStr(dpfData.rwStatus), dpfData.drive)
+			}
+		case dpfInsModeAlt1:
 			log.Fatal("DPF DIA (Alt Mode 1) not yet implemented")
-		case dpfInsModeAlt_2:
+		case dpfInsModeAlt2:
 			log.Fatal("DPF DIA (Alt Mode 2) not yet implemented")
 		}
 	case 'B':
 		switch dpfData.instructionMode {
 		case dpfInsModeNormal:
 			cpuPtr.ac[iPtr.acd] = dg.DwordT(dpfData.driveStatus & 0xfeff)
-			logging.DebugPrint(logging.DpfLog, "DIB [Read Drive Status] (normal mode) DRV=%d, %s to AC%d, PC: %d\n",
-				dpfData.drive, util.WordToBinStr(dpfData.driveStatus), iPtr.acd, cpuPtr.pc)
-		case dpfInsModeAlt_1:
+			if debugLogging {
+				logging.DebugPrint(logging.DpfLog, "DIB [Read Drive Status] (normal mode) DRV=%d, %s to AC%d, PC: %d\n",
+					dpfData.drive, util.WordToBinStr(dpfData.driveStatus), iPtr.acd, cpuPtr.pc)
+			}
+		case dpfInsModeAlt1:
 			cpuPtr.ac[iPtr.acd] = dg.DwordT(0x8000) | (dg.DwordT(dpfData.ema) & 0x01f)
 			//			if dpfData.mapEnabled {
 			//				cpuPtr.ac[iPtr.acd] = dg_dword(dpfData.ema&0x1f) | 0x8000
 			//			} else {
 			//				cpuPtr.ac[iPtr.acd] = dg_dword(dpfData.ema & 0x1f)
 			//			}
-			logging.DebugPrint(logging.DpfLog, "DIB [Read EMA] (Alt Mode 1) returning: %d, PC: %d\n",
-				cpuPtr.ac[iPtr.acd], cpuPtr.pc)
-		case dpfInsModeAlt_2:
+			if debugLogging {
+				logging.DebugPrint(logging.DpfLog, "DIB [Read EMA] (Alt Mode 1) returning: %d, PC: %d\n",
+					cpuPtr.ac[iPtr.acd], cpuPtr.pc)
+			}
+		case dpfInsModeAlt2:
 			log.Fatal("DPF DIB (Alt Mode 2) not yet implemented")
 		}
 	case 'C':
@@ -277,7 +281,9 @@ func dpfDataIn(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 		ssc |= (dg.WordT(dpfData.sector) & 0x1f) << 5
 		ssc |= (dg.WordT(dpfData.sectCnt) & 0x1f)
 		cpuPtr.ac[iPtr.acd] = dg.DwordT(ssc)
-		logging.DebugPrint(logging.DpfLog, "DPF DIC returning: %s\n", util.WordToBinStr(ssc))
+		if debugLogging {
+			logging.DebugPrint(logging.DpfLog, "DPF DIC returning: %s\n", util.WordToBinStr(ssc))
+		}
 	}
 	dpfData.dpfMu.RUnlock()
 
@@ -310,22 +316,22 @@ func dpfDataOut(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 			dpfData.rwStatus &= ^dg.WordT(dpfDrive3Done)
 		}
 		dpfData.instructionMode = dpfInsModeNormal
-		if dpfData.command == dpfCmdSetAltMode_1 {
-			dpfData.instructionMode = dpfInsModeAlt_1
+		if dpfData.command == dpfCmdSetAltMode1 {
+			dpfData.instructionMode = dpfInsModeAlt1
 		}
-		if dpfData.command == dpfCmdSetAltMode_2 {
-			dpfData.instructionMode = dpfInsModeAlt_2
+		if dpfData.command == dpfCmdSetAltMode2 {
+			dpfData.instructionMode = dpfInsModeAlt2
 		}
 		if dpfData.command == dpfCmdNoOp {
 			dpfData.instructionMode = dpfInsModeNormal
 			dpfData.rwStatus = 0
 			dpfData.driveStatus = dpfReady
-			if dpfData.debug {
+			if debugLogging {
 				logging.DebugPrint(logging.DpfLog, "... NO OP command done\n")
 			}
 		}
 		dpfData.lastDOAwasSeek = (dpfData.command == dpfCmdSeek)
-		if dpfData.debug {
+		if debugLogging {
 			logging.DebugPrint(logging.DpfLog, "DOA [Specify Cmd,Drv,EMA] to DRV=%d with data %s at PC: %d\n",
 				dpfData.drive, util.WordToBinStr(data), cpuPtr.pc)
 			logging.DebugPrint(logging.DpfLog, "... CMD: %s, DRV: %d, EMA: %d\n",
@@ -338,7 +344,7 @@ func dpfDataOut(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 			dpfData.ema &= 0xfe
 		}
 		dpfData.memAddr = data & 0x7fff
-		if dpfData.debug {
+		if debugLogging {
 			logging.DebugPrint(logging.DpfLog, "DOB [Specify Memory Addr] with data %s at PC: %d\n",
 				util.WordToBinStr(data), cpuPtr.pc)
 			logging.DebugPrint(logging.DpfLog, "... MEM Addr: %d\n", dpfData.memAddr)
@@ -347,7 +353,7 @@ func dpfDataOut(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 	case 'C':
 		if dpfData.lastDOAwasSeek {
 			dpfData.cylinder = data & 0x03ff // mask off lower 10 bits
-			if dpfData.debug {
+			if debugLogging {
 				logging.DebugPrint(logging.DpfLog, "DOC [Specify Cylinder] after SEEK with data %s at PC: %d\n",
 					util.WordToBinStr(data), cpuPtr.pc)
 				logging.DebugPrint(logging.DpfLog, "... CYL: %d\n", dpfData.cylinder)
@@ -357,7 +363,7 @@ func dpfDataOut(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 			dpfData.surface = extractsurface(data)
 			dpfData.sector = extractSector(data)
 			dpfData.sectCnt = extractSectCnt(data)
-			if dpfData.debug {
+			if debugLogging {
 				logging.DebugPrint(logging.DpfLog, "DOC [Specify Surf,Sect,Cnt] (not after seek) with data %s at PC: %d\n",
 					util.WordToBinStr(data), cpuPtr.pc)
 				logging.DebugPrint(logging.DpfLog, "... MAP: %d, SURF: %d, SECT: %d, SECCNT: %d\n",
@@ -365,7 +371,7 @@ func dpfDataOut(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 			}
 		}
 	case 'N': // dummy value for NIO - we just handle the flag below
-		if dpfData.debug {
+		if debugLogging {
 			logging.DebugPrint(logging.DpfLog, "NIO%c received\n", iPtr.f)
 		}
 	}
@@ -392,7 +398,7 @@ func dpfDoCommand() {
 		dpfPositionDiskImage()
 		dpfData.driveStatus = dpfReady
 		dpfData.rwStatus = dpfRwdone | dpfDrive0Done
-		if dpfData.debug {
+		if debugLogging {
 			logging.DebugPrint(logging.DpfLog, "... RECAL done, %s\n", dpfPrintableAddr())
 		}
 
@@ -402,13 +408,13 @@ func dpfDoCommand() {
 		dpfPositionDiskImage()
 		dpfData.driveStatus = dpfReady
 		dpfData.rwStatus = dpfRwdone | dpfDrive0Done
-		if dpfData.debug {
+		if debugLogging {
 			logging.DebugPrint(logging.DpfLog, "... SEEK done, %s\n", dpfPrintableAddr())
 		}
 
 	// ===== READ from DPF =====
 	case dpfCmdRead:
-		if dpfData.debug {
+		if debugLogging {
 			logging.DebugPrint(logging.DpfLog, "... READ command invoked %s\n", dpfPrintableAddr())
 			logging.DebugPrint(logging.DpfLog, "... .... Start Address: %d\n", dpfData.memAddr)
 		}
@@ -426,7 +432,7 @@ func dpfDoCommand() {
 			if dpfData.sector >= dpfSectPerTrack {
 				dpfData.sector = 0
 				dpfData.surface++
-				if dpfData.debug {
+				if debugLogging {
 					logging.DebugPrint(logging.DpfLog, "Sector read overflow, advancing to surface %d",
 						dpfData.surface)
 				}
@@ -457,19 +463,19 @@ func dpfDoCommand() {
 			dpfData.sectCnt++
 			dpfData.reads++
 
-			if dpfData.debug {
+			if debugLogging {
 				logging.DebugPrint(logging.DpfLog, "Buffer: %X\n", dpfData.readBuff)
 			}
 
 		}
-		if dpfData.debug {
+		if debugLogging {
 			logging.DebugPrint(logging.DpfLog, "... .... READ command finished %s\n", dpfPrintableAddr())
 			logging.DebugPrint(logging.DpfLog, "\n... .... Last Address: %d\n", dpfData.memAddr)
 		}
 		dpfData.rwStatus = dpfRwdone //| dpfDrive0Done
 
 	case dpfCmdWrite:
-		if dpfData.debug {
+		if debugLogging {
 			logging.DebugPrint(logging.DpfLog, "... WRITE command invoked %s\n", dpfPrintableAddr())
 			logging.DebugPrint(logging.DpfLog, "... .....  Start Address: %d\n", dpfData.memAddr)
 		}
@@ -487,7 +493,7 @@ func dpfDoCommand() {
 			if dpfData.sector >= dpfSectPerTrack {
 				dpfData.sector = 0
 				dpfData.surface++
-				if dpfData.debug {
+				if debugLogging {
 					logging.DebugPrint(logging.DpfLog, "Sector write overflow, advancing to surface %d",
 						dpfData.surface)
 				}
@@ -518,11 +524,11 @@ func dpfDoCommand() {
 			dpfData.sectCnt++
 			dpfData.writes++
 
-			if dpfData.debug {
+			if debugLogging {
 				logging.DebugPrint(logging.DpfLog, "Buffer: %X\n", dpfData.writeBuff)
 			}
 		}
-		if dpfData.debug {
+		if debugLogging {
 			logging.DebugPrint(logging.DpfLog, "... ..... WRITE command finished %s\n", dpfPrintableAddr())
 			logging.DebugPrint(logging.DpfLog, "... ..... Last Address: %d\n", dpfData.memAddr)
 		}
@@ -545,7 +551,7 @@ func dpfHandleFlag(f byte) {
 		dpfData.rwStatus = 0
 		// TODO start I/O timeout
 		dpfData.rwCommand = dpfData.command
-		if dpfData.debug {
+		if debugLogging {
 			logging.DebugPrint(logging.DpfLog, "... S flag set\n")
 		}
 		dpfData.dpfMu.Unlock()
@@ -559,7 +565,7 @@ func dpfHandleFlag(f byte) {
 	case 'P':
 		busSetBusy(DEV_DPF, false)
 		dpfData.dpfMu.Lock()
-		if dpfData.debug {
+		if debugLogging {
 			logging.DebugPrint(logging.DpfLog, "... P flag set\n")
 		}
 		dpfData.rwStatus = 0
@@ -597,7 +603,7 @@ func dpfReset() {
 	dpfData.instructionMode = dpfInsModeNormal
 	dpfData.rwStatus = 0
 	dpfData.driveStatus = dpfReady
-	if dpfData.debug {
+	if debugLogging {
 		logging.DebugPrint(logging.DpfLog, "DPF Reset\n")
 	}
 	dpfData.dpfMu.Unlock()
