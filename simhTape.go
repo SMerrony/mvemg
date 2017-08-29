@@ -96,6 +96,20 @@ func (st *SimhTapesT) simhTapeReadRecordHeader(tNum int) (dg.DwordT, bool) {
 	return hdr, true
 }
 
+func (st *SimhTapesT) simhTapeWriteRecordHeader(tNum int, hdr dg.DwordT) bool {
+	hdrBytes := make([]byte, 4)
+	hdrBytes[3] = byte(hdr >> 24)
+	hdrBytes[2] = byte(hdr >> 16)
+	hdrBytes[1] = byte(hdr >> 8)
+	hdrBytes[0] = byte(hdr)
+	nb, err := st[tNum].simhFile.Write(hdrBytes)
+	if err != nil || nb != 4 {
+		logging.DebugPrint(logging.DebugLog, "ERROR: Could not write header record due to %s\n", err.Error())
+		return false
+	}
+	return true
+}
+
 // attempt to read record from SimH tape image, fail if wrong number of bytes read
 func (st *SimhTapesT) simhTapeReadRecord(tNum int, byteLen int) ([]byte, bool) {
 	rec := make([]byte, byteLen)
