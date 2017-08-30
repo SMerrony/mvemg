@@ -82,7 +82,8 @@ func eclipseStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case "RTN":
 		// complement of SAVE
-		memory.WriteWord(memory.NspLoc, memory.ReadWord(memory.NfpLoc)) // ???
+		//memory.WriteWord(memory.NspLoc, memory.ReadWord(memory.NfpLoc)) // ???
+		memory.WriteWord(memory.NfpLoc, memory.ReadWord(memory.NspLoc)) // ???
 		word := memory.NsPop(0, debugLogging)
 		cpuPtr.carry = util.TestWbit(word, 0)
 		cpuPtr.pc = dg.PhysAddrT(word) & 0x7fff
@@ -128,10 +129,10 @@ func eclipseStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 				memory.NsPush(0, 0, debugLogging) // ...
 			}
 		}
-		cpuPtr.ac[3] = dg.DwordT(memory.ReadWord(memory.NspLoc)) // ???
-		memory.WriteWord(memory.NfpLoc, dg.WordT(cpuPtr.ac[3]))  // ???
+		//cpuPtr.ac[3] = dg.DwordT(memory.ReadWord(memory.NspLoc)) // ???
+		cpuPtr.ac[3] = dg.DwordT(nspSav + 5)
+		memory.WriteWord(memory.NfpLoc, dg.WordT(cpuPtr.ac[3])) // ???
 		memory.WriteWord(memory.NspLoc, nspSav+5)
-		//cpuPtr.ac[3] = dg_dword(nspSav + 5)
 
 	default:
 		log.Fatalf("ERROR: ECLIPSE_STACK instruction <%s> not yet implemented\n", iPtr.mnemonic)
