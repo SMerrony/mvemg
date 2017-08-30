@@ -36,3 +36,7 @@ Devices which may be subject to DCH/BMC mapping should only use the mem...Chan(.
   * Lookout for unexpected changes of AC contents around the error
   * Use BREAK command in emulator to stop emulator at a given PC
   * Suspect complicated instructions first!
+  * The DG documentation varies in quality AND content, compare different versions when looking at complex instructions
+
+## Code History/Quality ##
+The MTB and SimHTape modules were written very early on (still learning Go) and could do with rewriting at some point.

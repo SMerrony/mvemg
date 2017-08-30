@@ -138,7 +138,7 @@ func mtbInit() bool {
 
 // Reset the MTB to startup state
 func mtbReset() {
-	simht.simhTapeRewind(0)
+	simht.Rewind(0)
 	mtb.statusReg1 = sr1_HI_DENSITY | sr1_9TRACK | sr1_BOT | sr1_UNIT_READY
 	mtb.statusReg2 = sr2_PE_MODE
 	mtbLog.Println("MTB Reset")
@@ -147,7 +147,7 @@ func mtbReset() {
 // Attach a SimH tape image file to the emulated tape drive
 func mtbAttach(tNum int, imgName string) bool {
 	mtbLog.Printf("mtbAttach called on unit #%d with image file: %s\n", tNum, imgName)
-	if simht.simhTapeAttach(tNum, imgName) {
+	if simht.Attach(tNum, imgName) {
 		mtb.simhTapeNum = tNum
 		mtb.imageAttached = true
 		mtb.statusReg1 = sr1_HI_DENSITY | sr1_9TRACK | sr1_BOT | sr1_UNIT_READY
@@ -161,7 +161,7 @@ func mtbAttach(tNum int, imgName string) bool {
 // Scan the attached SimH tape image to ensure it makes sense
 // (This is just a pass-through to the equivalent function in simhTape)
 func mtbScanImage(tNum int) string {
-	return simht.SimhTapeScanImage(0)
+	return simht.ScanImage(0)
 }
 
 /* This function fakes the ROM/SCP boot-from-tape routine.
@@ -175,13 +175,13 @@ func mtbLoadTBoot() {
 		TBTSIZ_B = 2048
 		TBTSIZ_W = 1024
 	)
-	simht.simhTapeRewind(0)
-	hdr, ok := simht.simhTapeReadRecordHeader(0)
+	simht.Rewind(0)
+	hdr, ok := simht.ReadRecordHeader(0)
 	if !ok || hdr != TBTSIZ_B {
 		logging.DebugPrint(logging.DebugLog, "WARN: mtbLoadTBoot called when no bootable tape image attached\n")
 		return
 	}
-	tapeData, ok := simht.simhTapeReadRecord(0, TBTSIZ_B)
+	tapeData, ok := simht.ReadRecordData(0, TBTSIZ_B)
 	var byte0, byte1 byte
 	var word dg.WordT
 	var wdix dg.PhysAddrT
@@ -191,7 +191,7 @@ func mtbLoadTBoot() {
 		word = dg.WordT(byte1)<<8 | dg.WordT(byte0)
 		memory.WriteWord(wdix, word)
 	}
-	trailer, ok := simht.simhTapeReadRecordHeader(0)
+	trailer, ok := simht.ReadRecordHeader(0)
 	if hdr != trailer {
 		logging.DebugPrint(logging.DebugLog, "WARN: mtbLoadTBoot found mismatched trailer in TBOOT file\n")
 	}
@@ -278,7 +278,7 @@ func mtbDoCommand() {
 	switch mtb.currentcmd {
 	case cmd_READ:
 		mtbLog.Printf("*READ* command\n ==== Word Count: %d Location: %d\n", mtb.negWordCntReg, mtb.memAddrReg)
-		hdrLen, _ := simht.simhTapeReadRecordHeader(0)
+		hdrLen, _ := simht.ReadRecordHeader(0)
 		mtbLog.Printf(" ----  Header read giving length: %d\n", hdrLen)
 		if hdrLen == mtb_EOF {
 			mtbLog.Printf(" ----  Header is EOF indicator\n")
@@ -288,7 +288,7 @@ func mtbDoCommand() {
 			var w dg.DwordT
 			var wd dg.WordT
 			var pAddr dg.PhysAddrT
-			rec, _ := simht.simhTapeReadRecord(0, int(hdrLen))
+			rec, _ := simht.ReadRecordData(0, int(hdrLen))
 			for w = 0; w < hdrLen; w += 2 {
 				wd = (dg.WordT(rec[w]) << 8) | dg.WordT(rec[w+1])
 				pAddr = memory.MemWriteWordDchChan(mtb.memAddrReg, wd)
@@ -299,7 +299,7 @@ func mtbDoCommand() {
 					break
 				}
 			}
-			trailer, _ := simht.simhTapeReadRecordHeader(0)
+			trailer, _ := simht.ReadRecordHeader(0)
 			mtbLog.Printf(" ----  %d bytes loaded\n", w)
 			mtbLog.Printf(" ----  Read SimH Trailer: %d\n", trailer)
 			// TODO Need to verify how status should be set here...
@@ -310,14 +310,14 @@ func mtbDoCommand() {
 
 	case cmd_REWIND:
 		mtbLog.Printf("*REWIND* command\n")
-		simht.simhTapeRewind(0)
+		simht.Rewind(0)
 		mtb.statusReg1 = sr1_HI_DENSITY | sr1_9TRACK | sr1_UNIT_READY | sr1_BOT
 		mtb.statusReg2 = sr2_PE_MODE
 		// FIXME set flags here?
 
 	case cmd_SPACE_FWD:
 		mtbLog.Printf("*SPACE FORWARD* command\n")
-		simht.SimhTapeSpaceFwd(0, 0)
+		simht.SpaceFwd(0, 0)
 		mtb.statusReg1 = sr1_HI_DENSITY | sr1_9TRACK | sr1_UNIT_READY | sr1_EOF | sr1_ERROR
 		busSetBusy(DEV_MTB, false)
 		busSetDone(DEV_MTB, true)
