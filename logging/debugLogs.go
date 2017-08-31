@@ -27,17 +27,19 @@ import (
 )
 
 const (
-	numDebugLogs     = 4
+	numDebugLogs     = 5
 	numDebugLogLines = 40000
 
 	// DebugLog is the general-purpose log
 	DebugLog = 0
-	// DpfLog is for the DPF module
-	DpfLog = 1
-	// DskpLog is for the DSKP module
-	DskpLog = 2
+	// MtbLog is for the MTB tape module
+	MtbLog = 1
+	// DpfLog is for the DPF disk module
+	DpfLog = 2
+	// DskpLog is for the DSKP disk module
+	DskpLog = 3
 	// MapLog is for BMC/DCH-related logging
-	MapLog = 3
+	MapLog = 4
 
 	logPerms = 0644
 )
@@ -62,6 +64,8 @@ func DebugLogsDump() {
 			switch l {
 			case DebugLog:
 				debugDumpFile, _ = os.OpenFile("mvem_debug.log", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, logPerms)
+			case MtbLog:
+				debugDumpFile, _ = os.OpenFile("mtb_debug.log", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, logPerms)
 			case DpfLog:
 				debugDumpFile, _ = os.OpenFile("dpf_debug.log", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, logPerms)
 			case DskpLog:

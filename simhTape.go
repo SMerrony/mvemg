@@ -143,6 +143,43 @@ func (st *SimhTapesT) WriteRecordData(tNum int, rec []byte) bool {
 	return true
 }
 
+// ReadCompleteRecord reads a header-record-trailer sequence and returns the data if OK
+func (st *SimhTapesT) ReadCompleteRecord(tNum int) ([]byte, bool) {
+	var (
+		hdr, trlr       dg.DwordT
+		hdrInt, trlrInt int
+		ok              bool
+		rec             []byte
+	)
+	hdr, ok = st.ReadRecordHeader(tNum)
+	if !ok {
+		return nil, false
+	}
+	hdrInt = int(int32(hdr))
+	if hdrInt < 0 {
+		logging.DebugPrint(logging.DebugLog, "ERROR: Tape record header indicates presence of error in block\n")
+		return nil, false
+	}
+	rec, ok = st.ReadRecordData(tNum, hdrInt)
+	if !ok {
+		return nil, false
+	}
+	if hdrInt != len(rec) {
+		logging.DebugPrint(logging.DebugLog, "ERROR: Tape record block length does not match header (%d vs. %d)\n", len(rec), hdrInt)
+		return nil, false
+	}
+	trlr, ok = st.ReadRecordHeader(tNum)
+	if !ok {
+		return nil, false
+	}
+	trlrInt = int(int32(trlr))
+	if hdrInt != trlrInt {
+		logging.DebugPrint(logging.DebugLog, "ERROR: Tape record trailer does not match header (%d vs. %d)\n", trlrInt, hdrInt)
+		return nil, false
+	}
+	return rec, true
+}
+
 // SpaceFwd advances the virtual tape by the specifield amount (0 means 1 whole file)
 func (st *SimhTapesT) SpaceFwd(tNum int, recCnt int) bool {
 

@@ -107,8 +107,8 @@ func instructionsInit() {
 	instructionSet["DAD"] = instrChars{0x8088, 0x87ff, 1, TWOACC_1_WORD_FMT, NOVA_OP}
 	instructionSet["DEQUE"] = instrChars{0xe7c9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
 	instructionSet["DERR"] = instrChars{0x8f09, 0x8fcf, 1, DERR_FMT, EAGLE_OP}
-	instructionSet["DHXL"] = instrChars{0x8388, 0x87ff, 1, IMM_ONEACC_FMT, NOVA_OP}
-	instructionSet["DHXR"] = instrChars{0x83c8, 0x87ff, 1, IMM_ONEACC_FMT, NOVA_OP}
+	instructionSet["DHXL"] = instrChars{0x8388, 0x87ff, 1, IMM_ONEACC_FMT, ECLIPSE_OP}
+	instructionSet["DHXR"] = instrChars{0x83c8, 0x87ff, 1, IMM_ONEACC_FMT, ECLIPSE_OP}
 	instructionSet["DIA"] = instrChars{0x6100, 0xe700, 1, NOVA_DATA_IO_FMT, NOVA_IO}
 	instructionSet["DIB"] = instrChars{0x6300, 0xe700, 1, NOVA_DATA_IO_FMT, NOVA_IO}
 	instructionSet["DIC"] = instrChars{0x6500, 0xe700, 1, NOVA_DATA_IO_FMT, NOVA_IO}
