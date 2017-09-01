@@ -93,6 +93,17 @@ func eclipseOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			cpuPtr.ac[1] = (dwd / dg.DwordT(quot)) & 0x0ffff
 		}
 
+	case "DHXL":
+		immOneAcc = iPtr.variant.(immOneAccT)
+		dplus1 := immOneAcc.acd + 1
+		if dplus1 == 4 {
+			dplus1 = 0
+		}
+		dwd := util.DWordFromTwoWords(util.DWordGetLowerWord(cpuPtr.ac[immOneAcc.acd]), util.DWordGetLowerWord(cpuPtr.ac[dplus1]))
+		dwd <<= (immOneAcc.immU16 * 4)
+		cpuPtr.ac[immOneAcc.acd] = dg.DwordT(util.DWordGetUpperWord(dwd))
+		cpuPtr.ac[dplus1] = dg.DwordT(util.DWordGetLowerWord(dwd))
+
 	case "DLSH":
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		dplus1 := twoAcc1Word.acd + 1

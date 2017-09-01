@@ -55,10 +55,10 @@ func (st *SimhTapesT) simhTapeInit() {
 
 // Attach associated a SimH tape image file with a virutal tape
 func (st *SimhTapesT) Attach(tNum int, imgName string) bool {
-	logging.DebugPrint(logging.DebugLog, "INFO: simhTapeAttach called for tape #%d with image <%s>\n", tNum, imgName)
+	logging.DebugPrint(logging.MtbLog, "INFO: simhTapeAttach called for tape #%d with image <%s>\n", tNum, imgName)
 	f, err := os.Open(imgName)
 	if err != nil {
-		logging.DebugPrint(logging.DebugLog, "ERROR: Could not open simH Tape Image file: %s, due to: %s\n", imgName, err.Error())
+		logging.DebugPrint(logging.MtbLog, "ERROR: Could not open simH Tape Image file: %s, due to: %s\n", imgName, err.Error())
 		return false
 	}
 	st[tNum].fileName = imgName
@@ -68,10 +68,10 @@ func (st *SimhTapesT) Attach(tNum int, imgName string) bool {
 
 // Rewind simulates a tape rewind by seeking to start of SimH tape image file
 func (st *SimhTapesT) Rewind(tNum int) bool {
-	logging.DebugPrint(logging.DebugLog, "INFO: simhTapeRewind called for tape #%d\n", tNum)
+	logging.DebugPrint(logging.MtbLog, "INFO: simhTapeRewind called for tape #%d\n", tNum)
 	_, err := st[tNum].simhFile.Seek(0, 0)
 	if err != nil {
-		logging.DebugPrint(logging.DebugLog, "ERROR: Could not rewind simH Tape Image file: %s, due to: %s\n", st[tNum].fileName, err.Error())
+		logging.DebugPrint(logging.MtbLog, "ERROR: Could not rewind simH Tape Image file: %s, due to: %s\n", st[tNum].fileName, err.Error())
 		return false
 	}
 	return true
@@ -82,11 +82,11 @@ func (st *SimhTapesT) ReadRecordHeader(tNum int) (dg.DwordT, bool) {
 	hdrBytes := make([]byte, 4)
 	nb, err := st[tNum].simhFile.Read(hdrBytes)
 	if err != nil {
-		logging.DebugPrint(logging.DebugLog, "ERROR: Could not read simH Tape Image record header: %s, due to: %s\n", st[tNum].fileName, err.Error())
+		logging.DebugPrint(logging.MtbLog, "ERROR: Could not read simH Tape Image record header: %s, due to: %s\n", st[tNum].fileName, err.Error())
 		return 0, false
 	}
 	if nb != 4 {
-		logging.DebugPrint(logging.DebugLog, "ERROR: Wrong length simH Tape Image record header: %d\n", nb)
+		logging.DebugPrint(logging.MtbLog, "ERROR: Wrong length simH Tape Image record header: %d\n", nb)
 		return 0, false
 	}
 	//logging.DebugPrint(logging.DEBUG_LOG,"Debug - Header bytes: %d %d %d %d\n", hdrBytes[0], hdrBytes[1], hdrBytes[2], hdrBytes[3])
@@ -107,7 +107,7 @@ func (st *SimhTapesT) WriteRecordHeader(tNum int, hdr dg.DwordT) bool {
 	hdrBytes[0] = byte(hdr)
 	nb, err := st[tNum].simhFile.Write(hdrBytes)
 	if err != nil || nb != 4 {
-		logging.DebugPrint(logging.DebugLog, "ERROR: Could not write simh tape header record due to %s\n", err.Error())
+		logging.DebugPrint(logging.MtbLog, "ERROR: Could not write simh tape header record due to %s\n", err.Error())
 		return false
 	}
 	return true
@@ -119,11 +119,11 @@ func (st *SimhTapesT) ReadRecordData(tNum int, byteLen int) ([]byte, bool) {
 	rec := make([]byte, byteLen)
 	nb, err := st[tNum].simhFile.Read(rec)
 	if err != nil {
-		logging.DebugPrint(logging.DebugLog, "ERROR: Could not read simH Tape Image %s record due to: %s\n", st[tNum].fileName, err.Error())
+		logging.DebugPrint(logging.MtbLog, "ERROR: Could not read simH Tape Image %s record due to: %s\n", st[tNum].fileName, err.Error())
 		return nil, false
 	}
 	if nb != byteLen {
-		logging.DebugPrint(logging.DebugLog, "ERROR: Could not read simH Tape Image %s record, got %d bytes, expecting %d\n", st[tNum].fileName, nb, byteLen)
+		logging.DebugPrint(logging.MtbLog, "ERROR: Could not read simH Tape Image %s record, got %d bytes, expecting %d\n", st[tNum].fileName, nb, byteLen)
 		return nil, false
 	}
 	return rec, true
@@ -133,11 +133,11 @@ func (st *SimhTapesT) ReadRecordData(tNum int, byteLen int) ([]byte, bool) {
 func (st *SimhTapesT) WriteRecordData(tNum int, rec []byte) bool {
 	nb, err := st[tNum].simhFile.Write(rec)
 	if err != nil {
-		logging.DebugPrint(logging.DebugLog, "ERROR: Could not write simh tape record due to %s\n", err.Error())
+		logging.DebugPrint(logging.MtbLog, "ERROR: Could not write simh tape record due to %s\n", err.Error())
 		return false
 	}
 	if nb != len(rec) {
-		logging.DebugPrint(logging.DebugLog, "ERROR: Could not write complete header record (Wrote %d of %d bytes)\n", nb, len(rec))
+		logging.DebugPrint(logging.MtbLog, "ERROR: Could not write complete header record (Wrote %d of %d bytes)\n", nb, len(rec))
 		return false
 	}
 	return true
@@ -157,7 +157,7 @@ func (st *SimhTapesT) ReadCompleteRecord(tNum int) ([]byte, bool) {
 	}
 	hdrInt = int(int32(hdr))
 	if hdrInt < 0 {
-		logging.DebugPrint(logging.DebugLog, "ERROR: Tape record header indicates presence of error in block\n")
+		logging.DebugPrint(logging.MtbLog, "ERROR: Tape record header indicates presence of error in block\n")
 		return nil, false
 	}
 	rec, ok = st.ReadRecordData(tNum, hdrInt)
@@ -165,7 +165,7 @@ func (st *SimhTapesT) ReadCompleteRecord(tNum int) ([]byte, bool) {
 		return nil, false
 	}
 	if hdrInt != len(rec) {
-		logging.DebugPrint(logging.DebugLog, "ERROR: Tape record block length does not match header (%d vs. %d)\n", len(rec), hdrInt)
+		logging.DebugPrint(logging.MtbLog, "ERROR: Tape record block length does not match header (%d vs. %d)\n", len(rec), hdrInt)
 		return nil, false
 	}
 	trlr, ok = st.ReadRecordHeader(tNum)
@@ -174,7 +174,7 @@ func (st *SimhTapesT) ReadCompleteRecord(tNum int) ([]byte, bool) {
 	}
 	trlrInt = int(int32(trlr))
 	if hdrInt != trlrInt {
-		logging.DebugPrint(logging.DebugLog, "ERROR: Tape record trailer does not match header (%d vs. %d)\n", trlrInt, hdrInt)
+		logging.DebugPrint(logging.MtbLog, "ERROR: Tape record trailer does not match header (%d vs. %d)\n", trlrInt, hdrInt)
 		return nil, false
 	}
 	return rec, true
@@ -185,7 +185,7 @@ func (st *SimhTapesT) SpaceFwd(tNum int, recCnt int) bool {
 
 	var hdr, trailer dg.DwordT
 	done := false
-	logging.DebugPrint(logging.DebugLog, "DEBUG: simhTapesTpaceFwd called for %d records\n", recCnt)
+	logging.DebugPrint(logging.MtbLog, "DEBUG: simhTapesTpaceFwd called for %d records\n", recCnt)
 
 	// special case when recCnt == 0 which means space forward one file...
 	if recCnt == 0 {

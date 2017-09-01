@@ -81,37 +81,57 @@ func eclipseStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		return true // because PC set
 
 	case "RTN":
-		// complement of SAVE
-		//memory.WriteWord(memory.NspLoc, memory.ReadWord(memory.NfpLoc)) // ???
-		memory.WriteWord(memory.NfpLoc, memory.ReadWord(memory.NspLoc)) // ???
-		word := memory.NsPop(0, debugLogging)
-		cpuPtr.carry = util.TestWbit(word, 0)
-		cpuPtr.pc = dg.PhysAddrT(word) & 0x7fff
-		//nfpSave := memory.NsPop(0)               // 1
+		// // complement of SAVE
+		// memory.WriteWord(memory.NspLoc, memory.ReadWord(memory.NfpLoc)) // ???
+		// //memory.WriteWord(memory.NfpLoc, memory.ReadWord(memory.NspLoc)) // ???
+		// word := memory.NsPop(0, debugLogging)
+		// cpuPtr.carry = util.TestWbit(word, 0)
+		// cpuPtr.pc = dg.PhysAddrT(word) & 0x7fff
+		// //nfpSave := memory.NsPop(0)               // 1
+		// cpuPtr.ac[3] = dg.DwordT(memory.NsPop(0, debugLogging)) // 2
+		// cpuPtr.ac[2] = dg.DwordT(memory.NsPop(0, debugLogging)) // 3
+		// cpuPtr.ac[1] = dg.DwordT(memory.NsPop(0, debugLogging)) // 4
+		// cpuPtr.ac[0] = dg.DwordT(memory.NsPop(0, debugLogging)) // 5
+		// memory.WriteWord(memory.NfpLoc, util.DWordGetLowerWord(cpuPtr.ac[3]))
+		// return true // because PC set
+
+		nfpSav := memory.ReadWord(memory.NfpLoc)
+		memory.WriteWord(memory.NspLoc, nfpSav)
+		pwd1 := memory.NsPop(0, debugLogging) // 1
+		cpuPtr.carry = util.TestWbit(pwd1, 0)
+		cpuPtr.pc = dg.PhysAddrT(pwd1 & 0x07fff)
 		cpuPtr.ac[3] = dg.DwordT(memory.NsPop(0, debugLogging)) // 2
 		cpuPtr.ac[2] = dg.DwordT(memory.NsPop(0, debugLogging)) // 3
 		cpuPtr.ac[1] = dg.DwordT(memory.NsPop(0, debugLogging)) // 4
 		cpuPtr.ac[0] = dg.DwordT(memory.NsPop(0, debugLogging)) // 5
+		//memory.WriteWord(memory.NspLoc, nfpSav-5)
 		memory.WriteWord(memory.NfpLoc, util.DWordGetLowerWord(cpuPtr.ac[3]))
+
 		return true // because PC set
-
-		//		nfpSav := memory.ReadWord(NFP_LOC)
-		//		pwd1 := memory.NsPop(0) // 1
-		//		cpuPtr.carry = util.TestWbit(pwd1, 0)
-		//		cpuPtr.pc = dg_phys_addr(pwd1 & 0x07fff)
-		//		cpuPtr.ac[3] = dg_dword(memory.NsPop(0)) // 2
-		//		cpuPtr.ac[2] = dg_dword(memory.NsPop(0)) // 3
-		//		cpuPtr.ac[1] = dg_dword(memory.NsPop(0)) // 4
-		//		cpuPtr.ac[0] = dg_dword(memory.NsPop(0)) // 5
-		//		WriteWord(NSP_LOC, nfpSav-5)
-		//		WriteWord(NFP_LOC, util.DWordGetLowerWord(cpuPtr.ac[3]))
-
-		//return true // because PC set
 
 	case "SAVE":
 		unique2Word = iPtr.variant.(unique2WordT)
+		i := dg.WordT(unique2Word.immU16)
 		nfpSav := memory.ReadWord(memory.NfpLoc)
 		nspSav := memory.ReadWord(memory.NspLoc)
+
+		// // version based in simH Nova SAVn
+		// memory.WriteWord(memory.NspLoc, nspSav+i)
+		// memory.NsPush(0, util.DWordGetLowerWord(cpuPtr.ac[0]), debugLogging) // 1
+		// memory.NsPush(0, util.DWordGetLowerWord(cpuPtr.ac[1]), debugLogging) // 2
+		// memory.NsPush(0, util.DWordGetLowerWord(cpuPtr.ac[2]), debugLogging) // 3
+		// memory.NsPush(0, nfpSav, debugLogging)                               // 4
+		// word := util.DWordGetLowerWord(cpuPtr.ac[3])
+		// if cpuPtr.carry {
+		// 	word |= 0x8000
+		// } else {
+		// 	word &= 0x7fff
+		// }
+		// memory.NsPush(0, word, debugLogging) // 5
+		// cpuPtr.ac[3] = dg.DwordT(memory.ReadWord(memory.NspLoc))
+		// memory.WriteWord(memory.NfpLoc, util.DWordGetLowerWord(cpuPtr.ac[3]))
+
+		// version based on 32-bit PoP
 		memory.NsPush(0, util.DWordGetLowerWord(cpuPtr.ac[0]), debugLogging) // 1
 		memory.NsPush(0, util.DWordGetLowerWord(cpuPtr.ac[1]), debugLogging) // 2
 		memory.NsPush(0, util.DWordGetLowerWord(cpuPtr.ac[2]), debugLogging) // 3
@@ -123,16 +143,9 @@ func eclipseStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			word &= 0x7fff
 		}
 		memory.NsPush(0, word, debugLogging) // 5
-		wdCnt := int(unique2Word.immU16)
-		if wdCnt > 0 {
-			for wd := 0; wd < wdCnt; wd++ {
-				memory.NsPush(0, 0, debugLogging) // ...
-			}
-		}
-		//cpuPtr.ac[3] = dg.DwordT(memory.ReadWord(memory.NspLoc)) // ???
+		memory.WriteWord(memory.NspLoc, nspSav+5+i)
+		memory.WriteWord(memory.NfpLoc, nspSav+5)
 		cpuPtr.ac[3] = dg.DwordT(nspSav + 5)
-		memory.WriteWord(memory.NfpLoc, dg.WordT(cpuPtr.ac[3])) // ???
-		memory.WriteWord(memory.NspLoc, nspSav+5)
 
 	default:
 		log.Fatalf("ERROR: ECLIPSE_STACK instruction <%s> not yet implemented\n", iPtr.mnemonic)
