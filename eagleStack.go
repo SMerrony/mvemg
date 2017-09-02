@@ -165,6 +165,8 @@ func wsav(cpuPtr *CPUT, u2wd *unique2WordT) {
 		dwd |= 0x80000000
 	}
 	memory.WsPush(0, dwd) // 5
+	memory.WriteDWord(memory.WfpLoc, memory.ReadDWord(memory.WspLoc))
+	cpuPtr.ac[3] = memory.ReadDWord(memory.WspLoc)
 	dwdCnt := uint(u2wd.immU16)
 	if dwdCnt > 0 {
 		// for d := 0; d < dwdCnt; d++ {
@@ -172,6 +174,4 @@ func wsav(cpuPtr *CPUT, u2wd *unique2WordT) {
 		// }
 		memory.AdvanceWSP(dwdCnt)
 	}
-	memory.WriteDWord(memory.WfpLoc, memory.ReadDWord(memory.WspLoc))
-	cpuPtr.ac[3] = memory.ReadDWord(memory.WspLoc)
 }

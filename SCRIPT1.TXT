@@ -2,6 +2,8 @@
 # Comments begin with the hash symbol in the first column
 # Logging slows down the VM by approx. 9x
 SET LOGGING ON
+# Trap JMP to location zeros - again, slows down the emulator a little
+BREAK 0
 # Attach a SimH-standard tape image
 ATT MTB TAPE1.9trk
 # Attach a 6061-type disk image

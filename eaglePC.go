@@ -113,15 +113,21 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case "WRTN": // FIXME incomplete: handle PSR and rings
 		wspSav := memory.ReadDWord(memory.WspLoc)
+		wfpSav := memory.ReadDWord(memory.WfpLoc)
+		// set WSP equal to WFP
+		memory.WriteDWord(memory.WspLoc, wfpSav)
+		// pop off 6 double words
 		dwd = memory.WsPop(0) // 1
 		cpuPtr.carry = util.TestDWbit(dwd, 0)
 		cpuPtr.pc = dg.PhysAddrT(dwd & 0x7fffffff)
 		cpuPtr.ac[3] = memory.WsPop(0) // 2
+		// replace WFP with popped value of AC3
 		memory.WriteDWord(memory.WfpLoc, cpuPtr.ac[3])
 		cpuPtr.ac[2] = memory.WsPop(0) // 3
 		cpuPtr.ac[1] = memory.WsPop(0) // 4
 		cpuPtr.ac[0] = memory.WsPop(0) // 5
 		dwd = memory.WsPop(0)          // 6
+		// TODO Set PSR
 		wsFramSz2 := int(dwd&0x00007fff) * 2
 		memory.WriteDWord(memory.WspLoc, wspSav-dg.DwordT(wsFramSz2)-12)
 
