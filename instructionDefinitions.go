@@ -246,8 +246,8 @@ func instructionsInit() {
 	instructionSet["WASHI"] = instrChars{0xc6a9, 0xe7ff, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_OP}
 	instructionSet["WBLM"] = instrChars{0xe749, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_MEMREF}
 	instructionSet["WBR"] = instrChars{0x8038, 0x843f, 1, SPLIT_8BIT_DISP_FMT, EAGLE_PC}
-	instructionSet["WBTO"] = instrChars{0x8299, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
-	instructionSet["WBTZ"] = instrChars{0x82a9, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
+	instructionSet["WBTO"] = instrChars{0x8299, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_MEMREF}
+	instructionSet["WBTZ"] = instrChars{0x82a9, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_MEMREF}
 	instructionSet["WCLM"] = instrChars{0x8569, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
 	instructionSet["WCMV"] = instrChars{0x8779, 0xFFFF, 1, UNIQUE_1_WORD_FMT, EAGLE_MEMREF}
 	instructionSet["WCOM"] = instrChars{0x8459, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}

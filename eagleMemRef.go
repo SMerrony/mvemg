@@ -31,11 +31,13 @@ import (
 
 func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	var (
-		addr               dg.PhysAddrT
+		addr, offset       dg.PhysAddrT
 		byt                dg.ByteT
 		wd                 dg.WordT
 		dwd                dg.DwordT
 		i32                int32
+		lowByte            bool
+		wordAddr           dg.PhysAddrT
 		immMode2Word       immMode2WordT
 		oneAccMode2Word    oneAccMode2WordT
 		oneAccModeInt2Word oneAccModeInd2WordT
@@ -101,6 +103,19 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			cpuPtr.ac[3] = dg.DwordT(dest + 1)
 		}
 
+	case "WBTO":
+		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
+		if twoAcc1Word.acs == twoAcc1Word.acd {
+			addr = 0
+		} else {
+			addr = resolve32bitIndirectableAddr(cpuPtr.ac[twoAcc1Word.acs])
+		}
+		offset = dg.PhysAddrT(cpuPtr.ac[twoAcc1Word.acd]) >> 4
+		bitNum := uint(cpuPtr.ac[twoAcc1Word.acd] & 0x0f)
+		wd = memory.ReadWord(addr + offset)
+		wd = util.SetWbit(wd, bitNum)
+		memory.WriteWord(addr+offset, wd)
+
 	case "WCMV": // ACO destCount, AC1 srcCount, AC2 dest byte ptr, AC3 src byte ptr
 		var destAscend, srcAscend bool
 		destCount := int32(cpuPtr.ac[0])
@@ -157,6 +172,13 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		}
 		cpuPtr.ac[0] = 0
 		cpuPtr.ac[1] = dg.DwordT(srcCount)
+
+	case "WLDB":
+		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
+		wordAddr = dg.PhysAddrT(cpuPtr.ac[twoAcc1Word.acs]) >> 1
+		lowByte = util.TestDWbit(cpuPtr.ac[twoAcc1Word.acs], 31)
+		byt = memory.ReadByte(wordAddr, lowByte)
+		cpuPtr.ac[twoAcc1Word.acd] = dg.DwordT(byt)
 
 	case "WSTB":
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)

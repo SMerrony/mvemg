@@ -143,6 +143,15 @@ func resolve32bitEffAddr(cpuPtr *CPUT, ind byte, mode string, disp int32) dg.Phy
 	return eff
 }
 
+func resolve32bitIndirectableAddr(iAddr dg.DwordT) dg.PhysAddrT {
+	eff := iAddr
+	// handle indirection
+	for util.TestDWbit(eff, 0) {
+		eff = memory.ReadDWord(dg.PhysAddrT(eff))
+	}
+	return dg.PhysAddrT(eff)
+}
+
 // resolveEclipseBitAddr as per page 10-8 of Pop
 // Used by BTO, BTZ, SNB, SZB, SZBO
 func resolveEclipseBitAddr(cpuPtr *CPUT, twoAcc1Word *twoAcc1WordT) (wordAddr dg.PhysAddrT, bitNum uint) {
