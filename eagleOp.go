@@ -31,17 +31,18 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	//var addr dg_phys_addr
 
 	var (
-		wd                dg.WordT
-		dwd               dg.DwordT
-		res, s32          int32
-		s16               int16
-		immOneAcc         immOneAccT
-		oneAcc1Word       oneAcc1WordT
-		oneAccImm2Word    oneAccImm2WordT
-		oneAccImmWd2Word  oneAccImmWd2WordT
-		oneAccImm3Word    oneAccImm3WordT
-		oneAccImmDwd3Word oneAccImmDwd3WordT
-		//oneAccMode3Word   oneAccMode3WordT // LLDB, LLEFB
+		wd                 dg.WordT
+		dwd                dg.DwordT
+		res, s32           int32
+		s16                int16
+		addr               dg.PhysAddrT
+		immOneAcc          immOneAccT
+		oneAcc1Word        oneAcc1WordT
+		oneAccImm2Word     oneAccImm2WordT
+		oneAccImmWd2Word   oneAccImmWd2WordT
+		oneAccImm3Word     oneAccImm3WordT
+		oneAccImmDwd3Word  oneAccImmDwd3WordT
+		oneAccMode3Word    oneAccMode3WordT // LLDB, LLEFB
 		oneAccModeInd3Word oneAccModeInd3WordT
 		twoAcc1Word        twoAcc1WordT
 	)
@@ -73,6 +74,15 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		oneAccModeInd3Word = iPtr.variant.(oneAccModeInd3WordT)
 		cpuPtr.ac[oneAccModeInd3Word.acd] = dg.DwordT(
 			resolve32bitEffAddr(cpuPtr, oneAccModeInd3Word.ind, oneAccModeInd3Word.mode, oneAccModeInd3Word.disp31))
+
+	case "LLEFB":
+		oneAccMode3Word = iPtr.variant.(oneAccMode3WordT)
+		addr = resolve32bitEffAddr(cpuPtr, ' ', oneAccMode3Word.mode, oneAccMode3Word.disp31>>1)
+		addr <<= 1
+		if util.TestDWbit(dg.DwordT(oneAccMode3Word.disp31), 31) {
+			addr |= 1
+		}
+		cpuPtr.ac[oneAccMode3Word.acd] = dg.DwordT(addr)
 
 	case "NADD": // signed add
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)

@@ -40,6 +40,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		noAccModeInd3WordXcall noAccModeInd3WordXcallT
 		noAccModeInd4Word      noAccModeInd4WordT
 		oneAccImm2Word         oneAccImm2WordT
+		oneAccModeInd3Word     oneAccModeInd3WordT
 		twoAcc1Word            twoAcc1WordT
 		split8bitDisp          split8bitDispT
 		wskb                   wskbT
@@ -59,6 +60,24 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		memory.WsPush(0, dwd)
 		cpuPtr.pc = resolve32bitEffAddr(cpuPtr, noAccModeInd4Word.ind, noAccModeInd4Word.mode, noAccModeInd4Word.disp31)
 		cpuPtr.ovk = false
+
+	case "LDSP":
+		oneAccModeInd3Word = iPtr.variant.(oneAccModeInd3WordT)
+		value := int32(cpuPtr.ac[oneAccModeInd3Word.acd])
+		tableAddr := resolve32bitEffAddr(cpuPtr, oneAccModeInd3Word.ind, oneAccModeInd3Word.mode, oneAccModeInd3Word.disp31)
+		h := int32(memory.ReadDWord(tableAddr - 2))
+		l := int32(memory.ReadDWord(tableAddr - 4))
+		if value < l || value > h {
+			cpuPtr.pc += 3
+		} else {
+			tableIndex := dg.PhysAddrT(tableAddr + (2 * dg.PhysAddrT(value)) - (2 * dg.PhysAddrT(l)))
+			tableVal := memory.ReadDWord(tableIndex)
+			if tableVal == 0xFFFFFFFF {
+				cpuPtr.pc += 3
+			} else {
+				cpuPtr.pc = dg.PhysAddrT(tableVal) + tableIndex
+			}
+		}
 
 	case "LJMP":
 		noAccModeInd3Word = iPtr.variant.(noAccModeInd3WordT)

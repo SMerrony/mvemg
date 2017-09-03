@@ -255,6 +255,7 @@ func instructionsInit() {
 	instructionSet["WIOR"] = instrChars{0x8469, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
 	instructionSet["WIORI"] = instrChars{0x86a9, 0xe7ff, 3, ONEACC_IMMDWD_3_WORD_FMT, EAGLE_OP}
 	instructionSet["WLDAI"] = instrChars{0xc689, 0xe7ff, 3, ONEACC_IMMDWD_3_WORD_FMT, EAGLE_OP}
+	instructionSet["WLDB"] = instrChars{0x8529, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_MEMREF}
 	instructionSet["WLMP"] = instrChars{0xa7f9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_IO}
 	instructionSet["WLSH"] = instrChars{0x8559, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
 	instructionSet["WLSHI"] = instrChars{0xe6d9, 0xe7ff, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_OP}
