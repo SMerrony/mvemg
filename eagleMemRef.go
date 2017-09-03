@@ -70,38 +70,7 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		memory.WriteDWord(addr, dwd)
 
 	case "WBLM":
-		/* AC0 - unused, AC1 - no. wds to move (if neg then descending order), AC2 - src, AC3 - dest */
-		numWds := int32(cpuPtr.ac[1])
-		var order int32 = 1
-		if numWds < 0 {
-			order = -1
-		}
-		if numWds == 0 {
-			log.Println("INFO: WBLM called with AC1 == 0, not moving anything")
-		} else {
-			src := dg.PhysAddrT(cpuPtr.ac[2])
-			dest := dg.PhysAddrT(cpuPtr.ac[3])
-			if debugLogging {
-				logging.DebugPrint(logging.DebugLog, "DEBUG: WBLM moving %d words from %d to %d\n", numWds, src, dest)
-			}
-			for numWds != 0 {
-				memory.WriteWord(dest, memory.ReadWord(src))
-				numWds -= order
-				if order == 1 {
-					src++
-					dest++
-				} else {
-					src--
-					dest--
-				}
-			}
-			cpuPtr.ac[1] = 0
-			//cpuPtr.ac[2] = dg_dword(dest) // TODO confirm this
-			//cpuPtr.ac[3] = dg_dword(dest)
-			// TESTING..
-			cpuPtr.ac[2] = dg.DwordT(src + 1) // TODO confirm this
-			cpuPtr.ac[3] = dg.DwordT(dest + 1)
-		}
+		wblm(cpuPtr)
 
 	case "WBTO":
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
@@ -116,62 +85,11 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		wd = util.SetWbit(wd, bitNum)
 		memory.WriteWord(addr+offset, wd)
 
-	case "WCMV": // ACO destCount, AC1 srcCount, AC2 dest byte ptr, AC3 src byte ptr
-		var destAscend, srcAscend bool
-		destCount := int32(cpuPtr.ac[0])
-		if destCount == 0 {
-			break
-		}
-		destAscend = (destCount > 0)
-		srcCount := int32(cpuPtr.ac[1])
-		srcAscend = (srcCount > 0)
-		if debugLogging {
-			logging.DebugPrint(logging.DebugLog, "DEBUG: WCMV moving %d chars from %d to %d\n",
-				srcCount, cpuPtr.ac[3], cpuPtr.ac[2])
-		}
-		// set carry if length of src is greater than length of dest
-		if cpuPtr.ac[1] > cpuPtr.ac[2] {
-			cpuPtr.carry = true
-		}
-		// 1st move srcCount bytes
-		for {
-			copyByte(cpuPtr.ac[3], cpuPtr.ac[2])
-			if srcAscend {
-				cpuPtr.ac[3]++
-				srcCount--
-			} else {
-				cpuPtr.ac[3]--
-				srcCount++
-			}
-			if destAscend {
-				cpuPtr.ac[2]++
-				destCount--
-			} else {
-				cpuPtr.ac[2]--
-				destCount++
-			}
-			if srcCount == 0 || destCount == 0 {
-				break
-			}
-		}
-		// now fill any excess bytes with ASCII spaces
-		if destCount != 0 {
-			for {
-				memWriteByteBA(ASCII_SPC, cpuPtr.ac[2])
-				if destAscend {
-					cpuPtr.ac[2]++
-					destCount--
-				} else {
-					cpuPtr.ac[2]--
-					destCount++
-				}
-				if destCount == 0 {
-					break
-				}
-			}
-		}
-		cpuPtr.ac[0] = 0
-		cpuPtr.ac[1] = dg.DwordT(srcCount)
+	case "WCMV":
+		wcmv(cpuPtr)
+
+	case "WCST":
+		wcst(cpuPtr)
 
 	case "WLDB":
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
@@ -262,4 +180,137 @@ func memWriteByteBA(b dg.ByteT, ba dg.DwordT) {
 
 func copyByte(srcBA, destBA dg.DwordT) {
 	memWriteByteBA(readByteBA(srcBA), destBA)
+}
+
+func wblm(cpuPtr *CPUT) {
+	/* AC0 - unused, AC1 - no. wds to move (if neg then descending order), AC2 - src, AC3 - dest */
+	numWds := int32(cpuPtr.ac[1])
+	var order int32 = 1
+	if numWds < 0 {
+		order = -1
+	}
+	if numWds == 0 {
+		log.Println("INFO: WBLM called with AC1 == 0, not moving anything")
+		return
+	}
+	src := dg.PhysAddrT(cpuPtr.ac[2])
+	dest := dg.PhysAddrT(cpuPtr.ac[3])
+	if debugLogging {
+		logging.DebugPrint(logging.DebugLog, "DEBUG: WBLM moving %d words from %d to %d\n", numWds, src, dest)
+	}
+	for numWds != 0 {
+		memory.WriteWord(dest, memory.ReadWord(src))
+		numWds -= order
+		if order == 1 {
+			src++
+			dest++
+		} else {
+			src--
+			dest--
+		}
+	}
+	cpuPtr.ac[1] = 0
+	//cpuPtr.ac[2] = dg_dword(dest) // TODO confirm this
+	//cpuPtr.ac[3] = dg_dword(dest)
+	// TESTING..
+	cpuPtr.ac[2] = dg.DwordT(src + 1) // TODO confirm this
+	cpuPtr.ac[3] = dg.DwordT(dest + 1)
+}
+
+func wcmv(cpuPtr *CPUT) {
+	// ACO destCount, AC1 srcCount, AC2 dest byte ptr, AC3 src byte ptr
+	var destAscend, srcAscend bool
+	destCount := int32(cpuPtr.ac[0])
+	if destCount == 0 {
+		log.Println("INFO: WCMV called with AC0 == 0, not moving anything")
+		return
+	}
+	destAscend = (destCount > 0)
+	srcCount := int32(cpuPtr.ac[1])
+	srcAscend = (srcCount > 0)
+	if debugLogging {
+		logging.DebugPrint(logging.DebugLog, "DEBUG: WCMV moving %d chars from %d to %d\n",
+			srcCount, cpuPtr.ac[3], cpuPtr.ac[2])
+	}
+	// set carry if length of src is greater than length of dest
+	if cpuPtr.ac[1] > cpuPtr.ac[2] {
+		cpuPtr.carry = true
+	}
+	// 1st move srcCount bytes
+	for {
+		copyByte(cpuPtr.ac[3], cpuPtr.ac[2])
+		if srcAscend {
+			cpuPtr.ac[3]++
+			srcCount--
+		} else {
+			cpuPtr.ac[3]--
+			srcCount++
+		}
+		if destAscend {
+			cpuPtr.ac[2]++
+			destCount--
+		} else {
+			cpuPtr.ac[2]--
+			destCount++
+		}
+		if srcCount == 0 || destCount == 0 {
+			break
+		}
+	}
+	// now fill any excess bytes with ASCII spaces
+	if destCount != 0 {
+		for {
+			memWriteByteBA(ASCII_SPC, cpuPtr.ac[2])
+			if destAscend {
+				cpuPtr.ac[2]++
+				destCount--
+			} else {
+				cpuPtr.ac[2]--
+				destCount++
+			}
+			if destCount == 0 {
+				break
+			}
+		}
+	}
+	cpuPtr.ac[0] = 0
+	cpuPtr.ac[1] = dg.DwordT(srcCount)
+}
+
+func wcst(cpuPtr *CPUT) {
+	strLenDir := int(int32(cpuPtr.ac[1]))
+	if strLenDir == 0 {
+		log.Println("INFO: WCST called with AC1 == 0, not scanning anything")
+		return
+	}
+	delimTabAddr := resolve32bitIndirectableAddr(cpuPtr.ac[0])
+	cpuPtr.ac[0] = dg.DwordT(delimTabAddr)
+	// load the table which is 256 bits stored as 16 words
+	var table [256]bool
+	var tIx dg.PhysAddrT
+	for tIx = 0; tIx < 16; tIx++ {
+		wd := memory.ReadWord(delimTabAddr + tIx)
+		for bit := 0; bit < 16; bit++ {
+			if util.TestWbit(wd, bit) {
+				table[(int(tIx)*16)+bit] = true
+			}
+		}
+	}
+	// table[] now contains true for any delimiter
+	var dir int32 = 1
+	if strLenDir < 0 {
+		dir = -1
+	}
+
+	for strLenDir != 0 {
+		thisChar := readByteBA(cpuPtr.ac[3])
+		if table[int(thisChar)] {
+			// match, so set AC1 and return
+			cpuPtr.ac[1] = 0
+			return
+		}
+		cpuPtr.ac[1] = dg.DwordT(int32(cpuPtr.ac[1]) + dir)
+		cpuPtr.ac[3] = dg.DwordT(int32(cpuPtr.ac[3]) + dir)
+		strLenDir += int(dir)
+	}
 }
