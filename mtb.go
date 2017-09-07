@@ -276,7 +276,7 @@ func mtbDoCommand() {
 			mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1UnitReady | mtbSr1EOF | mtbSr1Error
 		} else {
 			logging.DebugPrint(logging.MtbLog, " ----  Calling simhTapeReadRecord with length: %d\n", hdrLen)
-			var w dg.DwordT
+			var w uint32
 			var wd dg.WordT
 			var pAddr dg.PhysAddrT
 			rec, _ := simht.ReadRecordData(0, int(hdrLen))

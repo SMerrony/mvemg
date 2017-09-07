@@ -22,22 +22,15 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"mvemg/dg"
 	"mvemg/logging"
 	"os"
+
+	"github.com/SMerrony/aosvs-tools/simhTape"
 )
 
-const (
-	simhMtrTmk    = 0          /* tape mark */
-	simhMtrEom    = 0xFFFFFFFF /* end of medium */
-	simhMtrGap    = 0xFFFFFFFE /* primary gap */
-	simhMtrMaxlen = 0x00FFFFFF /* max len is 24b */
-	simhMtrErf    = 0x80000000 /* error flag */
-	maxSimhTapes  = 8
-	maxSimhRecLen = 32768
-)
+const maxSimhTapes = 8
 
 // SimhTapesT contains the associated (ATTached) image file
 // name and handle for each tape
@@ -53,7 +46,7 @@ func (st *SimhTapesT) simhTapeInit() {
 	}
 }
 
-// Attach associated a SimH tape image file with a virutal tape
+// Attach associated a SimH tape image file with a virtual tape
 func (st *SimhTapesT) Attach(tNum int, imgName string) bool {
 	logging.DebugPrint(logging.MtbLog, "INFO: simhTapeAttach called for tape #%d with image <%s>\n", tNum, imgName)
 	f, err := os.Open(imgName)
@@ -78,75 +71,30 @@ func (st *SimhTapesT) Rewind(tNum int) bool {
 }
 
 // ReadRecordHeader reads a 4-byte SimH header/trailer record
-func (st *SimhTapesT) ReadRecordHeader(tNum int) (dg.DwordT, bool) {
-	hdrBytes := make([]byte, 4)
-	nb, err := st[tNum].simhFile.Read(hdrBytes)
-	if err != nil {
-		logging.DebugPrint(logging.MtbLog, "ERROR: Could not read simH Tape Image record header: %s, due to: %s\n", st[tNum].fileName, err.Error())
-		return 0, false
-	}
-	if nb != 4 {
-		logging.DebugPrint(logging.MtbLog, "ERROR: Wrong length simH Tape Image record header: %d\n", nb)
-		return 0, false
-	}
-	//logging.DebugPrint(logging.DEBUG_LOG,"Debug - Header bytes: %d %d %d %d\n", hdrBytes[0], hdrBytes[1], hdrBytes[2], hdrBytes[3])
-	var hdr dg.DwordT
-	hdr = dg.DwordT(hdrBytes[3]) << 24
-	hdr |= dg.DwordT(hdrBytes[2]) << 16
-	hdr |= dg.DwordT(hdrBytes[1]) << 8
-	hdr |= dg.DwordT(hdrBytes[0])
-	return hdr, true
+func (st *SimhTapesT) ReadRecordHeader(tNum int) (uint32, bool) {
+	return simhTape.ReadMetaData(st[tNum].simhFile)
 }
 
 // WriteRecordHeader writes a 4-byte header/trailer
 func (st *SimhTapesT) WriteRecordHeader(tNum int, hdr dg.DwordT) bool {
-	hdrBytes := make([]byte, 4)
-	hdrBytes[3] = byte(hdr >> 24)
-	hdrBytes[2] = byte(hdr >> 16)
-	hdrBytes[1] = byte(hdr >> 8)
-	hdrBytes[0] = byte(hdr)
-	nb, err := st[tNum].simhFile.Write(hdrBytes)
-	if err != nil || nb != 4 {
-		logging.DebugPrint(logging.MtbLog, "ERROR: Could not write simh tape header record due to %s\n", err.Error())
-		return false
-	}
-	return true
+	return simhTape.WriteMetaData(st[tNum].simhFile, uint32(hdr))
 }
 
 // ReadRecordData attempts to read a data record from SimH tape image, fails if wrong number of bytes read
 // N.B. does not read the header and trailer
 func (st *SimhTapesT) ReadRecordData(tNum int, byteLen int) ([]byte, bool) {
-	rec := make([]byte, byteLen)
-	nb, err := st[tNum].simhFile.Read(rec)
-	if err != nil {
-		logging.DebugPrint(logging.MtbLog, "ERROR: Could not read simH Tape Image %s record due to: %s\n", st[tNum].fileName, err.Error())
-		return nil, false
-	}
-	if nb != byteLen {
-		logging.DebugPrint(logging.MtbLog, "ERROR: Could not read simH Tape Image %s record, got %d bytes, expecting %d\n", st[tNum].fileName, nb, byteLen)
-		return nil, false
-	}
-	return rec, true
+	return simhTape.ReadRecordData(st[tNum].simhFile, byteLen)
 }
 
 // WriteRecordData writes the actual data - not the header/trailer
 func (st *SimhTapesT) WriteRecordData(tNum int, rec []byte) bool {
-	nb, err := st[tNum].simhFile.Write(rec)
-	if err != nil {
-		logging.DebugPrint(logging.MtbLog, "ERROR: Could not write simh tape record due to %s\n", err.Error())
-		return false
-	}
-	if nb != len(rec) {
-		logging.DebugPrint(logging.MtbLog, "ERROR: Could not write complete header record (Wrote %d of %d bytes)\n", nb, len(rec))
-		return false
-	}
-	return true
+	return simhTape.WriteRecordData(st[tNum].simhFile, rec)
 }
 
 // ReadCompleteRecord reads a header-record-trailer sequence and returns the data if OK
 func (st *SimhTapesT) ReadCompleteRecord(tNum int) ([]byte, bool) {
 	var (
-		hdr, trlr       dg.DwordT
+		hdr, trlr       uint32
 		hdrInt, trlrInt int
 		ok              bool
 		rec             []byte
@@ -180,10 +128,10 @@ func (st *SimhTapesT) ReadCompleteRecord(tNum int) ([]byte, bool) {
 	return rec, true
 }
 
-// SpaceFwd advances the virtual tape by the specifield amount (0 means 1 whole file)
+// SpaceFwd advances the virtual tape by the specified amount (0 means 1 whole file)
 func (st *SimhTapesT) SpaceFwd(tNum int, recCnt int) bool {
 
-	var hdr, trailer dg.DwordT
+	var hdr, trailer uint32
 	done := false
 	logging.DebugPrint(logging.MtbLog, "DEBUG: simhTapesTpaceFwd called for %d records\n", recCnt)
 
@@ -191,7 +139,7 @@ func (st *SimhTapesT) SpaceFwd(tNum int, recCnt int) bool {
 	if recCnt == 0 {
 		for !done {
 			hdr, _ = st.ReadRecordHeader(tNum)
-			if hdr == simhMtrTmk {
+			if hdr == simhTape.SimhMtrTmk {
 				done = true
 			} else {
 				// read record and throw it away
@@ -214,57 +162,5 @@ func (st *SimhTapesT) SpaceFwd(tNum int, recCnt int) bool {
 //   attached tape image makes any sense.  It also serves to test the simhTapeReadRecordHeader() and
 //   simhTapeReadRecord() functions to some extent.
 func (st *SimhTapesT) ScanImage(tNum int) string {
-	var res string
-	if st[tNum].simhFile == nil {
-		return "\012 *** No Tape Image Attached ***"
-	}
-	res = fmt.Sprintf("\012Scanning attached tape image: %s...", st[tNum].fileName)
-
-	res += "\012Rewinding..."
-	st.Rewind(tNum)
-	res += "done!"
-
-	var fileSize, markCount, fileCount, recNum int
-	var hdr, trailer dg.DwordT
-	fileCount = -1
-
-loop:
-	for {
-		hdr, _ = st.ReadRecordHeader(tNum)
-		//logging.DebugPrint(logging.DEBUG_LOG,"Debug: got header value: %d\n", hdr)
-		switch hdr {
-		case simhMtrTmk:
-			if fileSize > 0 {
-				fileCount++
-				res += fmt.Sprintf("\012File %d : %14d bytes in %7d block(s)",
-					fileCount, fileSize, recNum)
-				fileSize = 0
-				recNum = 0
-			}
-			markCount++
-			if markCount == 3 {
-				res += "\012Triple Mark (old End Of Tape indicator)"
-				break loop
-			}
-		case simhMtrEom:
-			res += "\012End of Medium"
-			break loop
-		case simhMtrGap:
-			res += "\012Erase Gap"
-			markCount = 0
-		default:
-			recNum++
-			markCount = 0
-			st.ReadRecordData(tNum, int(hdr)) // read record and throw away
-			trailer, _ = st.ReadRecordHeader(tNum)
-			//logging.DebugPrint(logging.DEBUG_LOG,"Debug: got trailer value: %d\n", trailer)
-			if hdr == trailer {
-				fileSize += int(hdr)
-			} else {
-				res += "\012Non-matching trailer found."
-			}
-		}
-	}
-	st.Rewind(tNum)
-	return res
+	return simhTape.ScanImage(st[tNum].fileName, false)
 }
