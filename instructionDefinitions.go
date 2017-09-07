@@ -95,8 +95,8 @@ func instructionsInit() {
 	instructionSet["CIOI"] = instrChars{0x85f9, 0x87ff, 2, TWOACC_IMM_2_WORD_FMT, EAGLE_IO}
 	instructionSet["CLM"] = instrChars{0x84f8, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_PC}
 	instructionSet["CMP"] = instrChars{0xdfa8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_MEMREF}
-	instructionSet["CMT"] = instrChars{0xefa8, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_OP}
-	instructionSet["CMV"] = instrChars{0xd7a8, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_OP}
+	instructionSet["CMT"] = instrChars{0xefa8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_MEMREF}
+	instructionSet["CMV"] = instrChars{0xd7a8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_MEMREF}
 	instructionSet["COB"] = instrChars{0x8588, 0x87ff, 1, TWOACC_1_WORD_FMT, NOVA_OP}
 	instructionSet["COM"] = instrChars{0x8000, 0x8700, 1, NOVA_TWOACC_MULT_OP_FMT, NOVA_OP}
 	instructionSet["CRYTC"] = instrChars{0xa7e9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
@@ -252,6 +252,7 @@ func instructionsInit() {
 	instructionSet["WCMV"] = instrChars{0x8779, 0xFFFF, 1, UNIQUE_1_WORD_FMT, EAGLE_MEMREF}
 	instructionSet["WCOM"] = instrChars{0x8459, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
 	instructionSet["WCST"] = instrChars{0xe709, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_MEMREF}
+	instructionSet["WCTR"] = instrChars{0x8769, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_MEMREF}
 	instructionSet["WINC"] = instrChars{0x8259, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
 	instructionSet["WIOR"] = instrChars{0x8469, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
 	instructionSet["WIORI"] = instrChars{0x86a9, 0xe7ff, 3, ONEACC_IMMDWD_3_WORD_FMT, EAGLE_OP}

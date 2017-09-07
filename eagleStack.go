@@ -36,6 +36,7 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		firstAc, lastAc, thisAc int
 		acsUp                   = [8]int{0, 1, 2, 3, 0, 1, 2, 3}
 		tmpDwd                  dg.DwordT
+		noAccMode3Word          noAccMode3WordT
 		noAccModeInd2Word       noAccModeInd2WordT
 		noAccModeInd3Word       noAccModeInd3WordT
 		oneAcc1Word             oneAcc1WordT
@@ -64,6 +65,20 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case "LPEF":
 		noAccModeInd3Word = iPtr.variant.(noAccModeInd3WordT)
 		memory.WsPush(0, dg.DwordT(resolve32bitEffAddr(cpuPtr, noAccModeInd3Word.ind, noAccModeInd3Word.mode, noAccModeInd3Word.disp31)))
+
+	case "LPEFB":
+		noAccMode3Word = iPtr.variant.(noAccMode3WordT)
+		eff := dg.DwordT(noAccMode3Word.immU32)
+		switch noAccMode3Word.mode {
+		case "Absolute": // do nothing
+		case "PC":
+			eff += dg.DwordT(cpuPtr.pc)
+		case "AC2":
+			eff += cpuPtr.ac[2]
+		case "AC3":
+			eff += cpuPtr.ac[3]
+		}
+		memory.WsPush(0, eff)
 
 	case "STAFP":
 		oneAcc1Word = iPtr.variant.(oneAcc1WordT)
