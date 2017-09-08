@@ -22,7 +22,6 @@
 package main
 
 import (
-	"log"
 	"mvemg/dg"
 	"mvemg/logging"
 	"os"
@@ -61,13 +60,7 @@ func (st *SimhTapesT) Attach(tNum int, imgName string) bool {
 
 // Rewind simulates a tape rewind by seeking to start of SimH tape image file
 func (st *SimhTapesT) Rewind(tNum int) bool {
-	logging.DebugPrint(logging.MtbLog, "INFO: simhTapeRewind called for tape #%d\n", tNum)
-	_, err := st[tNum].simhFile.Seek(0, 0)
-	if err != nil {
-		logging.DebugPrint(logging.MtbLog, "ERROR: Could not rewind simH Tape Image file: %s, due to: %s\n", st[tNum].fileName, err.Error())
-		return false
-	}
-	return true
+	return simhTape.Rewind(st[tNum].simhFile)
 }
 
 // ReadRecordHeader reads a 4-byte SimH header/trailer record
@@ -130,32 +123,7 @@ func (st *SimhTapesT) ReadCompleteRecord(tNum int) ([]byte, bool) {
 
 // SpaceFwd advances the virtual tape by the specified amount (0 means 1 whole file)
 func (st *SimhTapesT) SpaceFwd(tNum int, recCnt int) bool {
-
-	var hdr, trailer uint32
-	done := false
-	logging.DebugPrint(logging.MtbLog, "DEBUG: simhTapesTpaceFwd called for %d records\n", recCnt)
-
-	// special case when recCnt == 0 which means space forward one file...
-	if recCnt == 0 {
-		for !done {
-			hdr, _ = st.ReadRecordHeader(tNum)
-			if hdr == simhTape.SimhMtrTmk {
-				done = true
-			} else {
-				// read record and throw it away
-				st.ReadRecordData(tNum, int(hdr))
-				// read trailer
-				trailer, _ = st.ReadRecordHeader(tNum)
-				if hdr != trailer {
-					log.Fatal("ERROR: simhTapesTpaceFwd found non-matching header/trailer")
-				}
-			}
-		}
-	} else {
-		log.Fatal("ERROR: simhTapesTpaceFwd called with record count != 0 - Not Yet Implemented")
-	}
-
-	return true
+	return simhTape.SpaceFwd(st[tNum].simhFile, recCnt)
 }
 
 // ScanImage - This function is available to the SCP emulator so that the user may determine if an
