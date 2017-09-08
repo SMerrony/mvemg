@@ -22,12 +22,14 @@
 package main
 
 import (
-	//"bytes"
 	"log"
 	"mvemg/dg"
 	"mvemg/logging"
 	"mvemg/memory"
 	"mvemg/util"
+	"os"
+
+	"github.com/SMerrony/aosvs-tools/simhTape"
 )
 
 const (
@@ -82,9 +84,12 @@ const (
 
 // }
 
+const maxTapes = 8
+
 type mtbT struct {
-	simhTapeNum            int
-	imageAttached          bool
+	imageAttached          [maxTapes]bool
+	fileName               [maxTapes]string
+	simhFile               [maxTapes]*os.File
 	statusReg1, statusReg2 dg.WordT
 	memAddrReg             dg.PhysAddrT
 	negWordCntReg          int
@@ -93,9 +98,8 @@ type mtbT struct {
 }
 
 var (
-	simht SimhTapesT
+	mtb mtbT
 
-	mtb        mtbT
 	commandSet [mtbCmdCount]dg.WordT
 )
 
@@ -112,9 +116,7 @@ func mtbInit() bool {
 	commandSet[mtbCmdUNLOAD] = mtbCmdUNLOAD_BITS
 	commandSet[mtbCmdDRIVE_MODE] = mtbCmdDRIVE_MODE_BITS
 
-	simht.simhTapeInit()
 	busAddDevice(DEV_MTB, "MTB", MTB_PMB, false, true, true)
-	mtb.imageAttached = false
 
 	mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1UnitReady
 	mtb.statusReg2 = mtbSr2PEMode
@@ -129,30 +131,39 @@ func mtbInit() bool {
 
 // Reset the MTB to startup state
 func mtbReset() {
-	simht.Rewind(0)
-	mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1BOT | mtbSr1UnitReady
-	mtb.statusReg2 = mtbSr2PEMode
+	for t := 0; t < maxTapes; t++ {
+		if mtb.imageAttached[t] {
+			simhTape.Rewind(mtb.simhFile[t])
+		}
+		mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1BOT | mtbSr1UnitReady
+		mtb.statusReg2 = mtbSr2PEMode
+
+	}
 	logging.DebugPrint(logging.MtbLog, "MTB Reset via call to mtbReset()\n")
 }
 
 // Attach a SimH tape image file to the emulated tape drive
 func mtbAttach(tNum int, imgName string) bool {
 	logging.DebugPrint(logging.MtbLog, "mtbAttach called on unit #%d with image file: %s\n", tNum, imgName)
-	if simht.Attach(tNum, imgName) {
-		mtb.simhTapeNum = tNum
-		mtb.imageAttached = true
-		mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1BOT | mtbSr1UnitReady
-		mtb.statusReg2 = mtbSr2PEMode
-		busSetAttached(DEV_MTB)
-		return true
+	f, err := os.Open(imgName)
+	if err != nil {
+		logging.DebugPrint(logging.MtbLog, "ERROR: Could not open simH Tape Image file: %s, due to: %s\n", imgName, err.Error())
+		return false
 	}
-	return false
+	mtb.fileName[tNum] = imgName
+	mtb.simhFile[tNum] = f
+	mtb.imageAttached[tNum] = true
+	mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1BOT | mtbSr1UnitReady
+	mtb.statusReg2 = mtbSr2PEMode
+	busSetAttached(DEV_MTB)
+	return true
+
 }
 
 // Scan the attached SimH tape image to ensure it makes sense
 // (This is just a pass-through to the equivalent function in simhTape)
 func mtbScanImage(tNum int) string {
-	return simht.ScanImage(0)
+	return simhTape.ScanImage(mtb.fileName[tNum], false)
 }
 
 /* This function fakes the ROM/SCP boot-from-tape routine.
@@ -166,13 +177,14 @@ func mtbLoadTBoot() {
 		tbootSizeB = 2048
 		tbootSizeW = 1024
 	)
-	simht.Rewind(0)
-	hdr, ok := simht.ReadRecordHeader(0)
+	tNum := 0
+	simhTape.Rewind(mtb.simhFile[tNum])
+	hdr, ok := simhTape.ReadMetaData(mtb.simhFile[tNum])
 	if !ok || hdr != tbootSizeB {
 		logging.DebugPrint(logging.DebugLog, "WARN: mtbLoadTBoot called when no bootable tape image attached\n")
 		return
 	}
-	tapeData, ok := simht.ReadRecordData(0, tbootSizeB)
+	tapeData, ok := simhTape.ReadRecordData(mtb.simhFile[tNum], tbootSizeB)
 	var byte0, byte1 byte
 	var word dg.WordT
 	var wdix dg.PhysAddrT
@@ -182,7 +194,7 @@ func mtbLoadTBoot() {
 		word = dg.WordT(byte1)<<8 | dg.WordT(byte0)
 		memory.WriteWord(wdix, word)
 	}
-	trailer, ok := simht.ReadRecordHeader(0)
+	trailer, ok := simhTape.ReadMetaData(mtb.simhFile[tNum])
 	if hdr != trailer {
 		logging.DebugPrint(logging.DebugLog, "WARN: mtbLoadTBoot found mismatched trailer in TBOOT file\n")
 	}
@@ -267,51 +279,51 @@ func mtbDataOut(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 func mtbDoCommand() {
 
 	switch mtb.currentcmd {
-	case mtbCmdREAD:
-		logging.DebugPrint(logging.MtbLog, "*READ* command\n ==== Word Count: %d Location: %d\n", mtb.negWordCntReg, mtb.memAddrReg)
-		hdrLen, _ := simht.ReadRecordHeader(0)
-		logging.DebugPrint(logging.MtbLog, " ----  Header read giving length: %d\n", hdrLen)
-		if hdrLen == mtbEOF {
-			logging.DebugPrint(logging.MtbLog, " ----  Header is EOF indicator\n")
-			mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1UnitReady | mtbSr1EOF | mtbSr1Error
-		} else {
-			logging.DebugPrint(logging.MtbLog, " ----  Calling simhTapeReadRecord with length: %d\n", hdrLen)
-			var w uint32
-			var wd dg.WordT
-			var pAddr dg.PhysAddrT
-			rec, _ := simht.ReadRecordData(0, int(hdrLen))
-			for w = 0; w < hdrLen; w += 2 {
-				wd = (dg.WordT(rec[w]) << 8) | dg.WordT(rec[w+1])
-				pAddr = memory.MemWriteWordDchChan(mtb.memAddrReg, wd)
-				logging.DebugPrint(logging.MtbLog, " ----  Written word (%02X | %02X := %04X) to logical address: %d, physical: %d\n", rec[w], rec[w+1], wd, mtb.memAddrReg, pAddr)
-				mtb.memAddrReg++
-				mtb.negWordCntReg++
-				if mtb.negWordCntReg == 0 {
-					break
-				}
-			}
-			trailer, _ := simht.ReadRecordHeader(0)
-			logging.DebugPrint(logging.MtbLog, " ----  %d bytes loaded\n", w)
-			logging.DebugPrint(logging.MtbLog, " ----  Read SimH Trailer: %d\n", trailer)
-			// TODO Need to verify how status should be set here...
-			mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1UnitReady
-		}
-		busSetBusy(DEV_MTB, false)
-		busSetDone(DEV_MTB, true)
+	// case mtbCmdREAD:
+	// 	logging.DebugPrint(logging.MtbLog, "*READ* command\n ==== Word Count: %d Location: %d\n", mtb.negWordCntReg, mtb.memAddrReg)
+	// 	hdrLen, _ := simht.ReadRecordHeader(0)
+	// 	logging.DebugPrint(logging.MtbLog, " ----  Header read giving length: %d\n", hdrLen)
+	// 	if hdrLen == mtbEOF {
+	// 		logging.DebugPrint(logging.MtbLog, " ----  Header is EOF indicator\n")
+	// 		mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1UnitReady | mtbSr1EOF | mtbSr1Error
+	// 	} else {
+	// 		logging.DebugPrint(logging.MtbLog, " ----  Calling simhTapeReadRecord with length: %d\n", hdrLen)
+	// 		var w uint32
+	// 		var wd dg.WordT
+	// 		var pAddr dg.PhysAddrT
+	// 		rec, _ := simht.ReadRecordData(0, int(hdrLen))
+	// 		for w = 0; w < hdrLen; w += 2 {
+	// 			wd = (dg.WordT(rec[w]) << 8) | dg.WordT(rec[w+1])
+	// 			pAddr = memory.MemWriteWordDchChan(mtb.memAddrReg, wd)
+	// 			logging.DebugPrint(logging.MtbLog, " ----  Written word (%02X | %02X := %04X) to logical address: %d, physical: %d\n", rec[w], rec[w+1], wd, mtb.memAddrReg, pAddr)
+	// 			mtb.memAddrReg++
+	// 			mtb.negWordCntReg++
+	// 			if mtb.negWordCntReg == 0 {
+	// 				break
+	// 			}
+	// 		}
+	// 		trailer, _ := simht.ReadRecordHeader(0)
+	// 		logging.DebugPrint(logging.MtbLog, " ----  %d bytes loaded\n", w)
+	// 		logging.DebugPrint(logging.MtbLog, " ----  Read SimH Trailer: %d\n", trailer)
+	// 		// TODO Need to verify how status should be set here...
+	// 		mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1UnitReady
+	// 	}
+	// 	busSetBusy(DEV_MTB, false)
+	// 	busSetDone(DEV_MTB, true)
 
-	case mtbCmdREWIND:
-		logging.DebugPrint(logging.MtbLog, "*REWIND* command\n")
-		simht.Rewind(0)
-		mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1UnitReady | mtbSr1BOT
-		mtb.statusReg2 = mtbSr2PEMode
-		// FIXME set flags here?
+	// case mtbCmdREWIND:
+	// 	logging.DebugPrint(logging.MtbLog, "*REWIND* command\n")
+	// 	simht.Rewind(0)
+	// 	mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1UnitReady | mtbSr1BOT
+	// 	mtb.statusReg2 = mtbSr2PEMode
+	// 	// FIXME set flags here?
 
-	case mtbCmdSPACE_FWD:
-		logging.DebugPrint(logging.MtbLog, "*SPACE FORWARD* command\n")
-		simht.SpaceFwd(0, 0)
-		mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1UnitReady | mtbSr1EOF | mtbSr1Error
-		busSetBusy(DEV_MTB, false)
-		busSetDone(DEV_MTB, true)
+	// case mtbCmdSPACE_FWD:
+	// 	logging.DebugPrint(logging.MtbLog, "*SPACE FORWARD* command\n")
+	// 	simht.SpaceFwd(0, 0)
+	// 	mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1UnitReady | mtbSr1EOF | mtbSr1Error
+	// 	busSetBusy(DEV_MTB, false)
+	// 	busSetDone(DEV_MTB, true)
 
 	default:
 		log.Fatalln("ERROR: mtbDoCommand - Command Not Yet Implemented")
