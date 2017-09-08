@@ -25,10 +25,6 @@ You should immediately be greeted with the welcome message...
 
   `Welcome to the MV/Emulator - Type HE for help`
 
-If you are running a debug build then a great deal of information about the internal operation of MV/Em will 
-appear on the console where you started the emulator.  Redirecting this information to a file instead will 
-significantly speed up the operation of the emulator. Eg. 
-    `./mvem SCRIPT1.TXT >mvem.log 2>&1`
 	
 ## Emulator Commands ##
 MV/Em commands are all entered at the console terminal which behaves rather like the SCP on a real MV/10000 but 
@@ -47,17 +43,17 @@ The following commands have been implemented...
 #### . ####
 > Display the current state of the CPU, eg. ACs, PC, carry and ATU flags.
 
-#### B `#` ####
-> Boot from device number #.  Currently only supports device 22 - the MTB unit.
+#### B `<devNum>` ####
+> Boot from given device number.  Currently only supports device 22 - the MTB unit.
 
 #### CO ####
 > COntinue (or start) processing from the current PC.
 
-#### E A # ####
-> Examine/modify Accumulator #.
+#### E A `<acNum>` ####
+> Examine/modify Accumulator acNum, where 0 <= acNum <=3.
 
-#### E M # ####
-> Examine/modify physical Memory location #.
+#### E M `<addr>` ####
+> Examine/modify physical Memory location addr.
 
 #### E P ####
 > Examine/modify the PC.
@@ -65,8 +61,14 @@ The following commands have been implemented...
 #### HE ####
 > HElp - display a 1-screen summary of available commands.
 
+#### RE ####
+> REset the system - not yet implemented.
+
 #### SS ####
 > Single-Step one instruction from the PC.
+
+#### ST `<addr>`
+> STart processing from the given address, equivalent to setting the PC and typing CO.
 
 ### Emulator Commands ###
 MV/Emulator commands control the emulation environment rather than the virtual machine.  They are loosely based on [[SimH]] commands.
@@ -75,13 +77,13 @@ MV/Emulator commands control the emulation environment rather than the virtual m
 > ATTach an image file to the named device.  Tape file images must be in SimH format.  
 
 #### BREAK `<addr>` ####
-> Set an execution BREAKpoint at the given address - the emulator will pause if that address is reached.  Use the CO command to continue execution.
+> Set an execution BREAKpoint at the given address - the emulator will pause if that address is reached.  Use the CO command to continue execution.  The emulator runs a little slower when breakpoints are defined.  N.B. BREAK 0 can be useful for trapping errors.
 
 #### CHECK ####
 > CHECK the validity of an attached tape image by attempting to read it all and displaying a summary of the virtual tape's contents on the console.
 
 #### CREATE `<type> <imageFileName>` ####
-> CREATE an empty disk image suitable for attaching to the emulator and initialising with DFMTR.  eg. CREATE DPF BLANK.DPF
+> CREATE an empty disk image suitable for attaching to the emulator and initialising with DFMTR.  eg. CREATE DPJ BLANK.DPJ
 
 #### DIS `<from> <to> | +<#>` ####
 > DISplay/disassemble memory between the given addresses or # locations from the PC.
@@ -91,8 +93,9 @@ MV/Emulator commands control the emulation environment rather than the virtual m
 > Here is an example scriptfile which attaches a SimH tape image to the MTB device,  attaches a DPF-type disk image, and
 attempts to boot from device 22 (MTB) and finally displays the status of the CPU...
 
+    # Comments begin with a # in the first column
     ATT MTB TAPE1.9trk
-	ATT DPF DISK1.DPF
+	ATT DPJ DISK1.DPJ
     B 22
     .
   
@@ -102,6 +105,19 @@ attempts to boot from device 22 (MTB) and finally displays the status of the CPU
 #### NOBREAK `<addr>`
 > Clear any breakpoint at the given address.
 
-#### SHOW DEV ####
-> SHOW a display a brief summary all known DEVices and their busy/done flags and statuses
+#### RESTORE `<stateFileName>`
+> Not yet implemented
+
+#### SAVE `<stateFileName>`
+> Not yet implemented
+
+#### SET LOGGING ON|OFF ####
+Turn on or off debug-level logging of the emulator.  This slows the emulator down by a factor of approx. 9 times.  The logs are held in circular buffers in memory and dumped to disk when the current run ends.
+
+#### SHOW BREAK|DEV|LOGGING ####
+> SHOW BREAK displays a list of currently set BREAKpoints
+
+> SHOW DEV displays a brief summary all known DEVices and their busy/done flags and statuses
+
+> SHOW LOGGING displays the current LOGGING state (see above)
 
