@@ -38,29 +38,29 @@ const (
 	mtbCmdCount      = 11
 	mtbCmdMask       = 0x00b8
 
-	mtbCmdREAD_BITS         = 0x0000
-	mtbCmdREWIND_BITS       = 0x0008
-	mtbCmdCTRL_MODE_BITS    = 0x0010
-	mtbCmdSPACE_FWD_BITS    = 0x0018
-	mtbCmdSPACE_REV_BITS    = 0x0020
-	mtbCmdWRITE_BITS        = 0x0028
-	mtbCmdWRITE_EOF_BITS    = 0x0030
-	mtbCmdERASE_BITS        = 0x0038
-	mtbCmdREAD_NONSTOP_BITS = 0x0080
-	mtbCmdUNLOAD_BITS       = 0x0088
-	mtbCmdDRIVE_MODE_BITS   = 0x0090
+	mtbCmdReadBits        = 0x0000
+	mtbCmdRewindBits      = 0x0008
+	mtbCmdCtrlModeBits    = 0x0010
+	mtbCmdSpaceFwdBits    = 0x0018
+	mtbCmdSpaceRevBits    = 0x0020
+	mtbCmdWiteBits        = 0x0028
+	mtbCmdWriteEOFBits    = 0x0030
+	mtbCmdEraseBits       = 0x0038
+	mtbCmdReadNonStopBits = 0x0080
+	mtbCmdUnloadBits      = 0x0088
+	mtbCmdDriveModeBits   = 0x0090
 
-	mtbCmdREAD         = 0
-	mtbCmdREWIND       = 1
-	mtbCmdCTRL_MODE    = 2
-	mtbCmdSPACE_FWD    = 3
-	mtbCmdSPACE_REV    = 4
-	mtbCmdWRITE        = 5
-	mtbCmdWRITE_EOF    = 6
-	mtbCmdERASE        = 7
-	mtbCmdREAD_NONSTOP = 8
-	mtbCmdUNLOAD       = 9
-	mtbCmdDRIVE_MODE   = 10
+	mtbCmdRead        = 0
+	mtbCmdRewind      = 1
+	mtbCmdCtrlMode    = 2
+	mtbCmdSpaceFwd    = 3
+	mtbCmdSpaceRev    = 4
+	mtbCmdWrite       = 5
+	mtbCmdWriteEOF    = 6
+	mtbCmdErase       = 7
+	mtbCmdReadNonStop = 8
+	mtbCmdUnload      = 9
+	mtbCmdDriveMode   = 10
 
 	mtbSr1Error     = 0100000
 	mtbSr1HiDensity = 04000
@@ -105,17 +105,17 @@ var (
 )
 
 func mtbInit() bool {
-	commandSet[mtbCmdREAD] = mtbCmdREAD_BITS
-	commandSet[mtbCmdREWIND] = mtbCmdREWIND_BITS
-	commandSet[mtbCmdCTRL_MODE] = mtbCmdCTRL_MODE_BITS
-	commandSet[mtbCmdSPACE_FWD] = mtbCmdSPACE_FWD_BITS
-	commandSet[mtbCmdSPACE_REV] = mtbCmdSPACE_REV_BITS
-	commandSet[mtbCmdWRITE] = mtbCmdWRITE_BITS
-	commandSet[mtbCmdWRITE_EOF] = mtbCmdWRITE_EOF_BITS
-	commandSet[mtbCmdERASE] = mtbCmdERASE_BITS
-	commandSet[mtbCmdREAD_NONSTOP] = mtbCmdREAD_NONSTOP_BITS
-	commandSet[mtbCmdUNLOAD] = mtbCmdUNLOAD_BITS
-	commandSet[mtbCmdDRIVE_MODE] = mtbCmdDRIVE_MODE_BITS
+	commandSet[mtbCmdRead] = mtbCmdReadBits
+	commandSet[mtbCmdRewind] = mtbCmdRewindBits
+	commandSet[mtbCmdCtrlMode] = mtbCmdCtrlModeBits
+	commandSet[mtbCmdSpaceFwd] = mtbCmdSpaceFwdBits
+	commandSet[mtbCmdSpaceRev] = mtbCmdSpaceRevBits
+	commandSet[mtbCmdWrite] = mtbCmdWiteBits
+	commandSet[mtbCmdWriteEOF] = mtbCmdWriteEOFBits
+	commandSet[mtbCmdErase] = mtbCmdEraseBits
+	commandSet[mtbCmdReadNonStop] = mtbCmdReadNonStopBits
+	commandSet[mtbCmdUnload] = mtbCmdUnloadBits
+	commandSet[mtbCmdDriveMode] = mtbCmdDriveModeBits
 
 	busAddDevice(DEV_MTB, "MTB", MTB_PMB, false, true, true)
 
@@ -137,7 +137,8 @@ func mtbReset() {
 			simhTape.Rewind(mtb.simhFile[t])
 		}
 	}
-	mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1BOT | mtbSr1UnitReady
+	// BOT is an error state...
+	mtb.statusReg1 = mtbSr1Error | mtbSr1HiDensity | mtbSr19Track | mtbSr1BOT | mtbSr1UnitReady
 	mtb.statusReg2 = mtbSr2PEMode
 	mtb.memAddrReg = 0
 	mtb.negWordCntReg = 0
@@ -157,7 +158,7 @@ func mtbAttach(tNum int, imgName string) bool {
 	mtb.fileName[tNum] = imgName
 	mtb.simhFile[tNum] = f
 	mtb.imageAttached[tNum] = true
-	mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1BOT | mtbSr1UnitReady
+	mtb.statusReg1 = mtbSr1Error | mtbSr1HiDensity | mtbSr19Track | mtbSr1BOT | mtbSr1UnitReady
 	mtb.statusReg2 = mtbSr2PEMode
 	busSetAttached(DEV_MTB)
 	return true
@@ -215,7 +216,7 @@ func mtbDataIn(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 
 	case 'B': /* Read memory addr register 1 - see p.IV-19 of Peripherals guide */
 		cpuPtr.ac[iPtr.acd] = dg.DwordT(mtb.memAddrReg)
-		logging.DebugPrint(logging.MtbLog, "DIB - Read Mem Addr Reg 1 <%d> to AC%d, PC: %dn",
+		logging.DebugPrint(logging.MtbLog, "DIB - Read Mem Addr Reg 1 <%d> to AC%d, PC: %d\n",
 			mtb.memAddrReg, iPtr.acd, cpuPtr.pc)
 
 	case 'C': /* Read status register 2 - see p.IV-18 of Peripherals guide */
@@ -278,7 +279,8 @@ func mtbHandleFlag(f byte) {
 	case 'C':
 		// if we were performing MTB operations in a Goroutine, this would interrupt them...
 		logging.DebugPrint(logging.MtbLog, "... C flag set\n")
-		mtbReset()
+		mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1UnitReady // ???
+		mtb.statusReg2 = mtbSr2PEMode                                     // ???
 		busSetBusy(DEV_MTB, false)
 		busSetDone(DEV_MTB, false)
 
@@ -294,8 +296,8 @@ func mtbHandleFlag(f byte) {
 func mtbDoCommand() {
 
 	switch mtb.currentCmd {
-	case mtbCmdREAD:
-		logging.DebugPrint(logging.MtbLog, "*READ* command\n ==== Unit: %d\n ==== Word Count: %d Location: %d\n", mtb.currentUnit, mtb.negWordCntReg, mtb.memAddrReg)
+	case mtbCmdRead:
+		logging.DebugPrint(logging.MtbLog, "*READ* command\n ---- Unit: %d\n ---- Word Count: %d Location: %d\n", mtb.currentUnit, mtb.negWordCntReg, mtb.memAddrReg)
 		hdrLen, _ := simhTape.ReadMetaData(mtb.simhFile[mtb.currentUnit])
 		logging.DebugPrint(logging.MtbLog, " ----  Header read giving length: %d\n", hdrLen)
 		if hdrLen == mtbEOF {
@@ -324,14 +326,13 @@ func mtbDoCommand() {
 			mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1UnitReady
 		}
 
-	case mtbCmdREWIND:
+	case mtbCmdRewind:
 		logging.DebugPrint(logging.MtbLog, "*REWIND* command\n ------ Unit: #%d\n", mtb.currentUnit)
 		simhTape.Rewind(mtb.simhFile[mtb.currentUnit])
-		mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1UnitReady | mtbSr1BOT
-		mtb.statusReg2 = mtbSr2PEMode
+		mtb.statusReg1 = mtbSr1Error | mtbSr1HiDensity | mtbSr19Track | mtbSr1UnitReady | mtbSr1BOT
 
-	case mtbCmdSPACE_FWD:
-		logging.DebugPrint(logging.MtbLog, "*SPACE FORWARD* command\n ----- Unit: #%d\n", mtb.currentUnit)
+	case mtbCmdSpaceFwd:
+		logging.DebugPrint(logging.MtbLog, "*SPACE FORWARD* command\n ----- ------- Unit: #%d\n", mtb.currentUnit)
 		simhTape.SpaceFwd(mtb.simhFile[mtb.currentUnit], 0)
 		mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1UnitReady | mtbSr1EOF | mtbSr1Error
 

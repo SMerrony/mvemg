@@ -13,7 +13,7 @@ invoking terminal.
 
 ## Invocation ##
 
-  `./mvem [doscriptfile]`
+  `./mvemg [doscriptfile]`
 
 When MV/Em is started from a console you may optionally supply a script name which will be executed as an 
 initial DO SCRIPT (see below) once a console is attached.
@@ -26,6 +26,9 @@ You should immediately be greeted with the welcome message...
   `Welcome to the MV/Emulator - Type HE for help`
 
 	
+### Internal Status Monitor ###
+You may optionally connect a DASHER emulator to port 9999 after the console has been connected.  This will display a frequently updated status view of the CPU and certain key devices while the CPU is running.
+
 ## Emulator Commands ##
 MV/Em commands are all entered at the console terminal which behaves rather like the SCP on a real MV/10000 but 
 with additional commands to control the emulation; so there are two groups of commands: SCP-CLI commands and Emulator 
