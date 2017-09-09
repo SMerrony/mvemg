@@ -93,7 +93,8 @@ type mtbT struct {
 	statusReg1, statusReg2 dg.WordT
 	memAddrReg             dg.PhysAddrT
 	negWordCntReg          int
-	currentcmd             int
+	currentCmd             int
+	currentUnit            int
 	debug                  bool
 }
 
@@ -135,10 +136,13 @@ func mtbReset() {
 		if mtb.imageAttached[t] {
 			simhTape.Rewind(mtb.simhFile[t])
 		}
-		mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1BOT | mtbSr1UnitReady
-		mtb.statusReg2 = mtbSr2PEMode
-
 	}
+	mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1BOT | mtbSr1UnitReady
+	mtb.statusReg2 = mtbSr2PEMode
+	mtb.memAddrReg = 0
+	mtb.negWordCntReg = 0
+	mtb.currentCmd = 0
+	mtb.currentUnit = 0
 	logging.DebugPrint(logging.MtbLog, "MTB Reset via call to mtbReset()\n")
 }
 
@@ -203,15 +207,6 @@ func mtbLoadTBoot() {
 // This is called from Bus to implement DIx from the MTB device
 func mtbDataIn(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 
-	switch iPtr.f {
-	case 'S':
-		busSetBusy(DEV_MTB, true)
-		busSetDone(DEV_MTB, false)
-	case 'C':
-		busSetBusy(DEV_MTB, false)
-		busSetDone(DEV_MTB, false)
-	}
-
 	switch abc {
 	case 'A': /* Read status register 1 - see p.IV-18 of Peripherals guide */
 		cpuPtr.ac[iPtr.acd] = dg.DwordT(mtb.statusReg1)
@@ -229,22 +224,11 @@ func mtbDataIn(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 			util.WordToBinStr(mtb.statusReg2), iPtr.acd, cpuPtr.pc)
 	}
 
-	if iPtr.f == 'S' {
-		mtbDoCommand()
-	}
+	mtbHandleFlag(iPtr.f)
 }
 
 // This is called from Bus to implement DOx from the MTB device
 func mtbDataOut(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
-
-	switch iPtr.f {
-	case 'S':
-		busSetBusy(DEV_MTB, true)
-		busSetDone(DEV_MTB, false)
-	case 'C':
-		busSetBusy(DEV_MTB, false)
-		busSetDone(DEV_MTB, false)
-	}
 
 	ac16 := util.DWordGetLowerWord(cpuPtr.ac[iPtr.acd])
 
@@ -253,12 +237,14 @@ func mtbDataOut(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 		// which command?
 		for c := 0; c < mtbCmdCount; c++ {
 			if (ac16 & mtbCmdMask) == commandSet[c] {
-				mtb.currentcmd = c
+				mtb.currentCmd = c
 				break
 			}
 		}
-		logging.DebugPrint(logging.MtbLog, "DOA - Specify Command and Drive - internal cmd #: %d, PC: %d\n",
-			mtb.currentcmd, cpuPtr.pc)
+		// which unit?
+		mtb.currentUnit = mtbExtractUnit(ac16)
+		logging.DebugPrint(logging.MtbLog, "DOA - Specify Command and Drive - internal cmd #: %d, unit: %d, PC: %d\n",
+			mtb.currentCmd, mtb.currentUnit, cpuPtr.pc)
 
 	case 'B':
 		mtb.memAddrReg = dg.PhysAddrT(ac16)
@@ -271,59 +257,83 @@ func mtbDataOut(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 			mtb.negWordCntReg, cpuPtr.pc)
 	}
 
-	if iPtr.f == 'S' {
+	mtbHandleFlag(iPtr.f)
+}
+
+func mtbExtractUnit(word dg.WordT) int {
+	return int(word & 0x07)
+}
+
+// mtbHandleFlag actions the flag/pulse to the MTB controller
+func mtbHandleFlag(f byte) {
+	switch f {
+	case 'S':
+		logging.DebugPrint(logging.MtbLog, "... S flag set\n")
+		busSetBusy(DEV_MTB, true)
+		busSetDone(DEV_MTB, false)
 		mtbDoCommand()
+		busSetBusy(DEV_MTB, false)
+		busSetDone(DEV_MTB, true)
+
+	case 'C':
+		// if we were performing MTB operations in a Goroutine, this would interrupt them...
+		logging.DebugPrint(logging.MtbLog, "... C flag set\n")
+		mtbReset()
+		busSetBusy(DEV_MTB, false)
+		busSetDone(DEV_MTB, false)
+
+	case 'P':
+		// 'Reserved'
+		logging.DebugPrint(logging.MtbLog, "WARNING: Received 'P' flag - which is reserved")
+
+	default:
+		// empty flag - nothing to do
 	}
 }
 
 func mtbDoCommand() {
 
-	switch mtb.currentcmd {
-	// case mtbCmdREAD:
-	// 	logging.DebugPrint(logging.MtbLog, "*READ* command\n ==== Word Count: %d Location: %d\n", mtb.negWordCntReg, mtb.memAddrReg)
-	// 	hdrLen, _ := simht.ReadRecordHeader(0)
-	// 	logging.DebugPrint(logging.MtbLog, " ----  Header read giving length: %d\n", hdrLen)
-	// 	if hdrLen == mtbEOF {
-	// 		logging.DebugPrint(logging.MtbLog, " ----  Header is EOF indicator\n")
-	// 		mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1UnitReady | mtbSr1EOF | mtbSr1Error
-	// 	} else {
-	// 		logging.DebugPrint(logging.MtbLog, " ----  Calling simhTapeReadRecord with length: %d\n", hdrLen)
-	// 		var w uint32
-	// 		var wd dg.WordT
-	// 		var pAddr dg.PhysAddrT
-	// 		rec, _ := simht.ReadRecordData(0, int(hdrLen))
-	// 		for w = 0; w < hdrLen; w += 2 {
-	// 			wd = (dg.WordT(rec[w]) << 8) | dg.WordT(rec[w+1])
-	// 			pAddr = memory.MemWriteWordDchChan(mtb.memAddrReg, wd)
-	// 			logging.DebugPrint(logging.MtbLog, " ----  Written word (%02X | %02X := %04X) to logical address: %d, physical: %d\n", rec[w], rec[w+1], wd, mtb.memAddrReg, pAddr)
-	// 			mtb.memAddrReg++
-	// 			mtb.negWordCntReg++
-	// 			if mtb.negWordCntReg == 0 {
-	// 				break
-	// 			}
-	// 		}
-	// 		trailer, _ := simht.ReadRecordHeader(0)
-	// 		logging.DebugPrint(logging.MtbLog, " ----  %d bytes loaded\n", w)
-	// 		logging.DebugPrint(logging.MtbLog, " ----  Read SimH Trailer: %d\n", trailer)
-	// 		// TODO Need to verify how status should be set here...
-	// 		mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1UnitReady
-	// 	}
-	// 	busSetBusy(DEV_MTB, false)
-	// 	busSetDone(DEV_MTB, true)
+	switch mtb.currentCmd {
+	case mtbCmdREAD:
+		logging.DebugPrint(logging.MtbLog, "*READ* command\n ==== Unit: %d\n ==== Word Count: %d Location: %d\n", mtb.currentUnit, mtb.negWordCntReg, mtb.memAddrReg)
+		hdrLen, _ := simhTape.ReadMetaData(mtb.simhFile[mtb.currentUnit])
+		logging.DebugPrint(logging.MtbLog, " ----  Header read giving length: %d\n", hdrLen)
+		if hdrLen == mtbEOF {
+			logging.DebugPrint(logging.MtbLog, " ----  Header is EOF indicator\n")
+			mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1UnitReady | mtbSr1EOF | mtbSr1Error
+		} else {
+			logging.DebugPrint(logging.MtbLog, " ----  Calling simhTape.ReadRecord with length: %d\n", hdrLen)
+			var w uint32
+			var wd dg.WordT
+			var pAddr dg.PhysAddrT
+			rec, _ := simhTape.ReadRecordData(mtb.simhFile[mtb.currentUnit], int(hdrLen))
+			for w = 0; w < hdrLen; w += 2 {
+				wd = (dg.WordT(rec[w]) << 8) | dg.WordT(rec[w+1])
+				pAddr = memory.MemWriteWordDchChan(mtb.memAddrReg, wd)
+				logging.DebugPrint(logging.MtbLog, " ----  Written word (%02X | %02X := %04X) to logical address: %d, physical: %d\n", rec[w], rec[w+1], wd, mtb.memAddrReg, pAddr)
+				mtb.memAddrReg++
+				mtb.negWordCntReg++
+				if mtb.negWordCntReg == 0 {
+					break
+				}
+			}
+			trailer, _ := simhTape.ReadMetaData(mtb.simhFile[mtb.currentUnit])
+			logging.DebugPrint(logging.MtbLog, " ----  %d bytes loaded\n", w)
+			logging.DebugPrint(logging.MtbLog, " ----  Read SimH Trailer: %d\n", trailer)
+			// TODO Need to verify how status should be set here...
+			mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1UnitReady
+		}
 
-	// case mtbCmdREWIND:
-	// 	logging.DebugPrint(logging.MtbLog, "*REWIND* command\n")
-	// 	simht.Rewind(0)
-	// 	mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1UnitReady | mtbSr1BOT
-	// 	mtb.statusReg2 = mtbSr2PEMode
-	// 	// FIXME set flags here?
+	case mtbCmdREWIND:
+		logging.DebugPrint(logging.MtbLog, "*REWIND* command\n ------ Unit: #%d\n", mtb.currentUnit)
+		simhTape.Rewind(mtb.simhFile[mtb.currentUnit])
+		mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1UnitReady | mtbSr1BOT
+		mtb.statusReg2 = mtbSr2PEMode
 
-	// case mtbCmdSPACE_FWD:
-	// 	logging.DebugPrint(logging.MtbLog, "*SPACE FORWARD* command\n")
-	// 	simht.SpaceFwd(0, 0)
-	// 	mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1UnitReady | mtbSr1EOF | mtbSr1Error
-	// 	busSetBusy(DEV_MTB, false)
-	// 	busSetDone(DEV_MTB, true)
+	case mtbCmdSPACE_FWD:
+		logging.DebugPrint(logging.MtbLog, "*SPACE FORWARD* command\n ----- Unit: #%d\n", mtb.currentUnit)
+		simhTape.SpaceFwd(mtb.simhFile[mtb.currentUnit], 0)
+		mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1UnitReady | mtbSr1EOF | mtbSr1Error
 
 	default:
 		log.Fatalln("ERROR: mtbDoCommand - Command Not Yet Implemented")
