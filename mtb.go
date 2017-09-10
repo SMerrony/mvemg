@@ -62,19 +62,25 @@ const (
 	mtbCmdUnload      = 9
 	mtbCmdDriveMode   = 10
 
-	mtbSr1Error     = 0100000
-	mtbSr1HiDensity = 04000
-	mtbSr1EOT       = 01000
-	mtbSr1EOF       = 0400
-	mtbSr1BOT       = 0200
-	mtbSr19Track    = 0100
-	mtbSr1UnitReady = 0001
+	mtbSr1Error         = 1 << 15
+	mtbSr1DataLate      = 1 << 14
+	mtbSr1Rewinding     = 1 << 13
+	mtbSr1Illegal       = 1 << 12
+	mtbSr1HiDensity     = 1 << 11
+	mtbSr1DataError     = 1 << 10
+	mtbSr1EOT           = 1 << 9
+	mtbSr1EOF           = 1 << 8
+	mtbSr1BOT           = 1 << 7
+	mtbSr19Track        = 1 << 6
+	mtbSr1BadTape       = 1 << 5
+	mtbSr1Reserved      = 1 << 4
+	mtbSr1StatusChanged = 1 << 3
+	mtbSr1WriteLock     = 1 << 2
+	mtbSr1OddChar       = 1 << 1
+	mtbSr1UnitReady     = 1
 
-	mtbSr2Error     = 0x8000
-	mtbSr2DataError = 0x0400
-	mtbSr2EOT       = 0x0200
-	mtbSr2EOF       = 0x0100
-	mtbSr2PEMode    = 0x0001
+	mtbSr2Error  = 1 << 15
+	mtbSr2PEMode = 1
 )
 
 // const mtbStatsPeriodMs = 500
@@ -334,6 +340,7 @@ func mtbDoCommand() {
 	case mtbCmdSpaceFwd:
 		logging.DebugPrint(logging.MtbLog, "*SPACE FORWARD* command\n ----- ------- Unit: #%d\n", mtb.currentUnit)
 		simhTape.SpaceFwd(mtb.simhFile[mtb.currentUnit], 0)
+		mtb.memAddrReg = 0xffffffff
 		mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1UnitReady | mtbSr1EOF | mtbSr1Error
 
 	default:
