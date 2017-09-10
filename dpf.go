@@ -580,8 +580,9 @@ func dpfHandleFlag(f byte) {
 
 // set the MV/Em disk image file postion according to current C/H/S
 func dpfPositionDiskImage() {
-	var offset, r int64
-	offset = int64(dpfData.cylinder) * int64(dpfData.surface) * int64(dpfData.sector) * dpfBytesPerSect
+	var lba, offset, r int64
+	lba = ((int64(dpfData.cylinder*dpfSurfPerDisk) + int64(dpfData.surface)) * int64(dpfSectPerTrack)) + int64(dpfData.sector)
+	offset = lba * dpfBytesPerSect
 	r, err = dpfData.imageFile.Seek(offset, 0)
 	if r != offset || err != nil {
 		log.Fatal("DPF could not postition disk image via seek()")
