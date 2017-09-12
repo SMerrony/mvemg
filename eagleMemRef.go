@@ -91,6 +91,9 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case "WCST":
 		wcst(cpuPtr)
 
+	case "WCTR":
+		wctr(cpuPtr)
+
 	case "WLDB":
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		wordAddr = dg.PhysAddrT(cpuPtr.ac[twoAcc1Word.acs]) >> 1
@@ -312,5 +315,49 @@ func wcst(cpuPtr *CPUT) {
 		cpuPtr.ac[1] = dg.DwordT(int32(cpuPtr.ac[1]) + dir)
 		cpuPtr.ac[3] = dg.DwordT(int32(cpuPtr.ac[3]) + dir)
 		strLenDir += int(dir)
+	}
+}
+
+func wctr(cpuPtr *CPUT) {
+	// AC0 Wide Byte addr of translation table - unchanged
+	// AC1 # of bytes in each string, NB. -ve => translate-and-move mode, +ve => translate-and-compare mode
+	// AC2 destination string ("string2") Byte addr
+	// AC3 source string ("string1") byte addr
+	if cpuPtr.ac[1] == 0 {
+		log.Println("INFO: WCTR called with AC1 == 0, not translating anything")
+		return
+	}
+	transTablePtr := dg.DwordT(resolve32bitIndirectableAddr(cpuPtr.ac[0]))
+	// build an array representation of the table
+	var transTable [256]dg.ByteT
+	var c dg.DwordT
+	for c = 0; c < 256; c++ {
+		transTable[c] = readByteBA(transTablePtr + c)
+	}
+
+	for cpuPtr.ac[1] != 0 {
+		srcByte := readByteBA(cpuPtr.ac[3])
+		cpuPtr.ac[3]++
+		transByte := transTable[int(srcByte)]
+		if int32(cpuPtr.ac[1]) < 0 {
+			// move mode
+			memWriteByteBA(transByte, cpuPtr.ac[2])
+			cpuPtr.ac[2]++
+			cpuPtr.ac[1]++
+		} else {
+			// compare mode
+			str2byte := readByteBA(cpuPtr.ac[2])
+			cpuPtr.ac[2]++
+			trans2byte := transTable[int(str2byte)]
+			if srcByte < trans2byte {
+				cpuPtr.ac[1] = 0xffffffff
+				break
+			}
+			if srcByte > trans2byte {
+				cpuPtr.ac[1] = 1
+				break
+			}
+			cpuPtr.ac[1]--
+		}
 	}
 }
