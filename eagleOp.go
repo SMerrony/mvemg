@@ -178,6 +178,12 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		oneAcc1Word = iPtr.variant.(oneAcc1WordT)
 		cpuPtr.ac[oneAcc1Word.acd] = cpuPtr.ac[oneAcc1Word.acd] >> 1
 
+	case "WMUL":
+		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
+		res = int32(cpuPtr.ac[twoAcc1Word.acd]) * int32(cpuPtr.ac[twoAcc1Word.acs])
+		// FIXME - handle overflow and carry
+		cpuPtr.ac[twoAcc1Word.acd] = dg.DwordT(res)
+
 	case "WNADI": //signed 16-bit
 		oneAccImm2Word = iPtr.variant.(oneAccImm2WordT)
 		s32 = int32(cpuPtr.ac[oneAccImm2Word.acd]) + int32(oneAccImm2Word.immS16)

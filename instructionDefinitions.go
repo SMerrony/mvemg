@@ -249,6 +249,7 @@ func instructionsInit() {
 	instructionSet["WBTO"] = instrChars{0x8299, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_MEMREF}
 	instructionSet["WBTZ"] = instrChars{0x82a9, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_MEMREF}
 	instructionSet["WCLM"] = instrChars{0x8569, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
+	instructionSet["WCMP"] = instrChars{0xa759, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_MEMREF}
 	instructionSet["WCMV"] = instrChars{0x8779, 0xFFFF, 1, UNIQUE_1_WORD_FMT, EAGLE_MEMREF}
 	instructionSet["WCOM"] = instrChars{0x8459, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
 	instructionSet["WCST"] = instrChars{0xe709, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_MEMREF}
@@ -265,6 +266,7 @@ func instructionsInit() {
 	instructionSet["WMOV"] = instrChars{0x8379, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
 	instructionSet["WMOVR"] = instrChars{0xe699, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_OP}
 	instructionSet["WMSP"] = instrChars{0xe649, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_STACK}
+	instructionSet["WMUL"] = instrChars{0x8169, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
 	instructionSet["WNADI"] = instrChars{0xE6F9, 0xE7FF, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_OP}
 	instructionSet["WNEG"] = instrChars{0x8269, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
 	instructionSet["WPOP"] = instrChars{0x8089, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_STACK}
