@@ -88,6 +88,9 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case "WCMV":
 		wcmv(cpuPtr)
 
+	case "WCMP":
+		wcmp(cpuPtr)
+
 	case "WCST":
 		wcst(cpuPtr)
 
@@ -278,6 +281,60 @@ func wcmv(cpuPtr *CPUT) {
 	}
 	cpuPtr.ac[0] = 0
 	cpuPtr.ac[1] = dg.DwordT(srcCount)
+}
+
+func getDirection(ac dg.DwordT) int32 {
+	if int32(ac) > 0 {
+		return 1
+	}
+	if int32(ac) < 0 {
+		return -1
+	}
+	return 0
+}
+
+func wcmp(cpuPtr *CPUT) {
+	// AC0 String2 length and dir (bwd if -ve)
+	// AC1 String1 length and dir (bwd if -ve)
+	// AC2 Byte Pointer to first byte of String2 to be compared
+	// AC3 Byte Pointer to first byte of String1 to be compared
+	str2dir := getDirection(cpuPtr.ac[0])
+	str1dir := getDirection(cpuPtr.ac[1])
+	var str1char, str2char dg.ByteT
+	if str1dir == 0 && str2dir == 0 {
+		return
+	}
+	for cpuPtr.ac[1] != 0 && cpuPtr.ac[0] != 0 {
+		// read the two bytes to compare, substitute with a space if one string has run out
+		if cpuPtr.ac[1] != 0 {
+			str1char = readByteBA(cpuPtr.ac[3])
+		} else {
+			str1char = ' '
+		}
+		if cpuPtr.ac[0] != 0 {
+			str2char = readByteBA(cpuPtr.ac[2])
+		} else {
+			str2char = ' '
+		}
+		// compare
+		if str1char < str2char {
+			cpuPtr.ac[1] = 0xFFFFFFFF
+			return
+		}
+		if str1char > str2char {
+			cpuPtr.ac[1] = 1
+			return
+		}
+		// they were equal, so adjust remaining lengths, move pointers, and loop round
+		if cpuPtr.ac[0] != 0 {
+			cpuPtr.ac[0] = dg.DwordT(int32(cpuPtr.ac[0]) + str2dir)
+		}
+		if cpuPtr.ac[1] != 0 {
+			cpuPtr.ac[1] = dg.DwordT(int32(cpuPtr.ac[1]) + str1dir)
+		}
+		cpuPtr.ac[2] = dg.DwordT(int32(cpuPtr.ac[2]) + str2dir)
+		cpuPtr.ac[3] = dg.DwordT(int32(cpuPtr.ac[3]) + str1dir)
+	}
 }
 
 func wcst(cpuPtr *CPUT) {

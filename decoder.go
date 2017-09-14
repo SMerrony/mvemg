@@ -247,7 +247,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 
 	mnem, found := instructionLookup(opcode, lefMode, ioOn, autOn)
 	if !found {
-		logging.DebugPrint(logging.DebugLog, "INFO: instructionFind failed to return anything to instructionDecode for location %d.\n", pc)
+		logging.DebugPrint(logging.DebugLog, "INFO: instructionDecode failed to find anything with instructionLookup for location %d., containing 0x%X\n", pc, opcode)
 		return &decodedInstr, false
 	}
 	decodedInstr.mnemonic = mnem
