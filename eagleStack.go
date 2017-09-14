@@ -46,6 +46,8 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	switch iPtr.mnemonic {
 
+	// N.B. DSZTS and ISZTS are in eaglePC
+
 	case "LDAFP":
 		oneAcc1Word = iPtr.variant.(oneAcc1WordT)
 		cpuPtr.ac[oneAcc1Word.acd] = memory.ReadDWord(memory.WfpLoc)

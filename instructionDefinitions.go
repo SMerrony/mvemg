@@ -122,7 +122,7 @@ func instructionsInit() {
 	instructionSet["DSB"] = instrChars{0x80c8, 0x87ff, 1, TWOACC_1_WORD_FMT, NOVA_OP}
 	instructionSet["DSPA"] = instrChars{0xc478, 0xe4ff, 2, ONEACC_MODE_IND_2_WORD_E_FMT, ECLIPSE_PC}
 	instructionSet["DSZ"] = instrChars{0x1800, 0xf800, 1, NOVA_NOACC_EFF_ADDR_FMT, NOVA_MEMREF}
-	instructionSet["DSZTS"] = instrChars{0xc7d9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
+	instructionSet["DSZTS"] = instrChars{0xc7d9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_PC}
 	instructionSet["ECLID"] = instrChars{0xffc8, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
 	instructionSet["EDIT"] = instrChars{0xf7a8, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_OP}
 	instructionSet["EDSZ"] = instrChars{0x9c38, 0xfcff, 2, NOACC_MODE_IND_2_WORD_E_FMT, ECLIPSE_PC}
@@ -152,7 +152,7 @@ func instructionsInit() {
 	instructionSet["IORI"] = instrChars{0x87f8, 0xe7ff, 2, ONEACC_IMMWD_2_WORD_FMT, ECLIPSE_OP}
 	instructionSet["IORST"] = instrChars{0x653f, 0xe73f, 1, ONEACC_1_WORD_FMT, NOVA_IO}
 	instructionSet["ISZ"] = instrChars{0x1000, 0xf800, 1, NOVA_NOACC_EFF_ADDR_FMT, NOVA_MEMREF}
-	instructionSet["ISZTS"] = instrChars{0xc7c9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
+	instructionSet["ISZTS"] = instrChars{0xc7c9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_PC}
 	instructionSet["JMP"] = instrChars{0x0, 0xf800, 1, NOVA_NOACC_EFF_ADDR_FMT, NOVA_PC}
 	instructionSet["JSR"] = instrChars{0x800, 0xf800, 1, NOVA_NOACC_EFF_ADDR_FMT, NOVA_PC}
 	instructionSet["LCALL"] = instrChars{0xa6c9, 0xe7ff, 4, NOACC_MODE_IND_4_WORD_FMT, EAGLE_PC}
@@ -299,7 +299,7 @@ func instructionsInit() {
 	instructionSet["XLEFB"] = instrChars{0x8439, 0x87ff, 2, ONEACC_MODE_2_WORD_X_B_FMT, EAGLE_MEMREF}
 	instructionSet["XNADD"] = instrChars{0x8018, 0x87ff, 2, ONEACC_MODE_IND_2_WORD_X_FMT, EAGLE_MEMREF}
 	instructionSet["XNADI"] = instrChars{0x8418, 0x87ff, 2, IMM_MODE_2_WORD_FMT, EAGLE_MEMREF}
-	instructionSet["XNDO"] = instrChars{0x8498, 0x87ff, 3, THREE_WORD_DO_FMT, EAGLE_MEMREF}
+	instructionSet["XNDO"] = instrChars{0x8498, 0x87ff, 3, THREE_WORD_DO_FMT, EAGLE_PC}
 	instructionSet["XNDSZ"] = instrChars{0xa609, 0xe7ff, 2, NOACC_MODE_IND_2_WORD_X_FMT, EAGLE_PC}
 	instructionSet["XNISZ"] = instrChars{0x8639, 0xe7ff, 2, NOACC_MODE_IND_2_WORD_X_FMT, EAGLE_PC}
 	instructionSet["XNLDA"] = instrChars{0x8329, 0x87ff, 2, ONEACC_MODE_IND_2_WORD_X_FMT, EAGLE_MEMREF}

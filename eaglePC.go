@@ -41,12 +41,31 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		noAccModeInd4Word      noAccModeInd4WordT
 		oneAccImm2Word         oneAccImm2WordT
 		oneAccModeInd3Word     oneAccModeInd3WordT
+		threeWordDo            threeWordDoT
 		twoAcc1Word            twoAcc1WordT
 		split8bitDisp          split8bitDispT
 		wskb                   wskbT
 	)
 
 	switch iPtr.mnemonic {
+
+	case "DSZTS":
+		dwd = memory.ReadDWord(memory.WspLoc) - 1
+		memory.WriteDWord(memory.WspLoc, dwd)
+		if dwd == 0 {
+			cpuPtr.pc += 2
+		} else {
+			cpuPtr.pc += 1
+		}
+
+	case "ISZTS":
+		dwd = memory.ReadDWord(memory.WspLoc) + 1
+		memory.WriteDWord(memory.WspLoc, dwd)
+		if dwd == 0 {
+			cpuPtr.pc += 2
+		} else {
+			cpuPtr.pc += 1
+		}
 
 	case "LCALL": // FIXME - LCALL only handling trivial case, no checking
 		noAccModeInd4Word = iPtr.variant.(noAccModeInd4WordT)
@@ -279,6 +298,21 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		noAccModeInd2Word = iPtr.variant.(noAccModeInd2WordT)
 		cpuPtr.ac[3] = dg.DwordT(cpuPtr.pc + 2) // TODO Check this, PoP is self-contradictory on p.11-642
 		cpuPtr.pc = resolve16bitEagleAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15)
+
+	case "XNDO": // Narrow Do Until Greater Than
+		threeWordDo = iPtr.variant.(threeWordDoT)
+		loopVarAddr := resolve16bitEagleAddr(cpuPtr, threeWordDo.ind, threeWordDo.mode, threeWordDo.disp15)
+		loopVar := int32(util.SexWordToDWord(util.DWordGetLowerWord(memory.ReadDWord(loopVarAddr))))
+		loopVar++
+		memory.WriteDWord(loopVarAddr, dg.DwordT(loopVar))
+		acVar := int32(cpuPtr.ac[threeWordDo.acd])
+		cpuPtr.ac[threeWordDo.acd] = dg.DwordT(loopVar)
+		if loopVar > acVar {
+			// loop ends
+			cpuPtr.pc = cpuPtr.pc + 1 + dg.PhysAddrT(threeWordDo.offsetU16)
+		} else {
+			cpuPtr.pc += dg.PhysAddrT(iPtr.instrLength)
+		}
 
 	case "XNISZ": // unsigned narrow increment and skip if zero
 		noAccModeInd2Word = iPtr.variant.(noAccModeInd2WordT)

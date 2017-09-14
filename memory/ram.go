@@ -94,6 +94,8 @@ func WriteByte(wordAddr dg.PhysAddrT, loByte bool, b dg.ByteT) {
 func ReadWord(wordAddr dg.PhysAddrT) dg.WordT {
 	var wd dg.WordT
 	if wordAddr >= MemSizeWords {
+		logging.DebugLogsDump()
+		debug.PrintStack()
 		log.Fatalf("ERROR: Attempt to read word beyond end of physical memory using address: %d", wordAddr)
 	}
 	memory.ramMu.RLock()
