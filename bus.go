@@ -40,12 +40,12 @@ type (
 	DataInFunc func(*CPUT, *novaDataIoT, byte)
 )
 
-type pioMsgT struct {
-	cpuPtr *CPUT
-	iPtr   *decodedInstrT
-	IO     byte // 'I' or 'O'
-	abc    byte // 'A', 'B', or 'C'
-}
+// type pioMsgT struct {
+// 	cpuPtr *CPUT
+// 	iPtr   *decodedInstrT
+// 	IO     byte // 'I' or 'O'
+// 	abc    byte // 'A', 'B', or 'C'
+// }
 
 type device struct {
 	devMu           sync.RWMutex
@@ -54,8 +54,6 @@ type device struct {
 	resetFunc       ResetFunc
 	dataOutFunc     DataOutFunc
 	dataInFunc      DataInFunc
-	pioChan         chan pioMsgT
-	pioDoneChan     chan bool
 	simAttached     bool
 	ioDevice        bool
 	bootable        bool
@@ -74,8 +72,6 @@ func busInit() {
 		d[dev].priorityMaskBit = 0
 		d[dev].dataInFunc = nil
 		d[dev].dataOutFunc = nil
-		d[dev].pioChan = nil
-		d[dev].pioDoneChan = nil
 		d[dev].simAttached = false
 		d[dev].ioDevice = false
 		d[dev].bootable = false
@@ -111,8 +107,8 @@ func busDataIn(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 	//var pio pioMsgT
 	//logging.DebugPrint(logging.DEBUG_LOG, "DEBUG: Bus Data In function called for dev #0%o\n", iPtr.ioDev)
 	d[iPtr.ioDev].devMu.RLock()
-	if d[iPtr.ioDev].dataInFunc == nil && d[iPtr.ioDev].pioChan == nil {
-		log.Fatalf("ERROR: busDataIn called for device %d with no function or channel set", iPtr.ioDev)
+	if d[iPtr.ioDev].dataInFunc == nil {
+		log.Fatalf("ERROR: busDataIn called for device %d with no function set", iPtr.ioDev)
 	}
 	d[iPtr.ioDev].devMu.RUnlock()
 	if d[iPtr.ioDev].dataInFunc != nil {
@@ -141,9 +137,9 @@ func busSetDataOutFunc(devNum int, fn DataOutFunc) {
 func busDataOut(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 	//var pio pioMsgT
 	d[iPtr.ioDev].devMu.Lock()
-	if d[iPtr.ioDev].dataOutFunc == nil && d[iPtr.ioDev].pioChan == nil {
+	if d[iPtr.ioDev].dataOutFunc == nil {
 		logging.DebugLogsDump()
-		log.Fatalf("ERROR: busDataOut called for device %d with no function or channel set",
+		log.Fatalf("ERROR: busDataOut called for device %d with no function set",
 			iPtr.ioDev)
 	}
 	d[iPtr.ioDev].devMu.Unlock()
@@ -160,13 +156,6 @@ func busDataOut(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 	// 	_ = <-d[iPtr.ioDev].pioDoneChan
 	// 	//logging.DebugPrint(logging.DebugLog, "INFO: Bus Data Out sent PIO msg to dev #0%o\n", iPtr.ioDev)
 	// }
-}
-
-func busSetPioChan(devNum int, pioc chan pioMsgT) {
-	d[devNum].pioChan = pioc
-}
-func busSetPioDoneChan(devNum int, piodc chan bool) {
-	d[devNum].pioDoneChan = piodc
 }
 
 func busSetResetFunc(devNum int, resetFn ResetFunc) {

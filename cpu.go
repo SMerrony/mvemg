@@ -47,7 +47,7 @@ type CPUT struct {
 	sbr                          [8]sbrBits   // SBRs (see above)
 
 	// emulator internals
-	instrCount uint64 // how many instructions executed during the current run
+	instrCount uint64 // how many instructions executed during the current run, running at 2 MIPS this will loop round roughly every 100 million years!
 	scpIO      bool   // true if console I/O is directed to the SCP
 }
 
