@@ -1,7 +1,11 @@
-# SCRIPT1.TXT
+# DEBUG_SCRIPT.TXT
 # Comments begin with the hash symbol in the first column
 #
-# Logging slows down the VM by approx. 9x
+# This script has logging and debugging turned on, so the emulator runs
+# roughly ten times slower but gives plenty of useful info when errors 
+# or unimplemented features occur.
+#
+# Logging slows down the eumlator by approx. 9x
 SET LOGGING ON
 #
 # Trap JMP to location zeros - again, slows down the emulator a little
