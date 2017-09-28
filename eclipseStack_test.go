@@ -56,6 +56,7 @@ func TestSave(t *testing.T) {
 	if newFP != 256+5 {
 		t.Errorf("Expected NFP to be 261, got %d", newFP)
 	}
+	t.Logf("SAVE 0 OK\n")
 
 	memory.WriteWord(memory.NspLoc, 256)
 	memory.WriteWord(memory.NfpLoc, 256)

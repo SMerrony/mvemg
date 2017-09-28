@@ -385,7 +385,7 @@ func dskpDoPioCommand() {
 			logging.DebugPrint(logging.DskpLog, "... ... Destination Start Address: %d\n", addr)
 		}
 		for w = 0; w < dskpIntInfBlkSize; w++ {
-			memory.MemWriteWordBmcChan(addr+w, dskpData.intInfBlock[w])
+			memory.WriteWordBmcChan(addr+w, dskpData.intInfBlock[w])
 			if debugLogging {
 				logging.DebugPrint(logging.DskpLog, "... ... Word %d: %s\n", w, util.WordToBinStr(dskpData.intInfBlock[w]))
 			}
@@ -400,11 +400,11 @@ func dskpDoPioCommand() {
 		}
 		// only a few fields can be changed...
 		w = 5
-		dskpData.intInfBlock[w] = memory.MemReadWordBmcChan(addr+w) & 0xff00
+		dskpData.intInfBlock[w] = memory.ReadWordBmcChan(addr+w) & 0xff00
 		w = 6
-		dskpData.intInfBlock[w] = memory.MemReadWordBmcChan(addr + w)
+		dskpData.intInfBlock[w] = memory.ReadWordBmcChan(addr + w)
 		w = 7
-		dskpData.intInfBlock[w] = memory.MemReadWordBmcChan(addr + w)
+		dskpData.intInfBlock[w] = memory.ReadWordBmcChan(addr + w)
 		if debugLogging {
 			logging.DebugPrint(logging.DskpLog, "... ... Word 5: %s\n", util.WordToBinStr(dskpData.intInfBlock[5]))
 			logging.DebugPrint(logging.DskpLog, "... ... Word 6: %s\n", util.WordToBinStr(dskpData.intInfBlock[6]))
@@ -419,7 +419,7 @@ func dskpDoPioCommand() {
 			logging.DebugPrint(logging.DskpLog, "... ... Destination Start Address: %d\n", addr)
 		}
 		for w = 0; w < dskpUnitInfBlkSize; w++ {
-			memory.MemWriteWordBmcChan(addr+w, dskpData.unitInfBlock[w])
+			memory.WriteWordBmcChan(addr+w, dskpData.unitInfBlock[w])
 			if debugLogging {
 				logging.DebugPrint(logging.DskpLog, "... ... Word %d: %s\n", w, util.WordToBinStr(dskpData.unitInfBlock[w]))
 			}
@@ -565,7 +565,7 @@ func dskpCBprocessor(dataPtr *dskpDataT) {
 		}
 		// copy CB contents from host memory
 		for w = 0; w < cbLength; w++ {
-			cb[w] = memory.MemReadWordBmcChan(addr + dg.PhysAddrT(w))
+			cb[w] = memory.ReadWordBmcChan(addr + dg.PhysAddrT(w))
 			if debugLogging {
 				logging.DebugPrint(logging.DskpLog, "... CB[%d]: %d\n", w, cb[w])
 			}
@@ -623,7 +623,7 @@ func dskpCBprocessor(dataPtr *dskpDataT) {
 				dataPtr.imageFile.Read(readBuff)
 				for w = 0; w < dskpWordsPerSector; w++ {
 					tmpWd = (dg.WordT(readBuff[w*2]) << 8) | dg.WordT(readBuff[(w*2)+1])
-					memory.MemWriteWordBmcChan(physAddr+(dg.PhysAddrT(sect)*dskpWordsPerSector)+dg.PhysAddrT(w), tmpWd)
+					memory.WriteWordBmcChan(physAddr+(dg.PhysAddrT(sect)*dskpWordsPerSector)+dg.PhysAddrT(w), tmpWd)
 				}
 				dataPtr.reads++
 			}
@@ -664,7 +664,7 @@ func dskpCBprocessor(dataPtr *dskpDataT) {
 				dataPtr.sectorNo += sect
 				dskpPositionDiskImage()
 				for w = 0; w < dskpWordsPerSector; w++ {
-					tmpWd = memory.MemReadWordBmcChan(physAddr + (dg.PhysAddrT(sect) * dskpWordsPerSector) + dg.PhysAddrT(w))
+					tmpWd = memory.ReadWordBmcChan(physAddr + (dg.PhysAddrT(sect) * dskpWordsPerSector) + dg.PhysAddrT(w))
 					writeBuff[w*2] = byte(tmpWd >> 8)
 					writeBuff[(w*2)+1] = byte(tmpWd & 0x00ff)
 				}
@@ -691,7 +691,7 @@ func dskpCBprocessor(dataPtr *dskpDataT) {
 
 		// write back CB
 		for w = 0; w < cbLength; w++ {
-			memory.MemWriteWordBmcChan(addr+dg.PhysAddrT(w), cb[w])
+			memory.WriteWordBmcChan(addr+dg.PhysAddrT(w), cb[w])
 		}
 
 		if nextCB == 0 {

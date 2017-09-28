@@ -29,8 +29,8 @@ import (
 func TestBmcdchReset(t *testing.T) {
 	var wd dg.WordT
 	bmcdchInit()
-	wd = regs[IOCHAN_DEF_REG]
-	if wd != IOCDR_1 {
+	wd = regs[iochanDefReg]
+	if wd != ioccdr1 {
 		t.Error("Got ", wd)
 	}
 }
