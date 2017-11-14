@@ -26,6 +26,7 @@ import (
 	"log"
 	"mvemg/dg"
 	"mvemg/util"
+	"runtime"
 	"sync"
 	"time"
 )
@@ -57,6 +58,10 @@ type cpuStatT struct {
 	ac                      [4]dg.DwordT
 	carry, atu, ion, pfflag bool
 	instrCount              uint64
+	goVersion               string
+	goroutineCount          int
+	hostCPUCount            int
+	heapSizeMB              int
 }
 
 const cpuStatPeriodMs = 500 // 125 // i.e. we send stats every 1/8th of a second
@@ -128,6 +133,9 @@ func cpuExecute(iPtr *decodedInstrT) bool {
 
 func cpuStatSender(sChan chan cpuStatT) {
 	var stats cpuStatT
+	var memStats runtime.MemStats
+	stats.goVersion = runtime.Version()
+	stats.hostCPUCount = runtime.NumCPU()
 	for {
 		cpu.cpuMu.RLock()
 		stats.pc = cpu.pc
@@ -137,6 +145,9 @@ func cpuStatSender(sChan chan cpuStatT) {
 		stats.ac[3] = cpu.ac[3]
 		stats.instrCount = cpu.instrCount
 		cpu.cpuMu.RUnlock()
+		stats.goroutineCount = runtime.NumGoroutine()
+		runtime.ReadMemStats(&memStats)
+		stats.heapSizeMB = int(memStats.HeapAlloc / 1048576)
 		select {
 		case sChan <- stats:
 		default:

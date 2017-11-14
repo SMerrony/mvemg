@@ -48,6 +48,9 @@ const (
 
 	cmdUnknown = " *** UNKNOWN SCP-CLI COMMAND ***"
 	cmdNYI     = "Command Not Yet Implemented"
+
+	version     = "20171114"
+	releaseType = "Prerelease"
 )
 
 var (

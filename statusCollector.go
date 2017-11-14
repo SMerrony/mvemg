@@ -32,10 +32,12 @@ import (
 
 const (
 	// define which screen row each of the monitored data appear on
-	statCPUrow  = 3
-	statCPUrow2 = 5
-	statDPFrow  = 7
-	statDSKProw = 9
+	statCPUrow        = 3
+	statCPUrow2       = 5
+	statDPFrow        = 7
+	statDSKProw       = 9
+	statInternalsRow  = 20
+	statInternalsRow2 = 21
 )
 
 // StatusCollector maintains a near real-time status screen available on STAT_PORT.
@@ -78,8 +80,8 @@ func statusCollector(
 			os.Exit(1)
 		}
 
-		statusSendString(conn, fmt.Sprintf("%c                        MV/Em Status\012", DASHER_ERASE_PAGE))
-		statusSendString(conn, "                        ============")
+		statusSendString(conn, fmt.Sprintf("%c                             MV/Em Status\012", DASHER_ERASE_PAGE))
+		statusSendString(conn, "                             ============")
 
 		for {
 			// blocking wait for a status update to arrive
@@ -101,6 +103,15 @@ func statusCollector(
 					cpuStats.ac[1],
 					cpuStats.ac[2],
 					cpuStats.ac[3]))
+				statusSendString(conn, fmt.Sprintf("%c%c%c%c", DASHER_WRITE_WINDOW_ADDR, 0, statInternalsRow, DASHER_ERASE_EOL))
+				statusSendString(conn, fmt.Sprintf("MV/Em - Version: %s (%s) built with %s",
+					version, releaseType,
+					cpuStats.goVersion))
+				statusSendString(conn, fmt.Sprintf("%c%c%c%c", DASHER_WRITE_WINDOW_ADDR, 0, statInternalsRow2, DASHER_ERASE_EOL))
+				statusSendString(conn, fmt.Sprintf("        Host CPUs: %d  Goroutines: %d  Heap: %dMB",
+					cpuStats.hostCPUCount,
+					cpuStats.goroutineCount,
+					cpuStats.heapSizeMB))
 			case dpfStats = <-dpfChan:
 				thisDpfIOcnt = dpfStats.writes + dpfStats.reads
 				dpfIops = float64(thisDpfIOcnt-lastDpfIOcnt) / time.Since(lastDpfTime).Seconds()
