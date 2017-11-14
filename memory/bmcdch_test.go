@@ -46,17 +46,33 @@ func TestWriteReadMapSlot(t *testing.T) {
 
 }
 
-func TestBmcDchMapAddr(t *testing.T) {
+func TestBmcMapAddr(t *testing.T) {
 	var addr1, addr2, page dg.PhysAddrT
 	BmcdchWriteSlot(0, 0)
 	addr1 = 1
-	addr2, page = getBmcDchMapAddr(addr1)
+	addr2, page = getBmcMapAddr(addr1)
 	if addr2 != 1 {
 		t.Error("Expected 1, got ", addr2, page)
 	}
 	BmcdchWriteSlot(0, 3)
 	addr1 = 1
-	addr2, page = getBmcDchMapAddr(addr1)
+	addr2, page = getBmcMapAddr(addr1)
+	// 3 << 10 is 3072
+	if addr2 != 3073 {
+		t.Error("Expected 3073, got ", addr2, page)
+	}
+}
+func TestDchMapAddr(t *testing.T) {
+	var addr1, addr2, page dg.PhysAddrT
+	BmcdchWriteSlot(0, 0)
+	addr1 = 1
+	addr2, page = getBmcMapAddr(addr1)
+	if addr2 != 1 {
+		t.Error("Expected 1, got ", addr2, page)
+	}
+	BmcdchWriteSlot(0, 3)
+	addr1 = 1
+	addr2, page = getDchMapAddr(addr1)
 	// 3 << 10 is 3072
 	if addr2 != 3073 {
 		t.Error("Expected 3073, got ", addr2, page)

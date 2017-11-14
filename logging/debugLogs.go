@@ -71,7 +71,7 @@ func DebugLogsDump() {
 			case DskpLog:
 				debugDumpFile, _ = os.OpenFile("dskp_debug.log", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, logPerms)
 			case MapLog:
-				debugDumpFile, _ = os.OpenFile("map_debug.log", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, logPerms)
+				debugDumpFile, _ = os.OpenFile("bmcdch_debug.log", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, logPerms)
 			}
 			debugDumpFile.WriteString(">>> Dumping Debug Log\n\n")
 			thisLine := firstLine[l]

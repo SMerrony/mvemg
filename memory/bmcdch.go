@@ -40,10 +40,11 @@ import (
 
 // See p.8-44 of PoP for meanings of these...
 const (
-	bmcRegs      = 2048
-	dchRegs      = 1024
-	totalRegs    = 4096  // 010000(8)
-	iochanDefReg = 06000 // 3072.
+	bmcRegs         = 2048
+	firstDchSlotReg = bmcRegs
+	dchRegs         = 1024
+	totalRegs       = 4096  // 010000(8)
+	iochanDefReg    = 06000 // 3072.
 	// 06001-07677 are reserved
 	iochanStatusReg   = 07700 // 4032.
 	iochanMaskReg     = 07701 // 4033.
@@ -147,7 +148,7 @@ func getBmcMapAddr(mAddr dg.PhysAddrT) (dg.PhysAddrT, dg.PhysAddrT) {
 	page = dg.PhysAddrT((regs[slot*2]&0x1f))<<16 + dg.PhysAddrT(regs[(slot*2)+1])<<10
 	//page = dg.PhysAddrT(regs[(slot*2)+1]) << 10
 	pAddr = (mAddr & 0x3ff) | page
-	logging.DebugPrint(logging.MapLog, "getBmcDchMapAddr got: %d, slot: %d, regs[slot*2+1]: %d, page: %d, returning: %d\n",
+	logging.DebugPrint(logging.MapLog, "getBmcMapAddr got: %d, slot: %d, regs[slot*2+1]: %d, page: %d, returning: %d\n",
 		mAddr, slot, regs[(slot*2)+1], page, pAddr)
 	return pAddr, page // TODO page return is just for debugging
 }
@@ -160,7 +161,7 @@ func getDchMapAddr(mAddr dg.PhysAddrT) (dg.PhysAddrT, dg.PhysAddrT) {
 	page = dg.PhysAddrT((regs[slot*2]&0x1f))<<16 + dg.PhysAddrT(regs[(slot*2)+1])<<10
 	//page = dg.PhysAddrT(regs[(slot*2)+1]) << 10
 	pAddr = (mAddr & 0x3ff) | page
-	logging.DebugPrint(logging.MapLog, "getBmcDchMapAddr got: %d, slot: %d, regs[slot*2+1]: %d, page: %d, returning: %d\n",
+	logging.DebugPrint(logging.MapLog, "getDchMapAddr got: %d, slot: %d, regs[slot*2+1]: %d, page: %d, returning: %d\n",
 		mAddr, slot, regs[(slot*2)+1], page, pAddr)
 	return pAddr, page // TODO page return is just for debugging
 }
