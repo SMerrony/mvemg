@@ -277,7 +277,9 @@ func mtbHandleFlag(f byte) {
 	switch f {
 	case 'S':
 		logging.DebugPrint(logging.MtbLog, "... S flag set\n")
-		busSetBusy(DEV_MTB, true)
+		if mtb.currentCmd != mtbCmdRewind {
+			busSetBusy(DEV_MTB, true)
+		}
 		busSetDone(DEV_MTB, false)
 		mtbDoCommand()
 		busSetBusy(DEV_MTB, false)
@@ -346,7 +348,11 @@ func mtbDoCommand() {
 		mtb.memAddrReg = 0xffffffff
 		mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1UnitReady | mtbSr1EOF | mtbSr1Error
 
+	case mtbCmdSpaceRev:
+		log.Fatalln("ERROR: mtbDoCommand - SPACE REVERSE command Not Yet Implemented")
+	case mtbCmdUnload:
+		log.Fatalln("ERROR: mtbDoCommand - UNLOAD command Not Yet Implemented")
 	default:
-		log.Fatalln("ERROR: mtbDoCommand - Command Not Yet Implemented")
+		log.Fatalf("ERROR: mtbDoCommand - Command #%d Not Yet Implemented\n", mtb.currentCmd)
 	}
 }

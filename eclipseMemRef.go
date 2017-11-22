@@ -63,8 +63,9 @@ func eclipseMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 }
 
 func cmp(cpuPtr *CPUT) {
-	str2len := util.DWordGetLowerWord(cpuPtr.ac[0])
-	str1len := util.DWordGetLowerWord(cpuPtr.ac[1])
+	var str1len, str2len int16
+	str2len = int16(util.DWordGetLowerWord(cpuPtr.ac[0]))
+	str1len = int16(util.DWordGetLowerWord(cpuPtr.ac[1]))
 	str1bp := util.DWordGetLowerWord(cpuPtr.ac[3])
 	str2bp := util.DWordGetLowerWord(cpuPtr.ac[2])
 	var byte1, byte2 dg.ByteT
