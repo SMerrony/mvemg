@@ -296,6 +296,7 @@ func boot(cmd []string) {
 		ttoPutNLString(" *** Device is not bootable ***")
 		return
 	}
+	memory.MemInit()
 	switch devNum {
 	case DEV_MTB:
 		mtbLoadTBoot()
@@ -699,7 +700,7 @@ RunLoop: // performance-critical section starts here
 	log.Println(errDetail)
 	ttoPutNLString(errDetail)
 
-	errDetail = fmt.Sprintf(" *** MV/Em executed %d	 instructions ***", cpu.instrCount)
+	errDetail = fmt.Sprintf(" *** MV/Em executed %d instructions ***", cpu.instrCount)
 	log.Println(errDetail)
 	ttoPutNLString(errDetail)
 

@@ -49,6 +49,9 @@ var memory memoryT // memory is NOT exported
 func MemInit() {
 	memory.atuEnabled = false
 	bmcdchInit()
+	for addr := range memory.ram {
+		memory.ram[addr] = 0
+	}
 	logging.DebugPrint(logging.DebugLog, "INFO: Initialised %d words of main memory\n", MemSizeWords)
 }
 
