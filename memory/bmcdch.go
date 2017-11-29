@@ -189,6 +189,7 @@ func decodeBmcAddr(bmcAddr dg.PhysAddrT) bmcAddrT {
 	return res
 }
 
+// ReadWordDchChan - reads a 16-bit word over the virtual DCH channel
 func ReadWordDchChan(addr dg.PhysAddrT) dg.WordT {
 	pAddr := addr
 	if getDchMode() {
