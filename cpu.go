@@ -42,13 +42,14 @@ type sbrBits struct {
 type CPUT struct {
 	cpuMu sync.RWMutex
 	// representations of physical attributes
-	pc                           dg.PhysAddrT // 32-bit PC
-	ac                           [4]dg.DwordT // 4 x 32-bit Accumulators
-	mask                         dg.WordT     // interrupt mask
-	carry, atu, ion, pfflag, ovk bool         // flag bits
-	sbr                          [8]sbrBits   // SBRs (see above)
-	fpac                         [4]dg.QwordT // 4 x 64-bit Floating Point Accumulators
-	fpsr                         dg.QwordT    // 64-bit Floating-Point Status Register
+	pc                      dg.PhysAddrT // 32-bit PC
+	ac                      [4]dg.DwordT // 4 x 32-bit Accumulators
+	mask                    dg.WordT     // interrupt mask
+	psr                     dg.WordT     // Processor Status Register - see PoP A-4
+	carry, atu, ion, pfflag bool         // flag bits
+	sbr                     [8]sbrBits   // SBRs (see above)
+	fpac                    [4]dg.QwordT // 4 x 64-bit Floating Point Accumulators
+	fpsr                    dg.QwordT    // 64-bit Floating-Point Status Register
 
 	// emulator internals
 	instrCount uint64 // how many instructions executed during the current run, running at 2 MIPS this will loop round roughly every 100 million years!
@@ -92,6 +93,34 @@ func cpuCompactPrintableStatus() string {
 		cpu.ac[0], cpu.ac[1], cpu.ac[2], cpu.ac[3], util.BoolToInt(cpu.carry), cpu.pc)
 	cpu.cpuMu.RUnlock()
 	return res
+}
+
+// GetOVR is a getter for the OVR flag embedded in the PSR
+func (c *CPUT) GetOVR() bool {
+	return util.TestWbit(c.psr, 1)
+}
+
+// SetOVR is a setter for the OVR flag embedded in the PSR
+func (c *CPUT) SetOVR(newOVR bool) {
+	if newOVR {
+		util.SetWbit(c.psr, 1)
+	} else {
+		util.ClearWbit(c.psr, 1)
+	}
+}
+
+// GetOVK is a getter for the OVK flag embedded in the PSR
+func (c *CPUT) GetOVK() bool {
+	return util.TestWbit(c.psr, 0)
+}
+
+// SetOVK is a setter for the OVK flag embedded in the PSR
+func (c *CPUT) SetOVK(newOVK bool) {
+	if newOVK {
+		util.SetWbit(c.psr, 0)
+	} else {
+		util.ClearWbit(c.psr, 0)
+	}
 }
 
 // Execute a single instruction

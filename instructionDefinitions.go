@@ -289,6 +289,7 @@ func instructionsInit() {
 	instructionSet["WSLT"] = instrChars{0x8289, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_PC}
 	instructionSet["WSNE"] = instrChars{0x8189, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_PC}
 	instructionSet["WSNEI"] = instrChars{0xe6e9, 0xe7ff, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_PC}
+	instructionSet["WSSVR"] = instrChars{0x8729, 0xffff, 2, UNIQUE_2_WORD_FMT, EAGLE_STACK}
 	instructionSet["WSTB"] = instrChars{0x8539, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_MEMREF}
 	instructionSet["WSUB"] = instrChars{0x8159, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
 	instructionSet["XCALL"] = instrChars{0x8609, 0xe7ff, 3, NOACC_MODE_IND_3_WORD_XCALL_FMT, EAGLE_PC}

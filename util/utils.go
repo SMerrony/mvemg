@@ -141,6 +141,13 @@ func TestDWbit(dw dg.DwordT, b int) bool {
 	return ((dw & (1 << (31 - bb))) != 0)
 }
 
+// TestQWbit - does qword qw have bit b set?
+func TestQWbit(qw dg.QwordT, b int) bool {
+	var bb uint8
+	bb = uint8(b)
+	return ((qw & (1 << (63 - bb))) != 0)
+}
+
 // WordToBinStr - get a pretty-printable string of a word
 func WordToBinStr(w dg.WordT) string {
 	return fmt.Sprintf("%08b %08b", w>>8, w&0x0ff)

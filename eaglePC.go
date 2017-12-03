@@ -78,7 +78,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		}
 		memory.WsPush(0, dwd)
 		cpuPtr.pc = resolve32bitEffAddr(cpuPtr, noAccModeInd4Word.ind, noAccModeInd4Word.mode, noAccModeInd4Word.disp31)
-		cpuPtr.ovk = false
+		cpu.SetOVK(false)
 
 	case "LDSP":
 		oneAccModeInd3Word = iPtr.variant.(oneAccModeInd3WordT)

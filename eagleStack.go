@@ -119,11 +119,30 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		cpuPtr.fpac[0] = memory.WsPopQWord(0)
 		tmpQwd = memory.WsPopQWord(0)
 		cpuPtr.fpsr = 0
+		any := false
+		// set the ANY bit?
 		if util.GetQWbits(tmpQwd, 1, 4) != 0 {
 			cpuPtr.fpsr = util.SetQWbit(cpuPtr.fpsr, 0)
+			any = true
 		}
+		// copy bits 1-11
 		for b := 1; b <= 11; b++ {
-			klklklklklklklklklklk
+			if util.TestQWbit(tmpQwd, b) {
+				cpuPtr.fpsr = util.SetQWbit(cpuPtr.fpsr, uint(b))
+			}
+		}
+		// bits 28-31
+		if any {
+			for b := 28; b <= 31; b++ {
+				if util.TestQWbit(tmpQwd, b) {
+					cpuPtr.fpsr = util.SetQWbit(cpuPtr.fpsr, uint(b))
+				}
+			}
+			for b := 33; b <= 63; b++ {
+				if util.TestQWbit(tmpQwd, b) {
+					cpuPtr.fpsr = util.SetQWbit(cpuPtr.fpsr, uint(b))
+				}
+			}
 		}
 
 	case "WMSP":
@@ -165,12 +184,18 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case "WSAVR":
 		unique2Word = iPtr.variant.(unique2WordT)
 		wsav(cpuPtr, &unique2Word)
-		cpu.ovk = false
+		cpu.SetOVK(false)
 
 	case "WSAVS":
 		unique2Word = iPtr.variant.(unique2WordT)
 		wsav(cpuPtr, &unique2Word)
-		cpu.ovk = true
+		cpu.SetOVK(true)
+
+	case "WSSVR":
+		unique2Word = iPtr.variant.(unique2WordT)
+		wssav(cpuPtr, &unique2Word)
+		cpu.SetOVK(false)
+		cpu.SetOVR(false)
 
 	case "XPEF":
 		noAccModeInd2Word = iPtr.variant.(noAccModeInd2WordT)
@@ -202,9 +227,27 @@ func wsav(cpuPtr *CPUT, u2wd *unique2WordT) {
 	cpuPtr.ac[3] = memory.ReadDWord(memory.WspLoc)
 	dwdCnt := uint(u2wd.immU16)
 	if dwdCnt > 0 {
-		// for d := 0; d < dwdCnt; d++ {
-		// 	memory.WsPush(0, 0)
-		// }
+		memory.AdvanceWSP(dwdCnt)
+	}
+}
+
+// wssav is common to WSSVR and WSSVS
+func wssav(cpuPtr *CPUT, u2wd *unique2WordT) {
+	wfpSav := memory.ReadDWord(memory.WfpLoc)
+	memory.WsPush(0, util.DWordFromTwoWords(cpuPtr.psr, 0)) // 1
+	memory.WsPush(0, cpuPtr.ac[0])                          // 2
+	memory.WsPush(0, cpuPtr.ac[1])                          // 3
+	memory.WsPush(0, cpuPtr.ac[2])                          // 4
+	memory.WsPush(0, wfpSav)                                // 5
+	dwd := cpuPtr.ac[3] & 0x7fffffff
+	if cpuPtr.carry {
+		dwd |= 0x80000000
+	}
+	memory.WsPush(0, dwd) // 6
+	memory.WriteDWord(memory.WfpLoc, memory.ReadDWord(memory.WspLoc))
+	cpuPtr.ac[3] = memory.ReadDWord(memory.WspLoc)
+	dwdCnt := uint(u2wd.immU16)
+	if dwdCnt > 0 {
 		memory.AdvanceWSP(dwdCnt)
 	}
 }
