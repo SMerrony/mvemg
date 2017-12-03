@@ -80,15 +80,6 @@ func DWordFromTwoWords(hw dg.WordT, lw dg.WordT) dg.DwordT {
 // extract nbits from value starting at leftBit
 func GetWbits(value dg.WordT, leftBit uint, nbits uint) dg.WordT {
 	var mask dg.WordT
-	// rightBit := leftBit + nbits
-	// for b := leftBit; b < rightBit; b++ {
-	// 	res = res << 1
-	// 	if TestWbit(value, b) {
-	// 		res++
-	// 	}
-	// }
-	// return res
-
 	if leftBit >= 16 {
 		return 0
 	}
@@ -102,6 +93,11 @@ func SetWbit(word dg.WordT, bitNum uint) dg.WordT {
 	return word | 1<<(15-bitNum)
 }
 
+// SetQWbit - sets a bit in a Quad-Word
+func SetQWbit(qw dg.QwordT, bitNum uint) dg.QwordT {
+	return qw | 1<<(63-bitNum)
+}
+
 // ClearWbit clears a single bit in a DG word
 func ClearWbit(word dg.WordT, bitNum uint) dg.WordT {
 	return word ^ 1<<(15-bitNum)
@@ -109,16 +105,26 @@ func ClearWbit(word dg.WordT, bitNum uint) dg.WordT {
 
 // GetDWbits - in the DG world, the first (leftmost) bit is numbered zero...
 // extract nbits from value starting at leftBit
-func GetDWbits(value dg.DwordT, leftBit int, nbits int) dg.DwordT {
-	var res dg.DwordT
-	rightBit := leftBit + nbits
-	for b := leftBit; b < rightBit; b++ {
-		res = res << 1
-		if TestDWbit(value, b) {
-			res++
-		}
+func GetDWbits(value dg.DwordT, leftBit uint, nbits uint) dg.DwordT {
+	var mask dg.DwordT
+	if leftBit >= 32 {
+		return 0
 	}
-	return res
+	value >>= 32 - (leftBit + nbits)
+	mask = (1 << nbits) - 1
+	return value & mask
+}
+
+// GetQWbits - in the DG world, the first (leftmost) bit is numbered zero...
+// extract nbits from value starting at leftBit
+func GetQWbits(value dg.QwordT, leftBit uint, nbits uint) dg.QwordT {
+	var mask dg.QwordT
+	if leftBit >= 64 {
+		return 0
+	}
+	value >>= 64 - (leftBit + nbits)
+	mask = (1 << nbits) - 1
+	return value & mask
 }
 
 // TestWbit - does word w have bit b set?

@@ -44,8 +44,11 @@ type CPUT struct {
 	// representations of physical attributes
 	pc                           dg.PhysAddrT // 32-bit PC
 	ac                           [4]dg.DwordT // 4 x 32-bit Accumulators
+	mask                         dg.WordT     // interrupt mask
 	carry, atu, ion, pfflag, ovk bool         // flag bits
 	sbr                          [8]sbrBits   // SBRs (see above)
+	fpac                         [4]dg.QwordT // 4 x 64-bit Floating Point Accumulators
+	fpsr                         dg.QwordT    // 64-bit Floating-Point Status Register
 
 	// emulator internals
 	instrCount uint64 // how many instructions executed during the current run, running at 2 MIPS this will loop round roughly every 100 million years!

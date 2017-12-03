@@ -28,6 +28,7 @@ import (
 	"mvemg/dg"
 	"mvemg/logging"
 	"mvemg/memory"
+	"mvemg/util"
 )
 
 func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
@@ -36,6 +37,7 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		firstAc, lastAc, thisAc int
 		acsUp                   = [8]int{0, 1, 2, 3, 0, 1, 2, 3}
 		tmpDwd                  dg.DwordT
+		tmpQwd                  dg.QwordT
 		noAccMode3Word          noAccMode3WordT
 		noAccModeInd2Word       noAccModeInd2WordT
 		noAccModeInd3Word       noAccModeInd3WordT
@@ -109,6 +111,20 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		oneAcc1Word = iPtr.variant.(oneAcc1WordT)
 		// FIXME handle segments
 		memory.WriteDWord(dg.PhysAddrT(memory.ReadDWord(memory.WslLoc)), cpuPtr.ac[oneAcc1Word.acd])
+
+	case "WFPOP":
+		cpuPtr.fpac[3] = memory.WsPopQWord(0)
+		cpuPtr.fpac[2] = memory.WsPopQWord(0)
+		cpuPtr.fpac[1] = memory.WsPopQWord(0)
+		cpuPtr.fpac[0] = memory.WsPopQWord(0)
+		tmpQwd = memory.WsPopQWord(0)
+		cpuPtr.fpsr = 0
+		if util.GetQWbits(tmpQwd, 1, 4) != 0 {
+			cpuPtr.fpsr = util.SetQWbit(cpuPtr.fpsr, 0)
+		}
+		for b := 1; b <= 11; b++ {
+			klklklklklklklklklklk
+		}
 
 	case "WMSP":
 		oneAcc1Word = iPtr.variant.(oneAcc1WordT)

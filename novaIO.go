@@ -49,6 +49,14 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			cpuPtr.pc++
 			return true
 		}
+		// Special Case: DOB 0-3,077 == MSKO
+		if iPtr.mnemonic == "DOB" && novaDataIo.ioDev == DEV_CPU {
+			logging.DebugPrint(logging.DebugLog, "INFO: Handling DOB %d, CPU instruction as MSKO\n", novaDataIo.acd)
+			novaDataIo = iPtr.variant.(novaDataIoT)
+			cpuPtr.mask = util.DWordGetLowerWord(cpuPtr.ac[novaDataIo.acd])
+			cpuPtr.pc++
+			return true
+		}
 		// Special Case: DOC 0-3,077 => Halt
 		if iPtr.mnemonic == "DOC" && novaDataIo.ioDev == DEV_CPU {
 			logging.DebugPrint(logging.DebugLog, "INFO: CPU Halting due to DOC %d,CPU instruction\n", novaDataIo.acd)

@@ -67,6 +67,8 @@ func eagleIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		dwd |= memory.MemSizeLCPID
 		cpuPtr.ac[0] = dwd
 
+		// MSKO is handled via DOB n,CPU
+
 	case "NCLID":
 		cpuPtr.ac[0] = CPU_MODEL_NO
 		cpuPtr.ac[1] = UCODE_REV

@@ -30,4 +30,6 @@ type (
 	ByteT byte
 	// PhysAddrT - a physical address is 32-bit unsigned
 	PhysAddrT uint32
+	// QwordT  - a DG Quad-Word is 64-bit unsigned used for F.P.
+	QwordT uint64
 )

@@ -46,7 +46,7 @@ func WsPush(seg dg.PhysAddrT, data dg.DwordT) {
 	logging.DebugPrint(logging.DebugLog, "... memory.WsPush pushed %8d onto the Wide Stack at location: %d\n", data, wsp)
 }
 
-// WsPop - POP a word off the Wide Stack
+// WsPop - POP a doubleword off the Wide Stack
 func WsPop(seg dg.PhysAddrT) dg.DwordT {
 	// TODO segment handling
 	// TODO overflow/underflow handling - either here or in instruction?
@@ -55,6 +55,16 @@ func WsPop(seg dg.PhysAddrT) dg.DwordT {
 	WriteDWord(WspLoc, wsp-2)
 	logging.DebugPrint(logging.DebugLog, "... memory.WsPop  popped %8d off  the Wide Stack at location: %d\n", dword, wsp)
 	return dword
+}
+
+// WsPopQWord - POP a Quad-word off the Wide Stack
+func WsPopQWord(seg dg.PhysAddrT) dg.QwordT {
+	// TODO segment handling
+	var qw dg.QwordT
+	lhDWord := WsPop(seg)
+	rhDWord := WsPop(seg)
+	qw = dg.QwordT(lhDWord)<<32 | dg.QwordT(rhDWord)
+	return qw
 }
 
 // AdvanceWSP increases the WSP by the given amount of DWords
