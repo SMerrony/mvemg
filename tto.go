@@ -76,6 +76,15 @@ func ttoDataOut(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 		ttoPutChar(ascii)
 		busSetBusy(DEV_TTO, false)
 		busSetDone(DEV_TTO, true)
+	case 'N':
+		switch iPtr.f {
+		case 'S':
+			busSetBusy(DEV_TTO, true)
+			busSetDone(DEV_TTO, false)
+		case 'C':
+			busSetBusy(DEV_TTO, false)
+			busSetDone(DEV_TTO, false)
+		}
 	default:
 		log.Fatalf("ERROR: unexpected source buffer <%c> for DOx ac,TTO instruction\n", abc)
 	}

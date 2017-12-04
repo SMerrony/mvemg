@@ -71,10 +71,9 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		noAccModeInd4Word = iPtr.variant.(noAccModeInd4WordT)
 		cpuPtr.ac[3] = dg.DwordT(cpuPtr.pc) + 4
 		if noAccModeInd4Word.argCount > 0 {
-			dwd = dg.DwordT(noAccModeInd4Word.argCount) & 0x00007fff
+			dwd = util.DWordFromTwoWords(cpuPtr.psr, dg.WordT(noAccModeInd4Word.argCount))
 		} else {
-			// TODO PSR
-			dwd = dg.DwordT(noAccModeInd4Word.argCount)
+			dwd = dg.DwordT(noAccModeInd4Word.argCount) & 0x00007fff
 		}
 		memory.WsPush(0, dwd)
 		cpuPtr.pc = resolve32bitEffAddr(cpuPtr, noAccModeInd4Word.ind, noAccModeInd4Word.mode, noAccModeInd4Word.disp31)
@@ -274,6 +273,15 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			cpuPtr.pc += 2
 		} else {
 			cpuPtr.pc += 1
+		}
+
+	case "WSNEI":
+		oneAccImm2Word = iPtr.variant.(oneAccImm2WordT)
+		tmp32b = dg.DwordT(int32(oneAccImm2Word.immS16))
+		if cpuPtr.ac[oneAccImm2Word.acd] != tmp32b {
+			cpuPtr.pc += 3
+		} else {
+			cpuPtr.pc += 2
 		}
 
 	case "XCALL":

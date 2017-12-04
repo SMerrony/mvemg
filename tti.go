@@ -40,6 +40,7 @@ func ttiInit(c net.Conn, cpuPtr *CPUT, ch chan<- byte) {
 	busAddDevice(DEV_TTI, "TTI", TTI_PMB, true, true, false)
 	busSetResetFunc(DEV_TTI, ttiReset)
 	busSetDataInFunc(DEV_TTI, ttiDataIn)
+	busSetDataOutFunc(DEV_TTI, ttiDataOut)
 	go ttiListener(cpuPtr, ch)
 }
 
@@ -99,5 +100,22 @@ func ttiDataIn(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 
 	default:
 		log.Fatalf("ERROR: unexpected source buffer <%c> for DOx ac,TTO instruction\n", abc)
+	}
+}
+
+// this is only here to support NIO commands to TTI
+func ttiDataOut(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
+	switch abc {
+	case 'N':
+		switch iPtr.f {
+		case 'S':
+			busSetBusy(DEV_TTI, true)
+			busSetDone(DEV_TTI, false)
+		case 'C':
+			busSetBusy(DEV_TTI, false)
+			busSetDone(DEV_TTI, false)
+		}
+	default:
+		log.Fatalf("ERROR: unexpected call to ttiDataOut with abc(n) flag set to %c\n", abc)
 	}
 }
