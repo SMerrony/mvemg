@@ -24,6 +24,7 @@ package main
 import (
 	"log"
 	"mvemg/dg"
+	"mvemg/memory"
 	"mvemg/util"
 )
 
@@ -33,6 +34,7 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	var (
 		wd                 dg.WordT
 		dwd                dg.DwordT
+		lobyte             bool
 		res, s32           int32
 		s16                int16
 		addr               dg.PhysAddrT
@@ -69,6 +71,12 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case "CRYTZ":
 		cpuPtr.carry = false
+
+	case "LLDB":
+		oneAccMode3Word = iPtr.variant.(oneAccMode3WordT)
+		addr = resolve32bitEffAddr(cpuPtr, ' ', oneAccMode3Word.mode, oneAccMode3Word.disp31>>1)
+		lobyte = util.TestDWbit(dg.DwordT(oneAccMode3Word.disp31), 31)
+		cpuPtr.ac[oneAccMode3Word.acd] = dg.DwordT(memory.ReadByte(addr, lobyte))
 
 	case "LLEF":
 		oneAccModeInd3Word = iPtr.variant.(oneAccModeInd3WordT)

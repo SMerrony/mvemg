@@ -55,7 +55,8 @@ func ttiListener(cpuPtr *CPUT, scpChan chan<- byte) {
 		//log.Printf("DEBUG: ttiListener() got <%c>\n", b[0])
 		for c := 0; c < n; c++ {
 			// console ESCape?
-			if b[c] == ASCII_ESC || b[c] == 0 {
+			//if b[c] == ASCII_ESC || b[c] == 0 {
+			if b[c] == ASCII_ESC {
 				cpuPtr.cpuMu.Lock()
 				cpuPtr.scpIO = true
 				cpuPtr.cpuMu.Unlock()
