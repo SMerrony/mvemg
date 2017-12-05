@@ -37,6 +37,7 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		lobyte             bool
 		res, s32           int32
 		s16                int16
+		s64                int64
 		addr               dg.PhysAddrT
 		immOneAcc          immOneAccT
 		oneAcc1Word        oneAcc1WordT
@@ -144,6 +145,20 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case "WCOM":
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		cpuPtr.ac[twoAcc1Word.acd] = ^cpuPtr.ac[twoAcc1Word.acs]
+
+	case "WDIVS":
+		s64 = int64(util.QWordFromTwoDwords(cpuPtr.ac[0], cpuPtr.ac[1]))
+		if cpuPtr.ac[2] == 0 {
+			cpuPtr.SetOVR(true)
+		} else {
+			s32 = int32(cpuPtr.ac[2])
+			if s64/int64(s32) < -2147483648 || s64/int64(s32) > 2147483647 {
+				cpuPtr.SetOVR(true)
+			} else {
+				cpuPtr.ac[0] = dg.DwordT(s64 % int64(s32))
+				cpuPtr.ac[1] = dg.DwordT(s64 / int64(s32))
+			}
+		}
 
 	case "WINC":
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)

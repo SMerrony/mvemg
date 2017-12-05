@@ -76,6 +76,11 @@ func DWordFromTwoWords(hw dg.WordT, lw dg.WordT) dg.DwordT {
 	return dg.DwordT(hw)<<16 | dg.DwordT(lw)
 }
 
+// QWordFromTwoDwords - catenate two DG DoubleWords into a DG QuadWord
+func QWordFromTwoDwords(hdw dg.DwordT, ldw dg.DwordT) dg.QwordT {
+	return dg.QwordT(hdw)<<32 | dg.QwordT(ldw)
+}
+
 // GetWbits - in the DG world, the first (leftmost) bit is numbered zero...
 // extract nbits from value starting at leftBit
 func GetWbits(value dg.WordT, leftBit uint, nbits uint) dg.WordT {

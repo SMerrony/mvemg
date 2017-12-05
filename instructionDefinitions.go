@@ -253,6 +253,7 @@ func instructionsInit() {
 	instructionSet["WCOM"] = instrChars{0x8459, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
 	instructionSet["WCST"] = instrChars{0xe709, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_MEMREF}
 	instructionSet["WCTR"] = instrChars{0x8769, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_MEMREF}
+	instructionSet["WDIVS"] = instrChars{0xe769, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
 	instructionSet["WFPOP"] = instrChars{0xa789, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_STACK}
 	instructionSet["WFPSH"] = instrChars{0x87b9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_STACK}
 	instructionSet["WINC"] = instrChars{0x8259, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
