@@ -98,6 +98,13 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		s16 = int16(cpuPtr.ac[twoAcc1Word.acd]) + int16(cpuPtr.ac[twoAcc1Word.acs])
 		cpuPtr.ac[twoAcc1Word.acd] = dg.DwordT(s16)
 
+	case "NADDI":
+		oneAccImm2Word = iPtr.variant.(oneAccImm2WordT)
+		s16 = int16(cpuPtr.ac[oneAccImm2Word.acd])
+		s16 += oneAccImm2Word.immS16
+		// FIXME handle overflow
+		cpuPtr.ac[oneAccImm2Word.acd] = dg.DwordT(s16)
+
 	case "NLDAI":
 		oneAccImm2Word = iPtr.variant.(oneAccImm2WordT)
 		cpuPtr.ac[oneAccImm2Word.acd] = dg.DwordT(int32(oneAccImm2Word.immS16))
