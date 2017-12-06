@@ -182,6 +182,9 @@ func readByteBA(ba dg.DwordT) dg.ByteT {
 func memWriteByteBA(b dg.ByteT, ba dg.DwordT) {
 	wordAddr, lowByte := resolve32bitByteAddr(ba)
 	memory.WriteByte(wordAddr, lowByte, b)
+	if debugLogging {
+		logging.DebugPrint(logging.DebugLog, "DEBUG: memWriteByte wrote %c to word addr: %d\n", b, wordAddr)
+	}
 }
 
 func copyByte(srcBA, destBA dg.DwordT) {

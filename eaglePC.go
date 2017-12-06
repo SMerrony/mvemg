@@ -50,8 +50,8 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	switch iPtr.mnemonic {
 
 	case "DSZTS":
-		dwd = memory.ReadDWord(memory.WspLoc) - 1
-		memory.WriteDWord(memory.WspLoc, dwd)
+		dwd = memory.ReadDWord(dg.PhysAddrT(memory.ReadDWord(memory.WspLoc))) - 1
+		memory.WriteDWord(dg.PhysAddrT(memory.ReadDWord(memory.WspLoc)), dwd)
 		if dwd == 0 {
 			cpuPtr.pc += 2
 		} else {
@@ -59,8 +59,8 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		}
 
 	case "ISZTS":
-		dwd = memory.ReadDWord(memory.WspLoc) + 1
-		memory.WriteDWord(memory.WspLoc, dwd)
+		dwd = memory.ReadDWord(dg.PhysAddrT(memory.ReadDWord(memory.WspLoc))) + 1
+		memory.WriteDWord(dg.PhysAddrT(memory.ReadDWord(memory.WspLoc)), dwd)
 		if dwd == 0 {
 			cpuPtr.pc += 2
 		} else {
