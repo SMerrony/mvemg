@@ -124,7 +124,7 @@ func instructionsInit() {
 	instructionSet["DSPA"] = instrChars{0xc478, 0xe4ff, 2, ONEACC_MODE_IND_2_WORD_E_FMT, ECLIPSE_PC}
 	instructionSet["DSZ"] = instrChars{0x1800, 0xf800, 1, NOVA_NOACC_EFF_ADDR_FMT, NOVA_MEMREF}
 	instructionSet["DSZTS"] = instrChars{0xc7d9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_PC}
-	instructionSet["ECLID"] = instrChars{0xffc8, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
+	instructionSet["ECLID"] = instrChars{0xffc8, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_IO}
 	instructionSet["EDIT"] = instrChars{0xf7a8, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_OP}
 	instructionSet["EDSZ"] = instrChars{0x9c38, 0xfcff, 2, NOACC_MODE_IND_2_WORD_E_FMT, ECLIPSE_PC}
 	instructionSet["EISZ"] = instrChars{0x9438, 0xfcff, 2, NOACC_MODE_IND_2_WORD_E_FMT, ECLIPSE_PC}

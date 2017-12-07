@@ -55,13 +55,19 @@ func eagleIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			cpuPtr.ac[twoAccImm2Word.acd] = dg.DwordT(dataWord)
 		}
 
+	case "ECLID": // seems to be the same as LCPID
+		dwd = CPU_MODEL_NO << 16
+		dwd |= UCODE_REV << 8
+		dwd |= memory.MemSizeLCPID
+		cpuPtr.ac[0] = dwd
+
 	case "INTDS":
 		cpu.ion = false
 
 	case "INTEN":
 		log.Fatal("ERROR: INTEN not yet supported")
 
-	case "LCPID":
+	case "LCPID": // seems to be the same as ECLID
 		dwd = CPU_MODEL_NO << 16
 		dwd |= UCODE_REV << 8
 		dwd |= memory.MemSizeLCPID
