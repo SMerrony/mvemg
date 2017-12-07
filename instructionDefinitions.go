@@ -36,6 +36,7 @@ const (
 	EAGLE_OP
 	EAGLE_MEMREF
 	EAGLE_STACK
+	EAGLE_FPU
 )
 
 // Instruction Formats
@@ -167,6 +168,7 @@ func instructionsInit() {
 	instructionSet["LDB"] = instrChars{0x85c8, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP}
 	instructionSet["LDSP"] = instrChars{0x8519, 0x87ff, 3, ONEACC_MODE_IND_3_WORD_FMT, EAGLE_PC}
 	instructionSet["LEF"] = instrChars{0x6000, 0xe000, 1, NOVA_ONEACC_EFF_ADDR_FMT, NOVA_MEMREF}
+	instructionSet["LFDMS"] = instrChars{0x81e9, 0x87ff, 3, ONEACC_MODE_IND_3_WORD_FMT, EAGLE_FPU}
 	instructionSet["LJMP"] = instrChars{0xa6d9, 0xe7ff, 3, NOACC_MODE_IND_3_WORD_FMT, EAGLE_PC}
 	instructionSet["LJSR"] = instrChars{0xa6e9, 0xe7ff, 3, NOACC_MODE_IND_3_WORD_FMT, EAGLE_PC}
 	instructionSet["LLDB"] = instrChars{0x84c9, 0x87ff, 3, ONEACC_MODE_3_WORD_FMT, EAGLE_OP}
