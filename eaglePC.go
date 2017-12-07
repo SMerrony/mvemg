@@ -135,6 +135,24 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			cpuPtr.pc += 3
 		}
 
+	case "NSALA":
+		oneAccImm2Word = iPtr.variant.(oneAccImm2WordT)
+		wd = ^util.DWordGetLowerWord(cpuPtr.ac[oneAccImm2Word.acd])
+		if dg.WordT(oneAccImm2Word.immS16)&wd == 0 {
+			cpuPtr.pc += 3
+		} else {
+			cpuPtr.pc += 2
+		}
+
+	case "NSANA":
+		oneAccImm2Word = iPtr.variant.(oneAccImm2WordT)
+		wd = util.DWordGetLowerWord(cpuPtr.ac[oneAccImm2Word.acd])
+		if dg.WordT(oneAccImm2Word.immS16)&wd == 0 {
+			cpuPtr.pc += 3
+		} else {
+			cpuPtr.pc += 2
+		}
+
 	case "WBR":
 		//		if iPtr.disp > 0 {
 		//			cpuPtr.pc += dg_phys_addr(iPtr.disp)

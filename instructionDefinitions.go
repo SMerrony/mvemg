@@ -205,6 +205,8 @@ func instructionsInit() {
 	instructionSet["NIO"] = instrChars{0x6000, 0xff00, 1, IO_FLAGS_DEV_FMT, NOVA_IO}
 	instructionSet["NLDAI"] = instrChars{0xc629, 0xe7ff, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_OP}
 	instructionSet["NMUL"] = instrChars{0x8069, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
+	instructionSet["NSALA"] = instrChars{0xe609, 0xe7ff, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_PC}
+	instructionSet["NSANA"] = instrChars{0xe629, 0xe7ff, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_PC}
 	instructionSet["NSBI"] = instrChars{0x85a9, 0x87ff, 1, IMM_ONEACC_FMT, EAGLE_OP}
 	instructionSet["NSUB"] = instrChars{0x8059, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
 	instructionSet["PIO"] = instrChars{0x85d9, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_IO}
