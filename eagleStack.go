@@ -38,6 +38,7 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		acsUp                   = [8]int{0, 1, 2, 3, 0, 1, 2, 3}
 		tmpDwd                  dg.DwordT
 		tmpQwd                  dg.QwordT
+		noAccMode2Word          noAccMode2WordT
 		noAccMode3Word          noAccMode3WordT
 		noAccModeInd2Word       noAccModeInd2WordT
 		noAccModeInd3Word       noAccModeInd3WordT
@@ -201,6 +202,21 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		noAccModeInd2Word = iPtr.variant.(noAccModeInd2WordT)
 		// FIXME segment handling, check for overflow
 		memory.WsPush(0, dg.DwordT(resolve16bitEagleAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15)))
+
+	case "XPEFB":
+		noAccMode2Word = iPtr.variant.(noAccMode2WordT)
+		// FIXME segment handling, check for overflow
+		eff := dg.DwordT(noAccMode2Word.disp16)
+		switch noAccMode2Word.mode {
+		case "Absolute": // do nothing
+		case "PC":
+			eff += dg.DwordT(cpuPtr.pc)
+		case "AC2":
+			eff += cpuPtr.ac[2]
+		case "AC3":
+			eff += cpuPtr.ac[3]
+		}
+		memory.WsPush(0, eff)
 
 	default:
 		log.Fatalf("ERROR: EAGLE_STACK instruction <%s> not yet implemented\n", iPtr.mnemonic)

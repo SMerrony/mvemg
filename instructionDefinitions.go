@@ -46,6 +46,7 @@ const (
 	IO_FLAGS_DEV_FMT
 	IO_TEST_DEV_FMT
 	LNDO_4_WORD_FMT
+	NOACC_MODE_2_WORD_FMT
 	NOACC_MODE_3_WORD_FMT
 	NOACC_MODE_IMM_IND_3_WORD_FMT
 	NOACC_MODE_IND_2_WORD_E_FMT
@@ -310,6 +311,7 @@ func instructionsInit() {
 	instructionSet["XNSTA"] = instrChars{0x8339, 0x87ff, 2, ONEACC_MODE_IND_2_WORD_X_FMT, EAGLE_MEMREF}
 	instructionSet["XNSUB"] = instrChars{0x8058, 0x87ff, 2, IMM_MODE_2_WORD_FMT, EAGLE_MEMREF}
 	instructionSet["XPEF"] = instrChars{0x8629, 0xe7ff, 2, NOACC_MODE_IND_2_WORD_X_FMT, EAGLE_STACK}
+	instructionSet["XPEFB"] = instrChars{0xa629, 0xe7ff, 2, NOACC_MODE_2_WORD_FMT, EAGLE_STACK}
 	instructionSet["XSTB"] = instrChars{0x8429, 0x87ff, 2, ONEACC_MODE_2_WORD_X_B_FMT, EAGLE_MEMREF}
 	instructionSet["XWADD"] = instrChars{0x8118, 0x87ff, 2, ONEACC_MODE_IND_2_WORD_X_FMT, EAGLE_MEMREF}
 	instructionSet["XWADI"] = instrChars{0x8518, 0x87ff, 2, IMM_MODE_2_WORD_FMT, EAGLE_MEMREF}
