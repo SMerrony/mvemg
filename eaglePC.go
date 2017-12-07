@@ -248,6 +248,15 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			cpuPtr.pc += 1
 		}
 
+	case "WSLEI":
+		oneAccImm2Word = iPtr.variant.(oneAccImm2WordT)
+		tmp32b = dg.DwordT(int32(oneAccImm2Word.immS16))
+		if cpuPtr.ac[oneAccImm2Word.acd] <= tmp32b {
+			cpuPtr.pc += 3
+		} else {
+			cpuPtr.pc += 2
+		}
+
 	case "WSLT":
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		if twoAcc1Word.acd == twoAcc1Word.acs {
