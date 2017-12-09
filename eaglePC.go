@@ -70,14 +70,14 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case "LCALL": // FIXME - LCALL only handling trivial case, no checking
 		noAccModeInd4Word = iPtr.variant.(noAccModeInd4WordT)
 		cpuPtr.ac[3] = dg.DwordT(cpuPtr.pc) + 4
-		if noAccModeInd4Word.argCount > 0 {
+		if noAccModeInd4Word.argCount >= 0 {
 			dwd = util.DWordFromTwoWords(cpuPtr.psr, dg.WordT(noAccModeInd4Word.argCount))
 		} else {
 			dwd = dg.DwordT(noAccModeInd4Word.argCount) & 0x00007fff
 		}
 		memory.WsPush(0, dwd)
+		cpu.SetOVR(false)
 		cpuPtr.pc = resolve32bitEffAddr(cpuPtr, noAccModeInd4Word.ind, noAccModeInd4Word.mode, noAccModeInd4Word.disp31)
-		cpu.SetOVK(false)
 
 	case "LDSP":
 		oneAccModeInd3Word = iPtr.variant.(oneAccModeInd3WordT)
@@ -315,11 +315,11 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		noAccModeInd3WordXcall = iPtr.variant.(noAccModeInd3WordXcallT)
 		// FIXME - only handling the trivial case so far
 		cpuPtr.ac[3] = dg.DwordT(cpuPtr.pc) + 3
-		if noAccModeInd3WordXcall.argCount > 0 {
-			dwd = dg.DwordT(noAccModeInd3WordXcall.argCount) & 0x00007fff
+		if noAccModeInd3WordXcall.argCount >= 0 {
+			dwd = dg.DwordT(cpuPtr.psr) << 16
+			dwd |= dg.DwordT(noAccModeInd3WordXcall.argCount)
 		} else {
-			// TODO PSR
-			dwd = dg.DwordT(noAccModeInd3WordXcall.argCount)
+			dwd = dg.DwordT(noAccModeInd3WordXcall.argCount) & 0x00007fff
 		}
 		memory.WsPush(0, dwd)
 		cpuPtr.pc = resolve16bitEagleAddr(cpuPtr, noAccModeInd3WordXcall.ind, noAccModeInd3WordXcall.mode,
