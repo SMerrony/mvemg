@@ -208,16 +208,17 @@ func decoderGenAllPossOpcodes() {
 // the corresponding mnemonic
 func instructionLookup(opcode dg.WordT, lefMode bool, ioOn bool, atuOn bool) (string, bool) {
 	if opCodeLookup[opcode] != "" {
-		if opCodeLookup[opcode] == "LEF" && lefMode {
-			return "", false
-		}
+		// if opCodeLookup[opcode] == "LEF" && lefMode {
+		// 	return "", false
+		// }
 		return opCodeLookup[opcode], true
 	}
 	return "", false
 }
 
 // instructionMatch looks for a match for the opcode in the instruction set and returns
-// the corresponding mnemonic
+// the corresponding mnemonic.  It is used only by the decoderGenAllPossOpcodes() above when
+// MV/Em is initialising.
 func instructionMatch(opcode dg.WordT, lefMode bool, ioOn bool, atuOn bool) (string, bool) {
 	var tail dg.WordT
 	for mnem, insChar := range instructionSet {
@@ -229,6 +230,8 @@ func instructionMatch(opcode dg.WordT, lefMode bool, ioOn bool, atuOn bool) (str
 					return "", false
 				}
 			case "ADC", "ADD", "AND", "COM", "INC", "MOV", "NEG", "SUB":
+				// these instructions are not allowed to end in 1000(2) or 1001(2)
+				// as those patterns are used for Eagle instructions
 				tail = opcode & 0x000f
 				if tail < 8 || tail > 9 {
 					return mnem, true

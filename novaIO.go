@@ -38,6 +38,12 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		//oneAcc1Word oneAcc1WordT
 	)
 
+	// The Eclipse LEF instruction is handled funkily...
+	if cpuPtr.atu && cpuPtr.sbr[util.GetSegment(cpuPtr.pc)].lef {
+		iPtr.mnemonic = "LEF"
+		log.Fatalf("ERROR: LEF not yet implemented, location %d\n", cpuPtr.pc)
+	}
+
 	switch iPtr.mnemonic {
 
 	case "DIA", "DIB", "DIC", "DOA", "DOB", "DOC":

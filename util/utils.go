@@ -176,3 +176,8 @@ func SwapBytes(wd dg.WordT) dg.WordT {
 	// return res
 	return dg.WordT(bits.ReverseBytes16(uint16(wd)))
 }
+
+// GetSegment - return the segment number for the supplied address
+func GetSegment(addr dg.PhysAddrT) int {
+	return int(GetDWbits(dg.DwordT(addr), 1, 3))
+}
