@@ -24,6 +24,7 @@ package main
 import (
 	"log"
 	"mvemg/dg"
+	"mvemg/logging"
 	"mvemg/memory"
 	"mvemg/util"
 )
@@ -49,22 +50,21 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	switch iPtr.mnemonic {
 
-	case "DSZTS":
-		dwd = memory.ReadDWord(dg.PhysAddrT(memory.ReadDWord(memory.WspLoc))) - 1
-		memory.WriteDWord(dg.PhysAddrT(memory.ReadDWord(memory.WspLoc)), dwd)
+	case "DSZTS", "ISZTS":
+		dwd = memory.ReadDWord(memory.WspLoc)
+		if iPtr.mnemonic == "DSZTS" {
+			dwd = memory.ReadDWord(tmpAddr) - 1
+		} else {
+			dwd = memory.ReadDWord(tmpAddr) + 1
+		}
+		memory.WriteDWord(memory.WspLoc, dwd)
 		if dwd == 0 {
 			cpuPtr.pc += 2
 		} else {
 			cpuPtr.pc += 1
 		}
-
-	case "ISZTS":
-		dwd = memory.ReadDWord(dg.PhysAddrT(memory.ReadDWord(memory.WspLoc))) + 1
-		memory.WriteDWord(dg.PhysAddrT(memory.ReadDWord(memory.WspLoc)), dwd)
-		if dwd == 0 {
-			cpuPtr.pc += 2
-		} else {
-			cpuPtr.pc += 1
+		if debugLogging {
+			logging.DebugPrint(logging.DebugLog, "..... wrote %d to %d\n", dwd, memory.WspLoc)
 		}
 
 	case "LCALL": // FIXME - LCALL only handling trivial case, no checking
@@ -164,7 +164,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case "WPOPJ":
 		dwd = memory.WsPop(0)
-		cpuPtr.pc = dg.PhysAddrT(dwd) & 0x0fffffff
+		cpuPtr.pc = (cpuPtr.pc & 0x70000000) | (dg.PhysAddrT(dwd) & 0x0fffffff)
 
 	case "WRTN": // FIXME incomplete: handle PSR and rings
 		wspSav := memory.ReadDWord(memory.WspLoc)
