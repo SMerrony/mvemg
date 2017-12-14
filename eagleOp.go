@@ -73,6 +73,18 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case "CRYTZ":
 		cpuPtr.carry = false
 
+	case "CVWN":
+		oneAcc1Word = iPtr.variant.(oneAcc1WordT)
+		dwd = cpuPtr.ac[oneAcc1Word.acd]
+		if dwd>>16 != 0 || dwd>>16 != 0xffff {
+			cpuPtr.SetOVR(true)
+		}
+		if util.TestDWbit(dwd, 16) {
+			cpuPtr.ac[oneAcc1Word.acd] |= 0xffff0000
+		} else {
+			cpuPtr.ac[oneAcc1Word.acd] &= 0x0000ffff
+		}
+
 	case "LLDB":
 		oneAccMode3Word = iPtr.variant.(oneAccMode3WordT)
 		addr = resolve32bitEffAddr(cpuPtr, ' ', oneAccMode3Word.mode, oneAccMode3Word.disp31>>1)

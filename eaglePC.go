@@ -51,20 +51,21 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	switch iPtr.mnemonic {
 
 	case "DSZTS", "ISZTS":
-		dwd = memory.ReadDWord(memory.WspLoc)
+		tmpAddr = dg.PhysAddrT(memory.ReadDWord(memory.WspLoc))
 		if iPtr.mnemonic == "DSZTS" {
 			dwd = memory.ReadDWord(tmpAddr) - 1
 		} else {
 			dwd = memory.ReadDWord(tmpAddr) + 1
 		}
-		memory.WriteDWord(memory.WspLoc, dwd)
+		memory.WriteDWord(tmpAddr, dwd)
+		cpuPtr.SetOVR(false)
 		if dwd == 0 {
 			cpuPtr.pc += 2
 		} else {
 			cpuPtr.pc += 1
 		}
 		if debugLogging {
-			logging.DebugPrint(logging.DebugLog, "..... wrote %d to %d\n", dwd, memory.WspLoc)
+			logging.DebugPrint(logging.DebugLog, "..... wrote %d to %d\n", dwd, tmpAddr)
 		}
 
 	case "LCALL": // FIXME - LCALL only handling trivial case, no checking
@@ -162,29 +163,19 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		split8bitDisp = iPtr.variant.(split8bitDispT)
 		cpuPtr.pc += dg.PhysAddrT(int32(split8bitDisp.disp8))
 
+	case "WPOPB": // FIXME - not yet decoded!
+		wpopb(cpuPtr)
+
 	case "WPOPJ":
 		dwd = memory.WsPop(0)
 		cpuPtr.pc = (cpuPtr.pc & 0x70000000) | (dg.PhysAddrT(dwd) & 0x0fffffff)
 
 	case "WRTN": // FIXME incomplete: handle PSR and rings
-		wspSav := memory.ReadDWord(memory.WspLoc)
+		//wspSav := memory.ReadDWord(memory.WspLoc)
 		wfpSav := memory.ReadDWord(memory.WfpLoc)
 		// set WSP equal to WFP
 		memory.WriteDWord(memory.WspLoc, wfpSav)
-		// pop off 6 double words
-		dwd = memory.WsPop(0) // 1
-		cpuPtr.carry = util.TestDWbit(dwd, 0)
-		cpuPtr.pc = dg.PhysAddrT(dwd & 0x7fffffff)
-		cpuPtr.ac[3] = memory.WsPop(0) // 2
-		// replace WFP with popped value of AC3
-		memory.WriteDWord(memory.WfpLoc, cpuPtr.ac[3])
-		cpuPtr.ac[2] = memory.WsPop(0) // 3
-		cpuPtr.ac[1] = memory.WsPop(0) // 4
-		cpuPtr.ac[0] = memory.WsPop(0) // 5
-		dwd = memory.WsPop(0)          // 6
-		// TODO Set PSR
-		wsFramSz2 := int(dwd&0x00007fff) * 2
-		memory.WriteDWord(memory.WspLoc, wspSav-dg.DwordT(wsFramSz2)-12)
+		wpopb(cpuPtr)
 
 	case "WSEQ": // Signedness doen't matter for equality testing
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
@@ -379,4 +370,23 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	}
 
 	return true
+}
+
+// used by WPOPB, WRTN
+func wpopb(cpuPtr *CPUT) {
+	// pop off 6 double words
+	dwd := memory.WsPop(0) // 1
+	cpuPtr.carry = util.TestDWbit(dwd, 0)
+	cpuPtr.pc = dg.PhysAddrT(dwd & 0x7fffffff)
+	cpuPtr.ac[3] = memory.WsPop(0) // 2
+	// replace WFP with popped value of AC3
+	memory.WriteDWord(memory.WfpLoc, cpuPtr.ac[3])
+	cpuPtr.ac[2] = memory.WsPop(0) // 3
+	cpuPtr.ac[1] = memory.WsPop(0) // 4
+	cpuPtr.ac[0] = memory.WsPop(0) // 5
+	dwd = memory.WsPop(0)          // 6
+	// TODO Set PSR
+	// TODO Set WFP is crossing rings
+	//wsFramSz2 := int(dwd&0x00007fff) * 2
+	//memory.WriteDWord(memory.WspLoc, wspSav-dg.DwordT(wsFramSz2)-12)
 }
