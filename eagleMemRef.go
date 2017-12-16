@@ -35,6 +35,7 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		byt                dg.ByteT
 		wd                 dg.WordT
 		dwd                dg.DwordT
+		i16                int16
 		i32                int32
 		lowByte            bool
 		wordAddr           dg.PhysAddrT
@@ -143,6 +144,10 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			addr++
 		}
 		cpuPtr.ac[oneAccMode2Word.acd] = dg.DwordT(addr)
+
+	case "XNADD", "XNSUB":
+		oneAccModeInt
+		i16
 
 	case "XNLDA":
 		oneAccModeInt2Word = iPtr.variant.(oneAccModeInd2WordT)
