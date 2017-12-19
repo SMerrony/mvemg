@@ -74,6 +74,7 @@ func resolve16bitEagleAddr(cpuPtr *CPUT, ind byte, mode string, disp int16) dg.P
 		eff     dg.PhysAddrT
 		intEff  int32
 		indAddr dg.DwordT
+		ok      bool
 	)
 
 	// handle addressing mode...
@@ -92,7 +93,10 @@ func resolve16bitEagleAddr(cpuPtr *CPUT, ind byte, mode string, disp int16) dg.P
 	if ind == '@' { // down the rabbit hole...
 		indAddr = memory.ReadDWord(dg.PhysAddrT(intEff))
 		for util.TestDWbit(indAddr, 0) {
-			indAddr = memory.ReadDWord(dg.PhysAddrT(indAddr))
+			indAddr, ok = memory.ReadDWordTrap(dg.PhysAddrT(indAddr & 0x7fffffff))
+			if !ok {
+				log.Fatalf("ERROR: PC=%d", cpuPtr.pc)
+			}
 		}
 		intEff = int32(indAddr)
 	}

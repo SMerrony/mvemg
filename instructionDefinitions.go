@@ -313,7 +313,7 @@ func instructionsInit() {
 	instructionSet["XNLDA"] = instrChars{0x8329, 0x87ff, 2, ONEACC_MODE_IND_2_WORD_X_FMT, EAGLE_MEMREF}
 	instructionSet["XNSBI"] = instrChars{0x8458, 0x87ff, 2, IMM_MODE_2_WORD_FMT, EAGLE_MEMREF}
 	instructionSet["XNSTA"] = instrChars{0x8339, 0x87ff, 2, ONEACC_MODE_IND_2_WORD_X_FMT, EAGLE_MEMREF}
-	instructionSet["XNSUB"] = instrChars{0x8058, 0x87ff, 2, IMM_MODE_2_WORD_FMT, EAGLE_MEMREF}
+	instructionSet["XNSUB"] = instrChars{0x8058, 0x87ff, 2, ONEACC_MODE_IND_2_WORD_X_FMT, EAGLE_MEMREF}
 	instructionSet["XPEF"] = instrChars{0x8629, 0xe7ff, 2, NOACC_MODE_IND_2_WORD_X_FMT, EAGLE_STACK}
 	instructionSet["XPEFB"] = instrChars{0xa629, 0xe7ff, 2, NOACC_MODE_2_WORD_FMT, EAGLE_STACK}
 	instructionSet["XPSHJ"] = instrChars{0x8619, 0xe7ff, 2, IMM_MODE_2_WORD_FMT, EAGLE_STACK}

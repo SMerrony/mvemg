@@ -139,6 +139,20 @@ func ReadDWord(wordAddr dg.PhysAddrT) dg.DwordT {
 	return util.DWordFromTwoWords(hiWd, loWd)
 }
 
+// ReadDWordTrap returns the doubleword at the given physical address
+func ReadDWordTrap(wordAddr dg.PhysAddrT) (dg.DwordT, bool) {
+	var hiWd, loWd dg.WordT
+	if wordAddr >= MemSizeWords {
+		log.Printf("ERROR: Attempt to read doubleword beyond end of physical memory using address: %d\n", wordAddr)
+		return 0, false
+	}
+	memory.ramMu.RLock()
+	hiWd = memory.ram[wordAddr]
+	loWd = memory.ram[wordAddr+1]
+	memory.ramMu.RUnlock()
+	return util.DWordFromTwoWords(hiWd, loWd), true
+}
+
 // WriteDWord writes a doubleword into memory at the given physical address
 func WriteDWord(wordAddr dg.PhysAddrT, dwd dg.DwordT) {
 	if wordAddr >= MemSizeWords {

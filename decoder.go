@@ -546,7 +546,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 				oneAccModeInd2Word.acd, oneAccModeInd2Word.ind, oneAccModeInd2Word.disp15,
 				modeToString(oneAccModeInd2Word.mode))
 		}
-	case ONEACC_MODE_IND_2_WORD_X_FMT: // eg. XNADD, XNLDA/XWSTA, XLEF
+	case ONEACC_MODE_IND_2_WORD_X_FMT: // eg. XNADD/SUB, XNLDA/XWSTA, XLEF
 		var oneAccModeInd2Word oneAccModeInd2WordT
 		oneAccModeInd2Word.mode = decodeMode(util.GetWbits(opcode, 1, 2))
 		oneAccModeInd2Word.acd = int(util.GetWbits(opcode, 3, 2))

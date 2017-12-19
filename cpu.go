@@ -156,7 +156,8 @@ func cpuExecute(iPtr *decodedInstrT) bool {
 	case EAGLE_STACK:
 		rc = eagleStack(&cpu, iPtr)
 	default:
-		log.Fatalln("ERROR: Unimplemented instruction type in cpuExecute()")
+		log.Println("ERROR: Unimplemented instruction type in cpuExecute()")
+		rc = false
 	}
 	cpu.instrCount++
 	cpu.cpuMu.Unlock()
