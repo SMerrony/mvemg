@@ -5,6 +5,7 @@ This guide currently applies to the development version of MV/Em written in Go.
 ## Prerequisites
 
 * Go version **1.9** or greater must be installed
+* A GNU-compatible `make` must be installed
 
 ### Obtain Required Packages
 
@@ -17,6 +18,6 @@ This guide currently applies to the development version of MV/Em written in Go.
 
 ## Build
 
-Simply type `go build` in the source directory.  The mvemg binary should build without any errors.
+Simply type `make` in the source directory.  The mvemg binary should pass its tests and build without any errors.
 
 See UserGuide.md for operating instructions.
