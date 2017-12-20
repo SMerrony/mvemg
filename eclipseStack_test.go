@@ -78,11 +78,11 @@ func TestSave(t *testing.T) {
 	if ac2 != 2 {
 		t.Errorf("Expected 2 from ac2 in NSP-3, got %d", ac2)
 	}
-	if cpuPtr.ac[3] != 256+10 {
-		t.Errorf("Expected AC3 to contain 266, got %d", cpuPtr.ac[3])
+	if cpuPtr.ac[3] != 256+5 {
+		t.Errorf("Expected AC3 to contain 261, got %d", cpuPtr.ac[3])
 	}
 	newFP = memory.ReadWord(memory.NfpLoc)
-	if newFP != 256+10 {
-		t.Errorf("Expected NFP to be 266, got %d", newFP)
+	if newFP != 256+5 {
+		t.Errorf("Expected NFP to be 261, got %d", newFP)
 	}
 }
