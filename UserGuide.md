@@ -13,7 +13,7 @@ invoking terminal.
 
 ## Invocation ##
 
-  `./mvemg [doscriptfile]`
+  `./mvemg [-do scriptfile]`
 
 When MV/Em is started from a console you may optionally supply a script name which will be executed as an 
 initial DO SCRIPT (see below) once a console is attached.
@@ -92,7 +92,7 @@ MV/Emulator commands control the emulation environment rather than the virtual m
 > DISplay/disassemble memory between the given addresses or # locations from the PC.
 
 #### DO `<scriptfile>` ####
-> DO emulator commands from the file.  
+> DO *emulator* commands from the file.  
 > Here is an example scriptfile which attaches a SimH tape image to the MTB device,  attaches a DPF-type disk image, and
 attempts to boot from device 22 (MTB) and finally displays the status of the CPU...
 

@@ -23,6 +23,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"log"
 	"mvemg/dg"
@@ -31,6 +32,8 @@ import (
 	"mvemg/util"
 	"net"
 	"os"
+	"runtime"
+	"runtime/pprof"
 	"sort"
 	"strconv"
 	"strings"
@@ -64,10 +67,25 @@ var (
 	ttiSCPchan    chan byte
 )
 
+// flags
+var (
+	doFlag     = flag.String("do", "", "run script `file` at startup")
+	cpuprofile = flag.String("cpuprofile", "", "write cpu profile `file`")
+	memprofile = flag.String("memprofile", "", "write memory profile to `file`")
+)
+
 func main() {
-	//p = profile.Start(profile.ProfilePath("."))
-	//defer p.Stop()
-	//	debugLogsInit()
+	flag.Parse()
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal("could not create CPU profile: ", err)
+		}
+		if err := pprof.StartCPUProfile(f); err != nil {
+			log.Fatal("could not start CPU profile: ", err)
+		}
+	}
+
 	log.Println("INFO: MV/Em will not start until console connected")
 
 	l, err := net.Listen("tcp", "localhost:"+ScpPort)
@@ -128,9 +146,8 @@ func main() {
 		go statusCollector(cpuStatsChan, dpfStatsChan, dskpStatsChan)
 
 		// run any command specified on the command line
-		args := os.Args[1:]
-		if len(args) == 1 {
-			command := fmt.Sprintf("DO %s", args[0])
+		if *doFlag != "" {
+			command := fmt.Sprintf("DO %s", *doFlag)
 			log.Printf("INFO: got startup command <%s>\n", command)
 			doCommand(command) // N.B. will not pass here until start-up script is complete...
 		}
@@ -173,7 +190,20 @@ func scpGetLine() string {
 // Exit cleanly, tidying up as much as we can
 func cleanExit() {
 	ttoPutNLString(" *** MV/Emulator stopping at user request ***")
-	//p.Stop()
+	if *cpuprofile != "" {
+		pprof.StopCPUProfile()
+	}
+	if *memprofile != "" {
+		f, err := os.Create(*memprofile)
+		if err != nil {
+			log.Fatal("could not create memory profile: ", err)
+		}
+		runtime.GC() // get up-to-date statistics
+		if err := pprof.WriteHeapProfile(f); err != nil {
+			log.Fatal("could not write memory profile: ", err)
+		}
+		f.Close()
+	}
 	logging.DebugLogsDump()
 	os.Exit(0)
 }

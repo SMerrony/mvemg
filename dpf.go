@@ -147,9 +147,12 @@ type DpfStatT struct {
 }
 
 var (
-	dpfData   dpfDataT
-	err       error
-	cmdDecode [dpfCmdFormat + 1]string
+	dpfData                      dpfDataT
+	dataWd, wd                   dg.WordT
+	ssc                          dg.WordT
+	bytesRead, bytesWritten, wIx int
+	err                          error
+	cmdDecode                    [dpfCmdFormat + 1]string
 )
 
 // DpfInit must be called to initialise the emulated DPF controller
@@ -273,7 +276,7 @@ func dpfDataIn(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 			log.Fatal("DPF DIB (Alt Mode 2) not yet implemented")
 		}
 	case 'C':
-		var ssc dg.WordT
+		ssc = 0
 		if dpfData.mapEnabled {
 			ssc = 1 << 15
 		}
@@ -294,25 +297,25 @@ func dpfDataIn(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 // NIO is also routed here with a dummy abc flag value of N
 func dpfDataOut(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 	dpfData.dpfMu.Lock()
-	data := util.DWordGetLowerWord(cpuPtr.ac[iPtr.acd])
+	dataWd = util.DWordGetLowerWord(cpuPtr.ac[iPtr.acd])
 	switch abc {
 	case 'A':
-		dpfData.command = extractDpfCommand(data)
-		dpfData.drive = extractDpfDriveNo(data)
-		dpfData.ema = extractDpfEMA(data)
-		if util.TestWbit(data, 0) {
+		dpfData.command = extractDpfCommand(dataWd)
+		dpfData.drive = extractDpfDriveNo(dataWd)
+		dpfData.ema = extractDpfEMA(dataWd)
+		if util.TestWbit(dataWd, 0) {
 			dpfData.rwStatus &= ^dg.WordT(dpfRwdone)
 		}
-		if util.TestWbit(data, 1) {
+		if util.TestWbit(dataWd, 1) {
 			dpfData.rwStatus &= ^dg.WordT(dpfDrive0Done)
 		}
-		if util.TestWbit(data, 2) {
+		if util.TestWbit(dataWd, 2) {
 			dpfData.rwStatus &= ^dg.WordT(dpfDrive1Done)
 		}
-		if util.TestWbit(data, 3) {
+		if util.TestWbit(dataWd, 3) {
 			dpfData.rwStatus &= ^dg.WordT(dpfDrive2Done)
 		}
-		if util.TestWbit(data, 4) {
+		if util.TestWbit(dataWd, 4) {
 			dpfData.rwStatus &= ^dg.WordT(dpfDrive3Done)
 		}
 		dpfData.instructionMode = dpfInsModeNormal
@@ -333,39 +336,39 @@ func dpfDataOut(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 		dpfData.lastDOAwasSeek = (dpfData.command == dpfCmdSeek)
 		if debugLogging {
 			logging.DebugPrint(logging.DpfLog, "DOA [Specify Cmd,Drv,EMA] to DRV=%d with data %s at PC: %d\n",
-				dpfData.drive, util.WordToBinStr(data), cpuPtr.pc)
+				dpfData.drive, util.WordToBinStr(dataWd), cpuPtr.pc)
 			logging.DebugPrint(logging.DpfLog, "... CMD: %s, DRV: %d, EMA: %d\n",
 				cmdDecode[dpfData.command], dpfData.drive, dpfData.ema)
 		}
 	case 'B':
-		if util.TestWbit(data, 0) {
+		if util.TestWbit(dataWd, 0) {
 			dpfData.ema |= 0x01
 		} else {
 			dpfData.ema &= 0xfe
 		}
-		dpfData.memAddr = data & 0x7fff
+		dpfData.memAddr = dataWd & 0x7fff
 		if debugLogging {
 			logging.DebugPrint(logging.DpfLog, "DOB [Specify Memory Addr] with data %s at PC: %d\n",
-				util.WordToBinStr(data), cpuPtr.pc)
+				util.WordToBinStr(dataWd), cpuPtr.pc)
 			logging.DebugPrint(logging.DpfLog, "... MEM Addr: %d\n", dpfData.memAddr)
 			logging.DebugPrint(logging.DpfLog, "... EMA: %d\n", dpfData.ema)
 		}
 	case 'C':
 		if dpfData.lastDOAwasSeek {
-			dpfData.cylinder = data & 0x03ff // mask off lower 10 bits
+			dpfData.cylinder = dataWd & 0x03ff // mask off lower 10 bits
 			if debugLogging {
 				logging.DebugPrint(logging.DpfLog, "DOC [Specify Cylinder] after SEEK with data %s at PC: %d\n",
-					util.WordToBinStr(data), cpuPtr.pc)
+					util.WordToBinStr(dataWd), cpuPtr.pc)
 				logging.DebugPrint(logging.DpfLog, "... CYL: %d\n", dpfData.cylinder)
 			}
 		} else {
-			dpfData.mapEnabled = util.TestWbit(data, 0)
-			dpfData.surface = extractsurface(data)
-			dpfData.sector = extractSector(data)
-			dpfData.sectCnt = extractSectCnt(data)
+			dpfData.mapEnabled = util.TestWbit(dataWd, 0)
+			dpfData.surface = extractsurface(dataWd)
+			dpfData.sector = extractSector(dataWd)
+			dpfData.sectCnt = extractSectCnt(dataWd)
 			if debugLogging {
 				logging.DebugPrint(logging.DpfLog, "DOC [Specify Surf,Sect,Cnt] (not after seek) with data %s at PC: %d\n",
-					util.WordToBinStr(data), cpuPtr.pc)
+					util.WordToBinStr(dataWd), cpuPtr.pc)
 				logging.DebugPrint(logging.DpfLog, "... MAP: %d, SURF: %d, SECT: %d, SECCNT: %d\n",
 					util.BoolToInt(dpfData.mapEnabled), dpfData.surface, dpfData.sector, dpfData.sectCnt)
 			}
@@ -381,10 +384,7 @@ func dpfDataOut(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 }
 
 func dpfDoCommand() {
-	var (
-		//buffer = make([]byte, dpfBytesPerSect)
-		wd dg.WordT
-	)
+
 	dpfData.dpfMu.Lock()
 
 	dpfData.instructionMode = dpfInsModeNormal
@@ -449,13 +449,13 @@ func dpfDoCommand() {
 				return
 			}
 			dpfPositionDiskImage()
-			br, err := dpfData.imageFile.Read(dpfData.readBuff)
+			bytesRead, err = dpfData.imageFile.Read(dpfData.readBuff)
 
-			if br != dpfBytesPerSect || err != nil {
+			if bytesRead != dpfBytesPerSect || err != nil {
 				log.Fatalf("ERROR: unexpected return from DPF Image File Read: %s", err)
 			}
-			for w := 0; w < dpfWordsPerSect; w++ {
-				wd = (dg.WordT(dpfData.readBuff[w*2]) << 8) | dg.WordT(dpfData.readBuff[(w*2)+1])
+			for wIx = 0; wIx < dpfWordsPerSect; wIx++ {
+				wd = (dg.WordT(dpfData.readBuff[wIx*2]) << 8) | dg.WordT(dpfData.readBuff[(wIx*2)+1])
 				memory.WriteWordBmcChan(dg.PhysAddrT(dpfData.memAddr), wd)
 				dpfData.memAddr++
 			}
@@ -510,14 +510,14 @@ func dpfDoCommand() {
 				return
 			}
 			dpfPositionDiskImage()
-			for w := 0; w < dpfWordsPerSect; w++ {
+			for wIx = 0; wIx < dpfWordsPerSect; wIx++ {
 				wd = memory.ReadWordBmcChan(dg.PhysAddrT(dpfData.memAddr))
 				dpfData.memAddr++
-				dpfData.writeBuff[w*2] = byte((wd & 0xff00) >> 8)
-				dpfData.writeBuff[(w*2)+1] = byte(wd & 0x00ff)
+				dpfData.writeBuff[wIx*2] = byte((wd & 0xff00) >> 8)
+				dpfData.writeBuff[(wIx*2)+1] = byte(wd & 0x00ff)
 			}
-			bw, err := dpfData.imageFile.Write(dpfData.writeBuff)
-			if bw != dpfBytesPerSect || err != nil {
+			bytesWritten, err = dpfData.imageFile.Write(dpfData.writeBuff)
+			if bytesWritten != dpfBytesPerSect || err != nil {
 				log.Fatalf("ERROR: unexpected return from DPF Image File Write: %s", err)
 			}
 			dpfData.sector++
@@ -580,9 +580,9 @@ func dpfHandleFlag(f byte) {
 
 // set the MV/Em disk image file postion according to current C/H/S
 func dpfPositionDiskImage() {
-	var lba, offset, r int64
-	lba = ((int64(dpfData.cylinder*dpfSurfPerDisk) + int64(dpfData.surface)) * int64(dpfSectPerTrack)) + int64(dpfData.sector)
-	offset = lba * dpfBytesPerSect
+	var offset, r int64
+	//lba = ((int64(dpfData.cylinder*dpfSurfPerDisk) + int64(dpfData.surface)) * int64(dpfSectPerTrack)) + int64(dpfData.sector)
+	offset = (((int64(dpfData.cylinder*dpfSurfPerDisk) + int64(dpfData.surface)) * int64(dpfSectPerTrack)) + int64(dpfData.sector)) * dpfBytesPerSect
 	r, err = dpfData.imageFile.Seek(offset, 0)
 	if r != offset || err != nil {
 		log.Fatal("DPF could not postition disk image via seek()")

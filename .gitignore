@@ -12,6 +12,7 @@ debug*
 *.log
 *.out
 *.pprof
+*.svg
 
 *.json
 mvemg.exe
