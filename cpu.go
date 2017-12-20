@@ -63,6 +63,7 @@ type cpuStatT struct {
 	carry, atu, ion, pfflag bool
 	instrCount              uint64
 	goVersion               string
+	build                   string
 	goroutineCount          int
 	hostCPUCount            int
 	heapSizeMB              int

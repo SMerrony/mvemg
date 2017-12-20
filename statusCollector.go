@@ -105,7 +105,7 @@ func statusCollector(
 					cpuStats.ac[3]))
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", DASHER_WRITE_WINDOW_ADDR, 0, statInternalsRow, DASHER_ERASE_EOL))
 				statusSendString(conn, fmt.Sprintf("MV/Em - Version: %s (%s) built with %s",
-					version, releaseType,
+					Version, ReleaseType,
 					cpuStats.goVersion))
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", DASHER_WRITE_WINDOW_ADDR, 0, statInternalsRow2, DASHER_ERASE_EOL))
 				statusSendString(conn, fmt.Sprintf("        Host CPUs: %d  Goroutines: %d  Heap: %dMB",

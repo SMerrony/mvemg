@@ -51,12 +51,11 @@ const (
 
 	cmdUnknown = " *** UNKNOWN SCP-CLI COMMAND ***"
 	cmdNYI     = "Command Not Yet Implemented"
-
-	version     = "20171114"
-	releaseType = "Prerelease"
 )
 
 var (
+	// Version etc. are set at build time via the Makefile
+	Version, Build, ReleaseType string
 	// debugLogging - CPU runs about 3x faster without debugLogging
 	// (and another 3x faster without disassembly, linked to this)
 	debugLogging  = true
