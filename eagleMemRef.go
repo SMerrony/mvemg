@@ -260,14 +260,16 @@ func wcmv(cpuPtr *CPUT) {
 	var destAscend, srcAscend bool
 	destCount := int32(cpuPtr.ac[0])
 	if destCount == 0 {
-		log.Println("INFO: WCMV called with AC0 == 0, not moving anything")
+		if debugLogging {
+			logging.DebugPrint(logging.DebugLog, ".... WCMV called with AC0 == 0, not moving anything\n")
+		}
 		return
 	}
 	destAscend = (destCount > 0)
 	srcCount := int32(cpuPtr.ac[1])
 	srcAscend = (srcCount > 0)
 	if debugLogging {
-		logging.DebugPrint(logging.DebugLog, "DEBUG: WCMV moving %d chars from %d to %d\n",
+		logging.DebugPrint(logging.DebugLog, ".... WCMV moving %d chars from %d to %d\n",
 			srcCount, cpuPtr.ac[3], cpuPtr.ac[2])
 	}
 	// set carry if length of src is greater than length of dest
@@ -372,7 +374,9 @@ func wcmp(cpuPtr *CPUT) {
 func wcst(cpuPtr *CPUT) {
 	strLenDir := int(int32(cpuPtr.ac[1]))
 	if strLenDir == 0 {
-		log.Println("INFO: WCST called with AC1 == 0, not scanning anything")
+		if debugLogging {
+			logging.DebugPrint(logging.DebugLog, ".... WCST called with AC1 == 0, not scanning anything\n")
+		}
 		return
 	}
 	delimTabAddr := resolve32bitIndirectableAddr(cpuPtr.ac[0])
@@ -413,7 +417,9 @@ func wctr(cpuPtr *CPUT) {
 	// AC2 destination string ("string2") Byte addr
 	// AC3 source string ("string1") byte addr
 	if cpuPtr.ac[1] == 0 {
-		log.Println("INFO: WCTR called with AC1 == 0, not translating anything")
+		if debugLogging {
+			logging.DebugPrint(logging.DebugLog, "INFO: WCTR called with AC1 == 0, not translating anything\n")
+		}
 		return
 	}
 	transTablePtr := dg.DwordT(resolve32bitIndirectableAddr(cpuPtr.ac[0]))

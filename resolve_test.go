@@ -60,3 +60,36 @@ func TestResolve16bitEclipseAddr(t *testing.T) {
 		t.Error("Expected 10, got ", r)
 	}
 }
+func TestResolve16bitEagleAddr(t *testing.T) {
+	cpuPtr := cpuInit(nil)
+	cpuPtr.pc = 11
+	memory.WriteWord(10, 9)
+	memory.WriteWord(11, 10)
+	memory.WriteWord(12, 12)
+
+	r := resolve16bitEagleAddr(cpuPtr, ' ', "Absolute", 11)
+	if r != 11 {
+		t.Error("Expected 11, got ", r)
+	}
+
+	r = resolve16bitEagleAddr(cpuPtr, ' ', "PC", 1)
+	if r != 12 {
+		t.Error("Expected 12, got ", r)
+	}
+
+	r = resolve16bitEagleAddr(cpuPtr, ' ', "PC", -1)
+	if r != 10 {
+		t.Error("Expected 10, got ", r)
+	}
+
+	r = resolve16bitEagleAddr(cpuPtr, '@', "PC", -1)
+	if r != 9 {
+		t.Error("Expected 9, got ", r)
+	}
+
+	cpuPtr.ac[2] = 12
+	r = resolve16bitEagleAddr(cpuPtr, '@', "AC2", -1)
+	if r != 10 {
+		t.Error("Expected 10, got ", r)
+	}
+}

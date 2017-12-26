@@ -32,11 +32,11 @@ RELEASETYPE = Prerelease
 
 LDFLAGS = -ldflags "-X main.Version=${VERSION} -X main.Build=${BUILD} -X main.ReleaseType=${RELEASETYPE}"
 
-all: test build
+all: build test
 build: 
 	${GOBUILD} ${LDFLAGS} -o ${BINARY_NAME} -v
 test: 
-	${GOTEST} -v ./...
+	${GOTEST} ./...
 clean: 
 	${GOCLEAN}
 	rm -f ${BINARY_NAME}
