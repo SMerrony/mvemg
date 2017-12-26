@@ -110,6 +110,21 @@ func ReadWord(wordAddr dg.PhysAddrT) dg.WordT {
 	return wd
 }
 
+// ReadWordTrap returns the DG Word at the specified physical address
+func ReadWordTrap(wordAddr dg.PhysAddrT) (dg.WordT, bool) {
+	var wd dg.WordT
+	if wordAddr >= MemSizeWords {
+		logging.DebugLogsDump()
+		debug.PrintStack()
+		log.Printf("ERROR: Attempt to read word beyond end of physical memory using address: %d", wordAddr)
+		return 0, false
+	}
+	memory.ramMu.RLock()
+	wd = memory.ram[wordAddr]
+	memory.ramMu.RUnlock()
+	return wd, true
+}
+
 // WriteWord - ALL memory-writing should ultimately go through this function
 // N.B. minor exceptions may be made for memory.NsPush() and memory.NsPop()
 func WriteWord(wordAddr dg.PhysAddrT, datum dg.WordT) {
@@ -143,6 +158,7 @@ func ReadDWord(wordAddr dg.PhysAddrT) dg.DwordT {
 func ReadDWordTrap(wordAddr dg.PhysAddrT) (dg.DwordT, bool) {
 	var hiWd, loWd dg.WordT
 	if wordAddr >= MemSizeWords {
+		logging.DebugLogsDump()
 		log.Printf("ERROR: Attempt to read doubleword beyond end of physical memory using address: %d\n", wordAddr)
 		return 0, false
 	}

@@ -37,7 +37,7 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		dwd                dg.DwordT
 		i16a, i16b         int16
 		i32                int32
-		lowByte            bool
+		lowByte, ok        bool
 		wordAddr           dg.PhysAddrT
 		immMode2Word       immMode2WordT
 		oneAccMode2Word    oneAccMode2WordT
@@ -160,7 +160,10 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case "XNLDA":
 		oneAccModeInd2Word = iPtr.variant.(oneAccModeInd2WordT)
 		addr = resolve16bitEagleAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, oneAccModeInd2Word.disp15)
-		wd = memory.ReadWord(addr)
+		wd, ok = memory.ReadWordTrap(addr)
+		if !ok {
+			return false
+		}
 		// FIXME check this...
 		cpuPtr.ac[oneAccModeInd2Word.acd] = util.SexWordToDWord(wd)
 
