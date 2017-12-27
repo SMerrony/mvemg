@@ -167,6 +167,16 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		// FIXME check this...
 		cpuPtr.ac[oneAccModeInd2Word.acd] = util.SexWordToDWord(wd)
 
+	case "XSTB":
+		oneAccMode2Word = iPtr.variant.(oneAccMode2WordT)
+		byt = dg.ByteT(cpuPtr.ac[oneAccMode2Word.acd])
+		memory.WriteByte(resolve16bitEagleAddr(cpuPtr,
+			' ',
+			oneAccMode2Word.mode,
+			oneAccMode2Word.disp16),
+			oneAccMode2Word.bitLow,
+			byt)
+
 	case "XNSTA":
 		oneAccModeInd2Word = iPtr.variant.(oneAccModeInd2WordT)
 		addr = resolve16bitEagleAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, oneAccModeInd2Word.disp15)
