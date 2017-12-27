@@ -36,6 +36,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		dwd, tmp32b            dg.DwordT
 		tmpAddr                dg.PhysAddrT
 		s32a, s32b             int32
+		bit                    uint
 		noAccModeInd2Word      noAccModeInd2WordT
 		noAccModeInd3Word      noAccModeInd3WordT
 		noAccModeInd3WordXcall noAccModeInd3WordXcallT
@@ -300,6 +301,19 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			cpuPtr.pc += 3
 		} else {
 			cpuPtr.pc += 2
+		}
+
+	case "WSZB":
+		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
+		tmpAddr, bit = resolveEagleBitAddr(cpuPtr, &twoAcc1Word)
+		wd := memory.ReadWord(tmpAddr)
+		if !util.TestWbit(wd, int(bit)) {
+			cpuPtr.pc += 2
+		} else {
+			cpuPtr.pc += 1
+		}
+		if debugLogging {
+			logging.DebugPrint(logging.DebugLog, ".... Wd Addr: %d., word: %0X, bit #: %d\n", tmpAddr, wd, bit)
 		}
 
 	case "XCALL":

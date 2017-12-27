@@ -173,3 +173,21 @@ func resolveEclipseBitAddr(cpuPtr *CPUT, twoAcc1Word *twoAcc1WordT) (wordAddr dg
 	bitNum = uint(cpuPtr.ac[twoAcc1Word.acd] & 0x000f)
 	return wordAddr, bitNum
 }
+
+// resolveEagleeBitAddr as per page 1-17 of Pop
+// Used by eg. WSZB
+func resolveEagleBitAddr(cpuPtr *CPUT, twoAcc1Word *twoAcc1WordT) (wordAddr dg.PhysAddrT, bitNum uint) {
+	// TODO handle segments and indirection
+	if twoAcc1Word.acd == twoAcc1Word.acs {
+		wordAddr = 0
+	} else {
+		if util.TestDWbit(cpuPtr.ac[twoAcc1Word.acs], 0) {
+			log.Fatal("ERROR: Indirect 32-bit BIT pointers not yet supported")
+		}
+		wordAddr = dg.PhysAddrT(cpuPtr.ac[twoAcc1Word.acs])
+	}
+	offset := dg.PhysAddrT(cpuPtr.ac[twoAcc1Word.acd]) >> 4
+	wordAddr += offset // add unsigned offset
+	bitNum = uint(cpuPtr.ac[twoAcc1Word.acd] & 0x000f)
+	return wordAddr, bitNum
+}
