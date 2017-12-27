@@ -126,6 +126,10 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		s16 = int16(cpuPtr.ac[twoAcc1Word.acd]) - int16(cpuPtr.ac[twoAcc1Word.acs])
 		cpuPtr.ac[twoAcc1Word.acd] = dg.DwordT(s16)
 
+	case "SEX": // Sign EXtend
+		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
+		cpuPtr.ac[twoAcc1Word.acd] = util.SexWordToDWord(util.DWordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs]))
+
 	case "SSPT": /* NO-OP - see p.8-5 of MV/10000 Sys Func Chars */
 		log.Println("INFO: SSPT is a No-Op on this machine, continuing")
 
