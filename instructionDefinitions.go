@@ -194,6 +194,7 @@ func instructionsInit() {
 	instructionSet["LPEFB"] = instrChars{0xc6f9, 0xe7ff, 3, NOACC_MODE_3_WORD_FMT, EAGLE_STACK}
 	instructionSet["LPHY"] = instrChars{0x87e9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
 	instructionSet["LPSHJ"] = instrChars{0xC6C9, 0xE7FF, 3, NOACC_MODE_IND_3_WORD_FMT, EAGLE_PC}
+	instructionSet["LPSR"] = instrChars{0xa799, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
 	instructionSet["LSH"] = instrChars{0x8288, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP}
 	instructionSet["LWDO"] = instrChars{0x8798, 0x87ff, 4, LNDO_4_WORD_FMT, EAGLE_PC}
 	instructionSet["LWDSZ"] = instrChars{0x86f9, 0xe7ff, 3, NOACC_MODE_IND_3_WORD_FMT, EAGLE_PC}

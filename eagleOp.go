@@ -105,6 +105,9 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		}
 		cpuPtr.ac[oneAccMode3Word.acd] = dg.DwordT(addr)
 
+	case "LPSR":
+		cpuPtr.ac[0] = dg.DwordT(cpuPtr.psr)
+
 	case "NADD": // signed add
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		s16 = int16(cpuPtr.ac[twoAcc1Word.acd]) + int16(cpuPtr.ac[twoAcc1Word.acs])
