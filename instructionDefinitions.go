@@ -230,6 +230,7 @@ func instructionsInit() {
 	instructionSet["SGT"] = instrChars{0x8208, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_PC}
 	instructionSet["SKP"] = instrChars{0x6700, 0xff00, 1, IO_TEST_DEV_FMT, NOVA_IO}
 	instructionSet["SNB"] = instrChars{0x85f8, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_PC}
+	instructionSet["SNOVR"] = instrChars{0xa7b9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_PC}
 	instructionSet["SPSR"] = instrChars{0xa7a9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
 	instructionSet["SPTE"] = instrChars{0xe729, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
 	instructionSet["SSPT"] = instrChars{0xe7d9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}

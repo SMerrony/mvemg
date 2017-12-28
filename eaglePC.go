@@ -156,6 +156,13 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			cpuPtr.pc += 2
 		}
 
+	case "SNOVR":
+		if cpuPtr.GetOVR() {
+			cpuPtr.pc += 1
+		} else {
+			cpuPtr.pc += 2
+		}
+
 	case "WBR":
 		//		if iPtr.disp > 0 {
 		//			cpuPtr.pc += dg_phys_addr(iPtr.disp)
