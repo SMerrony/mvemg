@@ -42,6 +42,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		noAccModeInd3WordXcall noAccModeInd3WordXcallT
 		noAccModeInd4Word      noAccModeInd4WordT
 		oneAccImm2Word         oneAccImm2WordT
+		oneAccImm3Word         oneAccImm3WordT
 		oneAccModeInd3Word     oneAccModeInd3WordT
 		threeWordDo            threeWordDoT
 		twoAcc1Word            twoAcc1WordT
@@ -314,6 +315,14 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		}
 		if debugLogging {
 			logging.DebugPrint(logging.DebugLog, ".... Wd Addr: %d., word: %0X, bit #: %d\n", tmpAddr, wd, bit)
+		}
+
+	case "WUGTI":
+		oneAccImm3Word = iPtr.variant.(oneAccImm3WordT)
+		if uint32(cpuPtr.ac[oneAccImm3Word.acd]) > oneAccImm3Word.immU32 {
+			cpuPtr.pc += 4
+		} else {
+			cpuPtr.pc += 3
 		}
 
 	case "XCALL":

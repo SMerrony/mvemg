@@ -136,7 +136,7 @@ type oneAccImmWd2WordT struct {
 }
 type oneAccImm3WordT struct {
 	acd    int
-	immS32 int32
+	immU32 uint32
 }
 type oneAccImmDwd3WordT struct {
 	acd      int
@@ -483,13 +483,13 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		if disassemble {
 			decodedInstr.disassembly += fmt.Sprintf(" %d.,%d [2-Word OpCode]", oneAccImmWd2Word.immWord, oneAccImmWd2Word.acd)
 		}
-	case ONEACC_IMM_3_WORD_FMT: // eg. WADDI
+	case ONEACC_IMM_3_WORD_FMT: // eg. WADDI, WUGTI
 		var oneAccImm3Word oneAccImm3WordT
 		oneAccImm3Word.acd = int(util.GetWbits(opcode, 3, 2))
-		oneAccImm3Word.immS32 = int32(memory.ReadDWord(pc + 1))
+		oneAccImm3Word.immU32 = uint32(memory.ReadDWord(pc + 1))
 		decodedInstr.variant = oneAccImm3Word
 		if disassemble {
-			decodedInstr.disassembly += fmt.Sprintf(" %d.,%d [3-Word OpCode]", oneAccImm3Word.immS32, oneAccImm3Word.acd)
+			decodedInstr.disassembly += fmt.Sprintf(" %d.,%d [3-Word OpCode]", oneAccImm3Word.immU32, oneAccImm3Word.acd)
 		}
 	case ONEACC_IMMDWD_3_WORD_FMT: // eg. WANDI, WIORI, WLDAI
 		var oneAccImmDwd3Word oneAccImmDwd3WordT

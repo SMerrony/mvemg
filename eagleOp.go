@@ -157,7 +157,7 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case "WADDI":
 		// FIXME - handle overflow and carry
 		oneAccImm3Word = iPtr.variant.(oneAccImm3WordT)
-		s32 = int32(cpuPtr.ac[oneAccImm3Word.acd]) + oneAccImm3Word.immS32
+		s32 = int32(cpuPtr.ac[oneAccImm3Word.acd]) + int32(oneAccImm3Word.immU32)
 		cpuPtr.ac[oneAccImm3Word.acd] = dg.DwordT(s32)
 
 	case "WAND":
