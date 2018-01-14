@@ -76,7 +76,7 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case "CVWN":
 		oneAcc1Word = iPtr.variant.(oneAcc1WordT)
 		dwd = cpuPtr.ac[oneAcc1Word.acd]
-		if dwd>>16 != 0 || dwd>>16 != 0xffff {
+		if dwd>>16 != 0 && dwd>>16 != 0xffff {
 			cpuPtr.SetOVR(true)
 		}
 		if util.TestDWbit(dwd, 16) {

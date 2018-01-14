@@ -4,9 +4,15 @@ DEVNOTES.md
 # MV/Emulator Development Notes #
 Things to remember and general thoughts to bear in mind when working on the Go version of the emulator.
 
+## Why use a Makefile? ##
+Firstly, it's not strictly necessary (at the moment), if you have something against make then `go build` should probably work.
+
+I'm using it for the convenience of having `make clean`, `make deps`, etc. rather than a bunch of scripts, and having 'repeatable builds'.
+
+Also, the default make will do a build followed by a test - which is good discipline for me as I find it too easy to omit the test runs when I'm at the codeface!
+
 ## Endianness Issues and Types ##
-DG is big-endian, Intel is litle-endian.  Bits are numbered from the left in DG, the right in Intel, so in DG-land
-bit 0 is the most significant.
+DG is big-endian, Intel is litle-endian.  Bits are numbered from the left in DG, the right in Intel, so in DG-land bit 0 is the most significant.
 
 Make use of the dg.WordT, etc types where possible.
 

@@ -99,7 +99,7 @@ func eclipseOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		if dplus1 == 4 {
 			dplus1 = 0
 		}
-		dwd := util.DWordFromTwoWords(util.DWordGetLowerWord(cpuPtr.ac[immOneAcc.acd]), util.DWordGetLowerWord(cpuPtr.ac[dplus1]))
+		dwd = util.DWordFromTwoWords(util.DWordGetLowerWord(cpuPtr.ac[immOneAcc.acd]), util.DWordGetLowerWord(cpuPtr.ac[dplus1]))
 		dwd <<= (immOneAcc.immU16 * 4)
 		cpuPtr.ac[immOneAcc.acd] = dg.DwordT(util.DWordGetUpperWord(dwd))
 		cpuPtr.ac[dplus1] = dg.DwordT(util.DWordGetLowerWord(dwd))
@@ -156,7 +156,7 @@ func eclipseOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		ac0 := util.DWordGetLowerWord(cpuPtr.ac[0])
 		ac1 := util.DWordGetLowerWord(cpuPtr.ac[1])
 		ac2 := util.DWordGetLowerWord(cpuPtr.ac[2])
-		dwd := (dg.DwordT(ac1) * dg.DwordT(ac2)) + dg.DwordT(ac0)
+		dwd = (dg.DwordT(ac1) * dg.DwordT(ac2)) + dg.DwordT(ac0)
 		cpuPtr.ac[0] = dg.DwordT(util.DWordGetUpperWord(dwd))
 		cpuPtr.ac[1] = dg.DwordT(util.DWordGetLowerWord(dwd))
 
