@@ -25,34 +25,33 @@ Note that when the BMC performs a mapped transfer, it increments the destination
 ## DCH/BMC Registers
 An MV computer system contains 512 DCH registers and 1024 BMC registers.  The map registers are numbered from 0 through 07777.
 
-Registers | Description
-----------|------------
-0000 - 3776 | Even-numbered regs, most significant half of BMC map posns 0 - 1777
-0001 - 3777 | Odd-numbered regs, least significant half or BMC map posns 0 - 1777
-4000 - 5776 | Even-numbered regs, most significant half of DCH map posns 0 - 777
-4001 - 5777 | Odd-numbered regs, least significant half of DCH maps posns 0 - 777
-6000        | I/O channel definition register
-6001 - 7677 | (reserved)
-7700        | I/O channel status register
-7701        | I/O channel mask register
-7702        | CPU dedication control
-7703 - 7777 | (reserved)
+| Registers | Description|
+| ----------|------------|
+|0000 - 3776 | Even-numbered regs, most significant half of BMC map posns 0 - 1777|
+|0001 - 3777 | Odd-numbered regs, least significant half or BMC map posns 0 - 1777|
+|4000 - 5776 | Even-numbered regs, most significant half of DCH map posns 0 - 777|
+|4001 - 5777 | Odd-numbered regs, least significant half of DCH maps posns 0 - 777|
+|001 - 7677 | (reserved)|
+|7700        | I/O channel status register|
+|7701        | I/O channel mask register|
+|7702        | CPU dedication control|
+|7703 - 7777 | (reserved)|
 
 The register formats are the same for DCH and BMC registers.
 
 ### Even-Numbered Register Format
-V | D | Hardware Reserved
---|---|------------------
-0 | 1 |2 -             15
+|V | D | Hardware Reserved|
+|--|---|------------------|
+|0 | 1 |2 -             15|
 
 V - validity bit; if 1 then processor denies access
 D - data bit; if 0 the channel transfers data, if 1 the channel transfers zeroes
 Reserved should be written to with zeroes; reading these returns an undefined state.
 
 ### Odd-Numbered Register Format
-Res | Physical Page Number
-----|---------------------
-0   | 1 - 15 (N.B. was 2-15 early on)
+|Res | Physical Page Number|
+|----|---------------------|
+|0   | 1 - 15 (N.B. was 2-15 early on)|
 
 Res - hardware reserved
 Physical Page Number - associated with logical page reference.
@@ -60,9 +59,9 @@ Physical Page Number - associated with logical page reference.
 ### I/O Channel Definition Register Format
 _N.B. [SHM] There are differences between the earlier Internals doc and the later PoP..._
 
-ICE | Res | BVE | DVE | DCH | BMC | BAP | BDP | Res  | DME | 1
-----|-----|-----|-----|-----|-----|-----|-----|------|-----|---
-0   | 1-2 | 3   | 4   | 5   | 6   | 7   | 8   | 9-13 | 14  | 15
+|ICE | Res | BVE | DVE | DCH | BMC | BAP | BDP | Res  | DME | 1 |
+|----|-----|-----|-----|-----|-----|-----|-----|------|-----|---|
+|0   | 1-2 | 3   | 4   | 5   | 6   | 7   | 8   | 9-13 | 14  | 15|
 
 _N.B. Writing to bits 3,4,7,8 or 14 with a 1 complements these bits.  The **IORST** instruction clears these bits._
 
@@ -82,9 +81,9 @@ _N.B. Writing to bits 3,4,7,8 or 14 with a 1 complements these bits.  The **IORS
 
 Old version...
 
-E | Res | XDCH | 1 | MSK | INT
---|-----|------|---|-----|----
-0 | 1-11| 12   |13 | 14  | 15
+|E | Res | XDCH | 1 | MSK | INT|
+|--|-----|------|---|-----|----|
+|0 | 1-11| 12   |13 | 14  | 15 |
 
   * E - error flag
   * Res - reserved
@@ -95,9 +94,9 @@ E | Res | XDCH | 1 | MSK | INT
 
 New version...
 
-ERR | Res | DTO | MPE | 1 | 1 | CMB | INT
-----|-----|-----|-----|---|---|-----|----
-0   | 1-9 | 10  |  11 |12 |13 | 14  | 15
+|ERR | Res | DTO | MPE | 1 | 1 | CMB | INT|
+|----|-----|-----|-----|---|---|-----|----|
+|0   | 1-9 | 10  |  11 |12 |13 | 14  | 15 |
 
   * ERR - If 1 the I/O channel has detected an error
   * Res - Reserved
@@ -117,9 +116,9 @@ An I/O channnel Bus Reset **PRTRST** instruction sets the mask bit to 0 for one 
 
 NOTE: A **CIO** read to the I/O/ channel mask register produces undefined results.
 
-Res | MK0 | MK1...MK6 | R
-----|-----|-----------|---
-0-7 | 8   |  9 - 14   | 15
+|Res | MK0 | MK1...MK6 | R |
+|----|-----|-----------|---|
+|0-7 | 8   |  9 - 14   | 15 |
 
   * Res - reserved
   * MK0 - prevents all devices on channel 0 from interrupting CPU
@@ -132,9 +131,9 @@ NOTE: A system reset sets MK0 to 0 and MK1-6 to 1.
 ### CPU Dedication Control
 Each IOC contains a 16-bit command I/O register (07702) which controls CPU dedication.  This read/write register is available only which the system is in dedicated mode.
 
-Res | CPU
-----|----
-1-14| 15
+|Res | CPU|
+|----|----|
+|1-14| 15 |
 
   * Res - reserved
   * CPU - CPU No. (0 or 1) to which all NOVA-type interrupts (except cross-interrupts) will be directed
