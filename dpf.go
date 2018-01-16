@@ -166,10 +166,10 @@ func DpfInit(statsChann chan DpfStatT) {
 
 	go dpfStatsSender(statsChann)
 
-	busAddDevice(DEV_DPF, "DPF", dpfPMB, false, true, true)
-	busSetResetFunc(DEV_DPF, dpfReset)
-	busSetDataInFunc(DEV_DPF, dpfDataIn)
-	busSetDataOutFunc(DEV_DPF, dpfDataOut)
+	busAddDevice(devDPF, "DPF", dpfPMB, false, true, true)
+	busSetResetFunc(devDPF, dpfReset)
+	busSetDataInFunc(devDPF, dpfDataIn)
+	busSetDataOutFunc(devDPF, dpfDataOut)
 	dpfData.imageAttached = false
 	dpfData.instructionMode = dpfInsModeNormal
 	dpfData.driveStatus = dpfReady
@@ -193,7 +193,7 @@ func dpfAttach(dNum int, imgName string) bool {
 	dpfData.imageFileName = imgName
 	dpfData.imageAttached = true
 	dpfData.dpfMu.Unlock()
-	busSetAttached(DEV_DPF)
+	busSetAttached(devDPF)
 	return true
 }
 
@@ -544,8 +544,8 @@ func dpfDoCommand() {
 func dpfHandleFlag(f byte) {
 	switch f {
 	case 'S':
-		busSetBusy(DEV_DPF, true)
-		busSetDone(DEV_DPF, false)
+		busSetBusy(devDPF, true)
+		busSetDone(devDPF, false)
 		// TODO stop any I/O
 		dpfData.dpfMu.Lock()
 		dpfData.rwStatus = 0
@@ -556,14 +556,14 @@ func dpfHandleFlag(f byte) {
 		}
 		dpfData.dpfMu.Unlock()
 		dpfDoCommand()
-		busSetBusy(DEV_DPF, false)
-		busSetDone(DEV_DPF, true)
+		busSetBusy(devDPF, false)
+		busSetDone(devDPF, true)
 
 	case 'C':
 		log.Fatal("DPF C flag not yet implemented")
 
 	case 'P':
-		busSetBusy(DEV_DPF, false)
+		busSetBusy(devDPF, false)
 		dpfData.dpfMu.Lock()
 		if debugLogging {
 			logging.DebugPrint(logging.DpfLog, "... P flag set\n")

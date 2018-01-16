@@ -200,10 +200,10 @@ func dskpInit(statsChann chan dskpStatT) {
 
 	go dskpStatSender(statsChann)
 
-	busAddDevice(DEV_DSKP, "DSKP", dskpPMB, false, true, true)
-	busSetResetFunc(DEV_DSKP, dskpReset)
-	busSetDataInFunc(DEV_DSKP, dskpDataIn)
-	busSetDataOutFunc(DEV_DSKP, dskpDataOut)
+	busAddDevice(devDSKP, "DSKP", dskpPMB, false, true, true)
+	busSetResetFunc(devDSKP, dskpReset)
+	busSetDataInFunc(devDSKP, dskpDataIn)
+	busSetDataOutFunc(devDSKP, dskpDataOut)
 
 	dskpData.dskpDataMu.Lock()
 	dskpData.imageAttached = false
@@ -233,7 +233,7 @@ func dskpAttach(dNum int, imgName string) bool {
 
 	dskpData.dskpDataMu.Unlock()
 
-	busSetAttached(DEV_DSKP)
+	busSetAttached(devDSKP)
 	return true
 }
 
@@ -496,18 +496,18 @@ func dskpGetCBextendedStatusSize() int {
 func dskpHandleFlag(f byte) {
 	switch f {
 	case 'S':
-		busSetBusy(DEV_DSKP, true)
-		busSetDone(DEV_DSKP, false)
+		busSetBusy(devDSKP, true)
+		busSetDone(devDSKP, false)
 		if debugLogging {
 			logging.DebugPrint(logging.DskpLog, "... S flag set\n")
 		}
 		dskpDoPioCommand()
 
-		busSetBusy(DEV_DSKP, false)
+		busSetBusy(devDSKP, false)
 		// set the DONE flag if the return bit was set
 		dskpData.dskpDataMu.RLock()
 		if util.TestWbit(dskpData.commandRegC, 15) {
-			busSetDone(DEV_DSKP, true)
+			busSetDone(devDSKP, true)
 		}
 		dskpData.dskpDataMu.RUnlock()
 
@@ -515,7 +515,7 @@ func dskpHandleFlag(f byte) {
 		if debugLogging {
 			logging.DebugPrint(logging.DskpLog, "... C flag set, clearing DONE flag\n")
 		}
-		busSetDone(DEV_DSKP, false)
+		busSetDone(devDSKP, false)
 		// TODO clear pending interrupt
 		//dskpData.statusRegC = 0
 		dskpSetPioStatusRegC(statXecStateMapped,
@@ -699,7 +699,7 @@ func dskpCBprocessor(dataPtr *dskpDataT) {
 			if debugLogging {
 				logging.DebugPrint(logging.DskpLog, "...ready to set ASYNC status\n")
 			}
-			for busGetBusy(DEV_DSKP) || busGetDone(DEV_DSKP) {
+			for busGetBusy(devDSKP) || busGetDone(devDSKP) {
 				time.Sleep(dskpAsynchStatRetryInterval)
 			}
 			dataPtr.dskpDataMu.Lock()
@@ -713,7 +713,7 @@ func dskpCBprocessor(dataPtr *dskpDataT) {
 			if debugLogging {
 				logging.DebugPrint(logging.DskpLog, "...set ASYNC status\n")
 			}
-			busSetDone(DEV_DSKP, true)
+			busSetDone(devDSKP, true)
 		} else {
 			// chain to next CB
 			//dskpProcessCB(nextCB)

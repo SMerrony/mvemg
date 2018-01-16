@@ -124,14 +124,14 @@ func mtbInit() bool {
 	commandSet[mtbCmdUnload] = mtbCmdUnloadBits
 	commandSet[mtbCmdDriveMode] = mtbCmdDriveModeBits
 
-	busAddDevice(DEV_MTB, "MTB", mtbPMB, false, true, true)
+	busAddDevice(devMTB, "MTB", mtbPMB, false, true, true)
 
 	mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1UnitReady
 	mtb.statusReg2 = mtbSr2PEMode
 
-	busSetResetFunc(DEV_MTB, mtbReset)
-	busSetDataInFunc(DEV_MTB, mtbDataIn)
-	busSetDataOutFunc(DEV_MTB, mtbDataOut)
+	busSetResetFunc(devMTB, mtbReset)
+	busSetDataInFunc(devMTB, mtbDataIn)
+	busSetDataOutFunc(devMTB, mtbDataOut)
 
 	logging.DebugPrint(logging.MtbLog, "MTB Initialised via call to mtbInit()\n")
 	return true
@@ -167,7 +167,7 @@ func mtbAttach(tNum int, imgName string) bool {
 	mtb.imageAttached[tNum] = true
 	mtb.statusReg1 = mtbSr1Error | mtbSr1HiDensity | mtbSr19Track | mtbSr1BOT | mtbSr1UnitReady
 	mtb.statusReg2 = mtbSr2PEMode
-	busSetAttached(DEV_MTB)
+	busSetAttached(devMTB)
 	return true
 
 }
@@ -278,20 +278,20 @@ func mtbHandleFlag(f byte) {
 	case 'S':
 		logging.DebugPrint(logging.MtbLog, "... S flag set\n")
 		if mtb.currentCmd != mtbCmdRewind {
-			busSetBusy(DEV_MTB, true)
+			busSetBusy(devMTB, true)
 		}
-		busSetDone(DEV_MTB, false)
+		busSetDone(devMTB, false)
 		mtbDoCommand()
-		busSetBusy(DEV_MTB, false)
-		busSetDone(DEV_MTB, true)
+		busSetBusy(devMTB, false)
+		busSetDone(devMTB, true)
 
 	case 'C':
 		// if we were performing MTB operations in a Goroutine, this would interrupt them...
 		logging.DebugPrint(logging.MtbLog, "... C flag set\n")
 		mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1UnitReady // ???
 		mtb.statusReg2 = mtbSr2PEMode                                     // ???
-		busSetBusy(DEV_MTB, false)
-		busSetDone(DEV_MTB, false)
+		busSetBusy(devMTB, false)
+		busSetDone(devMTB, false)
 
 	case 'P':
 		// 'Reserved'

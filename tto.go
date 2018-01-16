@@ -33,9 +33,9 @@ var (
 
 func ttoInit(c net.Conn) {
 	tto = c
-	busAddDevice(DEV_TTO, "TTO", ttoPMB, true, true, false)
-	busSetResetFunc(DEV_TTO, ttoReset)
-	busSetDataOutFunc(DEV_TTO, ttoDataOut)
+	busAddDevice(devTTO, "TTO", ttoPMB, true, true, false)
+	busSetResetFunc(devTTO, ttoReset)
+	busSetDataOutFunc(devTTO, ttoDataOut)
 }
 
 func ttoPutChar(c byte) {
@@ -70,20 +70,20 @@ func ttoDataOut(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 		logging.DebugPrint(logging.DebugLog, "ttoDataOut: AC# %d contains %d                                 yielding ASCII char<%c>\n",
 			iPtr.acd, cpuPtr.ac[iPtr.acd], ascii)
 		if iPtr.f == 'S' {
-			busSetBusy(DEV_TTO, true)
-			busSetDone(DEV_TTO, false)
+			busSetBusy(devTTO, true)
+			busSetDone(devTTO, false)
 		}
 		ttoPutChar(ascii)
-		busSetBusy(DEV_TTO, false)
-		busSetDone(DEV_TTO, true)
+		busSetBusy(devTTO, false)
+		busSetDone(devTTO, true)
 	case 'N':
 		switch iPtr.f {
 		case 'S':
-			busSetBusy(DEV_TTO, true)
-			busSetDone(DEV_TTO, false)
+			busSetBusy(devTTO, true)
+			busSetDone(devTTO, false)
 		case 'C':
-			busSetBusy(DEV_TTO, false)
-			busSetDone(DEV_TTO, false)
+			busSetBusy(devTTO, false)
+			busSetDone(devTTO, false)
 		}
 	default:
 		log.Fatalf("ERROR: unexpected source buffer <%c> for DOx ac,TTO instruction\n", abc)

@@ -74,7 +74,7 @@ const cpuStatPeriodMs = 500 // 125 // i.e. we send stats every 1/8th of a second
 var cpu CPUT
 
 func cpuInit(statsChan chan cpuStatT) *CPUT {
-	busAddDevice(DEV_CPU, "CPU", cpuPMB, true, false, false)
+	busAddDevice(devCPU, "CPU", cpuPMB, true, false, false)
 	go cpuStatSender(statsChan)
 	return &cpu
 }

@@ -37,10 +37,10 @@ var (
 
 func ttiInit(c net.Conn, cpuPtr *CPUT, ch chan<- byte) {
 	tti = c
-	busAddDevice(DEV_TTI, "TTI", ttiPMB, true, true, false)
-	busSetResetFunc(DEV_TTI, ttiReset)
-	busSetDataInFunc(DEV_TTI, ttiDataIn)
-	busSetDataOutFunc(DEV_TTI, ttiDataOut)
+	busAddDevice(devTTI, "TTI", ttiPMB, true, true, false)
+	busSetResetFunc(devTTI, ttiReset)
+	busSetDataInFunc(devTTI, ttiDataIn)
+	busSetDataOutFunc(devTTI, ttiDataOut)
 	go ttiListener(cpuPtr, ch)
 }
 
@@ -73,7 +73,7 @@ func ttiListener(cpuPtr *CPUT, scpChan chan<- byte) {
 				oneCharBufMu.Lock()
 				oneCharBuf = b[c]
 				oneCharBufMu.Unlock()
-				busSetDone(DEV_TTI, true)
+				busSetDone(devTTI, true)
 			}
 		}
 	}
@@ -92,11 +92,11 @@ func ttiDataIn(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 	case 'A':
 		switch iPtr.f {
 		case 'S':
-			busSetBusy(DEV_TTI, true)
-			busSetDone(DEV_TTI, false)
+			busSetBusy(devTTI, true)
+			busSetDone(devTTI, false)
 		case 'C':
-			busSetBusy(DEV_TTI, false)
-			busSetDone(DEV_TTI, false)
+			busSetBusy(devTTI, false)
+			busSetDone(devTTI, false)
 		}
 
 	default:
@@ -110,11 +110,11 @@ func ttiDataOut(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 	case 'N':
 		switch iPtr.f {
 		case 'S':
-			busSetBusy(DEV_TTI, true)
-			busSetDone(DEV_TTI, false)
+			busSetBusy(devTTI, true)
+			busSetDone(devTTI, false)
 		case 'C':
-			busSetBusy(DEV_TTI, false)
-			busSetDone(DEV_TTI, false)
+			busSetBusy(devTTI, false)
+			busSetDone(devTTI, false)
 		}
 	default:
 		log.Fatalf("ERROR: unexpected call to ttiDataOut with abc(n) flag set to %c\n", abc)
