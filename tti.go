@@ -37,7 +37,7 @@ var (
 
 func ttiInit(c net.Conn, cpuPtr *CPUT, ch chan<- byte) {
 	tti = c
-	busAddDevice(DEV_TTI, "TTI", TTI_PMB, true, true, false)
+	busAddDevice(DEV_TTI, "TTI", ttiPMB, true, true, false)
 	busSetResetFunc(DEV_TTI, ttiReset)
 	busSetDataInFunc(DEV_TTI, ttiDataIn)
 	busSetDataOutFunc(DEV_TTI, ttiDataOut)
@@ -55,8 +55,8 @@ func ttiListener(cpuPtr *CPUT, scpChan chan<- byte) {
 		//log.Printf("DEBUG: ttiListener() got <%c>\n", b[0])
 		for c := 0; c < n; c++ {
 			// console ESCape?
-			//if b[c] == ASCII_ESC || b[c] == 0 {
-			if b[c] == ASCII_ESC {
+			//if b[c] == asciiESC || b[c] == 0 {
+			if b[c] == asciiESC {
 				cpuPtr.cpuMu.Lock()
 				cpuPtr.scpIO = true
 				cpuPtr.cpuMu.Unlock()
@@ -83,7 +83,7 @@ func ttiReset() {
 	log.Println("INFO: TTI Reset")
 }
 
-// This is called from Bus to implement DIA from the TTI DEV_TTIice
+// This is called from Bus to implement DIA from the TTI devTTIice
 func ttiDataIn(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 	oneCharBufMu.Lock()
 	cpuPtr.ac[iPtr.acd] = dg.DwordT(oneCharBuf) // grab the char from the buffer

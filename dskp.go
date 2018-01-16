@@ -200,7 +200,7 @@ func dskpInit(statsChann chan dskpStatT) {
 
 	go dskpStatSender(statsChann)
 
-	busAddDevice(DEV_DSKP, "DSKP", DSKP_PMB, false, true, true)
+	busAddDevice(DEV_DSKP, "DSKP", dskpPMB, false, true, true)
 	busSetResetFunc(DEV_DSKP, dskpReset)
 	busSetDataInFunc(DEV_DSKP, dskpDataIn)
 	busSetDataOutFunc(DEV_DSKP, dskpDataOut)

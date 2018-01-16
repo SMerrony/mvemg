@@ -127,7 +127,7 @@ func main() {
 
 		memory.MemInit()
 		busInit()
-		busAddDevice(DEV_SCP, "SCP", SCP_PMB, true, false, false)
+		busAddDevice(DEV_SCP, "SCP", scpPMB, true, false, false)
 		instructionsInit()
 		decoderGenAllPossOpcodes()
 		cpuPtr := cpuInit(cpuStatsChan)
@@ -138,7 +138,7 @@ func main() {
 		dskpInit(dskpStatsChan)
 
 		// say hello...
-		ttoPutChar(ASCII_FF)
+		ttoPutChar(asciiFF)
 		ttoPutStringNL(" *** Welcome to the MV/Emulator - Type HE for help ***")
 
 		// kick off the status monitor routine
@@ -168,12 +168,12 @@ func main() {
 func scpGetLine() string {
 	line := []byte{}
 	var cc byte
-	for cc != ASCII_CR {
+	for cc != asciiCR {
 		cc = <-ttiSCPchan
 		//cc = ttiGetChar()
 		// handle the DASHER Delete key
-		if cc == DASHER_DELETE && len(line) > 0 {
-			ttoPutChar(DASHER_CURSOR_LEFT)
+		if cc == dasherDELETE && len(line) > 0 {
+			ttoPutChar(dasherCURSORLEFT)
 			line = line[:len(line)-1]
 		} else {
 			ttoPutChar(cc)
@@ -327,10 +327,10 @@ func boot(cmd []string) {
 	}
 	memory.MemInit()
 	switch devNum {
-	case DEV_MTB:
+	case devMTB:
 		mtbLoadTBoot()
 		cpu.cpuMu.Lock()
-		cpu.ac[0] = DEV_MTB
+		cpu.ac[0] = devMTB
 		cpu.pc = 10
 		cpu.cpuMu.Unlock()
 	default:

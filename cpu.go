@@ -74,14 +74,14 @@ const cpuStatPeriodMs = 500 // 125 // i.e. we send stats every 1/8th of a second
 var cpu CPUT
 
 func cpuInit(statsChan chan cpuStatT) *CPUT {
-	busAddDevice(DEV_CPU, "CPU", CPU_PMB, true, false, false)
+	busAddDevice(DEV_CPU, "CPU", cpuPMB, true, false, false)
 	go cpuStatSender(statsChan)
 	return &cpu
 }
 
 func cpuPrintableStatus() string {
 	cpu.cpuMu.RLock()
-	res := fmt.Sprintf("%c      AC0       AC1       AC2       AC3        PC CRY ATU%c", ASCII_NL, ASCII_NL)
+	res := fmt.Sprintf("%c      AC0       AC1       AC2       AC3        PC CRY ATU%c", asciiNL, asciiNL)
 	res += fmt.Sprintf("%9d %9d %9d %9d %9d", cpu.ac[0], cpu.ac[1], cpu.ac[2], cpu.ac[3], cpu.pc)
 	res += fmt.Sprintf("  %d   %d", util.BoolToInt(cpu.carry), util.BoolToInt(cpu.atu))
 	cpu.cpuMu.RUnlock()

@@ -49,14 +49,14 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case "DIA", "DIB", "DIC", "DOA", "DOB", "DOC":
 		novaDataIo = iPtr.variant.(novaDataIoT)
 		// Special Case: DICC 0,077 => I/O Reset
-		if iPtr.mnemonic == "DIC" && novaDataIo.f == 'C' && novaDataIo.acd == 0 && novaDataIo.ioDev == DEV_CPU {
+		if iPtr.mnemonic == "DIC" && novaDataIo.f == 'C' && novaDataIo.acd == 0 && novaDataIo.ioDev == devCPU {
 			logging.DebugPrint(logging.DebugLog, "INFO: I/O Reset due to DICC 0,CPU instruction\n")
 			busResetAllIODevices()
 			cpuPtr.pc++
 			return true
 		}
 		// Special Case: DOB 0-3,077 == MSKO
-		if iPtr.mnemonic == "DOB" && novaDataIo.ioDev == DEV_CPU {
+		if iPtr.mnemonic == "DOB" && novaDataIo.ioDev == devCPU {
 			logging.DebugPrint(logging.DebugLog, "INFO: Handling DOB %d, CPU instruction as MSKO\n", novaDataIo.acd)
 			novaDataIo = iPtr.variant.(novaDataIoT)
 			cpuPtr.mask = util.DWordGetLowerWord(cpuPtr.ac[novaDataIo.acd])
@@ -64,7 +64,7 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			return true
 		}
 		// Special Case: DOC 0-3,077 => Halt
-		if iPtr.mnemonic == "DOC" && novaDataIo.ioDev == DEV_CPU {
+		if iPtr.mnemonic == "DOC" && novaDataIo.ioDev == devCPU {
 			logging.DebugPrint(logging.DebugLog, "INFO: CPU Halting due to DOC %d,CPU instruction\n", novaDataIo.acd)
 			// do not advance PC
 			return false
@@ -101,7 +101,7 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case "NIO":
 		ioFlagsDev = iPtr.variant.(ioFlagsDevT)
 		// special case: NIOC CPU => INTDS
-		if ioFlagsDev.f == 'C' && ioFlagsDev.ioDev == DEV_CPU {
+		if ioFlagsDev.f == 'C' && ioFlagsDev.ioDev == devCPU {
 			// same as INTDS
 			cpu.ion = false
 			break

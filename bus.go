@@ -61,7 +61,7 @@ type device struct {
 	done            bool
 }
 
-type devices [MAX_DEVICES]device
+type devices [devMax]device
 
 var d devices
 
@@ -82,7 +82,7 @@ func busInit() {
 }
 
 func busAddDevice(devNum int, mnem string, pmb int, att bool, io bool, boot bool) {
-	if devNum >= MAX_DEVICES {
+	if devNum >= devMax {
 		log.Fatalf("ERROR: Attempt to add device with too-high device number: 0%o", devNum)
 	}
 	d[devNum].devMu.Lock()
@@ -252,7 +252,7 @@ func busIsIODevice(devNum int) bool {
 }
 
 func busGetPrintableDevList() string {
-	lst := fmt.Sprintf(" #  Mnem   PMB  I/O Busy Done Status%c", ASCII_NL)
+	lst := fmt.Sprintf(" #  Mnem   PMB  I/O Busy Done Status%c", asciiNL)
 	var line string
 	for dev := range d {
 		d[dev].devMu.RLock()

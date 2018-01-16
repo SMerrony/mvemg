@@ -310,7 +310,7 @@ func wcmv(cpuPtr *CPUT) {
 	// now fill any excess bytes with ASCII spaces
 	if destCount != 0 {
 		for {
-			memWriteByteBA(ASCII_SPC, cpuPtr.ac[2])
+			memWriteByteBA(asciiSPC, cpuPtr.ac[2])
 			if destAscend {
 				cpuPtr.ac[2]++
 				destCount--

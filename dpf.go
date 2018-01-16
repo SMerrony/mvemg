@@ -166,7 +166,7 @@ func DpfInit(statsChann chan DpfStatT) {
 
 	go dpfStatsSender(statsChann)
 
-	busAddDevice(DEV_DPF, "DPF", DPF_PMB, false, true, true)
+	busAddDevice(DEV_DPF, "DPF", dpfPMB, false, true, true)
 	busSetResetFunc(DEV_DPF, dpfReset)
 	busSetDataInFunc(DEV_DPF, dpfDataIn)
 	busSetDataOutFunc(DEV_DPF, dpfDataOut)

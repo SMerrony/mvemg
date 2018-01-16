@@ -33,7 +33,7 @@ var (
 
 func ttoInit(c net.Conn) {
 	tto = c
-	busAddDevice(DEV_TTO, "TTO", TTO_PMB, true, true, false)
+	busAddDevice(DEV_TTO, "TTO", ttoPMB, true, true, false)
 	busSetResetFunc(DEV_TTO, ttoReset)
 	busSetDataOutFunc(DEV_TTO, ttoDataOut)
 }
@@ -48,16 +48,16 @@ func ttoPutString(s string) {
 
 func ttoPutStringNL(s string) {
 	tto.Write([]byte(s))
-	tto.Write([]byte{ASCII_NL})
+	tto.Write([]byte{asciiNL})
 }
 
 func ttoPutNLString(s string) {
-	tto.Write([]byte{ASCII_NL})
+	tto.Write([]byte{asciiNL})
 	tto.Write([]byte(s))
 }
 
 func ttoReset() {
-	ttoPutChar(ASCII_FF)
+	ttoPutChar(asciiFF)
 	log.Println("INFO: TTO Reset")
 }
 

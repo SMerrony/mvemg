@@ -80,7 +80,7 @@ func statusCollector(
 			os.Exit(1)
 		}
 
-		statusSendString(conn, fmt.Sprintf("%c                             MV/Em Status\012", DASHER_ERASE_PAGE))
+		statusSendString(conn, fmt.Sprintf("%c                             MV/Em Status\012", dasherERASEPAGE))
 		statusSendString(conn, "                             ============")
 
 		for {
@@ -91,23 +91,23 @@ func statusCollector(
 				lastIcount = cpuStats.instrCount
 				ips = float64(iCount) / (time.Since(lastCPUtime).Seconds() * 1000)
 				lastCPUtime = time.Now()
-				statusSendString(conn, fmt.Sprintf("%c%c%c%c", DASHER_WRITE_WINDOW_ADDR, 0, statCPUrow, DASHER_ERASE_EOL))
+				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statCPUrow, dasherERASEEOL))
 				statusSendString(conn, fmt.Sprintf("PC:  %010d   Interrupts: %s    ATU: %s     IPS: %.fk/sec",
 					cpuStats.pc,
 					util.BoolToOnOff(cpuStats.ion),
 					util.BoolToOnOff(cpuStats.atu),
 					ips))
-				statusSendString(conn, fmt.Sprintf("%c%c%c%c", DASHER_WRITE_WINDOW_ADDR, 0, statCPUrow2, DASHER_ERASE_EOL))
+				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statCPUrow2, dasherERASEEOL))
 				statusSendString(conn, fmt.Sprintf("AC0: %010d   AC1: %010d   AC2: %010d   AC3: %010d",
 					cpuStats.ac[0],
 					cpuStats.ac[1],
 					cpuStats.ac[2],
 					cpuStats.ac[3]))
-				statusSendString(conn, fmt.Sprintf("%c%c%c%c", DASHER_WRITE_WINDOW_ADDR, 0, statInternalsRow, DASHER_ERASE_EOL))
+				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statInternalsRow, dasherERASEEOL))
 				statusSendString(conn, fmt.Sprintf("MV/Em - Version: %s (%s) built with %s",
 					Version, ReleaseType,
 					cpuStats.goVersion))
-				statusSendString(conn, fmt.Sprintf("%c%c%c%c", DASHER_WRITE_WINDOW_ADDR, 0, statInternalsRow2, DASHER_ERASE_EOL))
+				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statInternalsRow2, dasherERASEEOL))
 				statusSendString(conn, fmt.Sprintf("        Host CPUs: %d  Goroutines: %d  Heap: %dMB",
 					cpuStats.hostCPUCount,
 					cpuStats.goroutineCount,
@@ -117,7 +117,7 @@ func statusCollector(
 				dpfIops = float64(thisDpfIOcnt-lastDpfIOcnt) / time.Since(lastDpfTime).Seconds()
 				lastDpfIOcnt = thisDpfIOcnt
 				lastDpfTime = time.Now()
-				statusSendString(conn, fmt.Sprintf("%c%c%c%c", DASHER_WRITE_WINDOW_ADDR, 0, statDPFrow, DASHER_ERASE_EOL))
+				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statDPFrow, dasherERASEEOL))
 				statusSendString(conn, fmt.Sprintf("DPF  - Attached: %c  IOPS: %.f CYL: %04d  HD: %02d  SECT: %03d",
 					util.BoolToYN(dpfStats.imageAttached),
 					dpfIops,
@@ -130,7 +130,7 @@ func statusCollector(
 				dskpIops = float64(thisDskpIOcnt-lastDskpIOcnt) / time.Since(lastDskpTime).Seconds()
 				lastDskpIOcnt = thisDskpIOcnt
 				lastDskpTime = time.Now()
-				statusSendString(conn, fmt.Sprintf("%c%c%c%c", DASHER_WRITE_WINDOW_ADDR, 0, statDSKProw, DASHER_ERASE_EOL))
+				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statDSKProw, dasherERASEEOL))
 				statusSendString(conn, fmt.Sprintf("DSKP - Attached: %c  IOPS: %.f  SECNUM: %08d",
 					util.BoolToYN(dskpStats.imageAttached),
 					dskpIops,

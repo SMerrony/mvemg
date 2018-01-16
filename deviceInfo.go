@@ -1,4 +1,24 @@
 // deviceInfo.go
+
+// Copyright (C) 2017  Steve Merrony
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
 package main
 
 import "fmt"
@@ -8,52 +28,52 @@ import "fmt"
 // as per DG docs!
 // N.B. add to deviceToString() when new codes added here
 const (
-	MAX_DEVICES = 0100
-	DEV_PSC     = 004
-	PSC_PMB     = 13
-	DEV_TTI     = 010
-	TTI_PMB     = 14
-	DEV_TTO     = 011
-	TTO_PMB     = 15
-	DEV_RTC     = 014
-	RTC_PMB     = 13
-	DEV_MTB     = 022
-	MTB_PMB     = 10
-	DEV_DSKP    = 024
-	DSKP_PMB    = 7
-	DEV_DPF     = 027
-	DPF_PMB     = 7
-	DEV_SCP     = 045
-	SCP_PMB     = 15
-	DEV_CPU     = 077
-	CPU_PMB     = 0 // kinda!
+	devMax  = 0100
+	devPSC  = 004
+	pscPMB  = 13
+	devTTI  = 010
+	ttiPMB  = 14
+	devTTO  = 011
+	ttoPMB  = 15
+	devRTC  = 014
+	rtcPMB  = 13
+	devMTB  = 022
+	mtbPMB  = 10
+	devDSKP = 024
+	dskpPMB = 7
+	devDPF  = 027
+	dpfPMB  = 7
+	devSCP  = 045
+	scpPMB  = 15
+	devCPU  = 077
+	cpuPMB  = 0 // kinda!
 
-	CPU_MODEL_NO = 0x224C
-	UCODE_REV    = 0x04
+	cpuModelNo = 0x224C
+	ucodeRev   = 0x04
 )
 
 func deviceToString(devNum int) string {
 	var ds string
 	switch devNum {
-	case DEV_CPU:
+	case devCPU:
 		return "CPU"
-	case DEV_DSKP:
+	case devDSKP:
 		return "DSKP"
-	case DEV_DPF:
+	case devDPF:
 		return "DPF"
-	case DEV_MTB:
+	case devMTB:
 		return "MTB"
-		//	case DEV_PIT:
+		//	case devPIT:
 		//		return "PIT"
-	case DEV_PSC:
+	case devPSC:
 		return "PSC"
-	case DEV_RTC:
+	case devRTC:
 		return "RTC"
-	case DEV_SCP:
+	case devSCP:
 		return "SCP"
-	case DEV_TTI:
+	case devTTI:
 		return "TTI"
-	case DEV_TTO:
+	case devTTO:
 		return "TTO"
 	default:
 		ds = fmt.Sprintf("%#o", devNum)

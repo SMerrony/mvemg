@@ -124,7 +124,7 @@ func mtbInit() bool {
 	commandSet[mtbCmdUnload] = mtbCmdUnloadBits
 	commandSet[mtbCmdDriveMode] = mtbCmdDriveModeBits
 
-	busAddDevice(DEV_MTB, "MTB", MTB_PMB, false, true, true)
+	busAddDevice(DEV_MTB, "MTB", mtbPMB, false, true, true)
 
 	mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1UnitReady
 	mtb.statusReg2 = mtbSr2PEMode
