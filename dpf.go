@@ -456,7 +456,7 @@ func dpfDoCommand() {
 			}
 			for wIx = 0; wIx < dpfWordsPerSect; wIx++ {
 				wd = (dg.WordT(dpfData.readBuff[wIx*2]) << 8) | dg.WordT(dpfData.readBuff[(wIx*2)+1])
-				dpfData.memAddr = memory.WriteWordBmcChan16bit(dpfData.memAddr, wd)
+				memory.WriteWordBmcChan16bit(&dpfData.memAddr, wd)
 			}
 			dpfData.sector++
 			dpfData.sectCnt++
@@ -510,7 +510,7 @@ func dpfDoCommand() {
 			}
 			dpfPositionDiskImage()
 			for wIx = 0; wIx < dpfWordsPerSect; wIx++ {
-				wd, dpfData.memAddr = memory.ReadWordBmcChan16bit(dpfData.memAddr)
+				wd = memory.ReadWordBmcChan16bit(&dpfData.memAddr)
 				dpfData.writeBuff[wIx*2] = byte((wd & 0xff00) >> 8)
 				dpfData.writeBuff[(wIx*2)+1] = byte(wd & 0x00ff)
 			}

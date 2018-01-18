@@ -215,59 +215,58 @@ func ReadWordBmcChan(addr dg.PhysAddrT) (dg.WordT, dg.PhysAddrT) {
 }
 
 // ReadWordBmcChan16bit reads a word from memory over the virtual Burst Multiplex Channel for 16-bit devices
-func ReadWordBmcChan16bit(addr dg.WordT) (dg.WordT, dg.WordT) {
+func ReadWordBmcChan16bit(addr *dg.WordT) dg.WordT {
 	var pAddr dg.PhysAddrT
-	decodedAddr := decodeBmcAddr(dg.PhysAddrT(addr))
+	decodedAddr := decodeBmcAddr(dg.PhysAddrT(*addr))
 	if decodedAddr.isLogical {
-		pAddr, _ = getBmcMapAddr(dg.PhysAddrT(addr)) // FIXME
+		pAddr, _ = getBmcMapAddr(dg.PhysAddrT(*addr)) // FIXME
 	} else {
 		pAddr = decodedAddr.ca
 	}
 	wd := ReadWord(pAddr)
-	pAddr++
+	*addr = *addr + 1
 	logging.DebugPrint(logging.MapLog, "ReadWordBmcChan16bit got addr: %d, wrote to addr: %d\n", addr, pAddr)
-	return wd, dg.WordT(pAddr)
+	return wd
 }
 
 // WriteWordDchChan writes a word to memory over the virtual DCH
 // pAddr is returned for debugging purposes only
-func WriteWordDchChan(addr dg.PhysAddrT, data dg.WordT) dg.PhysAddrT {
-	pAddr := addr
+func WriteWordDchChan(addr *dg.PhysAddrT, data dg.WordT) {
+	pAddr := *addr
 
 	if getDchMode() {
-		pAddr, _ = getDchMapAddr(addr)
+		pAddr, _ = getDchMapAddr(*addr)
 	}
 	WriteWord(pAddr, data)
+	*addr = *addr + 1
 	logging.DebugPrint(logging.MapLog, "WriteWordDchChan got addr: %d, wrote to addr: %d\n", addr, pAddr)
-	return pAddr
+
 }
 
 // WriteWordBmcChan writes a word over the virtual Burst Multiplex Channel
-func WriteWordBmcChan(addr dg.PhysAddrT, data dg.WordT) dg.PhysAddrT {
+func WriteWordBmcChan(addr *dg.PhysAddrT, data dg.WordT) {
 	var pAddr dg.PhysAddrT
-	decodedAddr := decodeBmcAddr(addr)
+	decodedAddr := decodeBmcAddr(*addr)
 	if decodedAddr.isLogical {
-		pAddr, _ = getBmcMapAddr(addr) // FIXME
+		pAddr, _ = getBmcMapAddr(*addr) // FIXME
 	} else {
 		pAddr = decodedAddr.ca
 	}
 	WriteWord(pAddr, data)
-	pAddr++
+	*addr = *addr + 1
 	logging.DebugPrint(logging.MapLog, "WriteWordBmcChan got addr: %d, wrote to addr: %d\n", addr, pAddr)
-	return pAddr
 }
 
 // WriteWordBmcChan16bit writes a word over the virtual Burst Multiplex Channel for 16-bit devices
-func WriteWordBmcChan16bit(addr dg.WordT, data dg.WordT) dg.WordT {
+func WriteWordBmcChan16bit(addr *dg.WordT, data dg.WordT) {
 	var pAddr dg.PhysAddrT
-	decodedAddr := decodeBmcAddr(dg.PhysAddrT(addr))
+	decodedAddr := decodeBmcAddr(dg.PhysAddrT(*addr))
 	if decodedAddr.isLogical {
-		pAddr, _ = getBmcMapAddr(dg.PhysAddrT(addr)) // FIXME
+		pAddr, _ = getBmcMapAddr(dg.PhysAddrT(*addr)) // FIXME
 	} else {
 		pAddr = decodedAddr.ca
 	}
 	WriteWord(pAddr, data)
-	pAddr++
+	*addr = *addr + 1
 	logging.DebugPrint(logging.MapLog, "WriteWordBmcChan got addr: %d, wrote to addr: %d\n", addr, pAddr)
-	return dg.WordT(pAddr)
 }

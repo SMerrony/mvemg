@@ -320,10 +320,9 @@ func mtbDoCommand() {
 			rec, _ := simhTape.ReadRecordData(mtb.simhFile[mtb.currentUnit], int(hdrLen))
 			for w = 0; w < hdrLen; w += 2 {
 				wd = (dg.WordT(rec[w]) << 8) | dg.WordT(rec[w+1])
-				pAddr = memory.WriteWordDchChan(mtb.memAddrReg, wd)
+				memory.WriteWordDchChan(&mtb.memAddrReg, wd)
 				logging.DebugPrint(logging.MtbLog, " ----  Written word (%02X | %02X := %04X) to logical address: %d, physical: %d\n", rec[w], rec[w+1], wd, mtb.memAddrReg, pAddr)
 				// memAddrReg is auto-incremented for every word written  *******
-				mtb.memAddrReg++
 				// auto-incremement the (two's complement) word count
 				mtb.negWordCntReg++
 				if mtb.negWordCntReg == 0 {
