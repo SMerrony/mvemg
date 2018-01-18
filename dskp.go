@@ -400,11 +400,12 @@ func dskpDoPioCommand() {
 		}
 		// only a few fields can be changed...
 		w = 5
-		dskpData.intInfBlock[w] = memory.ReadWordBmcChan(addr+w) & 0xff00
+		dskpData.intInfBlock[w], _ = memory.ReadWordBmcChan(addr + w)
+		dskpData.intInfBlock[w] &= 0xff00
 		w = 6
-		dskpData.intInfBlock[w] = memory.ReadWordBmcChan(addr + w)
+		dskpData.intInfBlock[w], _ = memory.ReadWordBmcChan(addr + w)
 		w = 7
-		dskpData.intInfBlock[w] = memory.ReadWordBmcChan(addr + w)
+		dskpData.intInfBlock[w], _ = memory.ReadWordBmcChan(addr + w)
 		if debugLogging {
 			logging.DebugPrint(logging.DskpLog, "... ... Word 5: %s\n", util.WordToBinStr(dskpData.intInfBlock[5]))
 			logging.DebugPrint(logging.DskpLog, "... ... Word 6: %s\n", util.WordToBinStr(dskpData.intInfBlock[6]))
@@ -558,14 +559,15 @@ func dskpCBprocessor(dataPtr *dskpDataT) {
 		tmpWd         dg.WordT
 	)
 	for {
-		addr := <-cbChan
+		cbAddr := <-cbChan
 		cbLength = dskpCbMinSize + dskpGetCBextendedStatusSize()
 		if debugLogging {
 			logging.DebugPrint(logging.DskpLog, "... Processing CB, extended status size is: %d\n", dskpGetCBextendedStatusSize())
 		}
 		// copy CB contents from host memory
+		addr := cbAddr
 		for w = 0; w < cbLength; w++ {
-			cb[w] = memory.ReadWordBmcChan(addr + dg.PhysAddrT(w))
+			cb[w], addr = memory.ReadWordBmcChan(addr)
 			if debugLogging {
 				logging.DebugPrint(logging.DskpLog, "... CB[%d]: %d\n", w, cb[w])
 			}
@@ -663,8 +665,9 @@ func dskpCBprocessor(dataPtr *dskpDataT) {
 			for sect = 0; sect < dg.DwordT(cb[dskpCbTXFER_COUNT]); sect++ {
 				dataPtr.sectorNo += sect
 				dskpPositionDiskImage()
+				memAddr := physAddr + (dg.PhysAddrT(sect) * dskpWordsPerSector)
 				for w = 0; w < dskpWordsPerSector; w++ {
-					tmpWd = memory.ReadWordBmcChan(physAddr + (dg.PhysAddrT(sect) * dskpWordsPerSector) + dg.PhysAddrT(w))
+					tmpWd, memAddr = memory.ReadWordBmcChan(memAddr)
 					writeBuff[w*2] = byte(tmpWd >> 8)
 					writeBuff[(w*2)+1] = byte(tmpWd & 0x00ff)
 				}
@@ -690,6 +693,7 @@ func dskpCBprocessor(dataPtr *dskpDataT) {
 		}
 
 		// write back CB
+		addr = cbAddr
 		for w = 0; w < cbLength; w++ {
 			memory.WriteWordBmcChan(addr+dg.PhysAddrT(w), cb[w])
 		}

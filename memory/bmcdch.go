@@ -200,7 +200,7 @@ func ReadWordDchChan(addr dg.PhysAddrT) dg.WordT {
 }
 
 // ReadWordBmcChan reads a word from memory over the virtual Burst Multiplex Channel
-func ReadWordBmcChan(addr dg.PhysAddrT) dg.WordT {
+func ReadWordBmcChan(addr dg.PhysAddrT) (dg.WordT, dg.PhysAddrT) {
 	var pAddr dg.PhysAddrT
 	decodedAddr := decodeBmcAddr(addr)
 	if decodedAddr.isLogical {
@@ -208,8 +208,25 @@ func ReadWordBmcChan(addr dg.PhysAddrT) dg.WordT {
 	} else {
 		pAddr = decodedAddr.ca
 	}
-	logging.DebugPrint(logging.MapLog, "WriteWordBmcChan got addr: %d, wrote to addr: %d\n", addr, pAddr)
-	return ReadWord(pAddr)
+	wd := ReadWord(pAddr)
+	pAddr++
+	logging.DebugPrint(logging.MapLog, "ReadWordBmcChan got addr: %d, wrote to addr: %d\n", addr, pAddr)
+	return wd, pAddr
+}
+
+// ReadWordBmcChan16bit reads a word from memory over the virtual Burst Multiplex Channel for 16-bit devices
+func ReadWordBmcChan16bit(addr dg.WordT) (dg.WordT, dg.WordT) {
+	var pAddr dg.PhysAddrT
+	decodedAddr := decodeBmcAddr(dg.PhysAddrT(addr))
+	if decodedAddr.isLogical {
+		pAddr, _ = getBmcMapAddr(dg.PhysAddrT(addr)) // FIXME
+	} else {
+		pAddr = decodedAddr.ca
+	}
+	wd := ReadWord(pAddr)
+	pAddr++
+	logging.DebugPrint(logging.MapLog, "ReadWordBmcChan16bit got addr: %d, wrote to addr: %d\n", addr, pAddr)
+	return wd, dg.WordT(pAddr)
 }
 
 // WriteWordDchChan writes a word to memory over the virtual DCH
@@ -235,6 +252,22 @@ func WriteWordBmcChan(addr dg.PhysAddrT, data dg.WordT) dg.PhysAddrT {
 		pAddr = decodedAddr.ca
 	}
 	WriteWord(pAddr, data)
+	pAddr++
 	logging.DebugPrint(logging.MapLog, "WriteWordBmcChan got addr: %d, wrote to addr: %d\n", addr, pAddr)
 	return pAddr
+}
+
+// WriteWordBmcChan16bit writes a word over the virtual Burst Multiplex Channel for 16-bit devices
+func WriteWordBmcChan16bit(addr dg.WordT, data dg.WordT) dg.WordT {
+	var pAddr dg.PhysAddrT
+	decodedAddr := decodeBmcAddr(dg.PhysAddrT(addr))
+	if decodedAddr.isLogical {
+		pAddr, _ = getBmcMapAddr(dg.PhysAddrT(addr)) // FIXME
+	} else {
+		pAddr = decodedAddr.ca
+	}
+	WriteWord(pAddr, data)
+	pAddr++
+	logging.DebugPrint(logging.MapLog, "WriteWordBmcChan got addr: %d, wrote to addr: %d\n", addr, pAddr)
+	return dg.WordT(pAddr)
 }
