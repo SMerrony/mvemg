@@ -399,13 +399,11 @@ func dskpDoPioCommand() {
 			logging.DebugPrint(logging.DskpLog, "... ... Origin Start Address: %d\n", addr)
 		}
 		// only a few fields can be changed...
-		w = 5
-		dskpData.intInfBlock[w], _ = memory.ReadWordBmcChan(addr + w)
+		addr += 5
+		dskpData.intInfBlock[w] = memory.ReadWordBmcChan(&addr) // word 5
 		dskpData.intInfBlock[w] &= 0xff00
-		w = 6
-		dskpData.intInfBlock[w], _ = memory.ReadWordBmcChan(addr + w)
-		w = 7
-		dskpData.intInfBlock[w], _ = memory.ReadWordBmcChan(addr + w)
+		dskpData.intInfBlock[w] = memory.ReadWordBmcChan(&addr) // word 6
+		dskpData.intInfBlock[w] = memory.ReadWordBmcChan(&addr) // word 7
 		if debugLogging {
 			logging.DebugPrint(logging.DskpLog, "... ... Word 5: %s\n", util.WordToBinStr(dskpData.intInfBlock[5]))
 			logging.DebugPrint(logging.DskpLog, "... ... Word 6: %s\n", util.WordToBinStr(dskpData.intInfBlock[6]))
@@ -567,7 +565,7 @@ func dskpCBprocessor(dataPtr *dskpDataT) {
 		// copy CB contents from host memory
 		addr := cbAddr
 		for w = 0; w < cbLength; w++ {
-			cb[w], addr = memory.ReadWordBmcChan(addr)
+			cb[w] = memory.ReadWordBmcChan(&addr)
 			if debugLogging {
 				logging.DebugPrint(logging.DskpLog, "... CB[%d]: %d\n", w, cb[w])
 			}
@@ -668,7 +666,7 @@ func dskpCBprocessor(dataPtr *dskpDataT) {
 				dskpPositionDiskImage()
 				memAddr := physAddr + (dg.PhysAddrT(sect) * dskpWordsPerSector)
 				for w = 0; w < dskpWordsPerSector; w++ {
-					tmpWd, memAddr = memory.ReadWordBmcChan(memAddr)
+					tmpWd = memory.ReadWordBmcChan(&memAddr)
 					writeBuff[w*2] = byte(tmpWd >> 8)
 					writeBuff[(w*2)+1] = byte(tmpWd & 0x00ff)
 				}
