@@ -29,7 +29,7 @@ import (
 	"mvemg/util"
 	"os"
 
-	"github.com/SMerrony/aosvs-tools/simhTape"
+	"github.com/SMerrony/simhtape/pkg/simhtape"
 )
 
 const (
@@ -186,21 +186,23 @@ Rather than copying a ROM and executing that, we simply mimic its basic actions.
 */
 func mtbLoadTBoot() {
 	const (
-		tbootSizeB = 2048
-		tbootSizeW = 1024
+	// tbootSizeB = 2048
+	// tbootSizeW = 1024
 	)
 	tNum := 0
 	simhTape.Rewind(mtb.simhFile[tNum])
 	hdr, ok := simhTape.ReadMetaData(mtb.simhFile[tNum])
-	if !ok || hdr != tbootSizeB {
+	// if !ok || hdr != tbootSizeB {
+	if !ok {
 		logging.DebugPrint(logging.DebugLog, "WARN: mtbLoadTBoot called when no bootable tape image attached\n")
 		return
 	}
-	tapeData, ok := simhTape.ReadRecordData(mtb.simhFile[tNum], tbootSizeB)
+	tbootSizeW := hdr / 2
+	tapeData, ok := simhTape.ReadRecordData(mtb.simhFile[tNum], int(hdr))
 	var byte0, byte1 byte
 	var word dg.WordT
 	var wdix dg.PhysAddrT
-	for wdix = 0; wdix < tbootSizeW; wdix++ {
+	for wdix = 0; wdix < dg.PhysAddrT(tbootSizeW); wdix++ {
 		byte1 = tapeData[wdix*2]
 		byte0 = tapeData[wdix*2+1]
 		word = dg.WordT(byte1)<<8 | dg.WordT(byte0)
