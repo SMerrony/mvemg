@@ -85,7 +85,7 @@ func eagleIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		cpu.ion = false
 
 	case "INTEN":
-		log.Fatal("ERROR: INTEN not yet supported")
+		cpu.ion = true // TODO - Lots!!!!
 
 	case "LCPID": // seems to be the same as ECLID
 		dwd = cpuModelNo << 16

@@ -232,7 +232,7 @@ func ReadWordBmcChan16bit(addr *dg.WordT) dg.WordT {
 
 // WriteWordDchChan writes a word to memory over the virtual DCH
 // pAddr is returned for debugging purposes only
-func WriteWordDchChan(addr *dg.PhysAddrT, data dg.WordT) {
+func WriteWordDchChan(addr *dg.PhysAddrT, data dg.WordT) dg.PhysAddrT {
 	pAddr := *addr
 
 	if getDchMode() {
@@ -241,7 +241,7 @@ func WriteWordDchChan(addr *dg.PhysAddrT, data dg.WordT) {
 	WriteWord(pAddr, data)
 	*addr = *addr + 1
 	logging.DebugPrint(logging.MapLog, "WriteWordDchChan got addr: %d, wrote to addr: %d\n", addr, pAddr)
-
+	return pAddr
 }
 
 // WriteWordBmcChan writes a word over the virtual Burst Multiplex Channel

@@ -145,7 +145,7 @@ func instructionsInit() {
 	instructionSet["FSA"] = instrChars{0x8ea8, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_PC}
 	instructionSet["FXTD"] = instrChars{0xa779, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_OP}
 	instructionSet["FXTE"] = instrChars{0xc749, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_OP}
-	instructionSet["HALT"] = instrChars{0x647f, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_IO}
+	instructionSet["HALT"] = instrChars{0x647f, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_IO}
 	instructionSet["HLV"] = instrChars{0xc6f8, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_OP}
 	instructionSet["HXL"] = instrChars{0x8308, 0x87ff, 1, IMM_ONEACC_FMT, ECLIPSE_OP}
 	instructionSet["HXR"] = instrChars{0x8348, 0x87ff, 1, IMM_ONEACC_FMT, ECLIPSE_OP}

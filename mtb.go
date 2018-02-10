@@ -141,7 +141,7 @@ func mtbInit() bool {
 func mtbReset() {
 	for t := 0; t < maxTapes; t++ {
 		if mtb.imageAttached[t] {
-			simhTape.Rewind(mtb.simhFile[t])
+			simhtape.Rewind(mtb.simhFile[t])
 		}
 	}
 	// BOT is an error state...
@@ -173,9 +173,9 @@ func mtbAttach(tNum int, imgName string) bool {
 }
 
 // Scan the attached SimH tape image to ensure it makes sense
-// (This is just a pass-through to the equivalent function in simhTape)
+// (This is just a pass-through to the equivalent function in simhtape)
 func mtbScanImage(tNum int) string {
-	return simhTape.ScanImage(mtb.fileName[tNum], false)
+	return simhtape.ScanImage(mtb.fileName[tNum], false)
 }
 
 /* This function fakes the ROM/SCP boot-from-tape routine.
@@ -189,29 +189,57 @@ func mtbLoadTBoot() {
 	// tbootSizeB = 2048
 	// tbootSizeW = 1024
 	)
+	var (
+		byte0, byte1 byte
+		word         dg.WordT
+		wdix, memix  dg.PhysAddrT
+	)
+	logging.DebugPrint(logging.MtbLog, "mtbLoadTBoot() called\n")
 	tNum := 0
-	simhTape.Rewind(mtb.simhFile[tNum])
-	hdr, ok := simhTape.ReadMetaData(mtb.simhFile[tNum])
-	// if !ok || hdr != tbootSizeB {
-	if !ok {
-		logging.DebugPrint(logging.DebugLog, "WARN: mtbLoadTBoot called when no bootable tape image attached\n")
-		return
+	simhtape.Rewind(mtb.simhFile[tNum])
+	logging.DebugPrint(logging.MtbLog, "... tape rewound\n")
+
+readLoop:
+	for {
+		hdr, ok := simhtape.ReadMetaData(mtb.simhFile[tNum])
+		// if !ok || hdr != tbootSizeB {
+		if !ok {
+			logging.DebugPrint(logging.DebugLog, "WARN: mtbLoadTBoot called when no bootable tape image attached\n")
+			return
+		}
+		logging.DebugPrint(logging.MtbLog, "... header read, size is %d\n", hdr)
+		switch hdr {
+		case simhtape.SimhMtrTmk: // Tape Mark (separates files)
+			break readLoop
+		default:
+			tbootSizeW := hdr / 2
+			tapeData, ok := simhtape.ReadRecordData(mtb.simhFile[tNum], int(hdr))
+			if ok {
+				logging.DebugPrint(logging.MtbLog, "... data read\n")
+			} else {
+				logging.DebugPrint(logging.MtbLog, "... error reading data\n")
+				logging.DebugPrint(logging.DebugLog, "WARNING: Could not read data in mtbLoadTBoot()\n")
+				return
+			}
+
+			logging.DebugPrint(logging.MtbLog, "... loading data into memory starting at address %d\n", memix)
+			for wdix = 0; wdix < dg.PhysAddrT(tbootSizeW); wdix++ {
+				byte1 = tapeData[wdix*2]
+				byte0 = tapeData[wdix*2+1]
+				word = dg.WordT(byte1)<<8 | dg.WordT(byte0)
+				memory.WriteWord(memix+wdix, word)
+			}
+			memix += dg.PhysAddrT(tbootSizeW)
+			logging.DebugPrint(logging.MtbLog, "... finished loading data at address %d\n", memix+wdix)
+			trailer, ok := simhtape.ReadMetaData(mtb.simhFile[tNum])
+			if hdr != trailer {
+				logging.DebugPrint(logging.DebugLog, "WARN: mtbLoadTBoot found mismatched trailer in TBOOT file\n")
+			}
+		}
 	}
-	tbootSizeW := hdr / 2
-	tapeData, ok := simhTape.ReadRecordData(mtb.simhFile[tNum], int(hdr))
-	var byte0, byte1 byte
-	var word dg.WordT
-	var wdix dg.PhysAddrT
-	for wdix = 0; wdix < dg.PhysAddrT(tbootSizeW); wdix++ {
-		byte1 = tapeData[wdix*2]
-		byte0 = tapeData[wdix*2+1]
-		word = dg.WordT(byte1)<<8 | dg.WordT(byte0)
-		memory.WriteWord(wdix, word)
-	}
-	trailer, ok := simhTape.ReadMetaData(mtb.simhFile[tNum])
-	if hdr != trailer {
-		logging.DebugPrint(logging.DebugLog, "WARN: mtbLoadTBoot found mismatched trailer in TBOOT file\n")
-	}
+	simhtape.Rewind(mtb.simhFile[tNum])
+	logging.DebugPrint(logging.MtbLog, "... tape rewound\n")
+	logging.DebugPrint(logging.MtbLog, "... mtbLoadTBoot completed\n")
 }
 
 // This is called from Bus to implement DIx from the MTB device
@@ -309,20 +337,20 @@ func mtbDoCommand() {
 	switch mtb.currentCmd {
 	case mtbCmdRead:
 		logging.DebugPrint(logging.MtbLog, "*READ* command\n ---- Unit: %d\n ---- Word Count: %d Location: %d\n", mtb.currentUnit, mtb.negWordCntReg, mtb.memAddrReg)
-		hdrLen, _ := simhTape.ReadMetaData(mtb.simhFile[mtb.currentUnit])
+		hdrLen, _ := simhtape.ReadMetaData(mtb.simhFile[mtb.currentUnit])
 		logging.DebugPrint(logging.MtbLog, " ----  Header read giving length: %d\n", hdrLen)
 		if hdrLen == mtbEOF {
 			logging.DebugPrint(logging.MtbLog, " ----  Header is EOF indicator\n")
 			mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1UnitReady | mtbSr1EOF | mtbSr1Error
 		} else {
-			logging.DebugPrint(logging.MtbLog, " ----  Calling simhTape.ReadRecord with length: %d\n", hdrLen)
+			logging.DebugPrint(logging.MtbLog, " ----  Calling simhtape.ReadRecord with length: %d\n", hdrLen)
 			var w uint32
 			var wd dg.WordT
 			var pAddr dg.PhysAddrT
-			rec, _ := simhTape.ReadRecordData(mtb.simhFile[mtb.currentUnit], int(hdrLen))
+			rec, _ := simhtape.ReadRecordData(mtb.simhFile[mtb.currentUnit], int(hdrLen))
 			for w = 0; w < hdrLen; w += 2 {
 				wd = (dg.WordT(rec[w]) << 8) | dg.WordT(rec[w+1])
-				memory.WriteWordDchChan(&mtb.memAddrReg, wd)
+				pAddr = memory.WriteWordDchChan(&mtb.memAddrReg, wd)
 				logging.DebugPrint(logging.MtbLog, " ----  Written word (%02X | %02X := %04X) to logical address: %d, physical: %d\n", rec[w], rec[w+1], wd, mtb.memAddrReg, pAddr)
 				// memAddrReg is auto-incremented for every word written  *******
 				// auto-incremement the (two's complement) word count
@@ -331,7 +359,7 @@ func mtbDoCommand() {
 					break
 				}
 			}
-			trailer, _ := simhTape.ReadMetaData(mtb.simhFile[mtb.currentUnit])
+			trailer, _ := simhtape.ReadMetaData(mtb.simhFile[mtb.currentUnit])
 			logging.DebugPrint(logging.MtbLog, " ----  %d bytes loaded\n", w)
 			logging.DebugPrint(logging.MtbLog, " ----  Read SimH Trailer: %d\n", trailer)
 			// TODO Need to verify how status should be set here...
@@ -340,12 +368,12 @@ func mtbDoCommand() {
 
 	case mtbCmdRewind:
 		logging.DebugPrint(logging.MtbLog, "*REWIND* command\n ------ Unit: #%d\n", mtb.currentUnit)
-		simhTape.Rewind(mtb.simhFile[mtb.currentUnit])
+		simhtape.Rewind(mtb.simhFile[mtb.currentUnit])
 		mtb.statusReg1 = mtbSr1Error | mtbSr1HiDensity | mtbSr19Track | mtbSr1UnitReady | mtbSr1BOT
 
 	case mtbCmdSpaceFwd:
 		logging.DebugPrint(logging.MtbLog, "*SPACE FORWARD* command\n ----- ------- Unit: #%d\n", mtb.currentUnit)
-		simhTape.SpaceFwd(mtb.simhFile[mtb.currentUnit], 0)
+		simhtape.SpaceFwd(mtb.simhFile[mtb.currentUnit], 0)
 		mtb.memAddrReg = 0xffffffff
 		mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1UnitReady | mtbSr1EOF | mtbSr1Error
 

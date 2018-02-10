@@ -92,6 +92,11 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			}
 		}
 
+	case "HALT":
+		logging.DebugPrint(logging.DebugLog, "INFO: CPU Halting due to HALT instruction\n")
+		// do not advance PC
+		return false
+
 	case "IORST":
 		// oneAcc1Word = iPtr.variant.(oneAcc1WordT) // <== this is just an assertion really
 		busResetAllIODevices()
@@ -104,6 +109,14 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		if ioFlagsDev.f == 'C' && ioFlagsDev.ioDev == devCPU {
 			// same as INTDS
 			cpu.ion = false
+			logging.DebugPrint(logging.DebugLog, "Interrupts Disabled.\n")
+			break
+		}
+		// special case: NIOS CPU => INTEN
+		if ioFlagsDev.f == 'S' && ioFlagsDev.ioDev == devCPU {
+			// same as INTEN
+			cpu.ion = true
+			logging.DebugPrint(logging.DebugLog, "Interrupts Enabled.\n")
 			break
 		}
 		if debugLogging {
