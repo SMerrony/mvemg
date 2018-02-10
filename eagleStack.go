@@ -124,25 +124,25 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		any := false
 		// set the ANY bit?
 		if util.GetQWbits(tmpQwd, 1, 4) != 0 {
-			cpuPtr.fpsr = util.SetQWbit(cpuPtr.fpsr, 0)
+			util.SetQWbit(&cpuPtr.fpsr, 0)
 			any = true
 		}
 		// copy bits 1-11
 		for b := 1; b <= 11; b++ {
 			if util.TestQWbit(tmpQwd, b) {
-				cpuPtr.fpsr = util.SetQWbit(cpuPtr.fpsr, uint(b))
+				util.SetQWbit(&cpuPtr.fpsr, uint(b))
 			}
 		}
 		// bits 28-31
 		if any {
 			for b := 28; b <= 31; b++ {
 				if util.TestQWbit(tmpQwd, b) {
-					cpuPtr.fpsr = util.SetQWbit(cpuPtr.fpsr, uint(b))
+					util.SetQWbit(&cpuPtr.fpsr, uint(b))
 				}
 			}
 			for b := 33; b <= 63; b++ {
 				if util.TestQWbit(tmpQwd, b) {
-					cpuPtr.fpsr = util.SetQWbit(cpuPtr.fpsr, uint(b))
+					util.SetQWbit(&cpuPtr.fpsr, uint(b))
 				}
 			}
 		}

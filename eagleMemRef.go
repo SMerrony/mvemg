@@ -83,7 +83,7 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		offset = dg.PhysAddrT(cpuPtr.ac[twoAcc1Word.acd]) >> 4
 		bitNum := uint(cpuPtr.ac[twoAcc1Word.acd] & 0x0f)
 		wd = memory.ReadWord(addr + offset)
-		wd = util.SetWbit(wd, bitNum)
+		util.SetWbit(&wd, bitNum)
 		memory.WriteWord(addr+offset, wd)
 
 	case "WBTZ":
@@ -96,7 +96,7 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		offset = dg.PhysAddrT(cpuPtr.ac[twoAcc1Word.acd]) >> 4
 		bitNum := uint(cpuPtr.ac[twoAcc1Word.acd] & 0x0f)
 		wd = memory.ReadWord(addr + offset)
-		wd = util.ClearWbit(wd, bitNum)
+		util.ClearWbit(&wd, bitNum)
 		memory.WriteWord(addr+offset, wd)
 
 	case "WCMV":

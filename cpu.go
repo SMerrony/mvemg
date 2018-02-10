@@ -104,9 +104,9 @@ func (c *CPUT) GetOVR() bool {
 // SetOVR is a setter for the OVR flag embedded in the PSR
 func (c *CPUT) SetOVR(newOVR bool) {
 	if newOVR {
-		util.SetWbit(c.psr, 1)
+		util.SetWbit(&c.psr, 1)
 	} else {
-		util.ClearWbit(c.psr, 1)
+		util.ClearWbit(&c.psr, 1)
 	}
 }
 
@@ -118,9 +118,9 @@ func (c *CPUT) GetOVK() bool {
 // SetOVK is a setter for the OVK flag embedded in the PSR
 func (c *CPUT) SetOVK(newOVK bool) {
 	if newOVK {
-		util.SetWbit(c.psr, 0)
+		util.SetWbit(&c.psr, 0)
 	} else {
-		util.ClearWbit(c.psr, 0)
+		util.ClearWbit(&c.psr, 0)
 	}
 }
 

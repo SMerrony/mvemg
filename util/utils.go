@@ -94,18 +94,18 @@ func GetWbits(value dg.WordT, leftBit uint, nbits uint) dg.WordT {
 }
 
 // SetWbit sets a single bit in a DG word
-func SetWbit(word dg.WordT, bitNum uint) dg.WordT {
-	return word | 1<<(15-bitNum)
+func SetWbit(word *dg.WordT, bitNum uint) {
+	*word = *word | (1 << (15 - bitNum))
 }
 
 // SetQWbit - sets a bit in a Quad-Word
-func SetQWbit(qw dg.QwordT, bitNum uint) dg.QwordT {
-	return qw | 1<<(63-bitNum)
+func SetQWbit(qw *dg.QwordT, bitNum uint) {
+	*qw = *qw | (1 << (63 - bitNum))
 }
 
 // ClearWbit clears a single bit in a DG word
-func ClearWbit(word dg.WordT, bitNum uint) dg.WordT {
-	return word ^ 1<<(15-bitNum)
+func ClearWbit(word *dg.WordT, bitNum uint) {
+	*word = *word &^ (1 << (15 - bitNum))
 }
 
 // GetDWbits - in the DG world, the first (leftmost) bit is numbered zero...
