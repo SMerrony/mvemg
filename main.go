@@ -750,7 +750,7 @@ RunLoop: // performance-critical section starts here
 		n[int(v)] = append(n[int(v)], mn)
 	}
 	for k := range n {
-		a = append(a, int(k))
+		a = append(a, k)
 	}
 	sort.Sort(sort.Reverse(sort.IntSlice(a)))
 	log.Println("Instruction Execution Count by Count")

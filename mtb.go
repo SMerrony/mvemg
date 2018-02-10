@@ -232,7 +232,7 @@ readLoop:
 			memix += dg.PhysAddrT(tbootSizeW)
 			logging.DebugPrint(logging.MtbLog, "... finished loading data at address %d\n", memix+wdix)
 			trailer, ok := simhtape.ReadMetaData(mtb.simhFile[tNum])
-			if hdr != trailer {
+			if hdr != trailer || !ok {
 				logging.DebugPrint(logging.DebugLog, "WARN: mtbLoadTBoot found mismatched trailer in TBOOT file\n")
 			}
 		}

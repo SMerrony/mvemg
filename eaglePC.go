@@ -64,7 +64,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		if dwd == 0 {
 			cpuPtr.pc += 2
 		} else {
-			cpuPtr.pc += 1
+			cpuPtr.pc++
 		}
 		if debugLogging {
 			logging.DebugPrint(logging.DebugLog, "..... wrote %d to %d\n", dwd, tmpAddr)
@@ -91,7 +91,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		if value < l || value > h {
 			cpuPtr.pc += 3
 		} else {
-			tableIndex := dg.PhysAddrT(tableAddr + (2 * dg.PhysAddrT(value)) - (2 * dg.PhysAddrT(l)))
+			tableIndex := tableAddr + (2 * dg.PhysAddrT(value)) - (2 * dg.PhysAddrT(l))
 			tableVal := memory.ReadDWord(tableIndex)
 			if tableVal == 0xFFFFFFFF {
 				cpuPtr.pc += 3
@@ -158,7 +158,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case "SNOVR":
 		if cpuPtr.GetOVR() {
-			cpuPtr.pc += 1
+			cpuPtr.pc++
 		} else {
 			cpuPtr.pc += 2
 		}
@@ -196,7 +196,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		if cpuPtr.ac[twoAcc1Word.acs] == tmp32b {
 			cpuPtr.pc += 2
 		} else {
-			cpuPtr.pc += 1
+			cpuPtr.pc++
 		}
 
 	case "WSEQI":
@@ -219,7 +219,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		if s32b >= s32a {
 			cpuPtr.pc += 2
 		} else {
-			cpuPtr.pc += 1
+			cpuPtr.pc++
 		}
 
 	case "WSGT":
@@ -233,7 +233,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		if s32b > s32a {
 			cpuPtr.pc += 2
 		} else {
-			cpuPtr.pc += 1
+			cpuPtr.pc++
 		}
 
 	case "WSKBO":
@@ -241,7 +241,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		if util.TestDWbit(cpuPtr.ac[0], wskb.bitNum) {
 			cpuPtr.pc += 2
 		} else {
-			cpuPtr.pc += 1
+			cpuPtr.pc++
 		}
 
 	case "WSKBZ":
@@ -249,7 +249,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		if !util.TestDWbit(cpuPtr.ac[0], wskb.bitNum) {
 			cpuPtr.pc += 2
 		} else {
-			cpuPtr.pc += 1
+			cpuPtr.pc++
 		}
 
 	case "WSLE":
@@ -263,7 +263,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		if s32b <= s32a {
 			cpuPtr.pc += 2
 		} else {
-			cpuPtr.pc += 1
+			cpuPtr.pc++
 		}
 
 	case "WSLEI":
@@ -286,7 +286,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		if s32b < s32a {
 			cpuPtr.pc += 2
 		} else {
-			cpuPtr.pc += 1
+			cpuPtr.pc++
 		}
 
 	case "WSNE":
@@ -299,7 +299,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		if cpuPtr.ac[twoAcc1Word.acs] != tmp32b {
 			cpuPtr.pc += 2
 		} else {
-			cpuPtr.pc += 1
+			cpuPtr.pc++
 		}
 
 	case "WSNEI":
@@ -318,7 +318,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		if !util.TestWbit(wd, int(bit)) {
 			cpuPtr.pc += 2
 		} else {
-			cpuPtr.pc += 1
+			cpuPtr.pc++
 		}
 		if debugLogging {
 			logging.DebugPrint(logging.DebugLog, ".... Wd Addr: %d., word: %0X, bit #: %d\n", tmpAddr, wd, bit)

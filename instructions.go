@@ -22,10 +22,7 @@
 package main
 
 import (
-	"bufio"
-	"fmt"
 	"mvemg/dg"
-	"os"
 )
 
 // the characteristics of each instruction
@@ -50,23 +47,23 @@ var ioTests = [...]string{"BN", "BZ", "DN", "DZ"}
 var modes = [...]string{"Absolute", "PC", "AC2", "AC3"}
 var skips = [...]string{"NONE", "SKP", "SZC", "SNC", "SZR", "SNR", "SEZ", "SBN"}
 
-// debugging function...
-func dumpCSV() {
-	csvFilename := "/tmp/mvinstr.csv"
-	csvFile, _ := os.Create(csvFilename)
-	csvWriter := bufio.NewWriter(csvFile)
-	fmt.Fprintf(csvWriter, ";\n;Instructions\n")
-	for mnem := range instructionSet {
-		fmt.Fprintf(csvWriter, "%s,0x%X,0x%X,%d,%d,%d\n",
-			mnem,
-			instructionSet[mnem].bits,
-			instructionSet[mnem].mask,
-			instructionSet[mnem].instrLen,
-			instructionSet[mnem].instrFmt,
-			instructionSet[mnem].instrType)
-	}
+// // debugging function...
+// func dumpCSV() {
+// 	csvFilename := "/tmp/mvinstr.csv"
+// 	csvFile, _ := os.Create(csvFilename)
+// 	csvWriter := bufio.NewWriter(csvFile)
+// 	fmt.Fprintf(csvWriter, ";\n;Instructions\n")
+// 	for mnem := range instructionSet {
+// 		fmt.Fprintf(csvWriter, "%s,0x%X,0x%X,%d,%d,%d\n",
+// 			mnem,
+// 			instructionSet[mnem].bits,
+// 			instructionSet[mnem].mask,
+// 			instructionSet[mnem].instrLen,
+// 			instructionSet[mnem].instrFmt,
+// 			instructionSet[mnem].instrType)
+// 	}
 
-	fmt.Fprintf(csvWriter, ";\n")
-	csvWriter.Flush()
-	csvFile.Close()
-}
+// 	fmt.Fprintf(csvWriter, ";\n")
+// 	csvWriter.Flush()
+// 	csvFile.Close()
+// }

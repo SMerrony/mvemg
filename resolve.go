@@ -125,7 +125,7 @@ func resolve32bitEffAddr(cpuPtr *CPUT, ind byte, mode string, disp int32) dg.Phy
 	case "Absolute":
 		// nothing to do
 	case "PC":
-		eff += dg.PhysAddrT(cpuPtr.pc)
+		eff += cpuPtr.pc
 	case "AC2":
 		eff += dg.PhysAddrT(cpuPtr.ac[2])
 	case "AC3":

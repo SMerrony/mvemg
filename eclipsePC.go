@@ -98,7 +98,7 @@ func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		if acs > acd {
 			cpuPtr.pc += 2
 		} else {
-			cpuPtr.pc += 1
+			cpuPtr.pc++
 		}
 
 	case "SNB":
@@ -108,7 +108,7 @@ func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		if util.TestWbit(wd, int(bit)) {
 			cpuPtr.pc += 2
 		} else {
-			cpuPtr.pc += 1
+			cpuPtr.pc++
 		}
 		if debugLogging {
 			logging.DebugPrint(logging.DebugLog, "SNB: Wd Addr: %d., word: %0X, bit #: %d\n", addr, wd, bit)
@@ -121,7 +121,7 @@ func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		if !util.TestWbit(wd, int(bit)) {
 			cpuPtr.pc += 2
 		} else {
-			cpuPtr.pc += 1
+			cpuPtr.pc++
 		}
 		if debugLogging {
 			logging.DebugPrint(logging.DebugLog, "SZB: Wd Addr: %d., word: %0X, bit #: %d\n", addr, wd, bit)

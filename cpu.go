@@ -126,8 +126,7 @@ func (c *CPUT) SetOVK(newOVK bool) {
 
 // Execute a single instruction
 // A false return means failure, the VM should stop
-func cpuExecute(iPtr *decodedInstrT) bool {
-	rc := false
+func cpuExecute(iPtr *decodedInstrT) (rc bool) {
 	cpu.cpuMu.Lock()
 	switch iPtr.instrType {
 	case NOVA_MEMREF:

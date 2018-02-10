@@ -56,7 +56,7 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		oneAccImm2Word = iPtr.variant.(oneAccImm2WordT)
 		// signed 16-bit add immediate
 		s16 = int16(util.DWordGetLowerWord(cpuPtr.ac[oneAccImm2Word.acd]))
-		s16 += int16(oneAccImm2Word.immS16)
+		s16 += oneAccImm2Word.immS16
 		cpuPtr.ac[oneAccImm2Word.acd] = dg.DwordT(s16) & 0X0000FFFF
 
 	case "ANDI":
