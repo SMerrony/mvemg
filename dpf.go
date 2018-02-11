@@ -193,7 +193,7 @@ func dpfAttach(dNum int, imgName string) bool {
 	dpfData.imageFileName = imgName
 	dpfData.imageAttached = true
 	dpfData.dpfMu.Unlock()
-	busSetAttached(devDPF)
+	busSetAttached(devDPF, imgName)
 	return true
 }
 

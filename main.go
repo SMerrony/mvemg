@@ -42,6 +42,10 @@ import (
 // import "github.com/pkg/profile"
 
 const (
+	// Version number
+	Version = "v0.1.0"
+	// ReleaseType - Alpha, Beta, Production etc.
+	ReleaseType = "Prerelease"
 	// StatPort is the port for the real-time status monitor
 	StatPort = "9999"
 	// ScpPort is  the port for the SCP master console
@@ -54,8 +58,6 @@ const (
 )
 
 var (
-	// Version etc. are set at build time via the Makefile
-	Version, Build, ReleaseType string
 	// debugLogging - CPU runs about 3x faster without debugLogging
 	// (and another 3x faster without disassembly, linked to this)
 	debugLogging  = true
@@ -330,6 +332,7 @@ func boot(cmd []string) {
 	case devMTB:
 		mtbLoadTBoot()
 		cpu.cpuMu.Lock()
+		cpu.sr = 0x8000 | devMTB
 		cpu.ac[0] = devMTB
 		cpu.pc = 10
 		cpu.cpuMu.Unlock()

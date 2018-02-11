@@ -167,7 +167,7 @@ func mtbAttach(tNum int, imgName string) bool {
 	mtb.imageAttached[tNum] = true
 	mtb.statusReg1 = mtbSr1Error | mtbSr1HiDensity | mtbSr19Track | mtbSr1BOT | mtbSr1UnitReady
 	mtb.statusReg2 = mtbSr2PEMode
-	busSetAttached(devMTB)
+	busSetAttached(devMTB, imgName)
 	return true
 
 }

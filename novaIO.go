@@ -23,6 +23,7 @@ package main
 
 import (
 	"log"
+	"mvemg/dg"
 	"mvemg/logging"
 	"mvemg/util"
 )
@@ -48,6 +49,15 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case "DIA", "DIB", "DIC", "DOA", "DOB", "DOC":
 		novaDataIo = iPtr.variant.(novaDataIoT)
+
+		// Special Case: DIA n,CPU => READS
+		if iPtr.mnemonic == "DIA" && novaDataIo.ioDev == devCPU {
+			// load the AC with the contents of the dummy CPU register 'SR'
+			logging.DebugPrint(logging.DebugLog, "INFO: Interpreting DIA n,CPU as READS n instruction\n")
+			cpuPtr.ac[novaDataIo.acd] = dg.DwordT(cpuPtr.sr)
+			cpuPtr.pc++
+			return true
+		}
 		// Special Case: DICC 0,077 => I/O Reset
 		if iPtr.mnemonic == "DIC" && novaDataIo.f == 'C' && novaDataIo.acd == 0 && novaDataIo.ioDev == devCPU {
 			logging.DebugPrint(logging.DebugLog, "INFO: I/O Reset due to DICC 0,CPU instruction\n")
@@ -65,7 +75,7 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		}
 		// Special Case: DOC 0-3,077 => Halt
 		if iPtr.mnemonic == "DOC" && novaDataIo.ioDev == devCPU {
-			logging.DebugPrint(logging.DebugLog, "INFO: CPU Halting due to DOC %d,CPU instruction\n", novaDataIo.acd)
+			logging.DebugPrint(logging.DebugLog, "INFO: CPU Halting due to DOC %d,CPU (HALT) instruction\n", novaDataIo.acd)
 			// do not advance PC
 			return false
 		}

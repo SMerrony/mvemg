@@ -233,7 +233,7 @@ func dskpAttach(dNum int, imgName string) bool {
 
 	dskpData.dskpDataMu.Unlock()
 
-	busSetAttached(devDSKP)
+	busSetAttached(devDSKP, imgName)
 	return true
 }
 

@@ -50,6 +50,7 @@ type CPUT struct {
 	sbr                     [8]sbrBits   // SBRs (see above)
 	fpac                    [4]dg.QwordT // 4 x 64-bit Floating Point Accumulators
 	fpsr                    dg.QwordT    // 64-bit Floating-Point Status Register
+	sr                      dg.WordT     // Not sure about this... fake Switch Register
 
 	// emulator internals
 	instrCount uint64 // how many instructions executed during the current run, running at 2 MIPS this will loop round roughly every 100 million years!
@@ -72,6 +73,45 @@ type cpuStatT struct {
 const cpuStatPeriodMs = 500 // 125 // i.e. we send stats every 1/8th of a second
 
 var cpu CPUT
+
+// shamelessly borrowed from SIMH...
+var eclipseAplRom = [...]dg.WordT{
+	062677,  //      IORST           ;Reset all I/O
+	060477,  //      READS 0         ;Read SR into AC0
+	024026,  //      LDA 1,C77       ;Get dev mask
+	0107400, //      AND 0,1         ;Isolate dev code
+	0124000, //      COM 1,1         ;- device code - 1
+	010014,  // LOOP: ISZ OP1        ;Device code to all
+	010030,  //      ISZ OP2         ;I/O instructions
+	010032,  //      ISZ OP3
+	0125404, //      INC 1,1,SZR     ;done?
+	000005,  //      JMP LOOP        ;No, increment again
+	030016,  //      LDA 2,C377      ;place JMP 377 into
+	050377,  //      STA 2,377       ;location 377
+	060077,  // OP1: 060077          ;start device (NIOS 0)
+	0101102, //      MOVL 0,0,SZC    ;Test switch 0, low speed?
+	000377,  // C377: JMP 377        ;no - jmp 377 & wait
+	004030,  // LOOP2: JSR GET+1     ;Get a frame
+	0101065, //      MOVC 0,0,SNR    ;is it non-zero?
+	000017,  //      JMP LOOP2       ;no, ignore
+	004027,  // LOOP4: JSR GET       ;yes, get full word
+	046026,  //      STA 1,@C77      ;store starting at 100
+	//                      ;2's complement of word ct
+	010100, //      ISZ 100         ;done?
+	000022, //      JMP LOOP4       ;no, get another
+	000077, // C77: JMP 77          ;yes location ctr and
+	//                      ;jmp to last word
+	0126420, // GET: SUBZ 1,1        ; clr AC1, set carry
+	// OP2:
+	063577,  // LOOP3: 063577        ;done? (SKPDN 0) - 1
+	000030,  //      JMP LOOP3       ;no -- wait
+	060477,  // OP3: 060477          ;y--read in ac0 (DIAS 0,0)
+	0107363, //      ADDCS 0,1,SNC   ;add 2 frames swapped - got 2nd?
+	000030,  //      JMP LOOP3       ;no go back after it
+	0125300, //      MOVS 1,1        ;yes swap them
+	001400,  //      JMP 0,3         ;rtn with full word
+	0,       //      0               ;padding
+}
 
 func cpuInit(statsChan chan cpuStatT) *CPUT {
 	busAddDevice(devCPU, "CPU", cpuPMB, true, false, false)

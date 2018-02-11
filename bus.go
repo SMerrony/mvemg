@@ -55,6 +55,7 @@ type device struct {
 	dataOutFunc     DataOutFunc
 	dataInFunc      DataInFunc
 	simAttached     bool
+	simImageName    string
 	ioDevice        bool
 	bootable        bool
 	busy            bool
@@ -188,14 +189,16 @@ func busResetAllIODevices() {
 	}
 }
 
-func busSetAttached(devNum int) {
+func busSetAttached(devNum int, imgName string) {
 	d[devNum].devMu.Lock()
 	d[devNum].simAttached = true
+	d[devNum].simImageName = imgName
 	d[devNum].devMu.Unlock()
 }
 func busSetDetached(devNum int) {
 	d[devNum].devMu.Lock()
 	d[devNum].simAttached = false
+	d[devNum].simImageName = ""
 	d[devNum].devMu.Unlock()
 }
 func busIsAttached(devNum int) bool {
@@ -262,12 +265,16 @@ func busGetPrintableDevList() string {
 				util.BoolToInt(d[dev].ioDevice), util.BoolToInt(d[dev].busy), util.BoolToInt(d[dev].done))
 			if d[dev].simAttached {
 				line += "Attached"
+				if d[dev].simImageName != "" {
+					line += " to image: " + d[dev].simImageName
+				}
 			} else {
 				line += "Not Attached"
 			}
-			if d[dev].bootable {
-				line += ", Bootable"
-			}
+			// Commented out the below for now as it's a bit misleading...
+			// if d[dev].bootable {
+			// 	line += ", Bootable"
+			// }
 			line += "\012"
 			lst += line
 		}

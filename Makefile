@@ -26,11 +26,11 @@ GOGET = ${GOCMD}	get
 BINARY_NAME = mvemg
 
 # Values for program version etc.
-VERSION = 0.1
-BUILD = `git rev-parse HEAD`
-RELEASETYPE = Prerelease
+# VERSION = 0.1
+# BUILD = `git rev-parse HEAD`
+# RELEASETYPE = Prerelease
 
-LDFLAGS = -ldflags "-X main.Version=${VERSION} -X main.Build=${BUILD} -X main.ReleaseType=${RELEASETYPE}"
+# LDFLAGS = -ldflags "-X main.Version=${VERSION} -X main.Build=${BUILD} -X main.ReleaseType=${RELEASETYPE}"
 
 all: build test
 build: 
