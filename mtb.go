@@ -88,11 +88,6 @@ const (
 
 const mtbStatsPeriodMs = 500 // Will update status this often
 
-// type mtbStatT struct {
-// 	imageAttached bool
-
-// }
-
 const maxTapes = 8
 
 type mtbT struct {
@@ -139,8 +134,10 @@ func mtbInit(statsChan chan mtbStatT) bool {
 
 	busAddDevice(devMTB, "MTB", mtbPMB, false, true, true)
 
+	mtb.mtbDataMu.Lock()
 	mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1UnitReady
 	mtb.statusReg2 = mtbSr2PEMode
+	mtb.mtbDataMu.Unlock()
 
 	busSetResetFunc(devMTB, mtbReset)
 	busSetDataInFunc(devMTB, mtbDataIn)
@@ -181,6 +178,7 @@ func mtbStatSender(sChan chan mtbStatT) {
 
 // Reset the MTB to startup state
 func mtbReset() {
+	mtb.mtbDataMu.Lock()
 	for t := 0; t < maxTapes; t++ {
 		if mtb.imageAttached[t] {
 			simhtape.Rewind(mtb.simhFile[t])
@@ -193,6 +191,7 @@ func mtbReset() {
 	mtb.negWordCntReg = 0
 	mtb.currentCmd = 0
 	mtb.currentUnit = 0
+	mtb.mtbDataMu.Unlock()
 	logging.DebugPrint(logging.MtbLog, "MTB Reset via call to mtbReset()\n")
 }
 
@@ -204,11 +203,13 @@ func mtbAttach(tNum int, imgName string) bool {
 		logging.DebugPrint(logging.MtbLog, "ERROR: Could not open simH Tape Image file: %s, due to: %s\n", imgName, err.Error())
 		return false
 	}
+	mtb.mtbDataMu.Lock()
 	mtb.fileName[tNum] = imgName
 	mtb.simhFile[tNum] = f
 	mtb.imageAttached[tNum] = true
 	mtb.statusReg1 = mtbSr1Error | mtbSr1HiDensity | mtbSr19Track | mtbSr1BOT | mtbSr1UnitReady
 	mtb.statusReg2 = mtbSr2PEMode
+	mtb.mtbDataMu.Unlock()
 	busSetAttached(devMTB, imgName)
 	return true
 
@@ -217,7 +218,10 @@ func mtbAttach(tNum int, imgName string) bool {
 // Scan the attached SimH tape image to ensure it makes sense
 // (This is just a pass-through to the equivalent function in simhtape)
 func mtbScanImage(tNum int) string {
-	return simhtape.ScanImage(mtb.fileName[tNum], false)
+	mtb.mtbDataMu.RLock()
+	imageName := mtb.fileName[tNum]
+	mtb.mtbDataMu.RUnlock()
+	return simhtape.ScanImage(imageName, false)
 }
 
 /* This function fakes the ROM/SCP boot-from-tape routine.
@@ -238,6 +242,8 @@ func mtbLoadTBoot() {
 	)
 	logging.DebugPrint(logging.MtbLog, "mtbLoadTBoot() called\n")
 	tNum := 0
+	mtb.mtbDataMu.Lock()
+	defer mtb.mtbDataMu.Unlock()
 	simhtape.Rewind(mtb.simhFile[tNum])
 	logging.DebugPrint(logging.MtbLog, "... tape rewound\n")
 
@@ -287,6 +293,7 @@ readLoop:
 // This is called from Bus to implement DIx from the MTB device
 func mtbDataIn(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 
+	mtb.mtbDataMu.RLock()
 	switch abc {
 	case 'A': /* Read status register 1 - see p.IV-18 of Peripherals guide */
 		cpuPtr.ac[iPtr.acd] = dg.DwordT(mtb.statusReg1)
@@ -303,6 +310,7 @@ func mtbDataIn(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 		logging.DebugPrint(logging.MtbLog, "DIC - Read Status Reg 2 %s to AC%d, PC: %d\n",
 			util.WordToBinStr(mtb.statusReg2), iPtr.acd, cpuPtr.pc)
 	}
+	mtb.mtbDataMu.RUnlock()
 
 	mtbHandleFlag(iPtr.f)
 }
@@ -312,6 +320,7 @@ func mtbDataOut(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 
 	ac16 := util.DWordGetLowerWord(cpuPtr.ac[iPtr.acd])
 
+	mtb.mtbDataMu.Lock()
 	switch abc {
 	case 'A': // Specify Command and Drive - p.IV-17
 		// which command?
@@ -336,6 +345,7 @@ func mtbDataOut(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 		logging.DebugPrint(logging.MtbLog, "DOC - Set (neg) Word Count to %d, PC: %d\n",
 			mtb.negWordCntReg, cpuPtr.pc)
 	}
+	mtb.mtbDataMu.Unlock()
 
 	mtbHandleFlag(iPtr.f)
 }
@@ -349,9 +359,11 @@ func mtbHandleFlag(f byte) {
 	switch f {
 	case 'S':
 		logging.DebugPrint(logging.MtbLog, "... S flag set\n")
+		mtb.mtbDataMu.RLock()
 		if mtb.currentCmd != mtbCmdRewind {
 			busSetBusy(devMTB, true)
 		}
+		mtb.mtbDataMu.RUnlock()
 		busSetDone(devMTB, false)
 		mtbDoCommand()
 		busSetBusy(devMTB, false)
@@ -360,8 +372,10 @@ func mtbHandleFlag(f byte) {
 	case 'C':
 		// if we were performing MTB operations in a Goroutine, this would interrupt them...
 		logging.DebugPrint(logging.MtbLog, "... C flag set\n")
+		mtb.mtbDataMu.Lock()
 		mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1UnitReady // ???
 		mtb.statusReg2 = mtbSr2PEMode                                     // ???
+		mtb.mtbDataMu.Unlock()
 		busSetBusy(devMTB, false)
 		busSetDone(devMTB, false)
 
@@ -375,6 +389,8 @@ func mtbHandleFlag(f byte) {
 }
 
 func mtbDoCommand() {
+	mtb.mtbDataMu.Lock()
+	defer mtb.mtbDataMu.Unlock()
 
 	switch mtb.currentCmd {
 	case mtbCmdRead:
