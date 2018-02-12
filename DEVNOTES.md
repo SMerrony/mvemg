@@ -28,7 +28,7 @@ Devices which may be subject to DCH/BMC mapping should only use the mem...Chan(.
 
 ### Explicit Goroutines ###
   * StatusCollector is mainly a goroutine which waits on status updates and presents them on port 9999
-  * Each unit that sends statistics to the StatusCollector has a goroutine dedicated to the task. ie. CPU, DPF, DSKP
+  * Each unit that sends statistics to the StatusCollector has a goroutine dedicated to the task. ie. CPU, DPF, DSKP, MTB
   * TTI has a goroutine for the TtiListener which gets console keyboard input
   * DSKP has a goroutine which does the actual disk I/O (CB processing)
 

@@ -28,6 +28,8 @@ import (
 	"mvemg/memory"
 	"mvemg/util"
 	"os"
+	"sync"
+	"time"
 
 	"github.com/SMerrony/simhtape/pkg/simhtape"
 )
@@ -84,7 +86,7 @@ const (
 	mtbSr2PEMode = 1
 )
 
-// const mtbStatsPeriodMs = 500
+const mtbStatsPeriodMs = 500 // Will update status this often
 
 // type mtbStatT struct {
 // 	imageAttached bool
@@ -94,6 +96,7 @@ const (
 const maxTapes = 8
 
 type mtbT struct {
+	mtbDataMu              sync.RWMutex
 	imageAttached          [maxTapes]bool
 	fileName               [maxTapes]string
 	simhFile               [maxTapes]*os.File
@@ -105,13 +108,21 @@ type mtbT struct {
 	debug                  bool
 }
 
+type mtbStatT struct {
+	imageAttached          [maxTapes]bool
+	fileName               [maxTapes]string
+	memAddrReg             dg.PhysAddrT
+	currentCmd             int
+	statusReg1, statusReg2 dg.WordT
+}
+
 var (
 	mtb mtbT
 
 	commandSet [mtbCmdCount]dg.WordT
 )
 
-func mtbInit() bool {
+func mtbInit(statsChan chan mtbStatT) bool {
 	commandSet[mtbCmdRead] = mtbCmdReadBits
 	commandSet[mtbCmdRewind] = mtbCmdRewindBits
 	commandSet[mtbCmdCtrlMode] = mtbCmdCtrlModeBits
@@ -124,6 +135,8 @@ func mtbInit() bool {
 	commandSet[mtbCmdUnload] = mtbCmdUnloadBits
 	commandSet[mtbCmdDriveMode] = mtbCmdDriveModeBits
 
+	go mtbStatSender(statsChan)
+
 	busAddDevice(devMTB, "MTB", mtbPMB, false, true, true)
 
 	mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1UnitReady
@@ -135,6 +148,35 @@ func mtbInit() bool {
 
 	logging.DebugPrint(logging.MtbLog, "MTB Initialised via call to mtbInit()\n")
 	return true
+}
+
+// mtbStatSender provides a near real-time view of MTB status and should be run as a Goroutine
+// TODO = only handles Unit 0 at the moment
+func mtbStatSender(sChan chan mtbStatT) {
+	var stats mtbStatT
+	logging.DebugPrint(logging.DebugLog, "dskpStatSender() started\n")
+	for {
+		mtb.mtbDataMu.RLock()
+		if mtb.imageAttached[0] {
+			stats.imageAttached[0] = true
+			stats.fileName[0] = mtb.fileName[0]
+			stats.memAddrReg = mtb.memAddrReg
+			stats.currentCmd = mtb.currentCmd // Could decode this
+			stats.statusReg1 = mtb.statusReg1
+			stats.statusReg2 = mtb.statusReg2
+		} else {
+			stats = mtbStatT{}
+		}
+		mtb.mtbDataMu.RUnlock()
+		// Non-blocking send of stats
+		select {
+		case sChan <- stats:
+			// stats sent
+		default:
+			// do not block
+		}
+		time.Sleep(mtbStatsPeriodMs * time.Millisecond)
+	}
 }
 
 // Reset the MTB to startup state

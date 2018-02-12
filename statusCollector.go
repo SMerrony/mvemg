@@ -36,6 +36,7 @@ const (
 	statCPUrow2       = 5
 	statDPFrow        = 7
 	statDSKProw       = 9
+	statMTBrow        = 11
 	statInternalsRow  = 20
 	statInternalsRow2 = 21
 )
@@ -52,7 +53,8 @@ const (
 func statusCollector(
 	cpuChan chan cpuStatT,
 	dpfChan chan DpfStatT,
-	dskpChan chan dskpStatT) {
+	dskpChan chan dskpStatT,
+	mtbChan chan mtbStatT) {
 
 	var (
 		cpuStats                               cpuStatT
@@ -63,6 +65,7 @@ func statusCollector(
 		thisDskpIOcnt, lastDskpIOcnt           uint64
 		dpfStats                               DpfStatT
 		dskpStats                              dskpStatT
+		mtbStats                               mtbStatT
 	)
 
 	l, err := net.Listen("tcp", "localhost:"+StatPort)
@@ -112,6 +115,7 @@ func statusCollector(
 					cpuStats.hostCPUCount,
 					cpuStats.goroutineCount,
 					cpuStats.heapSizeMB))
+
 			case dpfStats = <-dpfChan:
 				thisDpfIOcnt = dpfStats.writes + dpfStats.reads
 				dpfIops = float64(thisDpfIOcnt-lastDpfIOcnt) / time.Since(lastDpfTime).Seconds()
@@ -138,6 +142,14 @@ func statusCollector(
 					//dskpStats.head,
 					//dskpStats.sector,
 					dskpStats.sectorNo))
+
+			case mtbStats = <-mtbChan:
+				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statMTBrow, dasherERASEEOL))
+				statusSendString(conn, fmt.Sprintf("MTB0 - Attached: %c  File: %s  Mem Addr: %010d  Curr Cmd: %d",
+					util.BoolToYN(mtbStats.imageAttached[0]),
+					mtbStats.fileName[0],
+					mtbStats.memAddrReg,
+					mtbStats.currentCmd))
 			}
 		}
 	}

@@ -35,7 +35,6 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"log"
 	"mvemg/dg"
 	"mvemg/logging"
@@ -237,9 +236,10 @@ func dskpAttach(dNum int, imgName string) bool {
 	return true
 }
 
+// dskpStatSender provides a near real-time view of the DSKP status and should be run as a Goroutine
 func dskpStatSender(sChan chan dskpStatT) {
 	var stats dskpStatT
-	fmt.Printf("dskpStatSender() started\n")
+	logging.DebugPrint(logging.DebugLog, "dskpStatSender() started\n")
 	for {
 		dskpData.dskpDataMu.RLock()
 		if dskpData.imageAttached {
@@ -262,7 +262,6 @@ func dskpStatSender(sChan chan dskpStatT) {
 		case sChan <- stats:
 		default:
 		}
-
 		time.Sleep(time.Millisecond * dskpStatsPeriodMs)
 	}
 }

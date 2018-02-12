@@ -216,6 +216,8 @@ func cpuStatSender(sChan chan cpuStatT) {
 		stats.ac[1] = cpu.ac[1]
 		stats.ac[2] = cpu.ac[1]
 		stats.ac[3] = cpu.ac[3]
+		stats.ion = cpu.ion
+		stats.atu = cpu.atu
 		stats.instrCount = cpu.instrCount
 		cpu.cpuMu.RUnlock()
 		stats.goroutineCount = runtime.NumGoroutine()

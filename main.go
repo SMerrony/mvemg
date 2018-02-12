@@ -65,6 +65,7 @@ var (
 	cpuStatsChan  chan cpuStatT
 	dpfStatsChan  chan DpfStatT
 	dskpStatsChan chan dskpStatT
+	mtbStatsChan  chan mtbStatT
 	ttiSCPchan    chan byte
 )
 
@@ -110,6 +111,7 @@ func main() {
 		cpuStatsChan = make(chan cpuStatT, 3)
 		dpfStatsChan = make(chan DpfStatT, 3)
 		dskpStatsChan = make(chan dskpStatT, 3)
+		mtbStatsChan = make(chan mtbStatT, 3)
 
 		ttiSCPchan = make(chan byte, ScpBuffSize)
 
@@ -135,7 +137,7 @@ func main() {
 		cpuPtr := cpuInit(cpuStatsChan)
 		ttoInit(conn)
 		ttiInit(conn, cpuPtr, ttiSCPchan)
-		mtbInit()
+		mtbInit(mtbStatsChan)
 		DpfInit(dpfStatsChan)
 		dskpInit(dskpStatsChan)
 
@@ -144,7 +146,7 @@ func main() {
 		ttoPutStringNL(" *** Welcome to the MV/Emulator - Type HE for help ***")
 
 		// kick off the status monitor routine
-		go statusCollector(cpuStatsChan, dpfStatsChan, dskpStatsChan)
+		go statusCollector(cpuStatsChan, dpfStatsChan, dskpStatsChan, mtbStatsChan)
 
 		// run any command specified on the command line
 		if *doFlag != "" {
