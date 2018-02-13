@@ -214,7 +214,7 @@ func cpuStatSender(sChan chan cpuStatT) {
 		stats.pc = cpu.pc
 		stats.ac[0] = cpu.ac[0]
 		stats.ac[1] = cpu.ac[1]
-		stats.ac[2] = cpu.ac[1]
+		stats.ac[2] = cpu.ac[2]
 		stats.ac[3] = cpu.ac[3]
 		stats.ion = cpu.ion
 		stats.atu = cpu.atu
