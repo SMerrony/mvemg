@@ -178,12 +178,12 @@ func decodeBmcAddr(bmcAddr dg.PhysAddrT) bmcAddrT {
 		// Logical, or Mapped address...
 		res.tt = byte(util.GetDWbits(inAddr, 2, 5))
 		res.ttr = byte(util.GetDWbits(inAddr, 7, 5))
-		res.plow = dg.PhysAddrT(bmcAddr & 0x3ff) // mask off 10 bits
+		res.plow = bmcAddr & 0x3ff // mask off 10 bits
 	} else {
 		// Physical, or unmapped address..
 		res.bk = byte(util.GetDWbits(inAddr, 1, 3))
 		res.xca = byte(util.GetDWbits(inAddr, 4, 3))
-		res.ca = dg.PhysAddrT(bmcAddr & 0x7fff) // mask off 15 bits
+		res.ca = bmcAddr & 0x7fff // mask off 15 bits
 	}
 
 	return res

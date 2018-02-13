@@ -404,6 +404,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 // used by WPOPB, WRTN
 func wpopb(cpuPtr *CPUT) {
+	wspSav := memory.ReadDWord(memory.WspLoc)
 	// pop off 6 double words
 	dwd := memory.WsPop(0) // 1
 	cpuPtr.carry = util.TestDWbit(dwd, 0)
@@ -415,8 +416,8 @@ func wpopb(cpuPtr *CPUT) {
 	cpuPtr.ac[1] = memory.WsPop(0) // 4
 	cpuPtr.ac[0] = memory.WsPop(0) // 5
 	dwd = memory.WsPop(0)          // 6
-	// TODO Set PSR
+	cpuPtr.psr = util.DWordGetUpperWord(dwd)
 	// TODO Set WFP is crossing rings
-	//wsFramSz2 := int(dwd&0x00007fff) * 2
-	//memory.WriteDWord(memory.WspLoc, wspSav-dg.DwordT(wsFramSz2)-12)
+	wsFramSz2 := (int(dwd&0x00007fff) * 2) + 12
+	memory.WriteDWord(memory.WspLoc, wspSav-dg.DwordT(wsFramSz2))
 }

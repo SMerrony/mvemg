@@ -143,7 +143,6 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			busy = busGetBusy(ioTestDev.ioDev)
 			done = busGetDone(ioTestDev.ioDev)
 		}
-		done = busGetDone(ioTestDev.ioDev)
 		switch ioTestDev.t {
 		case "BN":
 			if busy {
