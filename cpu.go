@@ -70,7 +70,7 @@ type cpuStatT struct {
 	heapSizeMB              int
 }
 
-const cpuStatPeriodMs = 500 // 125 // i.e. we send stats every 1/8th of a second
+const cpuStatPeriodMs = 333 // 125 // i.e. we send stats every 1/8th of a second
 
 var cpu CPUT
 

@@ -37,6 +37,7 @@ func eagleIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		mapRegAddr          int
 		rw                  bool
 		wAddr               dg.PhysAddrT
+		oneAcc1Word         oneAcc1WordT
 		twoAcc1Word         twoAcc1WordT
 		twoAccImm2Word      twoAccImm2WordT
 	)
@@ -82,10 +83,10 @@ func eagleIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		cpuPtr.ac[0] = dwd
 
 	case "INTDS":
-		cpu.ion = false
+		return intds(cpuPtr)
 
 	case "INTEN":
-		cpu.ion = true // TODO - Lots!!!!
+		return inten(cpuPtr)
 
 	case "LCPID": // seems to be the same as ECLID
 		dwd = cpuModelNo << 16
@@ -99,6 +100,10 @@ func eagleIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		cpuPtr.ac[0] = cpuModelNo
 		cpuPtr.ac[1] = ucodeRev
 		cpuPtr.ac[2] = memory.MemSizeLCPID // TODO Check this
+
+	case "READS":
+		oneAcc1Word = iPtr.variant.(oneAcc1WordT)
+		return reads(cpuPtr, oneAcc1Word.acd)
 
 	case "WLMP":
 		if cpuPtr.ac[1] == 0 {

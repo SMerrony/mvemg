@@ -50,35 +50,27 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case "DIA", "DIB", "DIC", "DOA", "DOB", "DOC":
 		novaDataIo = iPtr.variant.(novaDataIoT)
 
-		// Special Case: DIA n,CPU => READS
-		if iPtr.mnemonic == "DIA" && novaDataIo.ioDev == devCPU {
-			// load the AC with the contents of the dummy CPU register 'SR'
-			logging.DebugPrint(logging.DebugLog, "INFO: Interpreting DIA n,CPU as READS n instruction\n")
-			cpuPtr.ac[novaDataIo.acd] = dg.DwordT(cpuPtr.sr)
-			cpuPtr.pc++
-			return true
+		// catch CPU I/O instructions
+		if novaDataIo.ioDev == devCPU {
+			switch iPtr.mnemonic {
+			case "DIA": // READS
+				logging.DebugPrint(logging.DebugLog, "INFO: Interpreting DIA n,CPU as READS n instruction\n")
+				return reads(cpuPtr, novaDataIo.acd)
+			case "DIB": // INTA
+				log.Fatalf("ERROR: DIB n,CPU (INTA )not yet implemented, location %d\n", cpuPtr.pc)
+			case "DIC": // IORST
+				logging.DebugPrint(logging.DebugLog, "INFO: I/O Reset due to DIC 0,CPU instruction\n")
+				return iorst(cpuPtr)
+			case "DOB": // MKSO
+				logging.DebugPrint(logging.DebugLog, "INFO: Handling DOB %d, CPU instruction as MSKO\n", novaDataIo.acd)
+				novaDataIo = iPtr.variant.(novaDataIoT)
+				return msko(cpuPtr, novaDataIo.acd)
+			case "DOC": // HALT
+				logging.DebugPrint(logging.DebugLog, "INFO: CPU Halting due to DOC %d,CPU (HALT) instruction\n", novaDataIo.acd)
+				return halt()
+			}
 		}
-		// Special Case: DICC 0,077 => I/O Reset
-		if iPtr.mnemonic == "DIC" && novaDataIo.f == 'C' && novaDataIo.acd == 0 && novaDataIo.ioDev == devCPU {
-			logging.DebugPrint(logging.DebugLog, "INFO: I/O Reset due to DICC 0,CPU instruction\n")
-			busResetAllIODevices()
-			cpuPtr.pc++
-			return true
-		}
-		// Special Case: DOB 0-3,077 == MSKO
-		if iPtr.mnemonic == "DOB" && novaDataIo.ioDev == devCPU {
-			logging.DebugPrint(logging.DebugLog, "INFO: Handling DOB %d, CPU instruction as MSKO\n", novaDataIo.acd)
-			novaDataIo = iPtr.variant.(novaDataIoT)
-			cpuPtr.mask = util.DWordGetLowerWord(cpuPtr.ac[novaDataIo.acd])
-			cpuPtr.pc++
-			return true
-		}
-		// Special Case: DOC 0-3,077 => Halt
-		if iPtr.mnemonic == "DOC" && novaDataIo.ioDev == devCPU {
-			logging.DebugPrint(logging.DebugLog, "INFO: CPU Halting due to DOC %d,CPU (HALT) instruction\n", novaDataIo.acd)
-			// do not advance PC
-			return false
-		}
+
 		if busIsAttached(novaDataIo.ioDev) && busIsIODevice(novaDataIo.ioDev) {
 			switch iPtr.mnemonic {
 			case "DOA", "DIA":
@@ -104,8 +96,7 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case "HALT":
 		logging.DebugPrint(logging.DebugLog, "INFO: CPU Halting due to HALT instruction\n")
-		// do not advance PC
-		return false
+		return halt()
 
 	case "IORST":
 		// oneAcc1Word = iPtr.variant.(oneAcc1WordT) // <== this is just an assertion really
@@ -115,19 +106,15 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case "NIO":
 		ioFlagsDev = iPtr.variant.(ioFlagsDevT)
-		// special case: NIOC CPU => INTDS
-		if ioFlagsDev.f == 'C' && ioFlagsDev.ioDev == devCPU {
-			// same as INTDS
-			cpu.ion = false
-			logging.DebugPrint(logging.DebugLog, "Interrupts Disabled.\n")
-			break
-		}
-		// special case: NIOS CPU => INTEN
-		if ioFlagsDev.f == 'S' && ioFlagsDev.ioDev == devCPU {
-			// same as INTEN
-			cpu.ion = true
-			logging.DebugPrint(logging.DebugLog, "Interrupts Enabled.\n")
-			break
+
+		if ioFlagsDev.ioDev == devCPU {
+			switch ioFlagsDev.f {
+			case 'C': // INTDS
+				return intds(cpuPtr)
+			case 'S': // INTEN
+				return inten(cpuPtr)
+			}
+
 		}
 		if debugLogging {
 			logging.DebugPrint(logging.DebugLog, "Sending NIO to device #%d.\n", ioFlagsDev.ioDev)
@@ -149,7 +136,13 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case "SKP":
 		ioTestDev = iPtr.variant.(ioTestDevT)
-		busy = busGetBusy(ioTestDev.ioDev)
+		if ioTestDev.ioDev == devCPU {
+			busy = cpuPtr.ion
+			done = cpuPtr.pfflag
+		} else {
+			busy = busGetBusy(ioTestDev.ioDev)
+			done = busGetDone(ioTestDev.ioDev)
+		}
 		done = busGetDone(ioTestDev.ioDev)
 		switch ioTestDev.t {
 		case "BN":
@@ -187,6 +180,42 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		return false
 	}
 
+	cpuPtr.pc++
+	return true
+}
+
+func halt() bool {
+	// do not advance PC
+	return false // stop processing
+}
+
+func intds(cpuPtr *CPUT) bool {
+	cpuPtr.ion = false
+	cpuPtr.pc++
+	return true
+}
+
+func inten(cpuPtr *CPUT) bool {
+	cpuPtr.ion = true
+	cpuPtr.pc++
+	return true
+}
+
+func iorst(cpuPtr *CPUT) bool {
+	busResetAllIODevices()
+	cpuPtr.pc++
+	return true
+}
+
+func msko(cpuPtr *CPUT, destAc int) bool {
+	cpuPtr.mask = util.DWordGetLowerWord(cpuPtr.ac[destAc])
+	cpuPtr.pc++
+	return true
+}
+
+func reads(cpuPtr *CPUT, destAc int) bool {
+	// load the AC with the contents of the dummy CPU register 'SR'
+	cpuPtr.ac[destAc] = dg.DwordT(cpuPtr.sr)
 	cpuPtr.pc++
 	return true
 }
