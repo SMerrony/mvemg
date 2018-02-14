@@ -34,6 +34,7 @@ func eagleIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	var (
 		cmd, word, dataWord dg.WordT
 		dwd                 dg.DwordT
+		ok                  bool
 		mapRegAddr          int
 		rw                  bool
 		wAddr               dg.PhysAddrT
@@ -118,7 +119,11 @@ func eagleIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			// cpuPtr.ac[2] += 2
 		} else {
 			for {
-				memory.BmcdchWriteSlot(int(cpuPtr.ac[0]&0x07ff), memory.ReadDWord(dg.PhysAddrT(cpuPtr.ac[2])))
+				dwd, ok = memory.ReadDWordTrap(dg.PhysAddrT(cpuPtr.ac[2]))
+				if !ok {
+					log.Fatalf("ERROR: Memory access failed at PC: %d\n", cpuPtr.pc)
+				}
+				memory.BmcdchWriteSlot(int(cpuPtr.ac[0]&0x07ff), dwd)
 				if debugLogging {
 					logging.DebugPrint(logging.DebugLog, "WLMP writing slot %d\n", 1+(cpuPtr.ac[0]&0x7ff))
 				}
