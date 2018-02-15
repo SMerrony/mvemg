@@ -19,6 +19,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+// N.B. These funcs may be used very frequently, ensure test coverage even for trivial ones
+//      and keep them efficient (review from time to time).
+
 package util
 
 import (
@@ -52,20 +55,20 @@ func BoolToOnOff(b bool) string {
 }
 
 // BoolToOZ converts a boolean to a O(ne) or Z(ero) byte
-func boolToOZ(b bool) byte {
+func BoolToOZ(b bool) byte {
 	if b {
 		return 'O'
 	}
 	return 'Z'
 }
 
-// DWordGetLowerWord gets the DG-lower word of a doubleword
+// DWordGetLowerWord gets the DG-lower word (RHS) of a doubleword
 // Called VERY often, hopefully inlined!
 func DWordGetLowerWord(dwd dg.DwordT) dg.WordT {
 	return dg.WordT(dwd) // & 0x0000ffff mask unneccessary
 }
 
-// DWordGetUpperWord gets the DG-higher word of a doubleword
+// DWordGetUpperWord gets the DG-higher word (LHS) of a doubleword
 // Called VERY often, hopefully inlined!
 func DWordGetUpperWord(dwd dg.DwordT) dg.WordT {
 	return dg.WordT(dwd >> 16)
@@ -134,23 +137,17 @@ func GetQWbits(value dg.QwordT, leftBit uint, nbits uint) dg.QwordT {
 
 // TestWbit - does word w have bit b set?
 func TestWbit(w dg.WordT, b int) bool {
-	var bb uint8
-	bb = uint8(b)
-	return (w & (1 << (15 - bb))) != 0
+	return (w & (1 << (15 - uint8(b)))) != 0
 }
 
 // TestDWbit - does dword dw have bit b set?
 func TestDWbit(dw dg.DwordT, b int) bool {
-	var bb uint8
-	bb = uint8(b)
-	return ((dw & (1 << (31 - bb))) != 0)
+	return ((dw & (1 << (31 - uint8(b)))) != 0)
 }
 
 // TestQWbit - does qword qw have bit b set?
 func TestQWbit(qw dg.QwordT, b int) bool {
-	var bb uint8
-	bb = uint8(b)
-	return ((qw & (1 << (63 - bb))) != 0)
+	return ((qw & (1 << (63 - uint8(b)))) != 0)
 }
 
 // WordToBinStr - get a pretty-printable string of a word

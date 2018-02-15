@@ -26,6 +26,50 @@ import (
 	"testing"
 )
 
+func TestBoolToInt(t *testing.T) {
+	tbool, fbool := true, false
+	tres := BoolToInt(tbool)
+	if tres != 1 {
+		t.Error("Expected 1 got ", tres)
+	}
+	fres := BoolToInt(fbool)
+	if fres != 0 {
+		t.Error("Expected 0 got ", fres)
+	}
+}
+func TestBoolToYN(t *testing.T) {
+	tbool, fbool := true, false
+	tres := BoolToYN(tbool)
+	if tres != 'Y' {
+		t.Error("Expected Y got ", tres)
+	}
+	fres := BoolToYN(fbool)
+	if fres != 'N' {
+		t.Error("Expected N got ", fres)
+	}
+}
+func TestBoolToOnOff(t *testing.T) {
+	tbool, fbool := true, false
+	tres := BoolToOnOff(tbool)
+	if tres != "On" {
+		t.Error("Expected On got ", tres)
+	}
+	fres := BoolToOnOff(fbool)
+	if fres != "Off" {
+		t.Error("Expected Off got ", fres)
+	}
+}
+func TestBoolToOZ(t *testing.T) {
+	tbool, fbool := true, false
+	tres := BoolToOZ(tbool)
+	if tres != 'O' {
+		t.Error("Expected O got ", tres)
+	}
+	fres := BoolToOZ(fbool)
+	if fres != 'Z' {
+		t.Error("Expected Z got ", fres)
+	}
+}
 func TestDWordFromTwoWords(t *testing.T) {
 	var hi dg.WordT = 0x1122
 	var lo dg.WordT = 0x3344
@@ -35,6 +79,29 @@ func TestDWordFromTwoWords(t *testing.T) {
 	}
 }
 
+func TestQWordFromTwoDwords(t *testing.T) {
+	var hi dg.DwordT = 0x11223344
+	var lo dg.DwordT = 0x55667788
+	r := QWordFromTwoDwords(hi, lo)
+	if r != 0x1122334455667788 {
+		t.Error("Expected 0x1122334455667788, got ", r)
+	}
+}
+
+func TestDWordGetLowerWord(t *testing.T) {
+	var dwd dg.DwordT = 0x11223344
+	r := DWordGetLowerWord(dwd)
+	if r != 0x3344 {
+		t.Error("Expected 0x3344, got ", r)
+	}
+}
+func TestDWordGetUpperWord(t *testing.T) {
+	var dwd dg.DwordT = 0x11223344
+	r := DWordGetUpperWord(dwd)
+	if r != 0x1122 {
+		t.Error("Expected 0x1122, got ", r)
+	}
+}
 func TestGetWbits(t *testing.T) {
 	var w dg.WordT = 0xb38f
 	r := GetWbits(w, 5, 3)
@@ -66,6 +133,18 @@ func TestSetWbit(t *testing.T) {
 	}
 }
 
+func TestSetQWbit(t *testing.T) {
+	var w dg.QwordT = 0
+	SetQWbit(&w, 63)
+	if w != 1 {
+		t.Errorf("Expected 0x01, got %x", w)
+	}
+	// repeat - should have no effect
+	SetQWbit(&w, 63)
+	if w != 1 {
+		t.Errorf("Expected 0x01, got %x", w)
+	}
+}
 func TestClearWbit(t *testing.T) {
 	var w dg.WordT = 0x4001
 	ClearWbit(&w, 1)
@@ -117,5 +196,39 @@ func TestSwapBytes(t *testing.T) {
 	wd = SwapBytes(s)
 	if wd != 0x1234 {
 		t.Error("Expected 4660., got ", wd)
+	}
+}
+
+func TestTestWbit(t *testing.T) {
+	var wd dg.WordT = 0x4000
+	r := TestWbit(wd, 1)
+	if !r {
+		t.Error("Expected true")
+	}
+	r = TestWbit(wd, 2)
+	if r {
+		t.Error("Expected false")
+	}
+}
+func TestTestDWbit(t *testing.T) {
+	var wd dg.DwordT = 0x40000000
+	r := TestDWbit(wd, 1)
+	if !r {
+		t.Error("Expected true")
+	}
+	r = TestDWbit(wd, 2)
+	if r {
+		t.Error("Expected false")
+	}
+}
+func TestTestQWbit(t *testing.T) {
+	var wd dg.QwordT = 0x4000000000000000
+	r := TestQWbit(wd, 1)
+	if !r {
+		t.Error("Expected true")
+	}
+	r = TestQWbit(wd, 2)
+	if r {
+		t.Error("Expected false")
 	}
 }
