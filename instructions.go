@@ -25,12 +25,12 @@ import (
 	"mvemg/dg"
 )
 
-// addressing modes
+// addressing modes, the values _are_ significant
 const (
-	absoluteMode = iota
-	pcMode
-	ac2Mode
-	ac3Mode
+	absoluteMode = 0
+	pcMode       = 1
+	ac2Mode      = 2
+	ac3Mode      = 3
 )
 
 // the characteristics of each instruction
