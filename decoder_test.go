@@ -7,23 +7,6 @@ import (
 	"mvemg/dg"
 )
 
-func TestDecodeMode(t *testing.T) {
-	var modeIx dg.WordT
-	var decMode string
-
-	modeIx = 0
-	decMode = decodeMode(modeIx)
-	if decMode != "Absolute" {
-		t.Error("Expected <Absolute>, got ", decMode)
-	}
-
-	modeIx = 1
-	decMode = decodeMode(modeIx)
-	if decMode != "PC" {
-		t.Error("Expected <PC>, got ", decMode)
-	}
-}
-
 func Test2bitImm(t *testing.T) {
 	ttable := []struct {
 		i dg.WordT
@@ -43,25 +26,25 @@ func Test2bitImm(t *testing.T) {
 
 func TestDecode8bitDisp(t *testing.T) {
 	var db dg.ByteT
-	var md string
+	var md int
 	var res int16
 
 	db = 7
-	md = "Absolute"
+	md = absoluteMode
 	res = decode8bitDisp(db, md)
 	if res != 7 {
 		t.Error("Expected 7, got ", res)
 	}
 
 	db = 7
-	md = "PC"
+	md = pcMode
 	res = decode8bitDisp(db, md)
 	if res != 7 {
 		t.Error("Expected 7, got ", res)
 	}
 
 	db = 0xff
-	md = "PC"
+	md = pcMode
 	res = decode8bitDisp(db, md)
 	if res != -1 {
 		t.Error("Expected -1, got ", res)
@@ -70,32 +53,32 @@ func TestDecode8bitDisp(t *testing.T) {
 
 func TestDecode15bitDisp(t *testing.T) {
 	var disp15 dg.WordT
-	var m string
+	var m int
 	var res int16
 
 	disp15 = 300
-	m = "Absolute"
+	m = absoluteMode
 	res = decode15bitDisp(disp15, m)
 	if res != 300 {
 		t.Error("Absolute Mode: Expected 300, got ", res)
 	}
 
 	disp15 = 300
-	m = "AC2"
+	m = ac2Mode
 	res = decode15bitDisp(disp15, m)
 	if res != 300 {
 		t.Error("AC2 Mode: Expected 300, got ", res)
 	}
 
 	disp15 = 0x7ed4
-	m = "AC2"
+	m = ac2Mode
 	res = decode15bitDisp(disp15, m)
 	if res != -300 {
 		t.Error("AC2 Mode: Expected -300, got ", res)
 	}
 
 	disp15 = 0x7ed4
-	m = "PC"
+	m = pcMode
 	res = decode15bitDisp(disp15, m)
 	if res != -299 {
 		t.Error("PC Mode: Expected -299, got ", res)

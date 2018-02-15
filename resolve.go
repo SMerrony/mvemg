@@ -29,7 +29,7 @@ import (
 	"mvemg/util"
 )
 
-func resolve16bitEclipseAddr(cpuPtr *CPUT, ind byte, mode string, disp int16) dg.PhysAddrT {
+func resolve16bitEclipseAddr(cpuPtr *CPUT, ind byte, mode int, disp int16) dg.PhysAddrT {
 
 	var (
 		eff     dg.PhysAddrT
@@ -39,13 +39,13 @@ func resolve16bitEclipseAddr(cpuPtr *CPUT, ind byte, mode string, disp int16) dg
 
 	// handle addressing mode...
 	switch mode {
-	case "Absolute":
+	case absoluteMode:
 		intEff = int32(disp)
-	case "PC":
+	case pcMode:
 		intEff = int32(cpuPtr.pc) + int32(disp)
-	case "AC2":
+	case ac2Mode:
 		intEff = int32(cpuPtr.ac[2]) + int32(disp)
-	case "AC3":
+	case ac3Mode:
 		intEff = int32(cpuPtr.ac[3]) + int32(disp)
 	}
 
@@ -68,7 +68,7 @@ func resolve16bitEclipseAddr(cpuPtr *CPUT, ind byte, mode string, disp int16) dg
 }
 
 // This is the same as resolve16bitEclipseAddr, but without the range masking at the end
-func resolve16bitEagleAddr(cpuPtr *CPUT, ind byte, mode string, disp int16) dg.PhysAddrT {
+func resolve16bitEagleAddr(cpuPtr *CPUT, ind byte, mode int, disp int16) dg.PhysAddrT {
 
 	var (
 		eff     dg.PhysAddrT
@@ -79,13 +79,13 @@ func resolve16bitEagleAddr(cpuPtr *CPUT, ind byte, mode string, disp int16) dg.P
 
 	// handle addressing mode...
 	switch mode {
-	case "Absolute":
+	case absoluteMode:
 		intEff = int32(disp)
-	case "PC":
+	case pcMode:
 		intEff = int32(cpuPtr.pc) + int32(disp)
-	case "AC2":
+	case ac2Mode:
 		intEff = int32(cpuPtr.ac[2]) + int32(disp)
-	case "AC3":
+	case ac3Mode:
 		intEff = int32(cpuPtr.ac[3]) + int32(disp)
 	}
 
@@ -116,19 +116,19 @@ func resolve32bitByteAddr(byteAddr dg.DwordT) (wordAddr dg.PhysAddrT, loByte boo
 	return wa, lb
 }
 
-func resolve32bitEffAddr(cpuPtr *CPUT, ind byte, mode string, disp int32) dg.PhysAddrT {
+func resolve32bitEffAddr(cpuPtr *CPUT, ind byte, mode int, disp int32) dg.PhysAddrT {
 
 	eff := dg.PhysAddrT(disp)
 
 	// handle addressing mode...
 	switch mode {
-	case "Absolute":
+	case absoluteMode:
 		// nothing to do
-	case "PC":
+	case pcMode:
 		eff += cpuPtr.pc
-	case "AC2":
+	case ac2Mode:
 		eff += dg.PhysAddrT(cpuPtr.ac[2])
-	case "AC3":
+	case ac3Mode:
 		eff += dg.PhysAddrT(cpuPtr.ac[3])
 	}
 

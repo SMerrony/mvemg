@@ -76,12 +76,12 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		noAccMode3Word = iPtr.variant.(noAccMode3WordT)
 		eff := dg.DwordT(noAccMode3Word.immU32)
 		switch noAccMode3Word.mode {
-		case "Absolute": // do nothing
-		case "PC":
+		case absoluteMode: // do nothing
+		case pcMode:
 			eff += dg.DwordT(cpuPtr.pc)
-		case "AC2":
+		case ac2Mode:
 			eff += cpuPtr.ac[2]
-		case "AC3":
+		case ac3Mode:
 			eff += cpuPtr.ac[3]
 		}
 		memory.WsPush(0, eff)
@@ -209,12 +209,12 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		// FIXME segment handling, check for overflow
 		eff := dg.DwordT(noAccMode2Word.disp16)
 		switch noAccMode2Word.mode {
-		case "Absolute": // do nothing
-		case "PC":
+		case absoluteMode: // do nothing
+		case pcMode:
 			eff += dg.DwordT(cpuPtr.pc)
-		case "AC2":
+		case ac2Mode:
 			eff += cpuPtr.ac[2]
-		case "AC3":
+		case ac3Mode:
 			eff += cpuPtr.ac[3]
 		}
 		memory.WsPush(0, eff)

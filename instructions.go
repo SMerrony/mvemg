@@ -25,6 +25,14 @@ import (
 	"mvemg/dg"
 )
 
+// addressing modes
+const (
+	absoluteMode = iota
+	pcMode
+	ac2Mode
+	ac3Mode
+)
+
 // the characteristics of each instruction
 type instrChars struct {
 	// mnemonic   string  // DG standard assembler mnemonic for opcode
@@ -44,7 +52,6 @@ var instructionSet = make(InstructionSet)
 
 var ioFlags = [...]byte{' ', 'S', 'C', 'P'}
 var ioTests = [...]string{"BN", "BZ", "DN", "DZ"}
-var modes = [...]string{"Absolute", "PC", "AC2", "AC3"}
 var skips = [...]string{"NONE", "SKP", "SZC", "SNC", "SZR", "SNR", "SEZ", "SBN"}
 
 // // debugging function...
