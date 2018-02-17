@@ -131,7 +131,7 @@ func main() {
 
 		memory.MemInit()
 		busInit()
-		busAddDevice(devSCP, "SCP", scpPMB, true, false, false)
+		busAddDevice(devSCP, "SCP", pmbSCP, true, false, false)
 		instructionsInit()
 		decoderGenAllPossOpcodes()
 		cpuPtr := cpuInit(cpuStatsChan)

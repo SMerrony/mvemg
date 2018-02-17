@@ -132,7 +132,7 @@ func mtbInit(statsChan chan mtbStatT) bool {
 
 	go mtbStatSender(statsChan)
 
-	busAddDevice(devMTB, "MTB", mtbPMB, false, true, true)
+	busAddDevice(devMTB, "MTB", pmbMTB, false, true, true)
 
 	mtb.mtbDataMu.Lock()
 	mtb.statusReg1 = mtbSr1HiDensity | mtbSr19Track | mtbSr1UnitReady

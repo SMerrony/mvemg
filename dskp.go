@@ -31,6 +31,8 @@
 
 // SYNCHRONOUS interrupts occur after a PIO command executes.
 
+// N.B. Assembler mnemonic: DSKP, AOS/VS mnemonic: DPJ
+
 package main
 
 import (
@@ -199,7 +201,7 @@ func dskpInit(statsChann chan dskpStatT) {
 
 	go dskpStatSender(statsChann)
 
-	busAddDevice(devDSKP, "DSKP", dskpPMB, false, true, true)
+	busAddDevice(devDSKP, "DSKP", pmbDSKP, false, true, true)
 	busSetResetFunc(devDSKP, dskpReset)
 	busSetDataInFunc(devDSKP, dskpDataIn)
 	busSetDataOutFunc(devDSKP, dskpDataOut)

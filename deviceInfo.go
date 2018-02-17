@@ -28,45 +28,61 @@ import "fmt"
 // as per DG docs!
 // N.B. add to deviceToString() when new codes added here
 const (
-	devMax  = 0100
-	devPSC  = 004
-	pscPMB  = 13
-	devTTI  = 010
-	ttiPMB  = 14
-	devTTO  = 011
-	ttoPMB  = 15
-	devRTC  = 014
-	rtcPMB  = 13
-	devMTB  = 022
-	mtbPMB  = 10
-	devDSKP = 024
-	dskpPMB = 7
-	devDPF  = 027
-	dpfPMB  = 7
-	devSCP  = 045
-	scpPMB  = 15
-	devCPU  = 077
-	cpuPMB  = 0 // kinda!
+	devMax = 0100
+
+	devBMC   = 005
+	devCPU   = 077
+	devDPF   = 027
+	devDSKP  = 024
+	devFPU   = 076
+	devMAP   = 003
+	devMTB   = 022
+	devPIT   = 043
+	devPSC   = 004
+	devPWRFL = 0
+	devRTC   = 014
+	devSCP   = 045
+	devTTI   = 010
+	devTTO   = 011
+	devWCS   = 001
+	pmbCPU   = 0 // kinda!
+	pmbDPF   = 7
+	pmbDSKP  = 7
+	pmbMTB   = 10
+	pmbPSC   = 13
+	pmbRTC   = 13
+	pmbSCP   = 15
+	pmbTTI   = 14
+	pmbTTO   = 15
 
 	cpuModelNo = 0x224C
 	ucodeRev   = 0x04
 )
 
+// deviceToString is used for disassembly
 func deviceToString(devNum int) string {
 	var ds string
 	switch devNum {
+	case devBMC:
+		return "BMC"
 	case devCPU:
 		return "CPU"
 	case devDSKP:
-		return "DSKP"
+		return "DSKP" // This is the Assembler mnemonic, the AOS/VS Mnemonic is "DPJ"
 	case devDPF:
 		return "DPF"
+	case devFPU:
+		return "FPU"
+	case devMAP:
+		return "MAP"
 	case devMTB:
 		return "MTB"
-		//	case devPIT:
-		//		return "PIT"
+	case devPIT:
+		return "PIT"
 	case devPSC:
 		return "PSC"
+	case devPWRFL:
+		return "PWRFAIL"
 	case devRTC:
 		return "RTC"
 	case devSCP:
@@ -75,6 +91,8 @@ func deviceToString(devNum int) string {
 		return "TTI"
 	case devTTO:
 		return "TTO"
+	case devWCS:
+		return "WCS"
 	default:
 		ds = fmt.Sprintf("%#o", devNum)
 	}

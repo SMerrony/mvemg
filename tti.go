@@ -37,7 +37,7 @@ var (
 
 func ttiInit(c net.Conn, cpuPtr *CPUT, ch chan<- byte) {
 	tti = c
-	busAddDevice(devTTI, "TTI", ttiPMB, true, true, false)
+	busAddDevice(devTTI, "TTI", pmbTTI, true, true, false)
 	busSetResetFunc(devTTI, ttiReset)
 	busSetDataInFunc(devTTI, ttiDataIn)
 	busSetDataOutFunc(devTTI, ttiDataOut)

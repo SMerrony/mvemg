@@ -122,7 +122,7 @@ func statusCollector(
 				lastDpfIOcnt = thisDpfIOcnt
 				lastDpfTime = time.Now()
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statDPFrow, dasherERASEEOL))
-				statusSendString(conn, fmt.Sprintf("DPF  - Attached: %c  IOPS: %.f CYL: %04d  HD: %02d  SECT: %03d",
+				statusSendString(conn, fmt.Sprintf("DPF  (DPF0)  - Attached: %c  IOPS: %.f CYL: %04d  HD: %02d  SECT: %03d",
 					util.BoolToYN(dpfStats.imageAttached),
 					dpfIops,
 					dpfStats.cylinder,
@@ -135,7 +135,7 @@ func statusCollector(
 				lastDskpIOcnt = thisDskpIOcnt
 				lastDskpTime = time.Now()
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statDSKProw, dasherERASEEOL))
-				statusSendString(conn, fmt.Sprintf("DSKP - Attached: %c  IOPS: %.f  SECNUM: %08d",
+				statusSendString(conn, fmt.Sprintf("DSKP (DPJ0) - Attached: %c  IOPS: %.f  SECNUM: %08d",
 					util.BoolToYN(dskpStats.imageAttached),
 					dskpIops,
 					//dskpStats.cylinder,
@@ -145,7 +145,7 @@ func statusCollector(
 
 			case mtbStats = <-mtbChan:
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statMTBrow, dasherERASEEOL))
-				statusSendString(conn, fmt.Sprintf("MTB0 - Attached: %c  File: %s  Mem Addr: %010d  Curr Cmd: %d",
+				statusSendString(conn, fmt.Sprintf("MTB  (MTC0) - Attached: %c  File: %s  Mem Addr: %010d  Curr Cmd: %d",
 					util.BoolToYN(mtbStats.imageAttached[0]),
 					mtbStats.fileName[0],
 					mtbStats.memAddrReg,

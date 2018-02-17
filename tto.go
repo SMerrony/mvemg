@@ -33,7 +33,7 @@ var (
 
 func ttoInit(c net.Conn) {
 	tto = c
-	busAddDevice(devTTO, "TTO", ttoPMB, true, true, false)
+	busAddDevice(devTTO, "TTO", pmbTTO, true, true, false)
 	busSetResetFunc(devTTO, ttoReset)
 	busSetDataOutFunc(devTTO, ttoDataOut)
 }
