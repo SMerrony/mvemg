@@ -122,7 +122,7 @@ func statusCollector(
 				lastDpfIOcnt = thisDpfIOcnt
 				lastDpfTime = time.Now()
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statDPFrow, dasherERASEEOL))
-				statusSendString(conn, fmt.Sprintf("DPF  (DPF0)  - Attached: %c  IOPS: %.f CYL: %04d  HD: %02d  SECT: %03d",
+				statusSendString(conn, fmt.Sprintf("DPF  (DPF0) - Attached: %c  IOPS: %.f CYL: %04d  HD: %02d  SECT: %03d",
 					util.BoolToYN(dpfStats.imageAttached),
 					dpfIops,
 					dpfStats.cylinder,

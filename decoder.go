@@ -27,7 +27,6 @@ import (
 	"mvemg/logging"
 	"mvemg/memory"
 	"mvemg/util"
-	"strconv"
 )
 
 // decodedInstrT defines the MV/Em internal decode of an opcode and any
@@ -792,10 +791,11 @@ func loHiToByte(loHi bool) byte {
 }
 
 func modeToString(mode int) string {
+	var modes = [...]string{"", "PC", "AC2", "AC3"}
 	if mode == absoluteMode {
 		return ""
 	}
-	return "," + strconv.Itoa(mode)
+	return "," + modes[mode]
 }
 
 func skipToString(s string) string {
