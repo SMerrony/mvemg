@@ -33,6 +33,26 @@ const (
 	ac3Mode      = 3
 )
 
+// skips, the values _are_ significant
+const (
+	noSkip  = 0
+	skpSkip = 1
+	szcSkip = 2
+	sncSkip = 3
+	szrSkip = 4
+	snrSkip = 5
+	sezSkip = 6
+	sbnSkip = 7
+)
+
+// tests, the values _are_ significant
+const (
+	bnTest = 0
+	bzTest = 1
+	dnTest = 2
+	dzTest = 3
+)
+
 // the characteristics of each instruction
 type instrChars struct {
 	// mnemonic   string  // DG standard assembler mnemonic for opcode
@@ -51,8 +71,6 @@ type InstructionSet map[string]instrChars
 var instructionSet = make(InstructionSet)
 
 var ioFlags = [...]byte{' ', 'S', 'C', 'P'}
-var ioTests = [...]string{"BN", "BZ", "DN", "DZ"}
-var skips = [...]string{"NONE", "SKP", "SZC", "SNC", "SZR", "SNR", "SEZ", "SBN"}
 
 // // debugging function...
 // func dumpCSV() {

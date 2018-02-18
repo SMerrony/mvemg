@@ -12,9 +12,9 @@ SET LOGGING ON
 BREAK 0
 #
 # Attach a SimH-standard tape image
-ATT MTB 31133_1.9trk
+# ATT MTB 31133_1.9trk
 # ATT MTB TAPE1.9trk
-# ATT MTB FAKE3900.9trk
+ATT MTB FAKE3900.9trk
 #
 # Attach a 6061-type disk image
 ATT DPF DISK1.DPF

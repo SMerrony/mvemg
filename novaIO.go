@@ -144,28 +144,28 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			done = busGetDone(ioTestDev.ioDev)
 		}
 		switch ioTestDev.t {
-		case "BN":
+		case bnTest:
 			if busy {
 				cpuPtr.pc++
 				// if debugLogging {
 				// 	logging.DebugPrint(logging.DebugLog, "... skipping\n")
 				// }
 			}
-		case "BZ":
+		case bzTest:
 			if !busy {
 				cpuPtr.pc++
 				// if debugLogging {
 				// 	logging.DebugPrint(logging.DebugLog, "... skipping\n")
 				// }
 			}
-		case "DN":
+		case dnTest:
 			if done {
 				cpuPtr.pc++
 				// if debugLogging {
 				// 	logging.DebugPrint(logging.DebugLog, "... skipping\n")
 				// }
 			}
-		case "DZ":
+		case dzTest:
 			if !done {
 				cpuPtr.pc++
 				// if debugLogging {

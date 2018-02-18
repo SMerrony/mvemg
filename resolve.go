@@ -99,6 +99,11 @@ func resolve16bitEagleAddr(cpuPtr *CPUT, ind byte, mode int, disp int16) dg.Phys
 			}
 		}
 		intEff = int32(indAddr)
+		// res, ok := memory.ReadWordTrap(dg.PhysAddrT(indAddr))
+		// if !ok {
+		// 	log.Fatalf("ERROR: PC=%d", cpuPtr.pc)
+		// }
+		// intEff = int32(res)
 	}
 
 	eff = dg.PhysAddrT(intEff)

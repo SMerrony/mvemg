@@ -56,7 +56,7 @@ type ioFlagsDevT struct {
 	ioDev int
 }
 type ioTestDevT struct {
-	t     string
+	t     int
 	ioDev int
 }
 type lndo4WordT struct {
@@ -121,7 +121,7 @@ type novaOneAccEffAddrT struct {
 type novaTwoAccMultOpT struct {
 	acd, acs  int
 	c, sh, nl byte
-	skip      string
+	skip      int
 }
 type oneAcc1WordT struct {
 	acd int
@@ -298,11 +298,11 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		}
 	case IO_TEST_DEV_FMT:
 		var ioTestDev ioTestDevT
-		ioTestDev.t = decodeIOTest(util.GetWbits(opcode, 8, 2))
+		ioTestDev.t = int(util.GetWbits(opcode, 8, 2))
 		ioTestDev.ioDev = int(util.GetWbits(opcode, 10, 6))
 		decodedInstr.variant = ioTestDev
 		if disassemble {
-			decodedInstr.disassembly += fmt.Sprintf("%s %s", ioTestDev.t, deviceToString(ioTestDev.ioDev))
+			decodedInstr.disassembly += fmt.Sprintf("%s %s", testToString(ioTestDev.t), deviceToString(ioTestDev.ioDev))
 		}
 	case LNDO_4_WORD_FMT:
 		var lndo4Word lndo4WordT
@@ -451,7 +451,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		novaTwoAccMultOp.sh = decodeShift(util.GetWbits(opcode, 8, 2))
 		novaTwoAccMultOp.c = decodeCarry(util.GetWbits(opcode, 10, 2))
 		novaTwoAccMultOp.nl = decodeNoLoad(util.TestWbit(opcode, 12))
-		novaTwoAccMultOp.skip = decodeSkip(util.GetWbits(opcode, 13, 3))
+		novaTwoAccMultOp.skip = int(util.GetWbits(opcode, 13, 3))
 		decodedInstr.variant = novaTwoAccMultOp
 		if disassemble {
 			decodedInstr.disassembly += fmt.Sprintf("%c%c%c %d,%d %s",
@@ -754,10 +754,6 @@ func decodeIOFlags(fl dg.WordT) byte {
 	return ioFlags[fl]
 }
 
-func decodeIOTest(t dg.WordT) string {
-	return ioTests[t]
-}
-
 func decodeNoLoad(n bool) byte {
 	if n {
 		return '#'
@@ -779,10 +775,6 @@ func decodeShift(sh dg.WordT) byte {
 	return '*'
 }
 
-func decodeSkip(skp dg.WordT) string {
-	return skips[skp]
-}
-
 func loHiToByte(loHi bool) byte {
 	if loHi {
 		return 'H'
@@ -798,9 +790,15 @@ func modeToString(mode int) string {
 	return "," + modes[mode]
 }
 
-func skipToString(s string) string {
-	if s == "NONE" {
+func skipToString(s int) string {
+	var skips = [...]string{"NONE", "SKP", "SZC", "SNC", "SZR", "SNR", "SEZ", "SBN"}
+	if s == 0 {
 		return ""
 	}
-	return s
+	return skips[s]
+}
+
+func testToString(t int) string {
+	var ioTests = [...]string{"BN", "BZ", "DN", "DZ"}
+	return ioTests[t]
 }

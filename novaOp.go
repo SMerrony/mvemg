@@ -127,41 +127,41 @@ func novaOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	// Skip?
 	switch novaTwoAccMultOp.skip {
-	case "NONE":
+	case noSkip:
 		pcInc = 1
-	case "SKP":
+	case skpSkip:
 		pcInc = 2
-	case "SZC":
+	case szcSkip:
 		if !cpuPtr.carry {
 			pcInc = 2
 		} else {
 			pcInc = 1
 		}
-	case "SNC":
+	case sncSkip:
 		if cpuPtr.carry {
 			pcInc = 2
 		} else {
 			pcInc = 1
 		}
-	case "SZR":
+	case szrSkip:
 		if shifter == 0 {
 			pcInc = 2
 		} else {
 			pcInc = 1
 		}
-	case "SNR":
+	case snrSkip:
 		if shifter != 0 {
 			pcInc = 2
 		} else {
 			pcInc = 1
 		}
-	case "SEZ":
+	case sezSkip:
 		if !cpuPtr.carry || shifter == 0 {
 			pcInc = 2
 		} else {
 			pcInc = 1
 		}
-	case "SBN":
+	case sbnSkip:
 		if cpuPtr.carry && shifter != 0 {
 			pcInc = 2
 		} else {
