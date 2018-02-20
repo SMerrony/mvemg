@@ -1,5 +1,5 @@
 // debugLogs.go
-// Copyright (C) 2017  Steve Merrony
+// Copyright (C) 2018  Steve Merrony
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -45,6 +45,7 @@ const (
 )
 
 var (
+	// N.B. I tried using strings.Builder for the logs with Go 1.10, it seemed to use c.1000x more heap
 	logArr    [numDebugLogs][numDebugLogLines]string // the stored log messages
 	logArrMu  [numDebugLogs]sync.Mutex
 	firstLine [numDebugLogs]int // pointer to the first line of each log
@@ -60,6 +61,7 @@ func DebugLogsDump() {
 	)
 
 	for l := range logArr {
+		logArrMu[l].Lock()
 		if firstLine[l] != lastLine[l] { // ignore unused or empty logs
 			switch l {
 			case DebugLog:
@@ -86,6 +88,7 @@ func DebugLogsDump() {
 			debugDumpFile.WriteString("\n>>> Debug Log Ends\n")
 			debugDumpFile.Close()
 		}
+		logArrMu[l].Unlock()
 	}
 }
 

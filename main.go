@@ -129,7 +129,7 @@ func main() {
 		 *   NO IACs, LPT or ISC
 		 ***/
 
-		memory.MemInit()
+		memory.MemInit(debugLogging)
 		busInit()
 		busAddDevice(devSCP, "SCP", pmbSCP, true, false, false)
 		instructionsInit()
@@ -329,7 +329,7 @@ func boot(cmd []string) {
 		ttoPutNLString(" *** Device is not bootable ***")
 		return
 	}
-	memory.MemInit()
+	memory.MemInit(debugLogging)
 	switch devNum {
 	case devMTB:
 		mtbLoadTBoot()

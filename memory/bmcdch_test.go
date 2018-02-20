@@ -28,7 +28,7 @@ import (
 
 func TestBmcdchReset(t *testing.T) {
 	var wd dg.WordT
-	bmcdchInit()
+	bmcdchInit(false)
 	wd = regs[iochanDefReg]
 	if wd != ioccdr1 {
 		t.Error("Got ", wd)

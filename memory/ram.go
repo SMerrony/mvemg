@@ -45,16 +45,18 @@ type memoryT struct {
 	atuEnabled bool
 }
 
-var memory memoryT // memory is NOT exported
+var (
+	memory memoryT // memory is NOT exported
+)
 
 // MemInit should be called at machine start
-func MemInit() {
+func MemInit(doLog bool) {
 	memory.atuEnabled = false
-	bmcdchInit()
+	bmcdchInit(doLog)
 	for addr := range memory.ram {
 		memory.ram[addr] = 0
 	}
-	logging.DebugPrint(logging.DebugLog, "INFO: Initialised %d words of main memory\n", MemSizeWords)
+	log.Printf("INFO: Initialised %d words of main memory\n", MemSizeWords)
 }
 
 // ReadByte - read a byte from memory using word address and low-byte flag (true => lower (rightmost) byte)
