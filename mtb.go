@@ -215,12 +215,29 @@ func mtbAttach(tNum int, imgName string) bool {
 
 }
 
+func mtbDetach(tNum int) bool {
+	logging.DebugPrint(logging.MtbLog, "mtbDetach called on unit #%d\n", tNum)
+	mtb.mtbDataMu.Lock()
+	mtb.fileName[tNum] = ""
+	mtb.simhFile[tNum] = nil
+	mtb.imageAttached[tNum] = false
+	mtb.statusReg1 = mtbSr1Error | mtbSr1HiDensity | mtbSr19Track | mtbSr1BOT | mtbSr1UnitReady
+	mtb.statusReg2 = mtbSr2PEMode
+	mtb.mtbDataMu.Unlock()
+	busSetDetached(devMTB)
+	return true
+}
+
 // Scan the attached SimH tape image to ensure it makes sense
 // (This is just a pass-through to the equivalent function in simhtape)
 func mtbScanImage(tNum int) string {
 	mtb.mtbDataMu.RLock()
 	imageName := mtb.fileName[tNum]
+	att := mtb.imageAttached[tNum]
 	mtb.mtbDataMu.RUnlock()
+	if !att {
+		return "WARNING: No image attached"
+	}
 	return simhtape.ScanImage(imageName, false)
 }
 

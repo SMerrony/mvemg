@@ -245,6 +245,8 @@ func doCommand(cmd string) {
 		ttoPutStringNL(mtbScanImage(0))
 	case "CREATE":
 		createBlank(words)
+	case "DET":
+		detach(words)
 	case "DIS":
 		disassemble(words)
 	case "DO":
@@ -379,6 +381,26 @@ func createBlank(cmd []string) {
 		}
 	default:
 		ttoPutNLString(" *** CREATE not yet supported for that device type ***")
+	}
+}
+
+func detach(cmd []string) {
+	if len(cmd) < 2 {
+		ttoPutNLString(" *** DET command requires argument: <dev> ***")
+		return
+	}
+	if debugLogging {
+		logging.DebugPrint(logging.DebugLog, "INFO: Detach called  with parm <%s> \n", cmd[1])
+	}
+	switch cmd[1] {
+	case "MTB":
+		if mtbDetach(0) {
+			ttoPutNLString(" *** Tape Image Detached ***")
+		} else {
+			ttoPutNLString(" *** Could not DETach Tape Image ***")
+		}
+	default:
+		ttoPutNLString(" *** Unknown or unimplemented Device for DET command ***")
 	}
 }
 
