@@ -61,8 +61,8 @@ func WsPop(seg dg.PhysAddrT) dg.DwordT {
 func WsPopQWord(seg dg.PhysAddrT) dg.QwordT {
 	// TODO segment handling
 	var qw dg.QwordT
-	lhDWord := WsPop(seg)
 	rhDWord := WsPop(seg)
+	lhDWord := WsPop(seg)
 	qw = dg.QwordT(lhDWord)<<32 | dg.QwordT(rhDWord)
 	return qw
 }

@@ -158,12 +158,20 @@ func TestClearWbit(t *testing.T) {
 	}
 }
 func TestGetDWbits(t *testing.T) {
-	var w dg.DwordT = 0xb38f00ff
+	var w dg.DwordT = 0x11112222
 	r := GetDWbits(w, 15, 2)
 	if r != 2 {
 		t.Error("Expected 2, got ", r)
 	}
 
+}
+
+func TestGetQWbits(t *testing.T) {
+	var q dg.QwordT = 0x1111222233334444
+	r := GetQWbits(q, 12, 8)
+	if r != 0x12 {
+		t.Errorf("Expected 0x12, got %x", r)
+	}
 }
 
 func TestSexWordToDWord(t *testing.T) {

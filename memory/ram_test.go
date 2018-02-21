@@ -64,6 +64,26 @@ func TestWriteReadWord(t *testing.T) {
 		t.Error("Expected 99, got ", w)
 	}
 }
+func TestWriteReadWordTrap(t *testing.T) {
+	var (
+		w  dg.WordT
+		ok bool
+	)
+	WriteWord(78, 99)
+	w = memory.ram[78]
+	if w != 99 {
+		t.Error("Expected 99, got ", w)
+	}
+	w, ok = ReadWordTrap(78)
+	if w != 99 || !ok {
+		t.Error("Expected 99, got ", w)
+	}
+	_, ok = ReadWordTrap(MemSizeWords + 10)
+	if ok {
+		t.Error("Expected failure, got ", ok)
+	}
+}
+
 func TestWriteReadDWord(t *testing.T) {
 	var dwd dg.DwordT
 	WriteDWord(68, 0x11223344)
@@ -78,5 +98,24 @@ func TestWriteReadDWord(t *testing.T) {
 	dwd = ReadDWord(68)
 	if dwd != 0x11223344 {
 		t.Error("Expected 0x11223344, got", dwd)
+	}
+}
+func TestWriteReadDWordTrap(t *testing.T) {
+	var (
+		dwd dg.DwordT
+		ok  bool
+	)
+	WriteDWord(68, 0x11223344)
+	w := memory.ram[68]
+	if w != 0x1122 {
+		t.Errorf("Expected 0x1122, got %x", w)
+	}
+	w = memory.ram[69]
+	if w != 0x3344 {
+		t.Errorf("Expected 0x3344, got %x", w)
+	}
+	dwd, ok = ReadDWordTrap(68)
+	if dwd != 0x11223344 || !ok {
+		t.Errorf("Expected 0x11223344, got %x", dwd)
 	}
 }
