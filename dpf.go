@@ -588,9 +588,8 @@ func dpfPositionDiskImage() {
 }
 
 func dpfPrintableAddr() string {
-	var pa string
 	// MUST BE LOCKED BY CALLER
-	pa = fmt.Sprintf("DRV: %d, CYL: %d, SURF: %d, SECT: %d, SECCNT: %d",
+	pa := fmt.Sprintf("DRV: %d, CYL: %d, SURF: %d, SECT: %d, SECCNT: %d",
 		dpfData.drive, dpfData.cylinder,
 		dpfData.surface, dpfData.sector, dpfData.sectCnt)
 	return pa

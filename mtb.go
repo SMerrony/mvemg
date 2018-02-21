@@ -100,7 +100,7 @@ type mtbT struct {
 	negWordCntReg          int
 	currentCmd             int
 	currentUnit            int
-	debug                  bool
+	// debug                  bool
 }
 
 type mtbStatT struct {
