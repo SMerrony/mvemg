@@ -96,6 +96,11 @@ func GetWbits(value dg.WordT, leftBit uint, nbits uint) dg.WordT {
 	return value & mask
 }
 
+// FlipWbit - flips a single bit in a Word using DG numbering
+func FlipWbit(word *dg.WordT, bitNum uint) {
+	*word = *word ^ (1 << (15 - bitNum))
+}
+
 // SetWbit sets a single bit in a DG word
 func SetWbit(word *dg.WordT, bitNum uint) {
 	*word = *word | (1 << (15 - bitNum))
