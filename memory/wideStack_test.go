@@ -26,6 +26,15 @@ import (
 	"testing"
 )
 
+func TestAdvanceWSP(t *testing.T) {
+	wsp1 := ReadDWord(WspLoc)
+	AdvanceWSP(1)
+	wsp2 := ReadDWord(WspLoc)
+	if wsp2-wsp1 != 2 {
+		t.Errorf("Expected %d, got %d", 2, wsp2-wsp1)
+	}
+}
+
 func TestWsPushAndPop(t *testing.T) {
 	WsPush(0, 1)
 	wsp := dg.PhysAddrT(ReadDWord(WspLoc))

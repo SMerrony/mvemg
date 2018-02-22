@@ -78,3 +78,12 @@ func TestDchMapAddr(t *testing.T) {
 		t.Error("Expected 3073, got ", addr2, page)
 	}
 }
+
+func TestGetDchMode(t *testing.T) {
+	bmcdchInit(false)
+	icdr := BmcdchReadReg(iochanDefReg)
+	if icdr != 1 {
+		t.Error("Expected initial IOCDR == 1, got", icdr)
+	}
+	//BmcdchWriteReg(iochanDefReg)
+}

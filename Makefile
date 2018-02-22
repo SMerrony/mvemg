@@ -20,7 +20,7 @@
 # Go parameters
 GOCMD = go
 GOBUILD = ${GOCMD}	build
-GOCLEAN = ${GOCMD}	clean
+GOCLEAN = ${GOCMD}	clean -cache -testcache
 GOTEST = ${GOCMD}	test
 GOGET = ${GOCMD}	get
 BINARY_NAME = mvemg

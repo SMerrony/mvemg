@@ -120,6 +120,18 @@ func TestGetWbits(t *testing.T) {
 	}
 }
 
+func TestFlipWbit(t *testing.T) {
+	var w dg.WordT = 0x0010
+	FlipWbit(&w, 0)
+	if w != 0x8010 {
+		t.Errorf("Expected 0x8010, got %x", w)
+	}
+	FlipWbit(&w, 0)
+	if w != 0x0010 {
+		t.Errorf("Expected 0x0010, got %x", w)
+	}
+}
+
 func TestSetWbit(t *testing.T) {
 	var w dg.WordT = 0x0001
 	SetWbit(&w, 1)
