@@ -75,7 +75,9 @@ var cpu CPUT
 
 func cpuInit(statsChan chan cpuStatT) *CPUT {
 	busAddDevice(devCPU, "CPU", pmbCPU, true, false, false)
-	go cpuStatSender(statsChan)
+	if statsChan != nil {
+		go cpuStatSender(statsChan)
+	}
 	return &cpu
 }
 
