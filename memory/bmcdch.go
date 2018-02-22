@@ -127,7 +127,25 @@ func BmcdchWriteReg(reg int, data dg.WordT) {
 	if isLogging {
 		logging.DebugPrint(logging.MapLog, "bmcdchWriteReg: Reg %d, Data: %d\n", reg, data)
 	}
-	regs[reg] = data
+	if reg == iochanDefReg {
+		// certain bits in the new data cause IOCDR bits to be flipped rather than set
+		for b := 0; b < 16; b++ {
+			switch b {
+			case 3, 4, 7, 8, 14:
+				if util.TestWbit(data, b) {
+					util.FlipWbit(&regs[iochanDefReg], uint(b))
+				}
+			default:
+				if util.TestWbit(data, b) {
+					util.SetWbit(&regs[iochanDefReg], uint(b))
+				} else {
+					util.ClearWbit(&regs[iochanDefReg], uint(b))
+				}
+			}
+		}
+	} else {
+		regs[reg] = data
+	}
 }
 
 // BmcdchWriteSlot populates a whole SLOT (pair of registers) with the supplied doubleword
