@@ -15,6 +15,6 @@ debug*
 *.svg
 *.tap
 
-*.json
+# *.json
 mvemg.exe
 #mvem_debug.log#
