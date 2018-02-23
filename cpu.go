@@ -59,14 +59,14 @@ type CPUT struct {
 
 // cpuStatT defines the data we will send to the statusCollector monitor
 type cpuStatT struct {
-	pc                      dg.PhysAddrT
-	ac                      [4]dg.DwordT
-	carry, atu, ion, pfflag bool
-	instrCount              uint64
-	goVersion               string
-	goroutineCount          int
-	hostCPUCount            int
-	heapSizeMB              int
+	pc              dg.PhysAddrT
+	ac              [4]dg.DwordT
+	carry, atu, ion bool
+	instrCount      uint64
+	goVersion       string
+	goroutineCount  int
+	hostCPUCount    int
+	heapSizeMB      int
 }
 
 const cpuStatPeriodMs = 333 // 125 // i.e. we send stats every 1/8th of a second
@@ -79,6 +79,21 @@ func cpuInit(statsChan chan cpuStatT) *CPUT {
 		go cpuStatSender(statsChan)
 	}
 	return &cpu
+}
+
+func (c *CPUT) Reset() {
+	c.pc = 0
+	for a := 0; a < 4; a++ {
+		c.ac[a] = 0
+		c.fpac[a] = 0
+	}
+	c.mask = 0
+	c.psr = 0
+	c.carry = false
+	c.atu = false
+	c.ion = false
+	c.pfflag = false
+	c.instrCount = 0
 }
 
 func cpuPrintableStatus() string {
@@ -180,6 +195,7 @@ func cpuStatSender(sChan chan cpuStatT) {
 		stats.ac[3] = cpu.ac[3]
 		stats.ion = cpu.ion
 		stats.atu = cpu.atu
+		stats.carry = cpu.carry
 		stats.instrCount = cpu.instrCount
 		cpu.cpuMu.RUnlock()
 		stats.goroutineCount = runtime.NumGoroutine()

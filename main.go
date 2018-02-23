@@ -62,6 +62,7 @@ var (
 	// (and another 3x faster without disassembly, linked to this)
 	debugLogging  = true
 	breakpoints   []dg.PhysAddrT
+	cpuPtr        *CPUT
 	cpuStatsChan  chan cpuStatT
 	dpfStatsChan  chan DpfStatT
 	dskpStatsChan chan dskpStatT
@@ -134,7 +135,7 @@ func main() {
 		busAddDevice(devSCP, "SCP", pmbSCP, true, false, false)
 		instructionsInit()
 		decoderGenAllPossOpcodes()
-		cpuPtr := cpuInit(cpuStatsChan)
+		cpuPtr = cpuInit(cpuStatsChan)
 		ttoInit(conn)
 		ttiInit(conn, cpuPtr, ttiSCPchan)
 		mtbInit(mtbStatsChan)
@@ -156,9 +157,9 @@ func main() {
 		}
 
 		// the main SCP/console interaction loop
-		cpu.cpuMu.Lock()
-		cpu.scpIO = true
-		cpu.cpuMu.Unlock()
+		cpuPtr.cpuMu.Lock()
+		cpuPtr.scpIO = true
+		cpuPtr.cpuMu.Unlock()
 		for {
 			ttoPutNLString("SCP-CLI> ")
 			command := scpGetLine()
@@ -230,7 +231,7 @@ func doCommand(cmd string) {
 	case "HE":
 		showHelp()
 	case "RE":
-		ttoPutNLString(cmdNYI)
+		reset()
 	case "SS":
 		singleStep()
 	case "ST":
@@ -560,6 +561,16 @@ func printableBreakpointList() string {
 		res += fmt.Sprintf("%d. ", b)
 	}
 	return res
+}
+
+// reset should bring the emulator back to its initial state
+func reset() {
+	memory.MemInit(debugLogging)
+	busResetAllIODevices()
+	cpuPtr.Reset()
+	mtbReset() // Not Init
+	dpfReset()
+	dskpReset()
 }
 
 func set(cmd []string) {
