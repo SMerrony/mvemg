@@ -41,49 +41,49 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	// The Eclipse LEF instruction is handled funkily...
 	if cpuPtr.atu && cpuPtr.sbr[util.GetSegment(cpuPtr.pc)].lef {
-		iPtr.mnemonic = "LEF"
+		iPtr.ix = instrLEF
 		log.Fatalf("ERROR: LEF not yet implemented, location %d\n", cpuPtr.pc)
 	}
 
-	switch iPtr.mnemonic {
+	switch iPtr.ix {
 
-	case "DIA", "DIB", "DIC", "DOA", "DOB", "DOC":
+	case instrDIA, instrDIB, instrDIC, instrDOA, instrDOB, instrDOC:
 		novaDataIo = iPtr.variant.(novaDataIoT)
 
 		// catch CPU I/O instructions
 		if novaDataIo.ioDev == devCPU {
-			switch iPtr.mnemonic {
-			case "DIA": // READS
+			switch iPtr.ix {
+			case instrDIA: // READS
 				logging.DebugPrint(logging.DebugLog, "INFO: Interpreting DIA n,CPU as READS n instruction\n")
 				return reads(cpuPtr, novaDataIo.acd)
-			case "DIB": // INTA
+			case instrDIB: // INTA
 				log.Fatalf("ERROR: DIB n,CPU (INTA )not yet implemented, location %d\n", cpuPtr.pc)
-			case "DIC": // IORST
+			case instrDIC: // IORST
 				logging.DebugPrint(logging.DebugLog, "INFO: I/O Reset due to DIC 0,CPU instruction\n")
 				return iorst(cpuPtr)
-			case "DOB": // MKSO
+			case instrDOB: // MKSO
 				logging.DebugPrint(logging.DebugLog, "INFO: Handling DOB %d, CPU instruction as MSKO\n", novaDataIo.acd)
 				novaDataIo = iPtr.variant.(novaDataIoT)
 				return msko(cpuPtr, novaDataIo.acd)
-			case "DOC": // HALT
+			case instrDOC: // HALT
 				logging.DebugPrint(logging.DebugLog, "INFO: CPU Halting due to DOC %d,CPU (HALT) instruction\n", novaDataIo.acd)
 				return halt()
 			}
 		}
 
 		if busIsAttached(novaDataIo.ioDev) && busIsIODevice(novaDataIo.ioDev) {
-			switch iPtr.mnemonic {
-			case "DOA", "DIA":
+			switch iPtr.ix {
+			case instrDOA, instrDIA:
 				abc = 'A'
-			case "DOB", "DIB":
+			case instrDOB, instrDIB:
 				abc = 'B'
-			case "DOC", "DIC":
+			case instrDOC, instrDIC:
 				abc = 'C'
 			}
-			switch iPtr.mnemonic {
-			case "DIA", "DIB", "DIC":
+			switch iPtr.ix {
+			case instrDIA, instrDIB, instrDIC:
 				busDataIn(cpuPtr, &novaDataIo, abc)
-			case "DOA", "DOB", "DOC":
+			case instrDOA, instrDOB, instrDOC:
 				busDataOut(cpuPtr, &novaDataIo, abc)
 			}
 		} else {
@@ -94,17 +94,17 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			}
 		}
 
-	case "HALT":
+	case instrHALT:
 		logging.DebugPrint(logging.DebugLog, "INFO: CPU Halting due to HALT instruction\n")
 		return halt()
 
-	case "IORST":
+	case instrIORST:
 		// oneAcc1Word = iPtr.variant.(oneAcc1WordT) // <== this is just an assertion really
 		busResetAllIODevices()
 		cpuPtr.ion = false
 		// TODO More to do for SMP support - HaHa!
 
-	case "NIO":
+	case instrNIO:
 		ioFlagsDev = iPtr.variant.(ioFlagsDevT)
 
 		if ioFlagsDev.ioDev == devCPU {
@@ -124,7 +124,7 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		novaDataIo.ioDev = ioFlagsDev.ioDev
 		busDataOut(cpuPtr, &novaDataIo, 'N') // DUMMY FLAG
 
-	case "PRTSEL":
+	case instrPRTSEL:
 		if debugLogging {
 			logging.DebugPrint(logging.DebugLog, "INFO: PRTSEL AC0: %d, PC: %d\n", cpuPtr.ac[0], cpuPtr.pc)
 		}
@@ -134,7 +134,7 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			cpuPtr.ac[0] = 0
 		}
 
-	case "SKP":
+	case instrSKP:
 		ioTestDev = iPtr.variant.(ioTestDevT)
 		if ioTestDev.ioDev == devCPU {
 			busy = cpuPtr.ion

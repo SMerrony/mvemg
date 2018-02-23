@@ -55,8 +55,8 @@ func novaOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	}
 
 	// perform the operation
-	switch iPtr.mnemonic {
-	case "ADC":
+	switch iPtr.ix {
+	case instrADC:
 		wideShifter = dg.DwordT(tmpAcD) + dg.DwordT(^tmpAcS)
 		shifter = util.DWordGetLowerWord(wideShifter)
 		if wideShifter > 65535 {
@@ -65,7 +65,7 @@ func novaOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			cpuPtr.carry = false
 		}
 
-	case "ADD": // unsigned
+	case instrADD: // unsigned
 		wideShifter = dg.DwordT(tmpAcD) + dg.DwordT(tmpAcS)
 		shifter = util.DWordGetLowerWord(wideShifter)
 		if wideShifter > 65535 {
@@ -74,28 +74,28 @@ func novaOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			cpuPtr.carry = false
 		}
 
-	case "AND":
+	case instrAND:
 		shifter = tmpAcD & tmpAcS
 
-	case "COM":
+	case instrCOM:
 		shifter = ^tmpAcS
 
-	case "INC":
+	case instrINC:
 		shifter = tmpAcS + 1
 		if tmpAcS == 0xffff {
 			cpuPtr.carry = !cpuPtr.carry
 		}
 
-	case "MOV":
+	case instrMOV:
 		shifter = tmpAcS
 
-	case "NEG":
+	case instrNEG:
 		shifter = dg.WordT(-int16(tmpAcS))
 		if tmpAcS == 0 {
 			cpuPtr.carry = !cpuPtr.carry
 		}
 
-	case "SUB":
+	case instrSUB:
 		shifter = tmpAcD - tmpAcS
 		if tmpAcS <= tmpAcD {
 			cpuPtr.carry = !cpuPtr.carry

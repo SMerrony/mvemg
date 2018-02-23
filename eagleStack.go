@@ -48,31 +48,31 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		unique2Word             unique2WordT
 	)
 
-	switch iPtr.mnemonic {
+	switch iPtr.ix {
 
 	// N.B. DSZTS and ISZTS are in eaglePC
 
-	case "LDAFP":
+	case instrLDAFP:
 		oneAcc1Word = iPtr.variant.(oneAcc1WordT)
 		cpuPtr.ac[oneAcc1Word.acd] = memory.ReadDWord(memory.WfpLoc)
 
-	case "LDASB":
+	case instrLDASB:
 		oneAcc1Word = iPtr.variant.(oneAcc1WordT)
 		cpuPtr.ac[oneAcc1Word.acd] = memory.ReadDWord(memory.WsbLoc)
 
-	case "LDASL":
+	case instrLDASL:
 		oneAcc1Word = iPtr.variant.(oneAcc1WordT)
 		cpuPtr.ac[oneAcc1Word.acd] = memory.ReadDWord(memory.WslLoc)
 
-	case "LDASP":
+	case instrLDASP:
 		oneAcc1Word = iPtr.variant.(oneAcc1WordT)
 		cpuPtr.ac[oneAcc1Word.acd] = memory.ReadDWord(memory.WspLoc)
 
-	case "LPEF":
+	case instrLPEF:
 		noAccModeInd3Word = iPtr.variant.(noAccModeInd3WordT)
 		memory.WsPush(0, dg.DwordT(resolve32bitEffAddr(cpuPtr, noAccModeInd3Word.ind, noAccModeInd3Word.mode, noAccModeInd3Word.disp31)))
 
-	case "LPEFB":
+	case instrLPEFB:
 		noAccMode3Word = iPtr.variant.(noAccMode3WordT)
 		eff := dg.DwordT(noAccMode3Word.immU32)
 		switch noAccMode3Word.mode {
@@ -86,22 +86,22 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		}
 		memory.WsPush(0, eff)
 
-	case "STAFP":
+	case instrSTAFP:
 		oneAcc1Word = iPtr.variant.(oneAcc1WordT)
 		// FIXME handle segments
 		memory.WriteDWord(memory.WfpLoc, cpuPtr.ac[oneAcc1Word.acd])
 
-	case "STASB":
+	case instrSTASB:
 		oneAcc1Word = iPtr.variant.(oneAcc1WordT)
 		// FIXME handle segments
 		memory.WriteDWord(memory.WsbLoc, cpuPtr.ac[oneAcc1Word.acd])
 
-	case "STASL":
+	case instrSTASL:
 		oneAcc1Word = iPtr.variant.(oneAcc1WordT)
 		// FIXME handle segments
 		memory.WriteDWord(memory.WslLoc, cpuPtr.ac[oneAcc1Word.acd])
 
-	case "STASP":
+	case instrSTASP:
 		oneAcc1Word = iPtr.variant.(oneAcc1WordT)
 		// FIXME handle segments
 		memory.WriteDWord(memory.WspLoc, cpuPtr.ac[oneAcc1Word.acd])
@@ -109,12 +109,12 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			logging.DebugPrint(logging.DebugLog, "... STASP set WSP to %d\n", cpuPtr.ac[oneAcc1Word.acd])
 		}
 
-	case "STATS":
+	case instrSTATS:
 		oneAcc1Word = iPtr.variant.(oneAcc1WordT)
 		// FIXME handle segments
 		memory.WriteDWord(dg.PhysAddrT(memory.ReadDWord(memory.WslLoc)), cpuPtr.ac[oneAcc1Word.acd])
 
-	case "WFPOP":
+	case instrWFPOP:
 		cpuPtr.fpac[3] = memory.WsPopQWord(0)
 		cpuPtr.fpac[2] = memory.WsPopQWord(0)
 		cpuPtr.fpac[1] = memory.WsPopQWord(0)
@@ -147,13 +147,13 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			}
 		}
 
-	case "WMSP":
+	case instrWMSP:
 		oneAcc1Word = iPtr.variant.(oneAcc1WordT)
 		tmpDwd = cpuPtr.ac[oneAcc1Word.acd] << 1
 		tmpDwd += memory.ReadDWord(memory.WspLoc)
 		memory.WriteDWord(memory.WspLoc, tmpDwd)
 
-	case "WPOP":
+	case instrWPOP:
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		firstAc = twoAcc1Word.acs
 		lastAc = twoAcc1Word.acd
@@ -167,7 +167,7 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			cpuPtr.ac[acsUp[thisAc]] = memory.WsPop(0)
 		}
 
-	case "WPSH":
+	case instrWPSH:
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		firstAc = twoAcc1Word.acs
 		lastAc = twoAcc1Word.acd
@@ -183,28 +183,28 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	// N.B. WRTN is in eaglePC
 
-	case "WSAVR":
+	case instrWSAVR:
 		unique2Word = iPtr.variant.(unique2WordT)
 		wsav(cpuPtr, &unique2Word)
 		cpu.SetOVK(false)
 
-	case "WSAVS":
+	case instrWSAVS:
 		unique2Word = iPtr.variant.(unique2WordT)
 		wsav(cpuPtr, &unique2Word)
 		cpu.SetOVK(true)
 
-	case "WSSVR":
+	case instrWSSVR:
 		unique2Word = iPtr.variant.(unique2WordT)
 		wssav(cpuPtr, &unique2Word)
 		cpu.SetOVK(false)
 		cpu.SetOVR(false)
 
-	case "XPEF":
+	case instrXPEF:
 		noAccModeInd2Word = iPtr.variant.(noAccModeInd2WordT)
 		// FIXME segment handling, check for overflow
 		memory.WsPush(0, dg.DwordT(resolve16bitEagleAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15)))
 
-	case "XPEFB":
+	case instrXPEFB:
 		noAccMode2Word = iPtr.variant.(noAccMode2WordT)
 		// FIXME segment handling, check for overflow
 		eff := dg.DwordT(noAccMode2Word.disp16)
@@ -219,7 +219,7 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		}
 		memory.WsPush(0, eff)
 
-	case "XPSHJ":
+	case instrXPSHJ:
 		// FIXME segment handling, check for overflow
 		immMode2Word = iPtr.variant.(immMode2WordT)
 		memory.WsPush(0, dg.DwordT(cpuPtr.pc+2))

@@ -32,6 +32,7 @@ import (
 // decodedInstrT defines the MV/Em internal decode of an opcode and any
 // parameters.
 type decodedInstrT struct {
+	ix          int
 	mnemonic    string
 	instrFmt    int
 	instrType   int
@@ -191,7 +192,7 @@ type wskbT struct {
 
 const numPosOpcodes = 65536
 
-var opCodeLookup [numPosOpcodes]string
+var opCodeLookup [numPosOpcodes]int
 
 func decoderGenAllPossOpcodes() {
 	for opcode := 0; opcode < numPosOpcodes; opcode++ {
@@ -199,37 +200,40 @@ func decoderGenAllPossOpcodes() {
 		if found {
 			opCodeLookup[opcode] = mnem
 		} else {
-			opCodeLookup[opcode] = ""
+			opCodeLookup[opcode] = -1
 		}
 	}
 }
 
 // InstructionFind looks up an opcode in the opcode lookup table and returns
 // the corresponding mnemonic
-func instructionLookup(opcode dg.WordT, lefMode bool, ioOn bool, atuOn bool) (string, bool) {
-	if opCodeLookup[opcode] != "" {
-		// if opCodeLookup[opcode] == "LEF" && lefMode {
+func instructionLookup(opcode dg.WordT, lefMode bool, ioOn bool, atuOn bool) (int, bool) {
+	if opCodeLookup[opcode] != -1 {
+		// if opCodeLookup[opcode] == instrLEF && lefMode {
 		// 	return "", false
 		// }
 		return opCodeLookup[opcode], true
 	}
-	return "", false
+	return -1, false
 }
 
 // instructionMatch looks for a match for the opcode in the instruction set and returns
 // the corresponding mnemonic.  It is used only by the decoderGenAllPossOpcodes() above when
 // MV/Em is initialising.
-func instructionMatch(opcode dg.WordT, lefMode bool, ioOn bool, atuOn bool) (string, bool) {
+func instructionMatch(opcode dg.WordT, lefMode bool, ioOn bool, atuOn bool) (int, bool) {
 	var tail dg.WordT
-	for mnem, insChar := range instructionSet {
+	//for mnem, insChar := range instructionSet {
+	for i := 0; i < len(instructionSet); i++ {
+		mnem := i
+		insChar := instructionSet[i]
 		if (opcode & insChar.mask) == insChar.bits {
 			// there are some exceptions to the normal decoding...
 			switch mnem {
-			case "LEF":
+			case instrLEF:
 				if lefMode {
-					return "", false
+					return -1, false
 				}
-			case "ADC", "ADD", "AND", "COM", "INC", "MOV", "NEG", "SUB":
+			case instrADC, instrADD, instrAND, instrCOM, instrINC, instrMOV, instrNEG, instrSUB:
 				// these instructions are not allowed to end in 1000(2) or 1001(2)
 				// as those patterns are used for Eagle instructions
 				tail = opcode & 0x000f
@@ -242,7 +246,7 @@ func instructionMatch(opcode dg.WordT, lefMode bool, ioOn bool, atuOn bool) (str
 			}
 		}
 	}
-	return "", false
+	return 0, false
 }
 
 // instructionDecode decodes an opcode
@@ -252,16 +256,17 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 
 	decodedInstr.disassembly = "; Unknown instruction"
 
-	mnem, found := instructionLookup(opcode, lefMode, ioOn, autOn)
+	ix, found := instructionLookup(opcode, lefMode, ioOn, autOn)
 	if !found {
 		logging.DebugPrint(logging.DebugLog, "INFO: instructionDecode failed to find anything with instructionLookup for location %d., containing 0x%X\n", pc, opcode)
 		return &decodedInstr, false
 	}
-	decodedInstr.mnemonic = mnem
-	decodedInstr.disassembly = mnem
-	decodedInstr.instrFmt = instructionSet[mnem].instrFmt
-	decodedInstr.instrType = instructionSet[mnem].instrType
-	decodedInstr.instrLength = instructionSet[mnem].instrLen
+	decodedInstr.ix = ix
+	decodedInstr.mnemonic = instructionSet[ix].mnemonic
+	decodedInstr.disassembly = instructionSet[ix].mnemonic
+	decodedInstr.instrFmt = instructionSet[ix].instrFmt
+	decodedInstr.instrType = instructionSet[ix].instrType
+	decodedInstr.instrLength = instructionSet[ix].instrLen
 
 	switch decodedInstr.instrFmt {
 
@@ -343,10 +348,10 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		if debugLogging {
 			logging.DebugPrint(logging.DebugLog, "X_FMT: Mnemonic is <%s>\n", decodedInstr.mnemonic)
 		}
-		switch decodedInstr.mnemonic {
-		case "XJMP", "XJSR", "XNDSZ", "XNISZ", "XPEF", "XWDSZ":
+		switch ix {
+		case instrXJMP, instrXJSR, instrXNDSZ, instrXNISZ, instrXPEF, instrXWDSZ:
 			noAccModeInd2Word.mode = int(util.GetWbits(opcode, 3, 2))
-		case "EDSZ", "EISZ", "EJMP", "EJSR", "PSHJ":
+		case instrEDSZ, instrEISZ, instrEJMP, instrEJSR, instrPSHJ:
 			noAccModeInd2Word.mode = int(util.GetWbits(opcode, 6, 2))
 		}
 		secondWord = memory.ReadWord(pc + 1)

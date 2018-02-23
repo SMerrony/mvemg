@@ -53,9 +53,11 @@ const (
 	dzTest = 3
 )
 
+const maxInstrs = 1000
+
 // the characteristics of each instruction
 type instrChars struct {
-	// mnemonic   string  // DG standard assembler mnemonic for opcode
+	mnemonic  string   // DG standard assembler mnemonic for opcode
 	bits      dg.WordT // bit-pattern for opcode
 	mask      dg.WordT // mask for unique bits in opcode
 	instrLen  int      // # of words in opcode and any following args
@@ -66,9 +68,11 @@ type instrChars struct {
 
 // InstructionSet contains the map of all recognised instruction.
 // N.B. Recognised, not implemented necessarily.
-type InstructionSet map[string]instrChars
+//type InstructionSet map[string]instrChars
 
-var instructionSet = make(InstructionSet)
+//var instructionSet = make(InstructionSet)
+
+var instructionSet [maxInstrs]instrChars
 
 var ioFlags = [...]byte{' ', 'S', 'C', 'P'}
 

@@ -27,7 +27,7 @@ func TestADDI(t *testing.T) {
 	cpuPtr := cpuInit(nil)
 	var iPtr decodedInstrT
 	var oneAccImm2Word oneAccImm2WordT
-	iPtr.mnemonic = "ADDI"
+	iPtr.ix = instrADDI
 	oneAccImm2Word.immS16 = 3
 	oneAccImm2Word.acd = 0
 	cpuPtr.ac[0] = 0xffff // -1
@@ -55,7 +55,7 @@ func TestANDI(t *testing.T) {
 	cpuPtr := cpuInit(nil)
 	var iPtr decodedInstrT
 	var oneAccImmWd2Word oneAccImmWd2WordT
-	iPtr.mnemonic = "ANDI"
+	iPtr.ix = instrANDI
 	oneAccImmWd2Word.immWord = 0x00ff
 	oneAccImmWd2Word.acd = 0
 	cpuPtr.ac[0] = 0x0101
@@ -71,7 +71,7 @@ func TestNADD(t *testing.T) {
 	cpuPtr := cpuInit(nil)
 	var iPtr decodedInstrT
 	var twoAcc1Word twoAcc1WordT
-	iPtr.mnemonic = "NADD"
+	iPtr.ix = instrNADD
 	twoAcc1Word.acs = 0
 	twoAcc1Word.acd = 1
 	// test neg + neg
@@ -101,7 +101,7 @@ func TestNSUB(t *testing.T) {
 	cpuPtr := cpuInit(nil)
 	var iPtr decodedInstrT
 	var twoAcc1Word twoAcc1WordT
-	iPtr.mnemonic = "NSUB"
+	iPtr.ix = instrNSUB
 	twoAcc1Word.acs = 0
 	twoAcc1Word.acd = 1
 	iPtr.variant = twoAcc1Word
@@ -132,7 +132,7 @@ func TestWANDI(t *testing.T) {
 	cpuPtr := cpuInit(nil)
 	var iPtr decodedInstrT
 	var oneAccImmDwd3Word oneAccImmDwd3WordT
-	iPtr.mnemonic = "WANDI"
+	iPtr.ix = instrWANDI
 	oneAccImmDwd3Word.immDword = 0x7fffffff
 	oneAccImmDwd3Word.acd = 0
 	iPtr.variant = oneAccImmDwd3Word
@@ -159,7 +159,7 @@ func TestWNEG(t *testing.T) {
 	cpuPtr := cpuInit(nil)
 	var iPtr decodedInstrT
 	var twoAcc1Word twoAcc1WordT
-	iPtr.mnemonic = "WNEG"
+	iPtr.ix = instrWNEG
 	twoAcc1Word.acs = 0
 	twoAcc1Word.acd = 1
 	iPtr.variant = twoAcc1Word

@@ -28,7 +28,7 @@ import "mvemg/dg"
 func TestDIV(t *testing.T) {
 	cpuPtr := cpuInit(nil)
 	var iPtr decodedInstrT
-	iPtr.mnemonic = "DIV"
+	iPtr.ix = instrDIV
 	cpuPtr.ac[0] = 0 // hi dividend
 	cpuPtr.ac[1] = 6 // lo dividend
 	cpuPtr.ac[2] = 2 // divisor
@@ -89,7 +89,7 @@ func TestHXL(t *testing.T) {
 	cpuPtr := cpuInit(nil)
 	var iPtr decodedInstrT
 	var immOneAcc immOneAccT
-	iPtr.mnemonic = "HXL"
+	iPtr.ix = instrHXL
 	immOneAcc.acd = 0
 	cpuPtr.ac[0] = 0x0123
 	immOneAcc.immU16 = 2
@@ -117,7 +117,7 @@ func TestHXR(t *testing.T) {
 	cpuPtr := cpuInit(nil)
 	var iPtr decodedInstrT
 	var immOneAcc immOneAccT
-	iPtr.mnemonic = "HXR"
+	iPtr.ix = instrHXR
 	immOneAcc.acd = 0
 	cpuPtr.ac[0] = 0x0123
 	immOneAcc.immU16 = 2
@@ -146,7 +146,7 @@ func TestSBI(t *testing.T) {
 	cpuPtr := cpuInit(nil)
 	var iPtr decodedInstrT
 	var immOneAcc immOneAccT
-	iPtr.mnemonic = "SBI"
+	iPtr.ix = instrSBI
 	immOneAcc.immU16 = 3
 	immOneAcc.acd = 0
 	iPtr.variant = immOneAcc

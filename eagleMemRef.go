@@ -46,34 +46,34 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		twoAcc1Word        twoAcc1WordT
 	)
 
-	switch iPtr.mnemonic {
+	switch iPtr.ix {
 
-	case "LNLDA":
+	case instrLNLDA:
 		oneAccModeInd3Word = iPtr.variant.(oneAccModeInd3WordT)
 		addr = resolve32bitEffAddr(cpuPtr, oneAccModeInd3Word.ind, oneAccModeInd3Word.mode, oneAccModeInd3Word.disp31)
 		cpuPtr.ac[oneAccModeInd3Word.acd] = util.SexWordToDWord(memory.ReadWord(addr))
 
-	case "LNSTA":
+	case instrLNSTA:
 		oneAccModeInd3Word = iPtr.variant.(oneAccModeInd3WordT)
 		addr = resolve32bitEffAddr(cpuPtr, oneAccModeInd3Word.ind, oneAccModeInd3Word.mode, oneAccModeInd3Word.disp31)
 		wd = util.DWordGetLowerWord(cpuPtr.ac[oneAccModeInd3Word.acd])
 		memory.WriteWord(addr, wd)
 
-	case "LWLDA":
+	case instrLWLDA:
 		oneAccModeInd3Word = iPtr.variant.(oneAccModeInd3WordT)
 		addr = resolve32bitEffAddr(cpuPtr, oneAccModeInd3Word.ind, oneAccModeInd3Word.mode, oneAccModeInd3Word.disp31)
 		cpuPtr.ac[oneAccModeInd3Word.acd] = memory.ReadDWord(addr)
 
-	case "LWSTA":
+	case instrLWSTA:
 		oneAccModeInd3Word = iPtr.variant.(oneAccModeInd3WordT)
 		addr = resolve32bitEffAddr(cpuPtr, oneAccModeInd3Word.ind, oneAccModeInd3Word.mode, oneAccModeInd3Word.disp31)
 		dwd = cpuPtr.ac[oneAccModeInd3Word.acd]
 		memory.WriteDWord(addr, dwd)
 
-	case "WBLM":
+	case instrWBLM:
 		wblm(cpuPtr)
 
-	case "WBTO":
+	case instrWBTO:
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		if twoAcc1Word.acs == twoAcc1Word.acd {
 			addr = 0
@@ -86,7 +86,7 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		util.SetWbit(&wd, bitNum)
 		memory.WriteWord(addr+offset, wd)
 
-	case "WBTZ":
+	case instrWBTZ:
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		if twoAcc1Word.acs == twoAcc1Word.acd {
 			addr = 0
@@ -99,31 +99,31 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		util.ClearWbit(&wd, bitNum)
 		memory.WriteWord(addr+offset, wd)
 
-	case "WCMV":
+	case instrWCMV:
 		wcmv(cpuPtr)
 
-	case "WCMP":
+	case instrWCMP:
 		wcmp(cpuPtr)
 
-	case "WCST":
+	case instrWCST:
 		wcst(cpuPtr)
 
-	case "WCTR":
+	case instrWCTR:
 		wctr(cpuPtr)
 
-	case "WLDB":
+	case instrWLDB:
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		wordAddr = dg.PhysAddrT(cpuPtr.ac[twoAcc1Word.acs]) >> 1
 		lowByte = util.TestDWbit(cpuPtr.ac[twoAcc1Word.acs], 31)
 		byt = memory.ReadByte(wordAddr, lowByte)
 		cpuPtr.ac[twoAcc1Word.acd] = dg.DwordT(byt)
 
-	case "WSTB":
+	case instrWSTB:
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		byt = dg.ByteT(cpuPtr.ac[twoAcc1Word.acd] & 0x0ff)
 		memWriteByteBA(byt, cpuPtr.ac[twoAcc1Word.acs])
 
-	case "XLDB":
+	case instrXLDB:
 		oneAccMode2Word = iPtr.variant.(oneAccMode2WordT)
 		cpuPtr.ac[oneAccMode2Word.acd] = dg.DwordT(memory.ReadByte(resolve16bitEagleAddr(cpuPtr,
 			' ',
@@ -131,11 +131,11 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			oneAccMode2Word.disp16),
 			oneAccMode2Word.bitLow)) & 0x00ff
 
-	case "XLEF":
+	case instrXLEF:
 		oneAccModeInd2Word = iPtr.variant.(oneAccModeInd2WordT)
 		cpuPtr.ac[oneAccModeInd2Word.acd] = dg.DwordT(resolve16bitEagleAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, oneAccModeInd2Word.disp15))
 
-	case "XLEFB":
+	case instrXLEFB:
 		oneAccMode2Word = iPtr.variant.(oneAccMode2WordT)
 		loBit := oneAccMode2Word.disp16 & 1
 		addr = resolve16bitEagleAddr(cpuPtr, 0, oneAccMode2Word.mode, oneAccMode2Word.disp16/2)
@@ -145,19 +145,19 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		}
 		cpuPtr.ac[oneAccMode2Word.acd] = dg.DwordT(addr)
 
-	case "XNADD", "XNSUB":
+	case instrXNADD, instrXNSUB:
 		oneAccModeInd2Word = iPtr.variant.(oneAccModeInd2WordT)
 		addr = resolve16bitEagleAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, oneAccModeInd2Word.disp15)
 		i16b = int16(memory.ReadWord(addr))
 		i16a = int16(util.DWordGetLowerWord(cpuPtr.ac[oneAccModeInd2Word.acd]))
-		if iPtr.mnemonic == "XNADD" {
+		if iPtr.ix == instrXNADD {
 			i16a += i16b
 		} else {
 			i16a -= i16b
 		}
 		cpuPtr.ac[oneAccModeInd2Word.acd] = util.SexWordToDWord(dg.WordT(i16a))
 
-	case "XNLDA":
+	case instrXNLDA:
 		oneAccModeInd2Word = iPtr.variant.(oneAccModeInd2WordT)
 		addr = resolve16bitEagleAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, oneAccModeInd2Word.disp15)
 		wd, ok = memory.ReadWordTrap(addr)
@@ -167,7 +167,7 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		// FIXME check this...
 		cpuPtr.ac[oneAccModeInd2Word.acd] = util.SexWordToDWord(wd)
 
-	case "XSTB":
+	case instrXSTB:
 		oneAccMode2Word = iPtr.variant.(oneAccMode2WordT)
 		byt = dg.ByteT(cpuPtr.ac[oneAccMode2Word.acd])
 		memory.WriteByte(resolve16bitEagleAddr(cpuPtr,
@@ -177,13 +177,13 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			oneAccMode2Word.bitLow,
 			byt)
 
-	case "XNSTA":
+	case instrXNSTA:
 		oneAccModeInd2Word = iPtr.variant.(oneAccModeInd2WordT)
 		addr = resolve16bitEagleAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, oneAccModeInd2Word.disp15)
 		wd = util.DWordGetLowerWord(cpuPtr.ac[oneAccModeInd2Word.acd])
 		memory.WriteWord(addr, wd)
 
-	case "XWADI":
+	case instrXWADI:
 		// add 1-4 to signed 32-bit acc
 		immMode2Word = iPtr.variant.(immMode2WordT)
 		addr = resolve16bitEagleAddr(cpuPtr, immMode2Word.ind, immMode2Word.mode, immMode2Word.disp15)
@@ -191,13 +191,13 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		// FIXME handle Carry and OVeRflow
 		memory.WriteDWord(addr, dg.DwordT(i32))
 
-	case "XWLDA":
+	case instrXWLDA:
 		oneAccModeInd2Word = iPtr.variant.(oneAccModeInd2WordT)
 		addr = resolve16bitEagleAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, oneAccModeInd2Word.disp15)
 		dwd = memory.ReadDWord(addr)
 		cpuPtr.ac[oneAccModeInd2Word.acd] = dwd
 
-	case "XWSTA":
+	case instrXWSTA:
 		oneAccModeInd2Word = iPtr.variant.(oneAccModeInd2WordT)
 		addr = resolve16bitEagleAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, oneAccModeInd2Word.disp15)
 		dwd = cpuPtr.ac[oneAccModeInd2Word.acd]

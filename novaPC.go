@@ -30,14 +30,14 @@ func novaPC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	var novaNoAccEffAddr novaNoAccEffAddrT
 
-	switch iPtr.mnemonic {
+	switch iPtr.ix {
 
-	case "JMP":
+	case instrJMP:
 		novaNoAccEffAddr = iPtr.variant.(novaNoAccEffAddrT)
 		// disp is only 8-bit, but same resolution code
 		cpuPtr.pc = resolve16bitEclipseAddr(cpuPtr, novaNoAccEffAddr.ind, novaNoAccEffAddr.mode, novaNoAccEffAddr.disp15)
 
-	case "JSR":
+	case instrJSR:
 		novaNoAccEffAddr = iPtr.variant.(novaNoAccEffAddrT)
 		tmpPC := dg.DwordT(cpuPtr.pc + 1)
 		cpuPtr.pc = resolve16bitEclipseAddr(cpuPtr, novaNoAccEffAddr.ind, novaNoAccEffAddr.mode, novaNoAccEffAddr.disp15)

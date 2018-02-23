@@ -42,15 +42,15 @@ func eclipseOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		twoAcc1Word        twoAcc1WordT
 	)
 
-	switch iPtr.mnemonic {
+	switch iPtr.ix {
 
-	case "ADI": // 16-bit unsigned Add Immediate
+	case instrADI: // 16-bit unsigned Add Immediate
 		immOneAcc = iPtr.variant.(immOneAccT)
 		wd = util.DWordGetLowerWord(cpuPtr.ac[immOneAcc.acd])
 		wd += dg.WordT(immOneAcc.immU16) // unsigned arithmetic does wraparound in Go
 		cpuPtr.ac[immOneAcc.acd] = dg.DwordT(wd)
 
-	case "BTO":
+	case instrBTO:
 		// TODO Handle segment and indirection...
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		addr, bitNum = resolveEclipseBitAddr(cpuPtr, &twoAcc1Word)
@@ -65,7 +65,7 @@ func eclipseOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			logging.DebugPrint(logging.DebugLog, "... BTO                     Result: %s\n", util.WordToBinStr(wd))
 		}
 
-	case "BTZ":
+	case instrBTZ:
 		// TODO Handle segment and indirection...
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		addr, bitNum = resolveEclipseBitAddr(cpuPtr, &twoAcc1Word)
@@ -80,7 +80,7 @@ func eclipseOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 				util.WordToBinStr(wd))
 		}
 
-	case "DIV": // unsigned divide
+	case instrDIV: // unsigned divide
 		uw := util.DWordGetLowerWord(cpuPtr.ac[0])
 		lw := util.DWordGetLowerWord(cpuPtr.ac[1])
 		dwd = util.DWordFromTwoWords(uw, lw)
@@ -93,7 +93,7 @@ func eclipseOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			cpuPtr.ac[1] = (dwd / dg.DwordT(quot)) & 0x0ffff
 		}
 
-	case "DHXL":
+	case instrDHXL:
 		immOneAcc = iPtr.variant.(immOneAccT)
 		dplus1 := immOneAcc.acd + 1
 		if dplus1 == 4 {
@@ -104,7 +104,7 @@ func eclipseOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		cpuPtr.ac[immOneAcc.acd] = dg.DwordT(util.DWordGetUpperWord(dwd))
 		cpuPtr.ac[dplus1] = dg.DwordT(util.DWordGetLowerWord(dwd))
 
-	case "DLSH":
+	case instrDLSH:
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		dplus1 := twoAcc1Word.acd + 1
 		if dplus1 == 4 {
@@ -114,45 +114,45 @@ func eclipseOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		cpuPtr.ac[twoAcc1Word.acd] = dg.DwordT(util.DWordGetUpperWord(dwd))
 		cpuPtr.ac[dplus1] = dg.DwordT(util.DWordGetLowerWord(dwd))
 
-	case "ELEF":
+	case instrELEF:
 		oneAccModeInt2Word = iPtr.variant.(oneAccModeInd2WordT)
 		cpuPtr.ac[oneAccModeInt2Word.acd] = dg.DwordT(resolve16bitEclipseAddr(cpuPtr, oneAccModeInt2Word.ind, oneAccModeInt2Word.mode, oneAccModeInt2Word.disp15))
 
-	case "ESTA":
+	case instrESTA:
 		oneAccModeInt2Word = iPtr.variant.(oneAccModeInd2WordT)
 		addr = resolve16bitEclipseAddr(cpuPtr, oneAccModeInt2Word.ind, oneAccModeInt2Word.mode, oneAccModeInt2Word.disp15)
 		memory.WriteWord(addr, util.DWordGetLowerWord(cpuPtr.ac[oneAccModeInt2Word.acd]))
 
-	case "HXL":
+	case instrHXL:
 		immOneAcc = iPtr.variant.(immOneAccT)
 		dwd = cpuPtr.ac[immOneAcc.acd] << (uint32(immOneAcc.immU16) * 4)
 		cpuPtr.ac[immOneAcc.acd] = dwd & 0x0ffff
 
-	case "HXR":
+	case instrHXR:
 		immOneAcc = iPtr.variant.(immOneAccT)
 		dwd = cpuPtr.ac[immOneAcc.acd] >> (uint32(immOneAcc.immU16) * 4)
 		cpuPtr.ac[immOneAcc.acd] = dwd & 0x0ffff
 
-	case "IOR":
+	case instrIOR:
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		wd = util.DWordGetLowerWord(cpuPtr.ac[twoAcc1Word.acd]) | util.DWordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs])
 		cpuPtr.ac[twoAcc1Word.acd] = dg.DwordT(wd)
 
-	case "IORI":
+	case instrIORI:
 		oneAccImmWd2Word = iPtr.variant.(oneAccImmWd2WordT)
 		wd = util.DWordGetLowerWord(cpuPtr.ac[oneAccImmWd2Word.acd]) | oneAccImmWd2Word.immWord
 		cpuPtr.ac[oneAccImmWd2Word.acd] = dg.DwordT(wd)
 
-	case "LDB":
+	case instrLDB:
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		byt = memory.ReadByteEclipseBA(util.DWordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs]))
 		cpuPtr.ac[twoAcc1Word.acd] = dg.DwordT(byt)
 
-	case "LSH":
+	case instrLSH:
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		cpuPtr.ac[twoAcc1Word.acd] = lsh(cpuPtr.ac[twoAcc1Word.acs], cpuPtr.ac[twoAcc1Word.acd])
 
-	case "MUL": // unsigned 16-bit multiply with add: (AC1 * AC2) + AC0 => AC0(h) and AC1(l)
+	case instrMUL: // unsigned 16-bit multiply with add: (AC1 * AC2) + AC0 => AC0(h) and AC1(l)
 		ac0 := util.DWordGetLowerWord(cpuPtr.ac[0])
 		ac1 := util.DWordGetLowerWord(cpuPtr.ac[1])
 		ac2 := util.DWordGetLowerWord(cpuPtr.ac[2])
@@ -160,7 +160,7 @@ func eclipseOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		cpuPtr.ac[0] = dg.DwordT(util.DWordGetUpperWord(dwd))
 		cpuPtr.ac[1] = dg.DwordT(util.DWordGetLowerWord(dwd))
 
-	case "SBI": // unsigned
+	case instrSBI: // unsigned
 		immOneAcc = iPtr.variant.(immOneAccT)
 		wd = util.DWordGetLowerWord(cpuPtr.ac[immOneAcc.acd])
 		if immOneAcc.immU16 < 1 || immOneAcc.immU16 > 4 {
@@ -169,14 +169,14 @@ func eclipseOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		wd -= dg.WordT(immOneAcc.immU16)
 		cpuPtr.ac[immOneAcc.acd] = dg.DwordT(wd)
 
-	case "STB":
+	case instrSTB:
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		hiLo := util.TestDWbit(cpuPtr.ac[twoAcc1Word.acs], 31)
 		addr = dg.PhysAddrT(util.DWordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs])) >> 1
 		byt = dg.ByteT(cpuPtr.ac[twoAcc1Word.acd])
 		memory.WriteByte(addr, hiLo, byt)
 
-	case "XCH":
+	case instrXCH:
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		dwd = cpuPtr.ac[twoAcc1Word.acs]
 		cpuPtr.ac[twoAcc1Word.acs] = cpuPtr.ac[twoAcc1Word.acd] & 0x0ffff

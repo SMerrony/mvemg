@@ -31,7 +31,7 @@ func TestSave(t *testing.T) {
 	// set nsb & nfp to 256
 	memory.WriteWord(memory.NspLoc, 256)
 	memory.WriteWord(memory.NfpLoc, 256)
-	iPtr.mnemonic = "SAVE"
+	iPtr.ix = instrSAVE
 	unique2Word.immU16 = 0 // "SAVE 0"
 	cpuPtr.ac[0] = 0
 	cpuPtr.ac[1] = 1
@@ -60,7 +60,7 @@ func TestSave(t *testing.T) {
 
 	memory.WriteWord(memory.NspLoc, 256)
 	memory.WriteWord(memory.NfpLoc, 256)
-	iPtr.mnemonic = "SAVE"
+	iPtr.ix = instrSAVE
 	unique2Word.immU16 = 5 // "SAVE 5"
 	cpuPtr.ac[0] = 0
 	cpuPtr.ac[1] = 1

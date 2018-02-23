@@ -30,7 +30,7 @@ func TestXSTB(t *testing.T) {
 	cpuPtr := cpuInit(nil)
 	var iPtr decodedInstrT
 	var oneAccMode2Word oneAccMode2WordT
-	iPtr.mnemonic = "XSTB"
+	iPtr.ix = instrXSTB
 	memory.WriteWord(7, 0) // write 0 into Word at normal addr 7
 	oneAccMode2Word.disp16 = 7
 	oneAccMode2Word.mode = absoluteMode

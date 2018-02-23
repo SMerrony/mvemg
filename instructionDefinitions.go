@@ -1,6 +1,6 @@
 // InstructionDefinitions.go
 
-// Copyright (C) 2017  Steve Merrony
+// Copyright (C) 2018  Steve Merrony
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -82,255 +82,508 @@ const (
 	WSKB_FMT
 )
 
+// Instruction Mnemonic Consts
+const (
+	instrADC = iota
+	instrADD
+	instrADDI
+	instrADI
+	instrANC
+	instrAND
+	instrANDI
+	instrBAM
+	instrBKPT
+	instrBLM
+	instrBTO
+	instrBTZ
+	instrCIO
+	instrCIOI
+	instrCLM
+	instrCMP
+	instrCMT
+	instrCMV
+	instrCOB
+	instrCOM
+	instrCRYTC
+	instrCRYTO
+	instrCRYTZ
+	instrCTR
+	instrCVWN
+	instrDAD
+	instrDEQUE
+	instrDERR
+	instrDHXL
+	instrDHXR
+	instrDIA
+	instrDIB
+	instrDIC
+	instrDIV
+	instrDIVS
+	instrDIVX
+	instrDLSH
+	instrDOA
+	instrDOB
+	instrDOC
+	instrDSB
+	instrDSPA
+	instrDSZ
+	instrDSZTS
+	instrECLID
+	instrEDIT
+	instrEDSZ
+	instrEISZ
+	instrEJMP
+	instrEJSR
+	instrELDA
+	instrELDB
+	instrELEF
+	instrENQH
+	instrENQT
+	instrESTA
+	instrESTB
+	instrFNS
+	instrFSA
+	instrFXTD
+	instrFXTE
+	instrHALT
+	instrHLV
+	instrHXL
+	instrHXR
+	instrINC
+	instrINTA
+	instrINTDS
+	instrINTEN
+	instrIOR
+	instrIORI
+	instrIORST
+	instrISZ
+	instrISZTS
+	instrJMP
+	instrJSR
+	instrLCALL
+	instrLCPID
+	instrLDA
+	instrLDAFP
+	instrLDASB
+	instrLDASL
+	instrLDASP
+	instrLDATS
+	instrLDB
+	instrLDSP
+	instrLEF
+	instrLFDMS
+	instrLJMP
+	instrLJSR
+	instrLLDB
+	instrLLEF
+	instrLLEFB
+	instrLMRF
+	instrLNADD
+	instrLNADI
+	instrLNDIV
+	instrLNDO
+	instrLNDSZ
+	instrLNISZ
+	instrLNLDA
+	instrLNMUL
+	instrLNSBI
+	instrLNSTA
+	instrLNSUB
+	instrLOB
+	instrLPEF
+	instrLPEFB
+	instrLPHY
+	instrLPSHJ
+	instrLPSR
+	instrLSH
+	instrLWDO
+	instrLWDSZ
+	instrLWISZ
+	instrLWLDA
+	instrLWSTA
+	instrMOV
+	instrMUL
+	instrNADD
+	instrNADDI
+	instrNADI
+	instrNCLID
+	instrNEG
+	instrNIO
+	instrNLDAI
+	instrNMUL
+	instrNSALA
+	instrNSANA
+	instrNSBI
+	instrNSUB
+	instrPIO
+	instrPOP
+	instrPOPJ
+	instrPRTRST
+	instrPRTSEL
+	instrPSH
+	instrPSHJ
+	instrREADS
+	instrRTN
+	instrSAVE
+	instrSBI
+	instrSEX
+	instrSGT
+	instrSKP
+	instrSNB
+	instrSNOVR
+	instrSPSR
+	instrSPTE
+	instrSSPT
+	instrSTA
+	instrSTAFP
+	instrSTASB
+	instrSTASL
+	instrSTASP
+	instrSTATS
+	instrSTB
+	instrSUB
+	instrSZB
+	instrSZBO
+	instrWADC
+	instrWADD
+	instrWADDI
+	instrWADI
+	instrWANC
+	instrWAND
+	instrWANDI
+	instrWASH
+	instrWASHI
+	instrWBLM
+	instrWBR
+	instrWBTO
+	instrWBTZ
+	instrWCLM
+	instrWCMP
+	instrWCMV
+	instrWCOM
+	instrWCST
+	instrWCTR
+	instrWDIVS
+	instrWFPOP
+	instrWFPSH
+	instrWINC
+	instrWIOR
+	instrWIORI
+	instrWLDAI
+	instrWLDB
+	instrWLMP
+	instrWLSH
+	instrWLSHI
+	instrWLSI
+	instrWMOV
+	instrWMOVR
+	instrWMSP
+	instrWMUL
+	instrWNADI
+	instrWNEG
+	instrWPOP
+	instrWPOPJ
+	instrWPSH
+	instrWRTN
+	instrWSAVR
+	instrWSAVS
+	instrWSBI
+	instrWSEQ
+	instrWSEQI
+	instrWSGE
+	instrWSGT
+	instrWSGTI
+	instrWSKBO
+	instrWSKBZ
+	instrWSLE
+	instrWSLEI
+	instrWSLT
+	instrWSNE
+	instrWSNEI
+	instrWSSVR
+	instrWSTB
+	instrWSUB
+	instrWSZB
+	instrWUGTI
+	instrXCALL
+	instrXCH
+	instrXJMP
+	instrXJSR
+	instrXLDB
+	instrXLEF
+	instrXLEFB
+	instrXNADD
+	instrXNADI
+	instrXNDO
+	instrXNDSZ
+	instrXNISZ
+	instrXNLDA
+	instrXNSBI
+	instrXNSTA
+	instrXNSUB
+	instrXPEF
+	instrXPEFB
+	instrXPSHJ
+	instrXSTB
+	instrXWADD
+	instrXWADI
+	instrXWDSZ
+	instrXWLDA
+	instrXWSBI
+	instrXWSTA
+	instrXWSUB
+	instrZEX
+)
+
 // InstructionsInit initialises the instruction characterstics for each instruction(
 func instructionsInit() {
-	instructionSet["ADC"] = instrChars{0x8400, 0x8700, 1, NOVA_TWOACC_MULT_OP_FMT, NOVA_OP}
-	instructionSet["ADD"] = instrChars{0x8600, 0x8700, 1, NOVA_TWOACC_MULT_OP_FMT, NOVA_OP}
-	instructionSet["ADDI"] = instrChars{0xe7f8, 0xe7ff, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_OP}
-	instructionSet["ADI"] = instrChars{0x8008, 0x87ff, 1, IMM_ONEACC_FMT, ECLIPSE_OP}
-	instructionSet["ANC"] = instrChars{0x8188, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
-	instructionSet["AND"] = instrChars{0x8700, 0x8700, 1, NOVA_TWOACC_MULT_OP_FMT, NOVA_OP}
-	instructionSet["ANDI"] = instrChars{0xc7f8, 0xe7ff, 2, ONEACC_IMMWD_2_WORD_FMT, EAGLE_OP}
-	instructionSet["BAM"] = instrChars{0x97c8, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_OP}
-	instructionSet["BKPT"] = instrChars{0xc789, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_PC}
-	instructionSet["BLM"] = instrChars{0xb7c8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_MEMREF}
-	instructionSet["BTO"] = instrChars{0x8408, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP}
-	instructionSet["BTZ"] = instrChars{0x8448, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP}
-	instructionSet["CIO"] = instrChars{0x85e9, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_IO}
-	instructionSet["CIOI"] = instrChars{0x85f9, 0x87ff, 2, TWOACC_IMM_2_WORD_FMT, EAGLE_IO}
-	instructionSet["CLM"] = instrChars{0x84f8, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_PC}
-	instructionSet["CMP"] = instrChars{0xdfa8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_MEMREF}
-	instructionSet["CMT"] = instrChars{0xefa8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_MEMREF}
-	instructionSet["CMV"] = instrChars{0xd7a8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_MEMREF}
-	instructionSet["COB"] = instrChars{0x8588, 0x87ff, 1, TWOACC_1_WORD_FMT, NOVA_OP}
-	instructionSet["COM"] = instrChars{0x8000, 0x8700, 1, NOVA_TWOACC_MULT_OP_FMT, NOVA_OP}
-	instructionSet["CRYTC"] = instrChars{0xa7e9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
-	instructionSet["CRYTO"] = instrChars{0xa7c9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
-	instructionSet["CRYTZ"] = instrChars{0xa7d9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
-	instructionSet["CTR"] = instrChars{0xe7a8, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_OP}
-	instructionSet["CVWN"] = instrChars{0xe669, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_OP}
-	instructionSet["DAD"] = instrChars{0x8088, 0x87ff, 1, TWOACC_1_WORD_FMT, NOVA_OP}
-	instructionSet["DEQUE"] = instrChars{0xe7c9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
-	instructionSet["DERR"] = instrChars{0x8f09, 0x8fcf, 1, DERR_FMT, EAGLE_OP}
-	instructionSet["DHXL"] = instrChars{0x8388, 0x87ff, 1, IMM_ONEACC_FMT, ECLIPSE_OP}
-	instructionSet["DHXR"] = instrChars{0x83c8, 0x87ff, 1, IMM_ONEACC_FMT, ECLIPSE_OP}
-	instructionSet["DIA"] = instrChars{0x6100, 0xe700, 1, NOVA_DATA_IO_FMT, NOVA_IO}
-	instructionSet["DIB"] = instrChars{0x6300, 0xe700, 1, NOVA_DATA_IO_FMT, NOVA_IO}
-	instructionSet["DIC"] = instrChars{0x6500, 0xe700, 1, NOVA_DATA_IO_FMT, NOVA_IO}
-	instructionSet["DIV"] = instrChars{0xd7c8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_OP}
-	instructionSet["DIVS"] = instrChars{0xdfc8, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_OP}
-	instructionSet["DIVX"] = instrChars{0xbfc8, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_OP}
-	instructionSet["DLSH"] = instrChars{0x82c8, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP}
-	instructionSet["DOA"] = instrChars{0x6200, 0xe700, 1, NOVA_DATA_IO_FMT, NOVA_IO}
-	instructionSet["DOB"] = instrChars{0x6400, 0xe700, 1, NOVA_DATA_IO_FMT, NOVA_IO}
-	instructionSet["DOC"] = instrChars{0x6600, 0xe700, 1, NOVA_DATA_IO_FMT, NOVA_IO}
-	instructionSet["DSB"] = instrChars{0x80c8, 0x87ff, 1, TWOACC_1_WORD_FMT, NOVA_OP}
-	instructionSet["DSPA"] = instrChars{0xc478, 0xe4ff, 2, ONEACC_MODE_IND_2_WORD_E_FMT, ECLIPSE_PC}
-	instructionSet["DSZ"] = instrChars{0x1800, 0xf800, 1, NOVA_NOACC_EFF_ADDR_FMT, NOVA_MEMREF}
-	instructionSet["DSZTS"] = instrChars{0xc7d9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_PC}
-	instructionSet["ECLID"] = instrChars{0xffc8, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_IO}
-	instructionSet["EDIT"] = instrChars{0xf7a8, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_OP}
-	instructionSet["EDSZ"] = instrChars{0x9c38, 0xfcff, 2, NOACC_MODE_IND_2_WORD_E_FMT, ECLIPSE_PC}
-	instructionSet["EISZ"] = instrChars{0x9438, 0xfcff, 2, NOACC_MODE_IND_2_WORD_E_FMT, ECLIPSE_PC}
-	instructionSet["EJMP"] = instrChars{0x8438, 0xfcff, 2, NOACC_MODE_IND_2_WORD_E_FMT, ECLIPSE_PC}
-	instructionSet["EJSR"] = instrChars{0x8c38, 0xfcff, 2, NOACC_MODE_IND_2_WORD_E_FMT, ECLIPSE_PC}
-	instructionSet["ELDA"] = instrChars{0xa438, 0xe4ff, 2, ONEACC_MODE_IND_2_WORD_E_FMT, ECLIPSE_MEMREF}
-	instructionSet["ELDB"] = instrChars{0x8478, 0xe4ff, 2, ONEACC_MODE_IND_2_WORD_E_FMT, ECLIPSE_MEMREF}
-	instructionSet["ELEF"] = instrChars{0xe438, 0xe4ff, 2, ONEACC_MODE_IND_2_WORD_E_FMT, ECLIPSE_OP}
-	instructionSet["ENQH"] = instrChars{0xc7e9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
-	instructionSet["ENQT"] = instrChars{0xc7f9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
-	instructionSet["ESTA"] = instrChars{0xc438, 0xe4ff, 2, ONEACC_MODE_IND_2_WORD_E_FMT, ECLIPSE_OP}
-	instructionSet["ESTB"] = instrChars{0xa478, 0xe4ff, 2, ONEACC_MODE_2_WORD_E_FMT, ECLIPSE_OP}
-	instructionSet["FNS"] = instrChars{0x86a8, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_PC}
-	instructionSet["FSA"] = instrChars{0x8ea8, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_PC}
-	instructionSet["FXTD"] = instrChars{0xa779, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_OP}
-	instructionSet["FXTE"] = instrChars{0xc749, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_OP}
-	instructionSet["HALT"] = instrChars{0x647f, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_IO}
-	instructionSet["HLV"] = instrChars{0xc6f8, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_OP}
-	instructionSet["HXL"] = instrChars{0x8308, 0x87ff, 1, IMM_ONEACC_FMT, ECLIPSE_OP}
-	instructionSet["HXR"] = instrChars{0x8348, 0x87ff, 1, IMM_ONEACC_FMT, ECLIPSE_OP}
-	instructionSet["INC"] = instrChars{0x8300, 0x8700, 1, NOVA_TWOACC_MULT_OP_FMT, NOVA_OP}
-	instructionSet["INTA"] = instrChars{0x633f, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_IO}
-	instructionSet["INTDS"] = instrChars{0x60bf, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_IO}
-	instructionSet["INTEN"] = instrChars{0x607f, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_IO}
-	instructionSet["IOR"] = instrChars{0x8108, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP}
-	instructionSet["IORI"] = instrChars{0x87f8, 0xe7ff, 2, ONEACC_IMMWD_2_WORD_FMT, ECLIPSE_OP}
-	instructionSet["IORST"] = instrChars{0x653f, 0xe73f, 1, ONEACC_1_WORD_FMT, NOVA_IO}
-	instructionSet["ISZ"] = instrChars{0x1000, 0xf800, 1, NOVA_NOACC_EFF_ADDR_FMT, NOVA_MEMREF}
-	instructionSet["ISZTS"] = instrChars{0xc7c9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_PC}
-	instructionSet["JMP"] = instrChars{0x0, 0xf800, 1, NOVA_NOACC_EFF_ADDR_FMT, NOVA_PC}
-	instructionSet["JSR"] = instrChars{0x800, 0xf800, 1, NOVA_NOACC_EFF_ADDR_FMT, NOVA_PC}
-	instructionSet["LCALL"] = instrChars{0xa6c9, 0xe7ff, 4, NOACC_MODE_IND_4_WORD_FMT, EAGLE_PC}
-	instructionSet["LCPID"] = instrChars{0x8759, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_IO}
-	instructionSet["LDA"] = instrChars{0x2000, 0xe000, 1, NOVA_ONEACC_EFF_ADDR_FMT, NOVA_MEMREF}
-	instructionSet["LDAFP"] = instrChars{0xc669, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_STACK}
-	instructionSet["LDASB"] = instrChars{0xc649, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_STACK}
-	instructionSet["LDASL"] = instrChars{0xa669, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_STACK}
-	instructionSet["LDASP"] = instrChars{0xa649, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_STACK}
-	instructionSet["LDATS"] = instrChars{0x8649, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_OP}
-	instructionSet["LDB"] = instrChars{0x85c8, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP}
-	instructionSet["LDSP"] = instrChars{0x8519, 0x87ff, 3, ONEACC_MODE_IND_3_WORD_FMT, EAGLE_PC}
-	instructionSet["LEF"] = instrChars{0x6000, 0xe000, 1, NOVA_ONEACC_EFF_ADDR_FMT, NOVA_MEMREF}
-	instructionSet["LFDMS"] = instrChars{0x81e9, 0x87ff, 3, ONEACC_MODE_IND_3_WORD_FMT, EAGLE_FPU}
-	instructionSet["LJMP"] = instrChars{0xa6d9, 0xe7ff, 3, NOACC_MODE_IND_3_WORD_FMT, EAGLE_PC}
-	instructionSet["LJSR"] = instrChars{0xa6e9, 0xe7ff, 3, NOACC_MODE_IND_3_WORD_FMT, EAGLE_PC}
-	instructionSet["LLDB"] = instrChars{0x84c9, 0x87ff, 3, ONEACC_MODE_3_WORD_FMT, EAGLE_OP}
-	instructionSet["LLEF"] = instrChars{0x83e9, 0x87ff, 3, ONEACC_MODE_IND_3_WORD_FMT, EAGLE_OP}
-	instructionSet["LLEFB"] = instrChars{0x84e9, 0x87ff, 3, ONEACC_MODE_3_WORD_FMT, EAGLE_OP}
-	instructionSet["LMRF"] = instrChars{0x87c9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
-	instructionSet["LNADD"] = instrChars{0x8218, 0x87ff, 3, ONEACC_MODE_IND_3_WORD_FMT, EAGLE_OP}
-	instructionSet["LNADI"] = instrChars{0x8618, 0x87ff, 3, NOACC_MODE_IMM_IND_3_WORD_FMT, EAGLE_OP}
-	instructionSet["LNDIV"] = instrChars{0x82d8, 0x87ff, 3, ONEACC_MODE_IND_3_WORD_FMT, EAGLE_OP}
-	instructionSet["LNDO"] = instrChars{0x8698, 0x87ff, 4, LNDO_4_WORD_FMT, EAGLE_PC}
-	instructionSet["LNDSZ"] = instrChars{0x86d9, 0xe7ff, 3, NOACC_MODE_IND_3_WORD_FMT, EAGLE_PC}
-	instructionSet["LNISZ"] = instrChars{0x86c9, 0xe7ff, 3, NOACC_MODE_IND_3_WORD_FMT, EAGLE_PC}
-	instructionSet["LNLDA"] = instrChars{0x83c9, 0x87ff, 3, ONEACC_MODE_IND_3_WORD_FMT, EAGLE_MEMREF}
-	instructionSet["LNMUL"] = instrChars{0x8298, 0x87ff, 3, ONEACC_MODE_IND_3_WORD_FMT, EAGLE_MEMREF}
-	instructionSet["LNSBI"] = instrChars{0x8658, 0x87ff, 3, NOACC_MODE_IMM_IND_3_WORD_FMT, EAGLE_MEMREF}
-	instructionSet["LNSTA"] = instrChars{0x83d9, 0x87ff, 3, ONEACC_MODE_IND_3_WORD_FMT, EAGLE_MEMREF}
-	instructionSet["LNSUB"] = instrChars{0x8258, 0x87ff, 3, ONEACC_MODE_IND_3_WORD_FMT, EAGLE_MEMREF}
-	instructionSet["LOB"] = instrChars{0x8508, 0x87ff, 1, TWOACC_1_WORD_FMT, NOVA_OP}
-	instructionSet["LPEF"] = instrChars{0xa6f9, 0xe7ff, 3, NOACC_MODE_IND_3_WORD_FMT, EAGLE_STACK}
-	instructionSet["LPEFB"] = instrChars{0xc6f9, 0xe7ff, 3, NOACC_MODE_3_WORD_FMT, EAGLE_STACK}
-	instructionSet["LPHY"] = instrChars{0x87e9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
-	instructionSet["LPSHJ"] = instrChars{0xC6C9, 0xE7FF, 3, NOACC_MODE_IND_3_WORD_FMT, EAGLE_PC}
-	instructionSet["LPSR"] = instrChars{0xa799, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
-	instructionSet["LSH"] = instrChars{0x8288, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP}
-	instructionSet["LWDO"] = instrChars{0x8798, 0x87ff, 4, LNDO_4_WORD_FMT, EAGLE_PC}
-	instructionSet["LWDSZ"] = instrChars{0x86f9, 0xe7ff, 3, NOACC_MODE_IND_3_WORD_FMT, EAGLE_PC}
-	instructionSet["LWISZ"] = instrChars{0x86e9, 0xe7ff, 3, NOACC_MODE_IND_3_WORD_FMT, EAGLE_PC}
-	instructionSet["LWLDA"] = instrChars{0x83f9, 0x87ff, 3, ONEACC_MODE_IND_3_WORD_FMT, EAGLE_MEMREF}
-	instructionSet["LWSTA"] = instrChars{0x84f9, 0x87ff, 3, ONEACC_MODE_IND_3_WORD_FMT, EAGLE_MEMREF}
-	instructionSet["MOV"] = instrChars{0x8200, 0x8700, 1, NOVA_TWOACC_MULT_OP_FMT, NOVA_OP}
-	instructionSet["MUL"] = instrChars{0xc7c8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_OP}
-	instructionSet["NADD"] = instrChars{0x8049, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
-	instructionSet["NADDI"] = instrChars{0xc639, 0xe7ff, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_OP}
-	instructionSet["NADI"] = instrChars{0x8599, 0x87ff, 1, IMM_ONEACC_FMT, EAGLE_OP}
-	instructionSet["NCLID"] = instrChars{0x683f, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_IO}
-	instructionSet["NEG"] = instrChars{0x8100, 0x8700, 1, NOVA_TWOACC_MULT_OP_FMT, NOVA_OP}
-	instructionSet["NIO"] = instrChars{0x6000, 0xff00, 1, IO_FLAGS_DEV_FMT, NOVA_IO}
-	instructionSet["NLDAI"] = instrChars{0xc629, 0xe7ff, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_OP}
-	instructionSet["NMUL"] = instrChars{0x8069, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
-	instructionSet["NSALA"] = instrChars{0xe609, 0xe7ff, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_PC}
-	instructionSet["NSANA"] = instrChars{0xe629, 0xe7ff, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_PC}
-	instructionSet["NSBI"] = instrChars{0x85a9, 0x87ff, 1, IMM_ONEACC_FMT, EAGLE_OP}
-	instructionSet["NSUB"] = instrChars{0x8059, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
-	instructionSet["PIO"] = instrChars{0x85d9, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_IO}
-	instructionSet["POP"] = instrChars{0x8688, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_STACK}
-	instructionSet["POPJ"] = instrChars{0x9fc8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_STACK}
-	instructionSet["PRTRST"] = instrChars{0x85d9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_IO}
-	instructionSet["PRTSEL"] = instrChars{0x783f, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_IO}
-	instructionSet["PSH"] = instrChars{0x8648, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_STACK}
-	instructionSet["PSHJ"] = instrChars{0x84b8, 0xfcff, 2, NOACC_MODE_IND_2_WORD_E_FMT, ECLIPSE_STACK}
-	instructionSet["READS"] = instrChars{0x613f, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_IO}
-	instructionSet["RTN"] = instrChars{0xafc8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_STACK}
-	instructionSet["SAVE"] = instrChars{0xe7c8, 0xffff, 2, UNIQUE_2_WORD_FMT, ECLIPSE_STACK}
-	instructionSet["SBI"] = instrChars{0x8048, 0x87ff, 1, IMM_ONEACC_FMT, ECLIPSE_OP}
-	instructionSet["SEX"] = instrChars{0x8349, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
-	instructionSet["SGT"] = instrChars{0x8208, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_PC}
-	instructionSet["SKP"] = instrChars{0x6700, 0xff00, 1, IO_TEST_DEV_FMT, NOVA_IO}
-	instructionSet["SNB"] = instrChars{0x85f8, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_PC}
-	instructionSet["SNOVR"] = instrChars{0xa7b9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_PC}
-	instructionSet["SPSR"] = instrChars{0xa7a9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
-	instructionSet["SPTE"] = instrChars{0xe729, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
-	instructionSet["SSPT"] = instrChars{0xe7d9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
-	instructionSet["STA"] = instrChars{0x4000, 0xe000, 1, NOVA_ONEACC_EFF_ADDR_FMT, NOVA_MEMREF}
-	instructionSet["STAFP"] = instrChars{0xc679, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_STACK}
-	instructionSet["STASB"] = instrChars{0xc659, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_STACK}
-	instructionSet["STASL"] = instrChars{0xa679, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_STACK}
-	instructionSet["STASP"] = instrChars{0xa659, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_STACK}
-	instructionSet["STATS"] = instrChars{0x8659, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_STACK}
-	instructionSet["STB"] = instrChars{0x8608, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP}
-	instructionSet["SUB"] = instrChars{0x8500, 0x8700, 1, NOVA_TWOACC_MULT_OP_FMT, NOVA_OP}
-	instructionSet["SZB"] = instrChars{0x8488, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_PC}
-	instructionSet["SZBO"] = instrChars{0x84c8, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP}
-	instructionSet["WADC"] = instrChars{0x8249, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
-	instructionSet["WADD"] = instrChars{0x8149, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
-	instructionSet["WADDI"] = instrChars{0x8689, 0xe7ff, 3, ONEACC_IMM_3_WORD_FMT, EAGLE_OP}
-	instructionSet["WADI"] = instrChars{0x84b9, 0x87ff, 1, IMM_ONEACC_FMT, EAGLE_OP}
-	instructionSet["WANC"] = instrChars{0x8549, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
-	instructionSet["WAND"] = instrChars{0x8449, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
-	instructionSet["WANDI"] = instrChars{0x8699, 0xe7ff, 3, ONEACC_IMMDWD_3_WORD_FMT, EAGLE_OP}
-	instructionSet["WASH"] = instrChars{0x8279, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
-	instructionSet["WASHI"] = instrChars{0xc6a9, 0xe7ff, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_OP}
-	instructionSet["WBLM"] = instrChars{0xe749, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_MEMREF}
-	instructionSet["WBR"] = instrChars{0x8038, 0x843f, 1, SPLIT_8BIT_DISP_FMT, EAGLE_PC}
-	instructionSet["WBTO"] = instrChars{0x8299, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_MEMREF}
-	instructionSet["WBTZ"] = instrChars{0x82a9, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_MEMREF}
-	instructionSet["WCLM"] = instrChars{0x8569, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
-	instructionSet["WCMP"] = instrChars{0xa759, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_MEMREF}
-	instructionSet["WCMV"] = instrChars{0x8779, 0xFFFF, 1, UNIQUE_1_WORD_FMT, EAGLE_MEMREF}
-	instructionSet["WCOM"] = instrChars{0x8459, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
-	instructionSet["WCST"] = instrChars{0xe709, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_MEMREF}
-	instructionSet["WCTR"] = instrChars{0x8769, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_MEMREF}
-	instructionSet["WDIVS"] = instrChars{0xe769, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
-	instructionSet["WFPOP"] = instrChars{0xa789, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_STACK}
-	instructionSet["WFPSH"] = instrChars{0x87b9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_STACK}
-	instructionSet["WINC"] = instrChars{0x8259, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
-	instructionSet["WIOR"] = instrChars{0x8469, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
-	instructionSet["WIORI"] = instrChars{0x86a9, 0xe7ff, 3, ONEACC_IMMDWD_3_WORD_FMT, EAGLE_OP}
-	instructionSet["WLDAI"] = instrChars{0xc689, 0xe7ff, 3, ONEACC_IMMDWD_3_WORD_FMT, EAGLE_OP}
-	instructionSet["WLDB"] = instrChars{0x8529, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_MEMREF}
-	instructionSet["WLMP"] = instrChars{0xa7f9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_IO}
-	instructionSet["WLSH"] = instrChars{0x8559, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
-	instructionSet["WLSHI"] = instrChars{0xe6d9, 0xe7ff, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_OP}
-	instructionSet["WLSI"] = instrChars{0x85b9, 0x87ff, 1, IMM_ONEACC_FMT, EAGLE_OP}
-	instructionSet["WMOV"] = instrChars{0x8379, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
-	instructionSet["WMOVR"] = instrChars{0xe699, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_OP}
-	instructionSet["WMSP"] = instrChars{0xe649, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_STACK}
-	instructionSet["WMUL"] = instrChars{0x8169, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
-	instructionSet["WNADI"] = instrChars{0xE6F9, 0xE7FF, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_OP}
-	instructionSet["WNEG"] = instrChars{0x8269, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
-	instructionSet["WPOP"] = instrChars{0x8089, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_STACK}
-	instructionSet["WPOPJ"] = instrChars{0x8789, 0xFFFF, 1, UNIQUE_1_WORD_FMT, EAGLE_PC}
-	instructionSet["WPSH"] = instrChars{0x8579, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_STACK}
-	instructionSet["WRTN"] = instrChars{0x87a9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_PC}
-	instructionSet["WSAVR"] = instrChars{0xA729, 0xFFFF, 2, UNIQUE_2_WORD_FMT, EAGLE_STACK}
-	instructionSet["WSAVS"] = instrChars{0xA739, 0xFFFF, 2, UNIQUE_2_WORD_FMT, EAGLE_STACK}
-	instructionSet["WSBI"] = instrChars{0x8589, 0x87ff, 1, IMM_ONEACC_FMT, EAGLE_OP}
-	instructionSet["WSEQ"] = instrChars{0x80b9, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_PC}
-	instructionSet["WSEQI"] = instrChars{0xe6c9, 0xe7ff, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_PC}
-	instructionSet["WSGE"] = instrChars{0x8199, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_PC}
-	instructionSet["WSGT"] = instrChars{0x81b9, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_PC}
-	instructionSet["WSGTI"] = instrChars{0xe689, 0xe7ff, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_PC}
-	instructionSet["WSKBO"] = instrChars{0x8f49, 0x8fcf, 1, WSKB_FMT, EAGLE_PC}
-	instructionSet["WSKBZ"] = instrChars{0x8f89, 0x8fcf, 1, WSKB_FMT, EAGLE_PC}
-	instructionSet["WSLE"] = instrChars{0x81a9, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_PC}
-	instructionSet["WSLEI"] = instrChars{0xe6a9, 0xe7ff, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_PC}
-	instructionSet["WSLT"] = instrChars{0x8289, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_PC}
-	instructionSet["WSNE"] = instrChars{0x8189, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_PC}
-	instructionSet["WSNEI"] = instrChars{0xe6e9, 0xe7ff, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_PC}
-	instructionSet["WSSVR"] = instrChars{0x8729, 0xffff, 2, UNIQUE_2_WORD_FMT, EAGLE_STACK}
-	instructionSet["WSTB"] = instrChars{0x8539, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_MEMREF}
-	instructionSet["WSUB"] = instrChars{0x8159, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
-	instructionSet["WSZB"] = instrChars{0x82b9, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_PC}
-	instructionSet["WUGTI"] = instrChars{0xc699, 0xe7ff, 3, ONEACC_IMM_3_WORD_FMT, EAGLE_PC}
-	instructionSet["XCALL"] = instrChars{0x8609, 0xe7ff, 3, NOACC_MODE_IND_3_WORD_XCALL_FMT, EAGLE_PC}
-	instructionSet["XCH"] = instrChars{0x81c8, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP}
-	instructionSet["XJMP"] = instrChars{0xc609, 0xe7ff, 2, NOACC_MODE_IND_2_WORD_X_FMT, EAGLE_PC}
-	instructionSet["XJSR"] = instrChars{0xc619, 0xe7ff, 2, NOACC_MODE_IND_2_WORD_X_FMT, EAGLE_PC}
-	instructionSet["XLDB"] = instrChars{0x8419, 0x87ff, 2, ONEACC_MODE_2_WORD_X_B_FMT, EAGLE_MEMREF}
-	instructionSet["XLEF"] = instrChars{0x8409, 0x87ff, 2, ONEACC_MODE_IND_2_WORD_X_FMT, EAGLE_MEMREF}
-	instructionSet["XLEFB"] = instrChars{0x8439, 0x87ff, 2, ONEACC_MODE_2_WORD_X_B_FMT, EAGLE_MEMREF}
-	instructionSet["XNADD"] = instrChars{0x8018, 0x87ff, 2, ONEACC_MODE_IND_2_WORD_X_FMT, EAGLE_MEMREF}
-	instructionSet["XNADI"] = instrChars{0x8418, 0x87ff, 2, IMM_MODE_2_WORD_FMT, EAGLE_MEMREF}
-	instructionSet["XNDO"] = instrChars{0x8498, 0x87ff, 3, THREE_WORD_DO_FMT, EAGLE_PC}
-	instructionSet["XNDSZ"] = instrChars{0xa609, 0xe7ff, 2, NOACC_MODE_IND_2_WORD_X_FMT, EAGLE_PC}
-	instructionSet["XNISZ"] = instrChars{0x8639, 0xe7ff, 2, NOACC_MODE_IND_2_WORD_X_FMT, EAGLE_PC}
-	instructionSet["XNLDA"] = instrChars{0x8329, 0x87ff, 2, ONEACC_MODE_IND_2_WORD_X_FMT, EAGLE_MEMREF}
-	instructionSet["XNSBI"] = instrChars{0x8458, 0x87ff, 2, IMM_MODE_2_WORD_FMT, EAGLE_MEMREF}
-	instructionSet["XNSTA"] = instrChars{0x8339, 0x87ff, 2, ONEACC_MODE_IND_2_WORD_X_FMT, EAGLE_MEMREF}
-	instructionSet["XNSUB"] = instrChars{0x8058, 0x87ff, 2, ONEACC_MODE_IND_2_WORD_X_FMT, EAGLE_MEMREF}
-	instructionSet["XPEF"] = instrChars{0x8629, 0xe7ff, 2, NOACC_MODE_IND_2_WORD_X_FMT, EAGLE_STACK}
-	instructionSet["XPEFB"] = instrChars{0xa629, 0xe7ff, 2, NOACC_MODE_2_WORD_FMT, EAGLE_STACK}
-	instructionSet["XPSHJ"] = instrChars{0x8619, 0xe7ff, 2, IMM_MODE_2_WORD_FMT, EAGLE_STACK}
-	instructionSet["XSTB"] = instrChars{0x8429, 0x87ff, 2, ONEACC_MODE_2_WORD_X_B_FMT, EAGLE_MEMREF}
-	instructionSet["XWADD"] = instrChars{0x8118, 0x87ff, 2, ONEACC_MODE_IND_2_WORD_X_FMT, EAGLE_MEMREF}
-	instructionSet["XWADI"] = instrChars{0x8518, 0x87ff, 2, IMM_MODE_2_WORD_FMT, EAGLE_MEMREF}
-	instructionSet["XWDSZ"] = instrChars{0xA639, 0xE7FF, 2, NOACC_MODE_IND_2_WORD_X_FMT, EAGLE_PC}
-	instructionSet["XWLDA"] = instrChars{0x8309, 0x87ff, 2, ONEACC_MODE_IND_2_WORD_X_FMT, EAGLE_MEMREF}
-	instructionSet["XWSBI"] = instrChars{0x8558, 0x87ff, 2, IMM_MODE_2_WORD_FMT, EAGLE_OP}
-	instructionSet["XWSTA"] = instrChars{0x8319, 0x87ff, 2, ONEACC_MODE_IND_2_WORD_X_FMT, EAGLE_MEMREF}
-	instructionSet["XWSUB"] = instrChars{0x8158, 0x87ff, 2, ONEACC_MODE_IND_2_WORD_X_FMT, EAGLE_OP}
-	instructionSet["ZEX"] = instrChars{0x8359, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrADC] = instrChars{"ADC", 0x8400, 0x8700, 1, NOVA_TWOACC_MULT_OP_FMT, NOVA_OP}
+	instructionSet[instrADD] = instrChars{"ADD", 0x8600, 0x8700, 1, NOVA_TWOACC_MULT_OP_FMT, NOVA_OP}
+	instructionSet[instrADDI] = instrChars{"ADDI", 0xe7f8, 0xe7ff, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_OP}
+	instructionSet[instrADI] = instrChars{"ADI", 0x8008, 0x87ff, 1, IMM_ONEACC_FMT, ECLIPSE_OP}
+	instructionSet[instrANC] = instrChars{"ANC", 0x8188, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrAND] = instrChars{"AND", 0x8700, 0x8700, 1, NOVA_TWOACC_MULT_OP_FMT, NOVA_OP}
+	instructionSet[instrANDI] = instrChars{"ANDI", 0xc7f8, 0xe7ff, 2, ONEACC_IMMWD_2_WORD_FMT, EAGLE_OP}
+	instructionSet[instrBAM] = instrChars{"BAM", 0x97c8, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_OP}
+	instructionSet[instrBKPT] = instrChars{"BKPT", 0xc789, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_PC}
+	instructionSet[instrBLM] = instrChars{"BLM", 0xb7c8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_MEMREF}
+	instructionSet[instrBTO] = instrChars{"BTO", 0x8408, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP}
+	instructionSet[instrBTZ] = instrChars{"BTZ", 0x8448, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP}
+	instructionSet[instrCIO] = instrChars{"CIO", 0x85e9, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_IO}
+	instructionSet[instrCIOI] = instrChars{"CIOI", 0x85f9, 0x87ff, 2, TWOACC_IMM_2_WORD_FMT, EAGLE_IO}
+	instructionSet[instrCLM] = instrChars{"CLM", 0x84f8, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_PC}
+	instructionSet[instrCMP] = instrChars{"CMP", 0xdfa8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_MEMREF}
+	instructionSet[instrCMT] = instrChars{"CMT", 0xefa8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_MEMREF}
+	instructionSet[instrCMV] = instrChars{"CMV", 0xd7a8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_MEMREF}
+	instructionSet[instrCOB] = instrChars{"COB", 0x8588, 0x87ff, 1, TWOACC_1_WORD_FMT, NOVA_OP}
+	instructionSet[instrCOM] = instrChars{"COM", 0x8000, 0x8700, 1, NOVA_TWOACC_MULT_OP_FMT, NOVA_OP}
+	instructionSet[instrCRYTC] = instrChars{"CRYTC", 0xa7e9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrCRYTO] = instrChars{"CRYTO", 0xa7c9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrCRYTZ] = instrChars{"CRYTZ", 0xa7d9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrCTR] = instrChars{"CTR", 0xe7a8, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_OP}
+	instructionSet[instrCVWN] = instrChars{"CVWN", 0xe669, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrDAD] = instrChars{"DAD", 0x8088, 0x87ff, 1, TWOACC_1_WORD_FMT, NOVA_OP}
+	instructionSet[instrDEQUE] = instrChars{"DEQUE", 0xe7c9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrDERR] = instrChars{"DERR", 0x8f09, 0x8fcf, 1, DERR_FMT, EAGLE_OP}
+	instructionSet[instrDHXL] = instrChars{"DHXL", 0x8388, 0x87ff, 1, IMM_ONEACC_FMT, ECLIPSE_OP}
+	instructionSet[instrDHXR] = instrChars{"DHXR", 0x83c8, 0x87ff, 1, IMM_ONEACC_FMT, ECLIPSE_OP}
+	instructionSet[instrDIA] = instrChars{"DIA", 0x6100, 0xe700, 1, NOVA_DATA_IO_FMT, NOVA_IO}
+	instructionSet[instrDIB] = instrChars{"DIB", 0x6300, 0xe700, 1, NOVA_DATA_IO_FMT, NOVA_IO}
+	instructionSet[instrDIC] = instrChars{"DIC", 0x6500, 0xe700, 1, NOVA_DATA_IO_FMT, NOVA_IO}
+	instructionSet[instrDIV] = instrChars{"DIV", 0xd7c8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_OP}
+	instructionSet[instrDIVS] = instrChars{"DIVS", 0xdfc8, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_OP}
+	instructionSet[instrDIVX] = instrChars{"DIVX", 0xbfc8, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_OP}
+	instructionSet[instrDLSH] = instrChars{"DLSH", 0x82c8, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP}
+	instructionSet[instrDOA] = instrChars{"DOA", 0x6200, 0xe700, 1, NOVA_DATA_IO_FMT, NOVA_IO}
+	instructionSet[instrDOB] = instrChars{"DOB", 0x6400, 0xe700, 1, NOVA_DATA_IO_FMT, NOVA_IO}
+	instructionSet[instrDOC] = instrChars{"DOC", 0x6600, 0xe700, 1, NOVA_DATA_IO_FMT, NOVA_IO}
+	instructionSet[instrDSB] = instrChars{"DSB", 0x80c8, 0x87ff, 1, TWOACC_1_WORD_FMT, NOVA_OP}
+	instructionSet[instrDSPA] = instrChars{"DSPA", 0xc478, 0xe4ff, 2, ONEACC_MODE_IND_2_WORD_E_FMT, ECLIPSE_PC}
+	instructionSet[instrDSZ] = instrChars{"DSZ", 0x1800, 0xf800, 1, NOVA_NOACC_EFF_ADDR_FMT, NOVA_MEMREF}
+	instructionSet[instrDSZTS] = instrChars{"DSZTS", 0xc7d9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_PC}
+	instructionSet[instrECLID] = instrChars{"ECLID", 0xffc8, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_IO}
+	instructionSet[instrEDIT] = instrChars{"EDIT", 0xf7a8, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_OP}
+	instructionSet[instrEDSZ] = instrChars{"EDSZ", 0x9c38, 0xfcff, 2, NOACC_MODE_IND_2_WORD_E_FMT, ECLIPSE_PC}
+	instructionSet[instrEISZ] = instrChars{"EISZ", 0x9438, 0xfcff, 2, NOACC_MODE_IND_2_WORD_E_FMT, ECLIPSE_PC}
+	instructionSet[instrEJMP] = instrChars{"EJMP", 0x8438, 0xfcff, 2, NOACC_MODE_IND_2_WORD_E_FMT, ECLIPSE_PC}
+	instructionSet[instrEJSR] = instrChars{"EJSR", 0x8c38, 0xfcff, 2, NOACC_MODE_IND_2_WORD_E_FMT, ECLIPSE_PC}
+	instructionSet[instrELDA] = instrChars{"ELDA", 0xa438, 0xe4ff, 2, ONEACC_MODE_IND_2_WORD_E_FMT, ECLIPSE_MEMREF}
+	instructionSet[instrELDB] = instrChars{"ELDB", 0x8478, 0xe4ff, 2, ONEACC_MODE_IND_2_WORD_E_FMT, ECLIPSE_MEMREF}
+	instructionSet[instrELEF] = instrChars{"ELEF", 0xe438, 0xe4ff, 2, ONEACC_MODE_IND_2_WORD_E_FMT, ECLIPSE_OP}
+	instructionSet[instrENQH] = instrChars{"ENQH", 0xc7e9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrENQT] = instrChars{"ENQT", 0xc7f9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrESTA] = instrChars{"ESTA", 0xc438, 0xe4ff, 2, ONEACC_MODE_IND_2_WORD_E_FMT, ECLIPSE_OP}
+	instructionSet[instrESTB] = instrChars{"ESTB", 0xa478, 0xe4ff, 2, ONEACC_MODE_2_WORD_E_FMT, ECLIPSE_OP}
+	instructionSet[instrFNS] = instrChars{"FNS", 0x86a8, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_PC}
+	instructionSet[instrFSA] = instrChars{"FSA", 0x8ea8, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_PC}
+	instructionSet[instrFXTD] = instrChars{"FXTD", 0xa779, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_OP}
+	instructionSet[instrFXTE] = instrChars{"FXTE", 0xc749, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_OP}
+	instructionSet[instrHALT] = instrChars{"HALT", 0x647f, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_IO}
+	instructionSet[instrHLV] = instrChars{"HLV", 0xc6f8, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrHXL] = instrChars{"HXL", 0x8308, 0x87ff, 1, IMM_ONEACC_FMT, ECLIPSE_OP}
+	instructionSet[instrHXR] = instrChars{"HXR", 0x8348, 0x87ff, 1, IMM_ONEACC_FMT, ECLIPSE_OP}
+	instructionSet[instrINC] = instrChars{"INC", 0x8300, 0x8700, 1, NOVA_TWOACC_MULT_OP_FMT, NOVA_OP}
+	instructionSet[instrINTA] = instrChars{"INTA", 0x633f, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_IO}
+	instructionSet[instrINTDS] = instrChars{"INTDS", 0x60bf, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_IO}
+	instructionSet[instrINTEN] = instrChars{"INTEN", 0x607f, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_IO}
+	instructionSet[instrIOR] = instrChars{"IOR", 0x8108, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP}
+	instructionSet[instrIORI] = instrChars{"IORI", 0x87f8, 0xe7ff, 2, ONEACC_IMMWD_2_WORD_FMT, ECLIPSE_OP}
+	instructionSet[instrIORST] = instrChars{"IORST", 0x653f, 0xe73f, 1, ONEACC_1_WORD_FMT, NOVA_IO}
+	instructionSet[instrISZ] = instrChars{"ISZ", 0x1000, 0xf800, 1, NOVA_NOACC_EFF_ADDR_FMT, NOVA_MEMREF}
+	instructionSet[instrISZTS] = instrChars{"ISZTS", 0xc7c9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_PC}
+	instructionSet[instrJMP] = instrChars{"JMP", 0x0, 0xf800, 1, NOVA_NOACC_EFF_ADDR_FMT, NOVA_PC}
+	instructionSet[instrJSR] = instrChars{"JSR", 0x800, 0xf800, 1, NOVA_NOACC_EFF_ADDR_FMT, NOVA_PC}
+	instructionSet[instrLCALL] = instrChars{"LCALL", 0xa6c9, 0xe7ff, 4, NOACC_MODE_IND_4_WORD_FMT, EAGLE_PC}
+	instructionSet[instrLCPID] = instrChars{"LCPID", 0x8759, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_IO}
+	instructionSet[instrLDA] = instrChars{"LDA", 0x2000, 0xe000, 1, NOVA_ONEACC_EFF_ADDR_FMT, NOVA_MEMREF}
+	instructionSet[instrLDAFP] = instrChars{"LDAFP", 0xc669, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_STACK}
+	instructionSet[instrLDASB] = instrChars{"LDASB", 0xc649, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_STACK}
+	instructionSet[instrLDASL] = instrChars{"LDASL", 0xa669, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_STACK}
+	instructionSet[instrLDASP] = instrChars{"LDASP", 0xa649, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_STACK}
+	instructionSet[instrLDATS] = instrChars{"LDATS", 0x8649, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrLDB] = instrChars{"LDB", 0x85c8, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP}
+	instructionSet[instrLDSP] = instrChars{"LDSP", 0x8519, 0x87ff, 3, ONEACC_MODE_IND_3_WORD_FMT, EAGLE_PC}
+	instructionSet[instrLEF] = instrChars{"LEF", 0x6000, 0xe000, 1, NOVA_ONEACC_EFF_ADDR_FMT, NOVA_MEMREF}
+	instructionSet[instrLFDMS] = instrChars{"LFDMS", 0x81e9, 0x87ff, 3, ONEACC_MODE_IND_3_WORD_FMT, EAGLE_FPU}
+	instructionSet[instrLJMP] = instrChars{"LJMP", 0xa6d9, 0xe7ff, 3, NOACC_MODE_IND_3_WORD_FMT, EAGLE_PC}
+	instructionSet[instrLJSR] = instrChars{"LJSR", 0xa6e9, 0xe7ff, 3, NOACC_MODE_IND_3_WORD_FMT, EAGLE_PC}
+	instructionSet[instrLLDB] = instrChars{"LLDB", 0x84c9, 0x87ff, 3, ONEACC_MODE_3_WORD_FMT, EAGLE_OP}
+	instructionSet[instrLLEF] = instrChars{"LLEF", 0x83e9, 0x87ff, 3, ONEACC_MODE_IND_3_WORD_FMT, EAGLE_OP}
+	instructionSet[instrLLEFB] = instrChars{"LLEFB", 0x84e9, 0x87ff, 3, ONEACC_MODE_3_WORD_FMT, EAGLE_OP}
+	instructionSet[instrLMRF] = instrChars{"LMRF", 0x87c9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrLNADD] = instrChars{"LNADD", 0x8218, 0x87ff, 3, ONEACC_MODE_IND_3_WORD_FMT, EAGLE_OP}
+	instructionSet[instrLNADI] = instrChars{"LNADI", 0x8618, 0x87ff, 3, NOACC_MODE_IMM_IND_3_WORD_FMT, EAGLE_OP}
+	instructionSet[instrLNDIV] = instrChars{"LNDIV", 0x82d8, 0x87ff, 3, ONEACC_MODE_IND_3_WORD_FMT, EAGLE_OP}
+	instructionSet[instrLNDO] = instrChars{"LNDO", 0x8698, 0x87ff, 4, LNDO_4_WORD_FMT, EAGLE_PC}
+	instructionSet[instrLNDSZ] = instrChars{"LNDSZ", 0x86d9, 0xe7ff, 3, NOACC_MODE_IND_3_WORD_FMT, EAGLE_PC}
+	instructionSet[instrLNISZ] = instrChars{"LNISZ", 0x86c9, 0xe7ff, 3, NOACC_MODE_IND_3_WORD_FMT, EAGLE_PC}
+	instructionSet[instrLNLDA] = instrChars{"LNLDA", 0x83c9, 0x87ff, 3, ONEACC_MODE_IND_3_WORD_FMT, EAGLE_MEMREF}
+	instructionSet[instrLNMUL] = instrChars{"LNMUL", 0x8298, 0x87ff, 3, ONEACC_MODE_IND_3_WORD_FMT, EAGLE_MEMREF}
+	instructionSet[instrLNSBI] = instrChars{"LNSBI", 0x8658, 0x87ff, 3, NOACC_MODE_IMM_IND_3_WORD_FMT, EAGLE_MEMREF}
+	instructionSet[instrLNSTA] = instrChars{"LNSTA", 0x83d9, 0x87ff, 3, ONEACC_MODE_IND_3_WORD_FMT, EAGLE_MEMREF}
+	instructionSet[instrLNSUB] = instrChars{"LNSUB", 0x8258, 0x87ff, 3, ONEACC_MODE_IND_3_WORD_FMT, EAGLE_MEMREF}
+	instructionSet[instrLOB] = instrChars{"LOB", 0x8508, 0x87ff, 1, TWOACC_1_WORD_FMT, NOVA_OP}
+	instructionSet[instrLPEF] = instrChars{"LPEF", 0xa6f9, 0xe7ff, 3, NOACC_MODE_IND_3_WORD_FMT, EAGLE_STACK}
+	instructionSet[instrLPEFB] = instrChars{"LPEFB", 0xc6f9, 0xe7ff, 3, NOACC_MODE_3_WORD_FMT, EAGLE_STACK}
+	instructionSet[instrLPHY] = instrChars{"LPHY", 0x87e9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrLPSHJ] = instrChars{"LPSHJ", 0xC6C9, 0xE7FF, 3, NOACC_MODE_IND_3_WORD_FMT, EAGLE_PC}
+	instructionSet[instrLPSR] = instrChars{"LPSR", 0xa799, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrLSH] = instrChars{"LSH", 0x8288, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP}
+	instructionSet[instrLWDO] = instrChars{"LWDO", 0x8798, 0x87ff, 4, LNDO_4_WORD_FMT, EAGLE_PC}
+	instructionSet[instrLWDSZ] = instrChars{"LWDSZ", 0x86f9, 0xe7ff, 3, NOACC_MODE_IND_3_WORD_FMT, EAGLE_PC}
+	instructionSet[instrLWISZ] = instrChars{"LWISZ", 0x86e9, 0xe7ff, 3, NOACC_MODE_IND_3_WORD_FMT, EAGLE_PC}
+	instructionSet[instrLWLDA] = instrChars{"LWLDA", 0x83f9, 0x87ff, 3, ONEACC_MODE_IND_3_WORD_FMT, EAGLE_MEMREF}
+	instructionSet[instrLWSTA] = instrChars{"LWSTA", 0x84f9, 0x87ff, 3, ONEACC_MODE_IND_3_WORD_FMT, EAGLE_MEMREF}
+	instructionSet[instrMOV] = instrChars{"MOV", 0x8200, 0x8700, 1, NOVA_TWOACC_MULT_OP_FMT, NOVA_OP}
+	instructionSet[instrMUL] = instrChars{"MUL", 0xc7c8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_OP}
+	instructionSet[instrNADD] = instrChars{"NADD", 0x8049, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrNADDI] = instrChars{"NADDI", 0xc639, 0xe7ff, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_OP}
+	instructionSet[instrNADI] = instrChars{"NADI", 0x8599, 0x87ff, 1, IMM_ONEACC_FMT, EAGLE_OP}
+	instructionSet[instrNCLID] = instrChars{"NCLID", 0x683f, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_IO}
+	instructionSet[instrNEG] = instrChars{"NEG", 0x8100, 0x8700, 1, NOVA_TWOACC_MULT_OP_FMT, NOVA_OP}
+	instructionSet[instrNIO] = instrChars{"NIO", 0x6000, 0xff00, 1, IO_FLAGS_DEV_FMT, NOVA_IO}
+	instructionSet[instrNLDAI] = instrChars{"NLDAI", 0xc629, 0xe7ff, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_OP}
+	instructionSet[instrNMUL] = instrChars{"NMUL", 0x8069, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrNSALA] = instrChars{"NSALA", 0xe609, 0xe7ff, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_PC}
+	instructionSet[instrNSANA] = instrChars{"NSANA", 0xe629, 0xe7ff, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_PC}
+	instructionSet[instrNSBI] = instrChars{"NSBI", 0x85a9, 0x87ff, 1, IMM_ONEACC_FMT, EAGLE_OP}
+	instructionSet[instrNSUB] = instrChars{"NSUB", 0x8059, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrPIO] = instrChars{"PIO", 0x85d9, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_IO}
+	instructionSet[instrPOP] = instrChars{"POP", 0x8688, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_STACK}
+	instructionSet[instrPOPJ] = instrChars{"POPJ", 0x9fc8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_STACK}
+	instructionSet[instrPRTRST] = instrChars{"PRTRST", 0x85d9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_IO}
+	instructionSet[instrPRTSEL] = instrChars{"PRTSEL", 0x783f, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_IO}
+	instructionSet[instrPSH] = instrChars{"PSH", 0x8648, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_STACK}
+	instructionSet[instrPSHJ] = instrChars{"PSHJ", 0x84b8, 0xfcff, 2, NOACC_MODE_IND_2_WORD_E_FMT, ECLIPSE_STACK}
+	instructionSet[instrREADS] = instrChars{"READS", 0x613f, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_IO}
+	instructionSet[instrRTN] = instrChars{"RTN", 0xafc8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_STACK}
+	instructionSet[instrSAVE] = instrChars{"SAVE", 0xe7c8, 0xffff, 2, UNIQUE_2_WORD_FMT, ECLIPSE_STACK}
+	instructionSet[instrSBI] = instrChars{"SBI", 0x8048, 0x87ff, 1, IMM_ONEACC_FMT, ECLIPSE_OP}
+	instructionSet[instrSEX] = instrChars{"SEX", 0x8349, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrSGT] = instrChars{"SGT", 0x8208, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_PC}
+	instructionSet[instrSKP] = instrChars{"SKP", 0x6700, 0xff00, 1, IO_TEST_DEV_FMT, NOVA_IO}
+	instructionSet[instrSNB] = instrChars{"SNB", 0x85f8, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_PC}
+	instructionSet[instrSNOVR] = instrChars{"SNOVR", 0xa7b9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_PC}
+	instructionSet[instrSPSR] = instrChars{"SPSR", 0xa7a9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrSPTE] = instrChars{"SPTE", 0xe729, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrSSPT] = instrChars{"SSPT", 0xe7d9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrSTA] = instrChars{"STA", 0x4000, 0xe000, 1, NOVA_ONEACC_EFF_ADDR_FMT, NOVA_MEMREF}
+	instructionSet[instrSTAFP] = instrChars{"STAFP", 0xc679, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_STACK}
+	instructionSet[instrSTASB] = instrChars{"STASB", 0xc659, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_STACK}
+	instructionSet[instrSTASL] = instrChars{"STASL", 0xa679, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_STACK}
+	instructionSet[instrSTASP] = instrChars{"STASP", 0xa659, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_STACK}
+	instructionSet[instrSTATS] = instrChars{"STATS", 0x8659, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_STACK}
+	instructionSet[instrSTB] = instrChars{"STB", 0x8608, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP}
+	instructionSet[instrSUB] = instrChars{"SUB", 0x8500, 0x8700, 1, NOVA_TWOACC_MULT_OP_FMT, NOVA_OP}
+	instructionSet[instrSZB] = instrChars{"SZB", 0x8488, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_PC}
+	instructionSet[instrSZBO] = instrChars{"SZBO", 0x84c8, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP}
+	instructionSet[instrWADC] = instrChars{"WADC", 0x8249, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrWADD] = instrChars{"WADD", 0x8149, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrWADDI] = instrChars{"WADDI", 0x8689, 0xe7ff, 3, ONEACC_IMM_3_WORD_FMT, EAGLE_OP}
+	instructionSet[instrWADI] = instrChars{"WADI", 0x84b9, 0x87ff, 1, IMM_ONEACC_FMT, EAGLE_OP}
+	instructionSet[instrWANC] = instrChars{"WANC", 0x8549, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrWAND] = instrChars{"WAND", 0x8449, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrWANDI] = instrChars{"WANDI", 0x8699, 0xe7ff, 3, ONEACC_IMMDWD_3_WORD_FMT, EAGLE_OP}
+	instructionSet[instrWASH] = instrChars{"WASH", 0x8279, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrWASHI] = instrChars{"WASHI", 0xc6a9, 0xe7ff, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_OP}
+	instructionSet[instrWBLM] = instrChars{"WBLM", 0xe749, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_MEMREF}
+	instructionSet[instrWBR] = instrChars{"WBR", 0x8038, 0x843f, 1, SPLIT_8BIT_DISP_FMT, EAGLE_PC}
+	instructionSet[instrWBTO] = instrChars{"WBTO", 0x8299, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_MEMREF}
+	instructionSet[instrWBTZ] = instrChars{"WBTZ", 0x82a9, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_MEMREF}
+	instructionSet[instrWCLM] = instrChars{"WCLM", 0x8569, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrWCMP] = instrChars{"WCMP", 0xa759, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_MEMREF}
+	instructionSet[instrWCMV] = instrChars{"WCMV", 0x8779, 0xFFFF, 1, UNIQUE_1_WORD_FMT, EAGLE_MEMREF}
+	instructionSet[instrWCOM] = instrChars{"WCOM", 0x8459, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrWCST] = instrChars{"WCST", 0xe709, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_MEMREF}
+	instructionSet[instrWCTR] = instrChars{"WCTR", 0x8769, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_MEMREF}
+	instructionSet[instrWDIVS] = instrChars{"WDIVS", 0xe769, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrWFPOP] = instrChars{"WFPOP", 0xa789, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_STACK}
+	instructionSet[instrWFPSH] = instrChars{"WFPSH", 0x87b9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_STACK}
+	instructionSet[instrWINC] = instrChars{"WINC", 0x8259, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrWIOR] = instrChars{"WIOR", 0x8469, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrWIORI] = instrChars{"WIORI", 0x86a9, 0xe7ff, 3, ONEACC_IMMDWD_3_WORD_FMT, EAGLE_OP}
+	instructionSet[instrWLDAI] = instrChars{"WLDAI", 0xc689, 0xe7ff, 3, ONEACC_IMMDWD_3_WORD_FMT, EAGLE_OP}
+	instructionSet[instrWLDB] = instrChars{"WLDB", 0x8529, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_MEMREF}
+	instructionSet[instrWLMP] = instrChars{"WLMP", 0xa7f9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_IO}
+	instructionSet[instrWLSH] = instrChars{"WLSH", 0x8559, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrWLSHI] = instrChars{"WLSHI", 0xe6d9, 0xe7ff, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_OP}
+	instructionSet[instrWLSI] = instrChars{"WLSI", 0x85b9, 0x87ff, 1, IMM_ONEACC_FMT, EAGLE_OP}
+	instructionSet[instrWMOV] = instrChars{"WMOV", 0x8379, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrWMOVR] = instrChars{"WMOVR", 0xe699, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrWMSP] = instrChars{"WMSP", 0xe649, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_STACK}
+	instructionSet[instrWMUL] = instrChars{"WMUL", 0x8169, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrWNADI] = instrChars{"WNADI", 0xE6F9, 0xE7FF, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_OP}
+	instructionSet[instrWNEG] = instrChars{"WNEG", 0x8269, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrWPOP] = instrChars{"WPOP", 0x8089, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_STACK}
+	instructionSet[instrWPOPJ] = instrChars{"WPOPJ", 0x8789, 0xFFFF, 1, UNIQUE_1_WORD_FMT, EAGLE_PC}
+	instructionSet[instrWPSH] = instrChars{"WPSH", 0x8579, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_STACK}
+	instructionSet[instrWRTN] = instrChars{"WRTN", 0x87a9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_PC}
+	instructionSet[instrWSAVR] = instrChars{"WSAVR", 0xA729, 0xFFFF, 2, UNIQUE_2_WORD_FMT, EAGLE_STACK}
+	instructionSet[instrWSAVS] = instrChars{"WSAVS", 0xA739, 0xFFFF, 2, UNIQUE_2_WORD_FMT, EAGLE_STACK}
+	instructionSet[instrWSBI] = instrChars{"WSBI", 0x8589, 0x87ff, 1, IMM_ONEACC_FMT, EAGLE_OP}
+	instructionSet[instrWSEQ] = instrChars{"WSEQ", 0x80b9, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_PC}
+	instructionSet[instrWSEQI] = instrChars{"WSEQI", 0xe6c9, 0xe7ff, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_PC}
+	instructionSet[instrWSGE] = instrChars{"WSGE", 0x8199, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_PC}
+	instructionSet[instrWSGT] = instrChars{"WSGT", 0x81b9, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_PC}
+	instructionSet[instrWSGTI] = instrChars{"WSGTI", 0xe689, 0xe7ff, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_PC}
+	instructionSet[instrWSKBO] = instrChars{"WSKBO", 0x8f49, 0x8fcf, 1, WSKB_FMT, EAGLE_PC}
+	instructionSet[instrWSKBZ] = instrChars{"WSKBZ", 0x8f89, 0x8fcf, 1, WSKB_FMT, EAGLE_PC}
+	instructionSet[instrWSLE] = instrChars{"WSLE", 0x81a9, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_PC}
+	instructionSet[instrWSLEI] = instrChars{"WSLEI", 0xe6a9, 0xe7ff, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_PC}
+	instructionSet[instrWSLT] = instrChars{"WSLT", 0x8289, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_PC}
+	instructionSet[instrWSNE] = instrChars{"WSNE", 0x8189, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_PC}
+	instructionSet[instrWSNEI] = instrChars{"WSNEI", 0xe6e9, 0xe7ff, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_PC}
+	instructionSet[instrWSSVR] = instrChars{"WSSVR", 0x8729, 0xffff, 2, UNIQUE_2_WORD_FMT, EAGLE_STACK}
+	instructionSet[instrWSTB] = instrChars{"WSTB", 0x8539, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_MEMREF}
+	instructionSet[instrWSUB] = instrChars{"WSUB", 0x8159, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrWSZB] = instrChars{"WSZB", 0x82b9, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_PC}
+	instructionSet[instrWUGTI] = instrChars{"WUGTI", 0xc699, 0xe7ff, 3, ONEACC_IMM_3_WORD_FMT, EAGLE_PC}
+	instructionSet[instrXCALL] = instrChars{"XCALL", 0x8609, 0xe7ff, 3, NOACC_MODE_IND_3_WORD_XCALL_FMT, EAGLE_PC}
+	instructionSet[instrXCH] = instrChars{"XCH", 0x81c8, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP}
+	instructionSet[instrXJMP] = instrChars{"XJMP", 0xc609, 0xe7ff, 2, NOACC_MODE_IND_2_WORD_X_FMT, EAGLE_PC}
+	instructionSet[instrXJSR] = instrChars{"XJSR", 0xc619, 0xe7ff, 2, NOACC_MODE_IND_2_WORD_X_FMT, EAGLE_PC}
+	instructionSet[instrXLDB] = instrChars{"XLDB", 0x8419, 0x87ff, 2, ONEACC_MODE_2_WORD_X_B_FMT, EAGLE_MEMREF}
+	instructionSet[instrXLEF] = instrChars{"XLEF", 0x8409, 0x87ff, 2, ONEACC_MODE_IND_2_WORD_X_FMT, EAGLE_MEMREF}
+	instructionSet[instrXLEFB] = instrChars{"XLEFB", 0x8439, 0x87ff, 2, ONEACC_MODE_2_WORD_X_B_FMT, EAGLE_MEMREF}
+	instructionSet[instrXNADD] = instrChars{"XNADD", 0x8018, 0x87ff, 2, ONEACC_MODE_IND_2_WORD_X_FMT, EAGLE_MEMREF}
+	instructionSet[instrXNADI] = instrChars{"XNADI", 0x8418, 0x87ff, 2, IMM_MODE_2_WORD_FMT, EAGLE_MEMREF}
+	instructionSet[instrXNDO] = instrChars{"XNDO", 0x8498, 0x87ff, 3, THREE_WORD_DO_FMT, EAGLE_PC}
+	instructionSet[instrXNDSZ] = instrChars{"XNDSZ", 0xa609, 0xe7ff, 2, NOACC_MODE_IND_2_WORD_X_FMT, EAGLE_PC}
+	instructionSet[instrXNISZ] = instrChars{"XNISZ", 0x8639, 0xe7ff, 2, NOACC_MODE_IND_2_WORD_X_FMT, EAGLE_PC}
+	instructionSet[instrXNLDA] = instrChars{"XNLDA", 0x8329, 0x87ff, 2, ONEACC_MODE_IND_2_WORD_X_FMT, EAGLE_MEMREF}
+	instructionSet[instrXNSBI] = instrChars{"XNSBI", 0x8458, 0x87ff, 2, IMM_MODE_2_WORD_FMT, EAGLE_MEMREF}
+	instructionSet[instrXNSTA] = instrChars{"XNSTA", 0x8339, 0x87ff, 2, ONEACC_MODE_IND_2_WORD_X_FMT, EAGLE_MEMREF}
+	instructionSet[instrXNSUB] = instrChars{"XNSUB", 0x8058, 0x87ff, 2, ONEACC_MODE_IND_2_WORD_X_FMT, EAGLE_MEMREF}
+	instructionSet[instrXPEF] = instrChars{"XPEF", 0x8629, 0xe7ff, 2, NOACC_MODE_IND_2_WORD_X_FMT, EAGLE_STACK}
+	instructionSet[instrXPEFB] = instrChars{"XPEFB", 0xa629, 0xe7ff, 2, NOACC_MODE_2_WORD_FMT, EAGLE_STACK}
+	instructionSet[instrXPSHJ] = instrChars{"XPSHJ", 0x8619, 0xe7ff, 2, IMM_MODE_2_WORD_FMT, EAGLE_STACK}
+	instructionSet[instrXSTB] = instrChars{"XSTB", 0x8429, 0x87ff, 2, ONEACC_MODE_2_WORD_X_B_FMT, EAGLE_MEMREF}
+	instructionSet[instrXWADD] = instrChars{"XWADD", 0x8118, 0x87ff, 2, ONEACC_MODE_IND_2_WORD_X_FMT, EAGLE_MEMREF}
+	instructionSet[instrXWADI] = instrChars{"XWADI", 0x8518, 0x87ff, 2, IMM_MODE_2_WORD_FMT, EAGLE_MEMREF}
+	instructionSet[instrXWDSZ] = instrChars{"XWDSZ", 0xA639, 0xE7FF, 2, NOACC_MODE_IND_2_WORD_X_FMT, EAGLE_PC}
+	instructionSet[instrXWLDA] = instrChars{"XWLDA", 0x8309, 0x87ff, 2, ONEACC_MODE_IND_2_WORD_X_FMT, EAGLE_MEMREF}
+	instructionSet[instrXWSBI] = instrChars{"XWSBI", 0x8558, 0x87ff, 2, IMM_MODE_2_WORD_FMT, EAGLE_OP}
+	instructionSet[instrXWSTA] = instrChars{"XWSTA", 0x8319, 0x87ff, 2, ONEACC_MODE_IND_2_WORD_X_FMT, EAGLE_MEMREF}
+	instructionSet[instrXWSUB] = instrChars{"XWSUB", 0x8158, 0x87ff, 2, ONEACC_MODE_IND_2_WORD_X_FMT, EAGLE_OP}
+	instructionSet[instrZEX] = instrChars{"ZEX", 0x8359, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
 }

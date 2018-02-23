@@ -43,9 +43,9 @@ func eagleIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		twoAccImm2Word      twoAccImm2WordT
 	)
 
-	switch iPtr.mnemonic {
+	switch iPtr.ix {
 
-	case "CIO":
+	case instrCIO:
 		// TODO handle I/O channel
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		word = util.DWordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs])
@@ -59,7 +59,7 @@ func eagleIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			cpuPtr.ac[twoAcc1Word.acd] = dg.DwordT(dataWord)
 		}
 
-	case "CIOI":
+	case instrCIOI:
 		// TODO handle I/O channel
 		twoAccImm2Word = iPtr.variant.(twoAccImm2WordT)
 		if twoAccImm2Word.acs == twoAccImm2Word.acd {
@@ -77,19 +77,19 @@ func eagleIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			cpuPtr.ac[twoAccImm2Word.acd] = dg.DwordT(dataWord)
 		}
 
-	case "ECLID": // seems to be the same as LCPID
+	case instrECLID: // seems to be the same as LCPID
 		dwd = cpuModelNo << 16
 		dwd |= ucodeRev << 8
 		dwd |= memory.MemSizeLCPID
 		cpuPtr.ac[0] = dwd
 
-	case "INTDS":
+	case instrINTDS:
 		return intds(cpuPtr)
 
-	case "INTEN":
+	case instrINTEN:
 		return inten(cpuPtr)
 
-	case "LCPID": // seems to be the same as ECLID
+	case instrLCPID: // seems to be the same as ECLID
 		dwd = cpuModelNo << 16
 		dwd |= ucodeRev << 8
 		dwd |= memory.MemSizeLCPID
@@ -97,16 +97,16 @@ func eagleIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 		// MSKO is handled via DOB n,CPU
 
-	case "NCLID":
+	case instrNCLID:
 		cpuPtr.ac[0] = cpuModelNo
 		cpuPtr.ac[1] = ucodeRev
 		cpuPtr.ac[2] = memory.MemSizeLCPID // TODO Check this
 
-	case "READS":
+	case instrREADS:
 		oneAcc1Word = iPtr.variant.(oneAcc1WordT)
 		return reads(cpuPtr, oneAcc1Word.acd)
 
-	case "WLMP":
+	case instrWLMP:
 		if cpuPtr.ac[1] == 0 {
 			mapRegAddr = int(cpuPtr.ac[0] & 0x7ff)
 			wAddr = dg.PhysAddrT(cpuPtr.ac[2])

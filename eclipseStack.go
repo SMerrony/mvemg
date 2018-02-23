@@ -38,9 +38,9 @@ func eclipseStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	)
 	acsUp := [8]int{0, 1, 2, 3, 0, 1, 2, 3}
 
-	switch iPtr.mnemonic {
+	switch iPtr.ix {
 
-	case "POP":
+	case instrPOP:
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		first = twoAcc1Word.acs
 		last = twoAcc1Word.acd
@@ -54,12 +54,12 @@ func eclipseStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			cpuPtr.ac[acsUp[thisAc]] = dg.DwordT(memory.NsPop(0, debugLogging))
 		}
 
-	case "POPJ":
+	case instrPOPJ:
 		addr = dg.PhysAddrT(memory.NsPop(0, debugLogging))
 		cpuPtr.pc = addr
 		return true // because PC set
 
-	case "PSH":
+	case instrPSH:
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		first = twoAcc1Word.acs
 		last = twoAcc1Word.acd
@@ -73,14 +73,14 @@ func eclipseStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			memory.NsPush(0, util.DWordGetLowerWord(cpuPtr.ac[acsUp[thisAc]]), debugLogging)
 		}
 
-	case "PSHJ":
+	case instrPSHJ:
 		noAccModeInd2Word = iPtr.variant.(noAccModeInd2WordT)
 		memory.NsPush(0, dg.WordT(cpuPtr.pc)+2, debugLogging)
 		addr = resolve16bitEclipseAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15)
 		cpuPtr.pc = addr
 		return true // because PC set
 
-	case "RTN":
+	case instrRTN:
 		// // complement of SAVE
 		// memory.WriteWord(memory.NspLoc, memory.ReadWord(memory.NfpLoc)) // ???
 		// //memory.WriteWord(memory.NfpLoc, memory.ReadWord(memory.NspLoc)) // ???
@@ -109,7 +109,7 @@ func eclipseStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 		return true // because PC set
 
-	case "SAVE":
+	case instrSAVE:
 		unique2Word = iPtr.variant.(unique2WordT)
 		i := dg.WordT(unique2Word.immU16)
 		nfpSav := memory.ReadWord(memory.NfpLoc)

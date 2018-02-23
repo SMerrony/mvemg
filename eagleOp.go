@@ -50,30 +50,30 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		twoAcc1Word        twoAcc1WordT
 	)
 
-	switch iPtr.mnemonic {
+	switch iPtr.ix {
 
-	case "ADDI":
+	case instrADDI:
 		oneAccImm2Word = iPtr.variant.(oneAccImm2WordT)
 		// signed 16-bit add immediate
 		s16 = int16(util.DWordGetLowerWord(cpuPtr.ac[oneAccImm2Word.acd]))
 		s16 += oneAccImm2Word.immS16
 		cpuPtr.ac[oneAccImm2Word.acd] = dg.DwordT(s16) & 0X0000FFFF
 
-	case "ANDI":
+	case instrANDI:
 		oneAccImmWd2Word = iPtr.variant.(oneAccImmWd2WordT)
 		wd = util.DWordGetLowerWord(cpuPtr.ac[oneAccImmWd2Word.acd])
 		cpuPtr.ac[oneAccImmWd2Word.acd] = dg.DwordT(wd&oneAccImmWd2Word.immWord) & 0x0000ffff
 
-	case "CRYTC":
+	case instrCRYTC:
 		cpuPtr.carry = !cpuPtr.carry
 
-	case "CRYTO":
+	case instrCRYTO:
 		cpuPtr.carry = true
 
-	case "CRYTZ":
+	case instrCRYTZ:
 		cpuPtr.carry = false
 
-	case "CVWN":
+	case instrCVWN:
 		oneAcc1Word = iPtr.variant.(oneAcc1WordT)
 		dwd = cpuPtr.ac[oneAcc1Word.acd]
 		if dwd>>16 != 0 && dwd>>16 != 0xffff {
@@ -85,18 +85,18 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			cpuPtr.ac[oneAcc1Word.acd] &= 0x0000ffff
 		}
 
-	case "LLDB":
+	case instrLLDB:
 		oneAccMode3Word = iPtr.variant.(oneAccMode3WordT)
 		addr = resolve32bitEffAddr(cpuPtr, ' ', oneAccMode3Word.mode, oneAccMode3Word.disp31>>1)
 		lobyte = util.TestDWbit(dg.DwordT(oneAccMode3Word.disp31), 31)
 		cpuPtr.ac[oneAccMode3Word.acd] = dg.DwordT(memory.ReadByte(addr, lobyte))
 
-	case "LLEF":
+	case instrLLEF:
 		oneAccModeInd3Word = iPtr.variant.(oneAccModeInd3WordT)
 		cpuPtr.ac[oneAccModeInd3Word.acd] = dg.DwordT(
 			resolve32bitEffAddr(cpuPtr, oneAccModeInd3Word.ind, oneAccModeInd3Word.mode, oneAccModeInd3Word.disp31))
 
-	case "LLEFB":
+	case instrLLEFB:
 		oneAccMode3Word = iPtr.variant.(oneAccMode3WordT)
 		addr = resolve32bitEffAddr(cpuPtr, ' ', oneAccMode3Word.mode, oneAccMode3Word.disp31>>1)
 		addr <<= 1
@@ -105,74 +105,74 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		}
 		cpuPtr.ac[oneAccMode3Word.acd] = dg.DwordT(addr)
 
-	case "LPSR":
+	case instrLPSR:
 		cpuPtr.ac[0] = dg.DwordT(cpuPtr.psr)
 
-	case "NADD": // signed add
+	case instrNADD: // signed add
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		s16 = int16(cpuPtr.ac[twoAcc1Word.acd]) + int16(cpuPtr.ac[twoAcc1Word.acs])
 		cpuPtr.ac[twoAcc1Word.acd] = dg.DwordT(s16)
 
-	case "NADDI":
+	case instrNADDI:
 		oneAccImm2Word = iPtr.variant.(oneAccImm2WordT)
 		s16 = int16(cpuPtr.ac[oneAccImm2Word.acd])
 		s16 += oneAccImm2Word.immS16
 		// FIXME handle overflow
 		cpuPtr.ac[oneAccImm2Word.acd] = dg.DwordT(s16)
 
-	case "NLDAI":
+	case instrNLDAI:
 		oneAccImm2Word = iPtr.variant.(oneAccImm2WordT)
 		cpuPtr.ac[oneAccImm2Word.acd] = dg.DwordT(int32(oneAccImm2Word.immS16))
 
-	case "NSUB": // signed subtract
+	case instrNSUB: // signed subtract
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		s16 = int16(cpuPtr.ac[twoAcc1Word.acd]) - int16(cpuPtr.ac[twoAcc1Word.acs])
 		cpuPtr.ac[twoAcc1Word.acd] = dg.DwordT(s16)
 
-	case "SEX": // Sign EXtend
+	case instrSEX: // Sign EXtend
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		cpuPtr.ac[twoAcc1Word.acd] = util.SexWordToDWord(util.DWordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs]))
 
-	case "SSPT": /* NO-OP - see p.8-5 of MV/10000 Sys Func Chars */
+	case instrSSPT: /* NO-OP - see p.8-5 of MV/10000 Sys Func Chars */
 		log.Println("INFO: SSPT is a No-Op on this machine, continuing")
 
-	case "WADC":
+	case instrWADC:
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		dwd = ^cpuPtr.ac[twoAcc1Word.acs]
 		cpuPtr.ac[twoAcc1Word.acd] = dg.DwordT(int32(cpuPtr.ac[twoAcc1Word.acd]) + int32(dwd))
 		// FIXME - handle overflow and carry
 
-	case "WADD":
+	case instrWADD:
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		res = int32(cpuPtr.ac[twoAcc1Word.acs]) + int32(cpuPtr.ac[twoAcc1Word.acd])
 		cpuPtr.ac[twoAcc1Word.acd] = dg.DwordT(res)
 		// FIXME - handle overflow and carry
 
-	case "WADI":
+	case instrWADI:
 		// FIXME - handle overflow and carry
 		immOneAcc = iPtr.variant.(immOneAccT)
 		s32 = int32(cpuPtr.ac[immOneAcc.acd]) + int32(immOneAcc.immU16)
 		cpuPtr.ac[immOneAcc.acd] = dg.DwordT(s32)
 
-	case "WADDI":
+	case instrWADDI:
 		// FIXME - handle overflow and carry
 		oneAccImm3Word = iPtr.variant.(oneAccImm3WordT)
 		s32 = int32(cpuPtr.ac[oneAccImm3Word.acd]) + int32(oneAccImm3Word.immU32)
 		cpuPtr.ac[oneAccImm3Word.acd] = dg.DwordT(s32)
 
-	case "WAND":
+	case instrWAND:
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		cpuPtr.ac[twoAcc1Word.acd] &= cpuPtr.ac[twoAcc1Word.acs]
 
-	case "WANDI":
+	case instrWANDI:
 		oneAccImmDwd3Word = iPtr.variant.(oneAccImmDwd3WordT)
 		cpuPtr.ac[oneAccImmDwd3Word.acd] &= oneAccImmDwd3Word.immDword
 
-	case "WCOM":
+	case instrWCOM:
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		cpuPtr.ac[twoAcc1Word.acd] = ^cpuPtr.ac[twoAcc1Word.acs]
 
-	case "WDIVS":
+	case instrWDIVS:
 		s64 = int64(util.QWordFromTwoDwords(cpuPtr.ac[0], cpuPtr.ac[1]))
 		if cpuPtr.ac[2] == 0 {
 			cpuPtr.SetOVR(true)
@@ -186,23 +186,23 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			}
 		}
 
-	case "WINC":
+	case instrWINC:
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		cpuPtr.ac[twoAcc1Word.acd] = cpuPtr.ac[twoAcc1Word.acs] + 1
 
-	case "WIOR":
+	case instrWIOR:
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		cpuPtr.ac[twoAcc1Word.acd] |= cpuPtr.ac[twoAcc1Word.acs]
 
-	case "WIORI":
+	case instrWIORI:
 		oneAccImmDwd3Word = iPtr.variant.(oneAccImmDwd3WordT)
 		cpuPtr.ac[oneAccImmDwd3Word.acd] |= oneAccImmDwd3Word.immDword
 
-	case "WLDAI":
+	case instrWLDAI:
 		oneAccImmDwd3Word = iPtr.variant.(oneAccImmDwd3WordT)
 		cpuPtr.ac[oneAccImmDwd3Word.acd] = oneAccImmDwd3Word.immDword
 
-	case "WLSHI":
+	case instrWLSHI:
 		oneAccImm2Word = iPtr.variant.(oneAccImm2WordT)
 		shiftAmt8 := int8(oneAccImm2Word.immS16 & 0x0ff)
 		if shiftAmt8 < 0 { // shift right
@@ -215,47 +215,47 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			cpuPtr.ac[oneAccImm2Word.acd] = dwd
 		}
 
-	case "WLSI":
+	case instrWLSI:
 		immOneAcc = iPtr.variant.(immOneAccT)
 		cpuPtr.ac[immOneAcc.acd] = cpuPtr.ac[immOneAcc.acd] << immOneAcc.immU16
 
-	case "WMOV":
+	case instrWMOV:
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		cpuPtr.ac[twoAcc1Word.acd] = cpuPtr.ac[twoAcc1Word.acs]
 
-	case "WMOVR":
+	case instrWMOVR:
 		oneAcc1Word = iPtr.variant.(oneAcc1WordT)
 		cpuPtr.ac[oneAcc1Word.acd] = cpuPtr.ac[oneAcc1Word.acd] >> 1
 
-	case "WMUL":
+	case instrWMUL:
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		res = int32(cpuPtr.ac[twoAcc1Word.acd]) * int32(cpuPtr.ac[twoAcc1Word.acs])
 		// FIXME - handle overflow and carry
 		cpuPtr.ac[twoAcc1Word.acd] = dg.DwordT(res)
 
-	case "WNADI": //signed 16-bit
+	case instrWNADI: //signed 16-bit
 		oneAccImm2Word = iPtr.variant.(oneAccImm2WordT)
 		s32 = int32(cpuPtr.ac[oneAccImm2Word.acd]) + int32(oneAccImm2Word.immS16)
 		cpuPtr.ac[oneAccImm2Word.acd] = dg.DwordT(s32)
 
-	case "WNEG":
+	case instrWNEG:
 		// FIXME WNEG - handle CARRY/OVR
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		cpuPtr.ac[twoAcc1Word.acd] = (^cpuPtr.ac[twoAcc1Word.acs]) + 1
 
-	case "WSBI":
+	case instrWSBI:
 		immOneAcc = iPtr.variant.(immOneAccT)
 		s32 = int32(cpuPtr.ac[immOneAcc.acd]) - int32(immOneAcc.immU16)
 		cpuPtr.ac[immOneAcc.acd] = dg.DwordT(s32)
 		// FIXME - handle overflow and carry
 
-	case "WSUB":
+	case instrWSUB:
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		res = int32(cpuPtr.ac[twoAcc1Word.acd]) - int32(cpuPtr.ac[twoAcc1Word.acs])
 		cpuPtr.ac[twoAcc1Word.acd] = dg.DwordT(res)
 		// FIXME - handle overflow and carry
 
-	case "ZEX":
+	case instrZEX:
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		cpuPtr.ac[twoAcc1Word.acd] = 0 | dg.DwordT(util.DWordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs]))
 

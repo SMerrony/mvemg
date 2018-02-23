@@ -16,9 +16,9 @@ func eclipseMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		oneAccModeInt2Word oneAccModeInd2WordT
 	)
 
-	switch iPtr.mnemonic {
+	switch iPtr.ix {
 
-	case "BLM":
+	case instrBLM:
 		/* AC0 - unused, AC1 - no. wds to move, AC2 - src, AC3 - dest */
 		numWds := util.DWordGetLowerWord(cpuPtr.ac[1])
 		if numWds == 0 {
@@ -42,13 +42,13 @@ func eclipseMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		cpuPtr.ac[2] = dg.DwordT(src + 1) // TODO confirm this is right, doc ambiguous
 		cpuPtr.ac[3] = dg.DwordT(dest + 1)
 
-	case "CMP":
+	case instrCMP:
 		cmp(cpuPtr)
 
-	case "CMV":
+	case instrCMV:
 		cmv(cpuPtr)
 
-	case "ELDA":
+	case instrELDA:
 		oneAccModeInt2Word = iPtr.variant.(oneAccModeInd2WordT)
 		addr = resolve16bitEclipseAddr(cpuPtr, oneAccModeInt2Word.ind, oneAccModeInt2Word.mode, oneAccModeInt2Word.disp15)
 		cpuPtr.ac[oneAccModeInt2Word.acd] = dg.DwordT(memory.ReadWord(addr)) & 0x0ffff

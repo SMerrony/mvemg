@@ -20,9 +20,9 @@ func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		twoAcc1Word        twoAcc1WordT
 	)
 
-	switch iPtr.mnemonic {
+	switch iPtr.ix {
 
-	case "CLM": // signed compare to limits
+	case instrCLM: // signed compare to limits
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		acs = int16(util.DWordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs]))
 		if twoAcc1Word.acs == twoAcc1Word.acd {
@@ -47,7 +47,7 @@ func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		}
 		cpuPtr.pc += inc
 
-	case "DSPA":
+	case instrDSPA:
 		oneAccModeInt2Word = iPtr.variant.(oneAccModeInd2WordT)
 		tableStart := resolve16bitEclipseAddr(cpuPtr, oneAccModeInt2Word.ind, oneAccModeInt2Word.mode, oneAccModeInt2Word.disp15)
 		offset := util.DWordGetLowerWord(cpuPtr.ac[oneAccModeInt2Word.acd])
@@ -68,7 +68,7 @@ func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			cpuPtr.pc = addr
 		}
 
-	case "EISZ":
+	case instrEISZ:
 		noAccModeInd2Word = iPtr.variant.(noAccModeInd2WordT)
 		addr = resolve16bitEclipseAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15)
 		wd = memory.ReadWord(addr)
@@ -80,18 +80,18 @@ func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			cpuPtr.pc += 2
 		}
 
-	case "EJMP":
+	case instrEJMP:
 		noAccModeInd2Word = iPtr.variant.(noAccModeInd2WordT)
 		addr = resolve16bitEclipseAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15)
 		cpuPtr.pc = addr
 
-	case "EJSR":
+	case instrEJSR:
 		noAccModeInd2Word = iPtr.variant.(noAccModeInd2WordT)
 		cpuPtr.ac[3] = dg.DwordT(cpuPtr.pc) + 2
 		addr = resolve16bitEclipseAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15)
 		cpuPtr.pc = addr
 
-	case "SGT": //16-bit signed numbers
+	case instrSGT: //16-bit signed numbers
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		acs = int16(util.DWordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs]))
 		acd = int16(util.DWordGetLowerWord(cpuPtr.ac[twoAcc1Word.acd]))
@@ -101,7 +101,7 @@ func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			cpuPtr.pc++
 		}
 
-	case "SNB":
+	case instrSNB:
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		addr, bit = resolveEclipseBitAddr(cpuPtr, &twoAcc1Word)
 		wd := memory.ReadWord(addr)
@@ -114,7 +114,7 @@ func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			logging.DebugPrint(logging.DebugLog, "SNB: Wd Addr: %d., word: %0X, bit #: %d\n", addr, wd, bit)
 		}
 
-	case "SZB":
+	case instrSZB:
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		addr, bit = resolveEclipseBitAddr(cpuPtr, &twoAcc1Word)
 		wd := memory.ReadWord(addr)
