@@ -712,15 +712,12 @@ func start(cmd []string) {
 // The main Emulator running loop...
 func run() {
 	var (
-		thisOp    dg.WordT
-		iPtr      *decodedInstrT
-		ok        bool
-		errDetail string
-		//b         byte
+		thisOp      dg.WordT
+		iPtr        *decodedInstrT
+		ok          bool
+		errDetail   string
+		instrCounts [maxInstrs]int
 	)
-
-	// instruction counting...
-	instrCounts := make(map[string]uint64)
 
 	// instruction disassembly slows CPU down by about 3x, for the moment it seems to make sense
 	// for it to follow the debugLogging setting...
@@ -783,7 +780,7 @@ RunLoop: // performance-critical section starts here
 		}
 
 		// instruction counting
-		instrCounts[iPtr.mnemonic]++
+		instrCounts[iPtr.ix]++
 
 		// N.B. RLock still in effect as we loop around
 	}
@@ -811,30 +808,24 @@ RunLoop: // performance-critical section starts here
 	ttoPutNLString(errDetail)
 
 	// instruction counts, first by Mnemonic, then by count
-	var mnems []string
-	for m := range instrCounts {
-		mnems = append(mnems, m)
-	}
-	sort.Strings(mnems)
-	log.Println("Instruction Execution Count by Mnemonic")
-	for _, m := range mnems {
-		log.Printf("%s\t%d\n", m, instrCounts[m])
-	}
+	m := make(map[int]string)
+	keys := make([]int, 0)
 
-	n := map[int][]string{}
-	var a []int
-	for mn, v := range instrCounts {
-		n[int(v)] = append(n[int(v)], mn)
-	}
-	for k := range n {
-		a = append(a, k)
-	}
-	sort.Sort(sort.Reverse(sort.IntSlice(a)))
-	log.Println("Instruction Execution Count by Count")
-	for _, k := range a {
-		for _, s := range n[k] {
-			log.Printf("%d\t%s\n", k, s)
+	log.Println("Instruction Execution Count by Mnemonic")
+	for i, c := range instrCounts {
+		if instrCounts[i] > 0 {
+			log.Printf("%s\t%d\n", instructionSet[i].mnemonic, c)
+			if m[c] == "" {
+				m[c] = instructionSet[i].mnemonic
+				keys = append(keys, c)
+			} else {
+				m[c] += ", " + instructionSet[i].mnemonic
+			}
 		}
 	}
-
+	log.Println("instructions by Count")
+	sort.Ints(keys)
+	for _, c := range keys {
+		log.Printf("%d\t%s\n", c, m[c])
+	}
 }
