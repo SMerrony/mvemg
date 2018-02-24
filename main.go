@@ -258,7 +258,7 @@ func doCommand(cmd string) {
 	case "EXIT":
 		cleanExit()
 	case "NOBREAK":
-		ttoPutNLString(cmdNYI)
+		breakClear(words)
 	case "RESTORE":
 		ttoPutNLString(cmdNYI)
 	case "SAVE":
@@ -357,7 +357,28 @@ func breakSet(cmd []string) {
 		return
 	}
 	breakpoints = append(breakpoints, dg.PhysAddrT(pAddr))
+
 	ttoPutNLString("BREAKpoint set")
+}
+
+func breakClear(cmd []string) {
+	if len(cmd) != 2 {
+		ttoPutNLString(" *** NOBREAK command requires a single physical <address> argument ***")
+		return
+	}
+	pAddr, err := strconv.Atoi(cmd[1])
+	if err != nil {
+		ttoPutNLString(" *** NOBREAK command could not parse <address> argument ***")
+		return
+	}
+	cAddr := dg.PhysAddrT(pAddr)
+	for ix, addr := range breakpoints {
+		if addr == cAddr {
+			breakpoints[ix] = breakpoints[len(breakpoints)-1]
+			breakpoints = breakpoints[:len(breakpoints)-1]
+			ttoPutNLString(" *** Cleared breakpoint ***")
+		}
+	}
 }
 
 func createBlank(cmd []string) {
@@ -556,7 +577,7 @@ func printableBreakpointList() string {
 	if len(breakpoints) == 0 {
 		return " *** No BREAKpoints are set ***"
 	}
-	res := "BREAKpoints at: "
+	res := "BREAKpoint(s) at: "
 	for _, b := range breakpoints {
 		res += fmt.Sprintf("%d. ", b)
 	}
@@ -614,7 +635,7 @@ func showHelp() {
 		" DIS <from> <to>|+<#>   - DISassemble physical memory range or # from PC\012" +
 		" DO <file>              - DO (i.e. run) emulator commands from script <file>\012" +
 		" EXIT                   - EXIT the emulator\012" +
-		" RESTORE/SAVE <file>    - RESTORE (get)/SAVE emulator state from/to file\012" +
+		//		" RESTORE/SAVE <file>    - RESTORE (get)/SAVE emulator state from/to file\012" +
 		" SET LOGGING ON|OFF     - Turn on or off debug logging (logs dumped end of run)\012" +
 		" SHOW BREAK/DEV/LOGGING - SHOW list of BREAKpoints/DEVices configured\012")
 }
@@ -708,9 +729,7 @@ RunLoop: // performance-critical section starts here
 
 		if debugLogging {
 			logging.DebugPrint(logging.DebugLog, "%s\t\t%s\n", iPtr.disassembly, cpuCompactPrintableStatus())
-		} // else {
-		// 	logging.DebugPrint(logging.DebugLog, "%d %s\n", cpu.pc, iPtr.mnemonic)
-		// }
+		}
 
 		// EXECUTE
 		if !cpuExecute(iPtr) {
