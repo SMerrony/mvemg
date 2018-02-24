@@ -428,13 +428,17 @@ func detach(cmd []string) {
 
 func disassemble(cmd []string) {
 	var (
-		cmd1              = cmd[1]
 		lowAddr, highAddr dg.PhysAddrT
 		word              dg.WordT
 		byte1, byte2      dg.ByteT
 		display           string
 		skipDecode        int
 	)
+	if len(cmd) == 1 {
+		ttoPutNLString(" *** DIS command requires an address ***")
+		return
+	}
+	cmd1 := cmd[1]
 	intVal1, err := strconv.Atoi(cmd1)
 	if err != nil {
 		ttoPutNLString(" *** Invalid address ***")
@@ -491,6 +495,10 @@ func disassemble(cmd []string) {
 }
 
 func doScript(cmd []string) {
+	if len(cmd) < 2 {
+		ttoPutNLString(" *** DO command required <scriptfile> ***")
+		return
+	}
 	scriptFile, err := os.Open(cmd[1])
 	if err != nil {
 		ttoPutNLString(" *** Could not open MV/Em command script ***")
@@ -516,6 +524,10 @@ func doScript(cmd []string) {
 func examine(cmd []string) {
 	switch cmd[1] {
 	case "A":
+		if len(cmd) < 3 {
+			ttoPutNLString(" *** Examine Accumulator - invalid AC number ***")
+			return
+		}
 		exAc, err := strconv.Atoi(cmd[2])
 		if err != nil || exAc < 0 || exAc > 3 {
 			ttoPutNLString(" *** Examine Accumulator - invalid AC number ***")
@@ -535,6 +547,10 @@ func examine(cmd []string) {
 			ttoPutNLString(prompt)
 		}
 	case "M":
+		if len(cmd) < 3 {
+			ttoPutNLString(" *** Examine Memory - invalid address ***")
+			return
+		}
 		exMem, err := strconv.Atoi(cmd[2])
 		if err != nil || exMem < 0 || exMem > memory.MemSizeWords {
 			ttoPutNLString(" *** Examine Memory - invalid address ***")
@@ -680,6 +696,10 @@ func singleStep() {
 
 // start running at user-provided PC
 func start(cmd []string) {
+	if len(cmd) < 2 {
+		ttoPutNLString(" *** ST command requires start address ***")
+		return
+	}
 	newPc, err := strconv.Atoi(cmd[1])
 	if err != nil || newPc < 0 {
 		ttoPutNLString(" *** Could not parse new PC value ***")
