@@ -252,20 +252,13 @@ func doCommand(cmd string) {
 		disassemble(words)
 	case "DO":
 		doScript(words)
-	// for convenience...
-	case "exit":
-		fallthrough
-	case "EXIT":
+	case "exit", "EXIT", "QUIT":
 		cleanExit()
 	case "NOBREAK":
 		breakClear(words)
-	case "RESTORE":
-		ttoPutNLString(cmdNYI)
-	case "SAVE":
-		ttoPutNLString(cmdNYI)
 	case "SET":
 		set(words)
-	case "SHOW":
+	case "SH", "SHO", "SHOW":
 		show(words)
 	default:
 		ttoPutNLString(cmdUnknown)
@@ -651,7 +644,6 @@ func showHelp() {
 		" DIS <from> <to>|+<#>   - DISassemble physical memory range or # from PC\012" +
 		" DO <file>              - DO (i.e. run) emulator commands from script <file>\012" +
 		" EXIT                   - EXIT the emulator\012" +
-		//		" RESTORE/SAVE <file>    - RESTORE (get)/SAVE emulator state from/to file\012" +
 		" SET LOGGING ON|OFF     - Turn on or off debug logging (logs dumped end of run)\012" +
 		" SHOW BREAK/DEV/LOGGING - SHOW list of BREAKpoints/DEVices configured\012")
 }
