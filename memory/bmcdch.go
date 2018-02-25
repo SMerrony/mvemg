@@ -168,34 +168,32 @@ func BmcdchReadSlot(slot int) dg.DwordT {
 	return util.DwordFromTwoWords(regs[slot*2], regs[(slot*2)+1])
 }
 
-func getBmcMapAddr(mAddr dg.PhysAddrT) (dg.PhysAddrT, dg.PhysAddrT) {
-	var page, slot, pAddr dg.PhysAddrT
-	slot = mAddr >> 10
+func getBmcMapAddr(mAddr dg.PhysAddrT) (physAddr dg.PhysAddrT, page dg.PhysAddrT) {
+	slot := mAddr >> 10
 	/*** N.B. at some point between 1980 and 1987 the lower 5 bits of the odd word were
 	  prepended to the even word to extend the mappable space */
 	page = dg.PhysAddrT((regs[slot*2]&0x1f))<<16 + dg.PhysAddrT(regs[(slot*2)+1])<<10
 	//page = dg.PhysAddrT(regs[(slot*2)+1]) << 10
-	pAddr = (mAddr & 0x3ff) | page
+	physAddr = (mAddr & 0x3ff) | page
 	if isLogging {
 		logging.DebugPrint(logging.MapLog, "getBmcMapAddr got: %d, slot: %d, regs[slot*2+1]: %d, page: %d, returning: %d\n",
-			mAddr, slot, regs[(slot*2)+1], page, pAddr)
+			mAddr, slot, regs[(slot*2)+1], page, physAddr)
 	}
-	return pAddr, page // TODO page return is just for debugging
+	return physAddr, page // TODO page return is just for debugging
 }
 
-func getDchMapAddr(mAddr dg.PhysAddrT) (dg.PhysAddrT, dg.PhysAddrT) {
-	var page, slot, pAddr dg.PhysAddrT
-	slot = mAddr >> 10
+func getDchMapAddr(mAddr dg.PhysAddrT) (physAddr dg.PhysAddrT, page dg.PhysAddrT) {
+	slot := mAddr >> 10
 	/*** N.B. at some point between 1980 and 1987 the lower 5 bits of the odd word were
 	  prepended to the even word to extend the mappable space */
 	page = dg.PhysAddrT((regs[slot*2]&0x1f))<<16 + dg.PhysAddrT(regs[(slot*2)+1])<<10
 	//page = dg.PhysAddrT(regs[(slot*2)+1]) << 10
-	pAddr = (mAddr & 0x3ff) | page
+	physAddr = (mAddr & 0x3ff) | page
 	if isLogging {
 		logging.DebugPrint(logging.MapLog, "getDchMapAddr got: %d, slot: %d, regs[slot*2+1]: %d, page: %d, returning: %d\n",
-			mAddr, slot, regs[(slot*2)+1], page, pAddr)
+			mAddr, slot, regs[(slot*2)+1], page, physAddr)
 	}
-	return pAddr, page // TODO page return is just for debugging
+	return physAddr, page // TODO page return is just for debugging
 }
 
 func decodeBmcAddr(bmcAddr dg.PhysAddrT) bmcAddrT {
@@ -223,14 +221,16 @@ func decodeBmcAddr(bmcAddr dg.PhysAddrT) bmcAddrT {
 
 // ReadWordDchChan - reads a 16-bit word over the virtual DCH channel
 func ReadWordDchChan(addr dg.PhysAddrT) dg.WordT {
-	pAddr := addr
+	var physAddr dg.PhysAddrT
 	if getDchMode() {
-		pAddr, _ = getDchMapAddr(addr)
+		physAddr, _ = getDchMapAddr(addr)
+	} else {
+		physAddr = addr
 	}
 	if isLogging {
-		logging.DebugPrint(logging.MapLog, "ReadWordDchChan got addr: %d, read from addr: %d\n", addr, pAddr)
+		logging.DebugPrint(logging.MapLog, "ReadWordDchChan got addr: %d, read from addr: %d\n", addr, physAddr)
 	}
-	return ReadWord(pAddr)
+	return ReadWord(physAddr)
 }
 
 // ReadWordBmcChan reads a word from memory over the virtual Burst Multiplex Channel
@@ -269,19 +269,20 @@ func ReadWordBmcChan16bit(addr *dg.WordT) dg.WordT {
 }
 
 // WriteWordDchChan writes a word to memory over the virtual DCH
-// pAddr is returned for debugging purposes only
-func WriteWordDchChan(addr *dg.PhysAddrT, data dg.WordT) dg.PhysAddrT {
-	pAddr := *addr
-
+// physAddr is returned for debugging purposes only
+func WriteWordDchChan(unmappedAddr *dg.PhysAddrT, data dg.WordT) (physAddr dg.PhysAddrT) {
 	if getDchMode() {
-		pAddr, _ = getDchMapAddr(*addr)
+		physAddr, _ = getDchMapAddr(*unmappedAddr)
+	} else {
+		physAddr = *unmappedAddr
 	}
-	WriteWord(pAddr, data)
-	*addr = *addr + 1
+	WriteWord(physAddr, data)
+	// auto-increment the supplied address
+	*unmappedAddr++
 	if isLogging {
-		logging.DebugPrint(logging.MapLog, "WriteWordDchChan got addr: %d, wrote to addr: %d\n", addr, pAddr)
+		logging.DebugPrint(logging.MapLog, "WriteWordDchChan got addr: %d, wrote to addr: %d\n", unmappedAddr, physAddr)
 	}
-	return pAddr
+	return physAddr
 }
 
 // WriteWordBmcChan writes a word over the virtual Burst Multiplex Channel

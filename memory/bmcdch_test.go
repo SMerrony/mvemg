@@ -85,5 +85,13 @@ func TestGetDchMode(t *testing.T) {
 	if icdr != 1 {
 		t.Error("Expected initial IOCDR == 1, got", icdr)
 	}
-	//BmcdchWriteReg(iochanDefReg)
+	r := getDchMode()
+	if r {
+		t.Error("Unecpected return from getDchMode()")
+	}
+	BmcdchWriteReg(iochanDefReg, 2)
+	r = getDchMode()
+	if !r {
+		t.Error("Unecpected return from getDchMode()")
+	}
 }
