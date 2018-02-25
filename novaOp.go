@@ -40,8 +40,8 @@ func novaOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	novaTwoAccMultOp = iPtr.variant.(novaTwoAccMultOpT)
 
-	tmpAcS = util.DWordGetLowerWord(cpuPtr.ac[novaTwoAccMultOp.acs])
-	tmpAcD = util.DWordGetLowerWord(cpuPtr.ac[novaTwoAccMultOp.acd])
+	tmpAcS = util.DwordGetLowerWord(cpuPtr.ac[novaTwoAccMultOp.acs])
+	tmpAcD = util.DwordGetLowerWord(cpuPtr.ac[novaTwoAccMultOp.acd])
 	savedCry = cpuPtr.carry
 
 	// Preset Carry if required
@@ -58,7 +58,7 @@ func novaOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	switch iPtr.ix {
 	case instrADC:
 		wideShifter = dg.DwordT(tmpAcD) + dg.DwordT(^tmpAcS)
-		shifter = util.DWordGetLowerWord(wideShifter)
+		shifter = util.DwordGetLowerWord(wideShifter)
 		if wideShifter > 65535 {
 			cpuPtr.carry = !cpuPtr.carry
 		} else {
@@ -67,7 +67,7 @@ func novaOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrADD: // unsigned
 		wideShifter = dg.DwordT(tmpAcD) + dg.DwordT(tmpAcS)
-		shifter = util.DWordGetLowerWord(wideShifter)
+		shifter = util.DwordGetLowerWord(wideShifter)
 		if wideShifter > 65535 {
 			cpuPtr.carry = !cpuPtr.carry
 		} else {

@@ -70,7 +70,7 @@ func eclipseStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			if debugLogging {
 				logging.DebugPrint(logging.DebugLog, "... narrow pushing AC%d\n", acsUp[thisAc])
 			}
-			memory.NsPush(0, util.DWordGetLowerWord(cpuPtr.ac[acsUp[thisAc]]), debugLogging)
+			memory.NsPush(0, util.DwordGetLowerWord(cpuPtr.ac[acsUp[thisAc]]), debugLogging)
 		}
 
 	case instrPSHJ:
@@ -105,7 +105,7 @@ func eclipseStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		cpuPtr.ac[1] = dg.DwordT(memory.NsPop(0, debugLogging)) // 4
 		cpuPtr.ac[0] = dg.DwordT(memory.NsPop(0, debugLogging)) // 5
 		//memory.WriteWord(memory.NspLoc, nfpSav-5)
-		memory.WriteWord(memory.NfpLoc, util.DWordGetLowerWord(cpuPtr.ac[3]))
+		memory.WriteWord(memory.NfpLoc, util.DwordGetLowerWord(cpuPtr.ac[3]))
 
 		return true // because PC set
 
@@ -132,11 +132,11 @@ func eclipseStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		// memory.WriteWord(memory.NfpLoc, util.DWordGetLowerWord(cpuPtr.ac[3]))
 
 		// version based on 32-bit PoP
-		memory.NsPush(0, util.DWordGetLowerWord(cpuPtr.ac[0]), debugLogging) // 1
-		memory.NsPush(0, util.DWordGetLowerWord(cpuPtr.ac[1]), debugLogging) // 2
-		memory.NsPush(0, util.DWordGetLowerWord(cpuPtr.ac[2]), debugLogging) // 3
+		memory.NsPush(0, util.DwordGetLowerWord(cpuPtr.ac[0]), debugLogging) // 1
+		memory.NsPush(0, util.DwordGetLowerWord(cpuPtr.ac[1]), debugLogging) // 2
+		memory.NsPush(0, util.DwordGetLowerWord(cpuPtr.ac[2]), debugLogging) // 3
 		memory.NsPush(0, nfpSav, debugLogging)                               // 4
-		word := util.DWordGetLowerWord(cpuPtr.ac[3])
+		word := util.DwordGetLowerWord(cpuPtr.ac[3])
 		if cpuPtr.carry {
 			word |= 0x8000
 		} else {

@@ -74,7 +74,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		noAccModeInd4Word = iPtr.variant.(noAccModeInd4WordT)
 		cpuPtr.ac[3] = dg.DwordT(cpuPtr.pc) + 4
 		if noAccModeInd4Word.argCount >= 0 {
-			dwd = util.DWordFromTwoWords(cpuPtr.psr, dg.WordT(noAccModeInd4Word.argCount))
+			dwd = util.DwordFromTwoWords(cpuPtr.psr, dg.WordT(noAccModeInd4Word.argCount))
 		} else {
 			dwd = dg.DwordT(noAccModeInd4Word.argCount) & 0x00007fff
 		}
@@ -140,7 +140,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrNSALA:
 		oneAccImm2Word = iPtr.variant.(oneAccImm2WordT)
-		wd = ^util.DWordGetLowerWord(cpuPtr.ac[oneAccImm2Word.acd])
+		wd = ^util.DwordGetLowerWord(cpuPtr.ac[oneAccImm2Word.acd])
 		if dg.WordT(oneAccImm2Word.immS16)&wd == 0 {
 			cpuPtr.pc += 3
 		} else {
@@ -149,7 +149,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrNSANA:
 		oneAccImm2Word = iPtr.variant.(oneAccImm2WordT)
-		wd = util.DWordGetLowerWord(cpuPtr.ac[oneAccImm2Word.acd])
+		wd = util.DwordGetLowerWord(cpuPtr.ac[oneAccImm2Word.acd])
 		if dg.WordT(oneAccImm2Word.immS16)&wd == 0 {
 			cpuPtr.pc += 3
 		} else {
@@ -238,7 +238,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrWSKBO:
 		wskb = iPtr.variant.(wskbT)
-		if util.TestDWbit(cpuPtr.ac[0], wskb.bitNum) {
+		if util.TestDwbit(cpuPtr.ac[0], wskb.bitNum) {
 			cpuPtr.pc += 2
 		} else {
 			cpuPtr.pc++
@@ -246,7 +246,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrWSKBZ:
 		wskb = iPtr.variant.(wskbT)
-		if !util.TestDWbit(cpuPtr.ac[0], wskb.bitNum) {
+		if !util.TestDwbit(cpuPtr.ac[0], wskb.bitNum) {
 			cpuPtr.pc += 2
 		} else {
 			cpuPtr.pc++
@@ -358,7 +358,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case instrXNDO: // Narrow Do Until Greater Than
 		threeWordDo = iPtr.variant.(threeWordDoT)
 		loopVarAddr := resolve16bitEagleAddr(cpuPtr, threeWordDo.ind, threeWordDo.mode, threeWordDo.disp15)
-		loopVar := int32(util.SexWordToDWord(util.DWordGetLowerWord(memory.ReadDWord(loopVarAddr))))
+		loopVar := int32(util.SexWordToDword(util.DwordGetLowerWord(memory.ReadDWord(loopVarAddr))))
 		loopVar++
 		memory.WriteDWord(loopVarAddr, dg.DwordT(loopVar))
 		acVar := int32(cpuPtr.ac[threeWordDo.acd])
@@ -407,7 +407,7 @@ func wpopb(cpuPtr *CPUT) {
 	wspSav := memory.ReadDWord(memory.WspLoc)
 	// pop off 6 double words
 	dwd := memory.WsPop(0) // 1
-	cpuPtr.carry = util.TestDWbit(dwd, 0)
+	cpuPtr.carry = util.TestDwbit(dwd, 0)
 	cpuPtr.pc = dg.PhysAddrT(dwd & 0x7fffffff)
 	cpuPtr.ac[3] = memory.WsPop(0) // 2
 	// replace WFP with popped value of AC3
@@ -416,7 +416,7 @@ func wpopb(cpuPtr *CPUT) {
 	cpuPtr.ac[1] = memory.WsPop(0) // 4
 	cpuPtr.ac[0] = memory.WsPop(0) // 5
 	dwd = memory.WsPop(0)          // 6
-	cpuPtr.psr = util.DWordGetUpperWord(dwd)
+	cpuPtr.psr = util.DwordGetUpperWord(dwd)
 	// TODO Set WFP is crossing rings
 	wsFramSz2 := (int(dwd&0x00007fff) * 2) + 12
 	memory.WriteDWord(memory.WspLoc, wspSav-dg.DwordT(wsFramSz2))

@@ -73,7 +73,7 @@ func TestBoolToOZ(t *testing.T) {
 func TestDWordFromTwoWords(t *testing.T) {
 	var hi dg.WordT = 0x1122
 	var lo dg.WordT = 0x3344
-	r := DWordFromTwoWords(hi, lo)
+	r := DwordFromTwoWords(hi, lo)
 	if r != 0x11223344 {
 		t.Error("Expected 287454020, got ", r)
 	}
@@ -82,7 +82,7 @@ func TestDWordFromTwoWords(t *testing.T) {
 func TestQWordFromTwoDwords(t *testing.T) {
 	var hi dg.DwordT = 0x11223344
 	var lo dg.DwordT = 0x55667788
-	r := QWordFromTwoDwords(hi, lo)
+	r := QwordFromTwoDwords(hi, lo)
 	if r != 0x1122334455667788 {
 		t.Error("Expected 0x1122334455667788, got ", r)
 	}
@@ -90,14 +90,14 @@ func TestQWordFromTwoDwords(t *testing.T) {
 
 func TestDWordGetLowerWord(t *testing.T) {
 	var dwd dg.DwordT = 0x11223344
-	r := DWordGetLowerWord(dwd)
+	r := DwordGetLowerWord(dwd)
 	if r != 0x3344 {
 		t.Error("Expected 0x3344, got ", r)
 	}
 }
 func TestDWordGetUpperWord(t *testing.T) {
 	var dwd dg.DwordT = 0x11223344
-	r := DWordGetUpperWord(dwd)
+	r := DwordGetUpperWord(dwd)
 	if r != 0x1122 {
 		t.Error("Expected 0x1122, got ", r)
 	}
@@ -147,12 +147,12 @@ func TestSetWbit(t *testing.T) {
 
 func TestSetQWbit(t *testing.T) {
 	var w dg.QwordT = 0
-	SetQWbit(&w, 63)
+	SetQwbit(&w, 63)
 	if w != 1 {
 		t.Errorf("Expected 0x01, got %x", w)
 	}
 	// repeat - should have no effect
-	SetQWbit(&w, 63)
+	SetQwbit(&w, 63)
 	if w != 1 {
 		t.Errorf("Expected 0x01, got %x", w)
 	}
@@ -171,7 +171,7 @@ func TestClearWbit(t *testing.T) {
 }
 func TestGetDWbits(t *testing.T) {
 	var w dg.DwordT = 0x11112222
-	r := GetDWbits(w, 15, 2)
+	r := GetDwbits(w, 15, 2)
 	if r != 2 {
 		t.Error("Expected 2, got ", r)
 	}
@@ -180,7 +180,7 @@ func TestGetDWbits(t *testing.T) {
 
 func TestGetQWbits(t *testing.T) {
 	var q dg.QwordT = 0x1111222233334444
-	r := GetQWbits(q, 12, 8)
+	r := GetQwbits(q, 12, 8)
 	if r != 0x12 {
 		t.Errorf("Expected 0x12, got %x", r)
 	}
@@ -191,13 +191,13 @@ func TestSexWordToDWord(t *testing.T) {
 	var dwd dg.DwordT
 
 	wd = 79
-	dwd = SexWordToDWord(wd)
+	dwd = SexWordToDword(wd)
 	if dwd != 79 {
 		t.Error("Expected 79, got ", dwd)
 	}
 
 	wd = 0xfff4
-	dwd = SexWordToDWord(wd)
+	dwd = SexWordToDword(wd)
 	if dwd != 0xfffffff4 {
 		t.Error("Expected -12, got ", dwd)
 	}
@@ -232,22 +232,22 @@ func TestTestWbit(t *testing.T) {
 }
 func TestTestDWbit(t *testing.T) {
 	var wd dg.DwordT = 0x40000000
-	r := TestDWbit(wd, 1)
+	r := TestDwbit(wd, 1)
 	if !r {
 		t.Error("Expected true")
 	}
-	r = TestDWbit(wd, 2)
+	r = TestDwbit(wd, 2)
 	if r {
 		t.Error("Expected false")
 	}
 }
 func TestTestQWbit(t *testing.T) {
 	var wd dg.QwordT = 0x4000000000000000
-	r := TestQWbit(wd, 1)
+	r := TestQwbit(wd, 1)
 	if !r {
 		t.Error("Expected true")
 	}
-	r = TestQWbit(wd, 2)
+	r = TestQwbit(wd, 2)
 	if r {
 		t.Error("Expected false")
 	}

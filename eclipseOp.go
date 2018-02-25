@@ -46,7 +46,7 @@ func eclipseOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrADI: // 16-bit unsigned Add Immediate
 		immOneAcc = iPtr.variant.(immOneAccT)
-		wd = util.DWordGetLowerWord(cpuPtr.ac[immOneAcc.acd])
+		wd = util.DwordGetLowerWord(cpuPtr.ac[immOneAcc.acd])
 		wd += dg.WordT(immOneAcc.immU16) // unsigned arithmetic does wraparound in Go
 		cpuPtr.ac[immOneAcc.acd] = dg.DwordT(wd)
 
@@ -81,10 +81,10 @@ func eclipseOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		}
 
 	case instrDIV: // unsigned divide
-		uw := util.DWordGetLowerWord(cpuPtr.ac[0])
-		lw := util.DWordGetLowerWord(cpuPtr.ac[1])
-		dwd = util.DWordFromTwoWords(uw, lw)
-		quot := util.DWordGetLowerWord(cpuPtr.ac[2])
+		uw := util.DwordGetLowerWord(cpuPtr.ac[0])
+		lw := util.DwordGetLowerWord(cpuPtr.ac[1])
+		dwd = util.DwordFromTwoWords(uw, lw)
+		quot := util.DwordGetLowerWord(cpuPtr.ac[2])
 		if uw > quot || quot == 0 {
 			cpuPtr.carry = true
 		} else {
@@ -99,10 +99,10 @@ func eclipseOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		if dplus1 == 4 {
 			dplus1 = 0
 		}
-		dwd = util.DWordFromTwoWords(util.DWordGetLowerWord(cpuPtr.ac[immOneAcc.acd]), util.DWordGetLowerWord(cpuPtr.ac[dplus1]))
+		dwd = util.DwordFromTwoWords(util.DwordGetLowerWord(cpuPtr.ac[immOneAcc.acd]), util.DwordGetLowerWord(cpuPtr.ac[dplus1]))
 		dwd <<= (immOneAcc.immU16 * 4)
-		cpuPtr.ac[immOneAcc.acd] = dg.DwordT(util.DWordGetUpperWord(dwd))
-		cpuPtr.ac[dplus1] = dg.DwordT(util.DWordGetLowerWord(dwd))
+		cpuPtr.ac[immOneAcc.acd] = dg.DwordT(util.DwordGetUpperWord(dwd))
+		cpuPtr.ac[dplus1] = dg.DwordT(util.DwordGetLowerWord(dwd))
 
 	case instrDLSH:
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
@@ -111,8 +111,8 @@ func eclipseOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			dplus1 = 0
 		}
 		dwd = dlsh(cpuPtr.ac[twoAcc1Word.acs], cpuPtr.ac[twoAcc1Word.acd], cpuPtr.ac[dplus1])
-		cpuPtr.ac[twoAcc1Word.acd] = dg.DwordT(util.DWordGetUpperWord(dwd))
-		cpuPtr.ac[dplus1] = dg.DwordT(util.DWordGetLowerWord(dwd))
+		cpuPtr.ac[twoAcc1Word.acd] = dg.DwordT(util.DwordGetUpperWord(dwd))
+		cpuPtr.ac[dplus1] = dg.DwordT(util.DwordGetLowerWord(dwd))
 
 	case instrELEF:
 		oneAccModeInt2Word = iPtr.variant.(oneAccModeInd2WordT)
@@ -121,7 +121,7 @@ func eclipseOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case instrESTA:
 		oneAccModeInt2Word = iPtr.variant.(oneAccModeInd2WordT)
 		addr = resolve16bitEclipseAddr(cpuPtr, oneAccModeInt2Word.ind, oneAccModeInt2Word.mode, oneAccModeInt2Word.disp15)
-		memory.WriteWord(addr, util.DWordGetLowerWord(cpuPtr.ac[oneAccModeInt2Word.acd]))
+		memory.WriteWord(addr, util.DwordGetLowerWord(cpuPtr.ac[oneAccModeInt2Word.acd]))
 
 	case instrHXL:
 		immOneAcc = iPtr.variant.(immOneAccT)
@@ -135,17 +135,17 @@ func eclipseOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrIOR:
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
-		wd = util.DWordGetLowerWord(cpuPtr.ac[twoAcc1Word.acd]) | util.DWordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs])
+		wd = util.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acd]) | util.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs])
 		cpuPtr.ac[twoAcc1Word.acd] = dg.DwordT(wd)
 
 	case instrIORI:
 		oneAccImmWd2Word = iPtr.variant.(oneAccImmWd2WordT)
-		wd = util.DWordGetLowerWord(cpuPtr.ac[oneAccImmWd2Word.acd]) | oneAccImmWd2Word.immWord
+		wd = util.DwordGetLowerWord(cpuPtr.ac[oneAccImmWd2Word.acd]) | oneAccImmWd2Word.immWord
 		cpuPtr.ac[oneAccImmWd2Word.acd] = dg.DwordT(wd)
 
 	case instrLDB:
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
-		byt = memory.ReadByteEclipseBA(util.DWordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs]))
+		byt = memory.ReadByteEclipseBA(util.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs]))
 		cpuPtr.ac[twoAcc1Word.acd] = dg.DwordT(byt)
 
 	case instrLSH:
@@ -153,16 +153,16 @@ func eclipseOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		cpuPtr.ac[twoAcc1Word.acd] = lsh(cpuPtr.ac[twoAcc1Word.acs], cpuPtr.ac[twoAcc1Word.acd])
 
 	case instrMUL: // unsigned 16-bit multiply with add: (AC1 * AC2) + AC0 => AC0(h) and AC1(l)
-		ac0 := util.DWordGetLowerWord(cpuPtr.ac[0])
-		ac1 := util.DWordGetLowerWord(cpuPtr.ac[1])
-		ac2 := util.DWordGetLowerWord(cpuPtr.ac[2])
+		ac0 := util.DwordGetLowerWord(cpuPtr.ac[0])
+		ac1 := util.DwordGetLowerWord(cpuPtr.ac[1])
+		ac2 := util.DwordGetLowerWord(cpuPtr.ac[2])
 		dwd = (dg.DwordT(ac1) * dg.DwordT(ac2)) + dg.DwordT(ac0)
-		cpuPtr.ac[0] = dg.DwordT(util.DWordGetUpperWord(dwd))
-		cpuPtr.ac[1] = dg.DwordT(util.DWordGetLowerWord(dwd))
+		cpuPtr.ac[0] = dg.DwordT(util.DwordGetUpperWord(dwd))
+		cpuPtr.ac[1] = dg.DwordT(util.DwordGetLowerWord(dwd))
 
 	case instrSBI: // unsigned
 		immOneAcc = iPtr.variant.(immOneAccT)
-		wd = util.DWordGetLowerWord(cpuPtr.ac[immOneAcc.acd])
+		wd = util.DwordGetLowerWord(cpuPtr.ac[immOneAcc.acd])
 		if immOneAcc.immU16 < 1 || immOneAcc.immU16 > 4 {
 			log.Fatal("Invalid immediate value in SBI")
 		}
@@ -171,8 +171,8 @@ func eclipseOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrSTB:
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
-		hiLo := util.TestDWbit(cpuPtr.ac[twoAcc1Word.acs], 31)
-		addr = dg.PhysAddrT(util.DWordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs])) >> 1
+		hiLo := util.TestDwbit(cpuPtr.ac[twoAcc1Word.acs], 31)
+		addr = dg.PhysAddrT(util.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs])) >> 1
 		byt = dg.ByteT(cpuPtr.ac[twoAcc1Word.acd])
 		memory.WriteByte(addr, hiLo, byt)
 
@@ -193,7 +193,7 @@ func eclipseOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 func dlsh(acS, acDh, acDl dg.DwordT) dg.DwordT {
 	var shft = int8(acS)
-	var dwd = util.DWordFromTwoWords(util.DWordGetLowerWord(acDh), util.DWordGetLowerWord(acDl))
+	var dwd = util.DwordFromTwoWords(util.DwordGetLowerWord(acDh), util.DwordGetLowerWord(acDl))
 	if shft != 0 {
 		if shft < -31 || shft > 31 {
 			dwd = 0
@@ -211,9 +211,9 @@ func dlsh(acS, acDh, acDl dg.DwordT) dg.DwordT {
 
 func lsh(acS, acD dg.DwordT) dg.DwordT {
 	var shft = int8(acS)
-	var wd = util.DWordGetLowerWord(acD)
+	var wd = util.DwordGetLowerWord(acD)
 	if shft == 0 {
-		wd = util.DWordGetLowerWord(acD) // do nothing
+		wd = util.DwordGetLowerWord(acD) // do nothing
 	} else {
 		if shft < -15 || shft > 15 {
 			wd = 0 // 16+ bit shift clears word

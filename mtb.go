@@ -335,7 +335,7 @@ func mtbDataIn(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 // This is called from Bus to implement DOx from the MTB device
 func mtbDataOut(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 
-	ac16 := util.DWordGetLowerWord(cpuPtr.ac[iPtr.acd])
+	ac16 := util.DwordGetLowerWord(cpuPtr.ac[iPtr.acd])
 
 	mtb.mtbDataMu.Lock()
 	switch abc {

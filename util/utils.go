@@ -62,25 +62,25 @@ func BoolToOZ(b bool) byte {
 	return 'Z'
 }
 
-// DWordGetLowerWord gets the DG-lower word (RHS) of a doubleword
+// DwordGetLowerWord gets the DG-lower word (RHS) of a doubleword
 // Called VERY often, hopefully inlined!
-func DWordGetLowerWord(dwd dg.DwordT) dg.WordT {
+func DwordGetLowerWord(dwd dg.DwordT) dg.WordT {
 	return dg.WordT(dwd) // & 0x0000ffff mask unneccessary
 }
 
-// DWordGetUpperWord gets the DG-higher word (LHS) of a doubleword
+// DwordGetUpperWord gets the DG-higher word (LHS) of a doubleword
 // Called VERY often, hopefully inlined!
-func DWordGetUpperWord(dwd dg.DwordT) dg.WordT {
+func DwordGetUpperWord(dwd dg.DwordT) dg.WordT {
 	return dg.WordT(dwd >> 16)
 }
 
-// DWordFromTwoWords - catenate two DG Words into a DG DoubleWord
-func DWordFromTwoWords(hw dg.WordT, lw dg.WordT) dg.DwordT {
+// DwordFromTwoWords - catenate two DG Words into a DG DoubleWord
+func DwordFromTwoWords(hw dg.WordT, lw dg.WordT) dg.DwordT {
 	return dg.DwordT(hw)<<16 | dg.DwordT(lw)
 }
 
-// QWordFromTwoDwords - catenate two DG DoubleWords into a DG QuadWord
-func QWordFromTwoDwords(hdw dg.DwordT, ldw dg.DwordT) dg.QwordT {
+// QwordFromTwoDwords - catenate two DG DoubleWords into a DG QuadWord
+func QwordFromTwoDwords(hdw dg.DwordT, ldw dg.DwordT) dg.QwordT {
 	return dg.QwordT(hdw)<<32 | dg.QwordT(ldw)
 }
 
@@ -106,8 +106,8 @@ func SetWbit(word *dg.WordT, bitNum uint) {
 	*word = *word | (1 << (15 - bitNum))
 }
 
-// SetQWbit - sets a bit in a Quad-Word
-func SetQWbit(qw *dg.QwordT, bitNum uint) {
+// SetQwbit - sets a bit in a Quad-Word
+func SetQwbit(qw *dg.QwordT, bitNum uint) {
 	*qw = *qw | (1 << (63 - bitNum))
 }
 
@@ -116,9 +116,9 @@ func ClearWbit(word *dg.WordT, bitNum uint) {
 	*word = *word &^ (1 << (15 - bitNum))
 }
 
-// GetDWbits - in the DG world, the first (leftmost) bit is numbered zero...
+// GetDwbits - in the DG world, the first (leftmost) bit is numbered zero...
 // extract nbits from value starting at leftBit
-func GetDWbits(value dg.DwordT, leftBit uint, nbits uint) dg.DwordT {
+func GetDwbits(value dg.DwordT, leftBit uint, nbits uint) dg.DwordT {
 	var mask dg.DwordT
 	if leftBit >= 32 {
 		return 0
@@ -128,9 +128,9 @@ func GetDWbits(value dg.DwordT, leftBit uint, nbits uint) dg.DwordT {
 	return value & mask
 }
 
-// GetQWbits - in the DG world, the first (leftmost) bit is numbered zero...
+// GetQwbits - in the DG world, the first (leftmost) bit is numbered zero...
 // extract nbits from value starting at leftBit
-func GetQWbits(value dg.QwordT, leftBit uint, nbits uint) dg.QwordT {
+func GetQwbits(value dg.QwordT, leftBit uint, nbits uint) dg.QwordT {
 	var mask dg.QwordT
 	if leftBit >= 64 {
 		return 0
@@ -145,13 +145,13 @@ func TestWbit(w dg.WordT, b int) bool {
 	return (w & (1 << (15 - uint8(b)))) != 0
 }
 
-// TestDWbit - does dword dw have bit b set?
-func TestDWbit(dw dg.DwordT, b int) bool {
+// TestDwbit - does dword dw have bit b set?
+func TestDwbit(dw dg.DwordT, b int) bool {
 	return ((dw & (1 << (31 - uint8(b)))) != 0)
 }
 
-// TestQWbit - does qword qw have bit b set?
-func TestQWbit(qw dg.QwordT, b int) bool {
+// TestQwbit - does qword qw have bit b set?
+func TestQwbit(qw dg.QwordT, b int) bool {
 	return ((qw & (1 << (63 - uint8(b)))) != 0)
 }
 
@@ -160,8 +160,8 @@ func WordToBinStr(w dg.WordT) string {
 	return fmt.Sprintf("%08b %08b", w>>8, w&0x0ff)
 }
 
-// SexWordToDWord - sign-extend a DG word to a DG DoubleWord
-func SexWordToDWord(wd dg.WordT) dg.DwordT {
+// SexWordToDword - sign-extend a DG word to a DG DoubleWord
+func SexWordToDword(wd dg.WordT) dg.DwordT {
 	var dwd dg.DwordT
 	if TestWbit(wd, 0) {
 		dwd = dg.DwordT(wd) | 0xffff0000
@@ -181,5 +181,5 @@ func SwapBytes(wd dg.WordT) dg.WordT {
 
 // GetSegment - return the segment number for the supplied address
 func GetSegment(addr dg.PhysAddrT) int {
-	return int(GetDWbits(dg.DwordT(addr), 1, 3))
+	return int(GetDwbits(dg.DwordT(addr), 1, 3))
 }

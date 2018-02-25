@@ -114,7 +114,7 @@ func TestWriteReadDWordTrap(t *testing.T) {
 	if w != 0x3344 {
 		t.Errorf("Expected 0x3344, got %x", w)
 	}
-	dwd, ok = ReadDWordTrap(68)
+	dwd, ok = ReadDwordTrap(68)
 	if dwd != 0x11223344 || !ok {
 		t.Errorf("Expected 0x11223344, got %x", dwd)
 	}

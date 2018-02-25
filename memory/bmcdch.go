@@ -154,8 +154,8 @@ func BmcdchWriteSlot(slot int, data dg.DwordT) {
 	if isLogging {
 		logging.DebugPrint(logging.MapLog, "bmcdch*Write*Slot: Slot %d, Data: %d\n", slot, data)
 	}
-	regs[slot*2] = util.DWordGetUpperWord(data)
-	regs[(slot*2)+1] = util.DWordGetLowerWord(data)
+	regs[slot*2] = util.DwordGetUpperWord(data)
+	regs[(slot*2)+1] = util.DwordGetLowerWord(data)
 }
 
 // BmcdchReadReg returns the single word contents of the requested register
@@ -165,7 +165,7 @@ func BmcdchReadReg(reg int) dg.WordT {
 
 // BmcdchReadSlot returns the doubleword contents of the requested SLOT
 func BmcdchReadSlot(slot int) dg.DwordT {
-	return util.DWordFromTwoWords(regs[slot*2], regs[(slot*2)+1])
+	return util.DwordFromTwoWords(regs[slot*2], regs[(slot*2)+1])
 }
 
 func getBmcMapAddr(mAddr dg.PhysAddrT) (dg.PhysAddrT, dg.PhysAddrT) {
@@ -205,16 +205,16 @@ func decodeBmcAddr(bmcAddr dg.PhysAddrT) bmcAddrT {
 	)
 
 	inAddr = dg.DwordT(bmcAddr << 10) // shift left so we can use documented 21-bit numbering
-	res.isLogical = util.TestDWbit(inAddr, 0)
+	res.isLogical = util.TestDwbit(inAddr, 0)
 	if res.isLogical {
 		// Logical, or Mapped address...
-		res.tt = byte(util.GetDWbits(inAddr, 2, 5))
-		res.ttr = byte(util.GetDWbits(inAddr, 7, 5))
+		res.tt = byte(util.GetDwbits(inAddr, 2, 5))
+		res.ttr = byte(util.GetDwbits(inAddr, 7, 5))
 		res.plow = bmcAddr & 0x3ff // mask off 10 bits
 	} else {
 		// Physical, or unmapped address..
-		res.bk = byte(util.GetDWbits(inAddr, 1, 3))
-		res.xca = byte(util.GetDWbits(inAddr, 4, 3))
+		res.bk = byte(util.GetDwbits(inAddr, 1, 3))
+		res.xca = byte(util.GetDwbits(inAddr, 4, 3))
 		res.ca = bmcAddr & 0x7fff // mask off 15 bits
 	}
 

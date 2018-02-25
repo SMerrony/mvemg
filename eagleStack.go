@@ -123,26 +123,26 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		cpuPtr.fpsr = 0
 		any := false
 		// set the ANY bit?
-		if util.GetQWbits(tmpQwd, 1, 4) != 0 {
-			util.SetQWbit(&cpuPtr.fpsr, 0)
+		if util.GetQwbits(tmpQwd, 1, 4) != 0 {
+			util.SetQwbit(&cpuPtr.fpsr, 0)
 			any = true
 		}
 		// copy bits 1-11
 		for b := 1; b <= 11; b++ {
-			if util.TestQWbit(tmpQwd, b) {
-				util.SetQWbit(&cpuPtr.fpsr, uint(b))
+			if util.TestQwbit(tmpQwd, b) {
+				util.SetQwbit(&cpuPtr.fpsr, uint(b))
 			}
 		}
 		// bits 28-31
 		if any {
 			for b := 28; b <= 31; b++ {
-				if util.TestQWbit(tmpQwd, b) {
-					util.SetQWbit(&cpuPtr.fpsr, uint(b))
+				if util.TestQwbit(tmpQwd, b) {
+					util.SetQwbit(&cpuPtr.fpsr, uint(b))
 				}
 			}
 			for b := 33; b <= 63; b++ {
-				if util.TestQWbit(tmpQwd, b) {
-					util.SetQWbit(&cpuPtr.fpsr, uint(b))
+				if util.TestQwbit(tmpQwd, b) {
+					util.SetQwbit(&cpuPtr.fpsr, uint(b))
 				}
 			}
 		}
@@ -258,7 +258,7 @@ func wsav(cpuPtr *CPUT, u2wd *unique2WordT) {
 // wssav is common to WSSVR and WSSVS
 func wssav(cpuPtr *CPUT, u2wd *unique2WordT) {
 	wfpSav := memory.ReadDWord(memory.WfpLoc)
-	memory.WsPush(0, util.DWordFromTwoWords(cpuPtr.psr, 0)) // 1
+	memory.WsPush(0, util.DwordFromTwoWords(cpuPtr.psr, 0)) // 1
 	memory.WsPush(0, cpuPtr.ac[0])                          // 2
 	memory.WsPush(0, cpuPtr.ac[1])                          // 3
 	memory.WsPush(0, cpuPtr.ac[2])                          // 4

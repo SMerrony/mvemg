@@ -297,7 +297,7 @@ func dpfDataIn(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 // NIO is also routed here with a dummy abc flag value of N
 func dpfDataOut(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 	dpfData.dpfMu.Lock()
-	dataWd = util.DWordGetLowerWord(cpuPtr.ac[iPtr.acd])
+	dataWd = util.DwordGetLowerWord(cpuPtr.ac[iPtr.acd])
 	switch abc {
 	case 'A':
 		dpfData.command = extractDpfCommand(dataWd)

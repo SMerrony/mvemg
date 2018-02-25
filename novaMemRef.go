@@ -67,7 +67,7 @@ func novaMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrSTA:
 		novaOneAccEffAddr = iPtr.variant.(novaOneAccEffAddrT)
-		shifter = util.DWordGetLowerWord(cpuPtr.ac[novaOneAccEffAddr.acd])
+		shifter = util.DwordGetLowerWord(cpuPtr.ac[novaOneAccEffAddr.acd])
 		effAddr = resolve16bitEclipseAddr(cpuPtr, novaOneAccEffAddr.ind, novaOneAccEffAddr.mode, novaOneAccEffAddr.disp15)
 		memory.WriteWord(effAddr, shifter)
 

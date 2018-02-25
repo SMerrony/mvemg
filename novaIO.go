@@ -129,7 +129,7 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			logging.DebugPrint(logging.DebugLog, "INFO: PRTSEL AC0: %d, PC: %d\n", cpuPtr.ac[0], cpuPtr.pc)
 		}
 		// only handle the query mode, setting is a no-op on this 'single-channel' machine
-		if util.DWordGetLowerWord(cpuPtr.ac[0]) == 0xffff {
+		if util.DwordGetLowerWord(cpuPtr.ac[0]) == 0xffff {
 			// return default I/O channel if -1 passed in
 			cpuPtr.ac[0] = 0
 		}
@@ -207,7 +207,7 @@ func iorst(cpuPtr *CPUT) bool {
 }
 
 func msko(cpuPtr *CPUT, destAc int) bool {
-	cpuPtr.mask = util.DWordGetLowerWord(cpuPtr.ac[destAc])
+	cpuPtr.mask = util.DwordGetLowerWord(cpuPtr.ac[destAc])
 	cpuPtr.pc++
 	return true
 }

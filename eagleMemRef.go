@@ -51,12 +51,12 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case instrLNLDA:
 		oneAccModeInd3Word = iPtr.variant.(oneAccModeInd3WordT)
 		addr = resolve32bitEffAddr(cpuPtr, oneAccModeInd3Word.ind, oneAccModeInd3Word.mode, oneAccModeInd3Word.disp31)
-		cpuPtr.ac[oneAccModeInd3Word.acd] = util.SexWordToDWord(memory.ReadWord(addr))
+		cpuPtr.ac[oneAccModeInd3Word.acd] = util.SexWordToDword(memory.ReadWord(addr))
 
 	case instrLNSTA:
 		oneAccModeInd3Word = iPtr.variant.(oneAccModeInd3WordT)
 		addr = resolve32bitEffAddr(cpuPtr, oneAccModeInd3Word.ind, oneAccModeInd3Word.mode, oneAccModeInd3Word.disp31)
-		wd = util.DWordGetLowerWord(cpuPtr.ac[oneAccModeInd3Word.acd])
+		wd = util.DwordGetLowerWord(cpuPtr.ac[oneAccModeInd3Word.acd])
 		memory.WriteWord(addr, wd)
 
 	case instrLWLDA:
@@ -114,7 +114,7 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case instrWLDB:
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		wordAddr = dg.PhysAddrT(cpuPtr.ac[twoAcc1Word.acs]) >> 1
-		lowByte = util.TestDWbit(cpuPtr.ac[twoAcc1Word.acs], 31)
+		lowByte = util.TestDwbit(cpuPtr.ac[twoAcc1Word.acs], 31)
 		byt = memory.ReadByte(wordAddr, lowByte)
 		cpuPtr.ac[twoAcc1Word.acd] = dg.DwordT(byt)
 
@@ -149,13 +149,13 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		oneAccModeInd2Word = iPtr.variant.(oneAccModeInd2WordT)
 		addr = resolve16bitEagleAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, oneAccModeInd2Word.disp15)
 		i16b = int16(memory.ReadWord(addr))
-		i16a = int16(util.DWordGetLowerWord(cpuPtr.ac[oneAccModeInd2Word.acd]))
+		i16a = int16(util.DwordGetLowerWord(cpuPtr.ac[oneAccModeInd2Word.acd]))
 		if iPtr.ix == instrXNADD {
 			i16a += i16b
 		} else {
 			i16a -= i16b
 		}
-		cpuPtr.ac[oneAccModeInd2Word.acd] = util.SexWordToDWord(dg.WordT(i16a))
+		cpuPtr.ac[oneAccModeInd2Word.acd] = util.SexWordToDword(dg.WordT(i16a))
 
 	case instrXNLDA:
 		oneAccModeInd2Word = iPtr.variant.(oneAccModeInd2WordT)
@@ -165,7 +165,7 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			return false
 		}
 		// FIXME check this...
-		cpuPtr.ac[oneAccModeInd2Word.acd] = util.SexWordToDWord(wd)
+		cpuPtr.ac[oneAccModeInd2Word.acd] = util.SexWordToDword(wd)
 
 	case instrXSTB:
 		oneAccMode2Word = iPtr.variant.(oneAccMode2WordT)
@@ -180,7 +180,7 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case instrXNSTA:
 		oneAccModeInd2Word = iPtr.variant.(oneAccModeInd2WordT)
 		addr = resolve16bitEagleAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, oneAccModeInd2Word.disp15)
-		wd = util.DWordGetLowerWord(cpuPtr.ac[oneAccModeInd2Word.acd])
+		wd = util.DwordGetLowerWord(cpuPtr.ac[oneAccModeInd2Word.acd])
 		memory.WriteWord(addr, wd)
 
 	case instrXWADI:

@@ -48,11 +48,11 @@ func eagleIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case instrCIO:
 		// TODO handle I/O channel
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
-		word = util.DWordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs])
+		word = util.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs])
 		mapRegAddr = int(word & 0x0fff)
 		rw = util.TestWbit(word, 0)
 		if rw { // write command
-			dataWord = util.DWordGetLowerWord(cpuPtr.ac[twoAcc1Word.acd])
+			dataWord = util.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acd])
 			memory.BmcdchWriteReg(mapRegAddr, dataWord)
 		} else { // read command
 			dataWord = memory.BmcdchReadReg(mapRegAddr)
@@ -65,12 +65,12 @@ func eagleIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		if twoAccImm2Word.acs == twoAccImm2Word.acd {
 			cmd = twoAccImm2Word.immWord
 		} else {
-			cmd = twoAccImm2Word.immWord | util.DWordGetLowerWord(cpuPtr.ac[twoAccImm2Word.acs])
+			cmd = twoAccImm2Word.immWord | util.DwordGetLowerWord(cpuPtr.ac[twoAccImm2Word.acs])
 		}
 		mapRegAddr = int(cmd & 0x0fff)
 		rw = util.TestWbit(cmd, 0)
 		if rw { // write command
-			dataWord = util.DWordGetLowerWord(cpuPtr.ac[twoAccImm2Word.acd])
+			dataWord = util.DwordGetLowerWord(cpuPtr.ac[twoAccImm2Word.acd])
 			memory.BmcdchWriteReg(mapRegAddr, dataWord)
 		} else { // read command
 			dataWord = memory.BmcdchReadReg(mapRegAddr)
@@ -121,7 +121,7 @@ func eagleIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			// cpuPtr.ac[2] += 2
 		} else {
 			for {
-				dwd, ok = memory.ReadDWordTrap(dg.PhysAddrT(cpuPtr.ac[2]))
+				dwd, ok = memory.ReadDwordTrap(dg.PhysAddrT(cpuPtr.ac[2]))
 				if !ok {
 					log.Fatalf("ERROR: Memory access failed at PC: %d\n", cpuPtr.pc)
 				}

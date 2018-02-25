@@ -55,13 +55,13 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case instrADDI:
 		oneAccImm2Word = iPtr.variant.(oneAccImm2WordT)
 		// signed 16-bit add immediate
-		s16 = int16(util.DWordGetLowerWord(cpuPtr.ac[oneAccImm2Word.acd]))
+		s16 = int16(util.DwordGetLowerWord(cpuPtr.ac[oneAccImm2Word.acd]))
 		s16 += oneAccImm2Word.immS16
 		cpuPtr.ac[oneAccImm2Word.acd] = dg.DwordT(s16) & 0X0000FFFF
 
 	case instrANDI:
 		oneAccImmWd2Word = iPtr.variant.(oneAccImmWd2WordT)
-		wd = util.DWordGetLowerWord(cpuPtr.ac[oneAccImmWd2Word.acd])
+		wd = util.DwordGetLowerWord(cpuPtr.ac[oneAccImmWd2Word.acd])
 		cpuPtr.ac[oneAccImmWd2Word.acd] = dg.DwordT(wd&oneAccImmWd2Word.immWord) & 0x0000ffff
 
 	case instrCRYTC:
@@ -79,7 +79,7 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		if dwd>>16 != 0 && dwd>>16 != 0xffff {
 			cpuSetOVR(true)
 		}
-		if util.TestDWbit(dwd, 16) {
+		if util.TestDwbit(dwd, 16) {
 			cpuPtr.ac[oneAcc1Word.acd] |= 0xffff0000
 		} else {
 			cpuPtr.ac[oneAcc1Word.acd] &= 0x0000ffff
@@ -88,7 +88,7 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case instrLLDB:
 		oneAccMode3Word = iPtr.variant.(oneAccMode3WordT)
 		addr = resolve32bitEffAddr(cpuPtr, ' ', oneAccMode3Word.mode, oneAccMode3Word.disp31>>1)
-		lobyte = util.TestDWbit(dg.DwordT(oneAccMode3Word.disp31), 31)
+		lobyte = util.TestDwbit(dg.DwordT(oneAccMode3Word.disp31), 31)
 		cpuPtr.ac[oneAccMode3Word.acd] = dg.DwordT(memory.ReadByte(addr, lobyte))
 
 	case instrLLEF:
@@ -100,7 +100,7 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		oneAccMode3Word = iPtr.variant.(oneAccMode3WordT)
 		addr = resolve32bitEffAddr(cpuPtr, ' ', oneAccMode3Word.mode, oneAccMode3Word.disp31>>1)
 		addr <<= 1
-		if util.TestDWbit(dg.DwordT(oneAccMode3Word.disp31), 31) {
+		if util.TestDwbit(dg.DwordT(oneAccMode3Word.disp31), 31) {
 			addr |= 1
 		}
 		cpuPtr.ac[oneAccMode3Word.acd] = dg.DwordT(addr)
@@ -131,7 +131,7 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrSEX: // Sign EXtend
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
-		cpuPtr.ac[twoAcc1Word.acd] = util.SexWordToDWord(util.DWordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs]))
+		cpuPtr.ac[twoAcc1Word.acd] = util.SexWordToDword(util.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs]))
 
 	case instrSSPT: /* NO-OP - see p.8-5 of MV/10000 Sys Func Chars */
 		log.Println("INFO: SSPT is a No-Op on this machine, continuing")
@@ -173,7 +173,7 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		cpuPtr.ac[twoAcc1Word.acd] = ^cpuPtr.ac[twoAcc1Word.acs]
 
 	case instrWDIVS:
-		s64 = int64(util.QWordFromTwoDwords(cpuPtr.ac[0], cpuPtr.ac[1]))
+		s64 = int64(util.QwordFromTwoDwords(cpuPtr.ac[0], cpuPtr.ac[1]))
 		if cpuPtr.ac[2] == 0 {
 			cpuSetOVR(true)
 		} else {
@@ -257,7 +257,7 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrZEX:
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
-		cpuPtr.ac[twoAcc1Word.acd] = 0 | dg.DwordT(util.DWordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs]))
+		cpuPtr.ac[twoAcc1Word.acd] = 0 | dg.DwordT(util.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs]))
 
 	default:
 		log.Fatalf("ERROR: EAGLE_OP instruction <%s> not yet implemented\n", iPtr.mnemonic)
