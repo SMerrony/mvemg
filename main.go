@@ -604,7 +604,7 @@ func printableBreakpointList() string {
 func reset() {
 	memory.MemInit(debugLogging)
 	busResetAllIODevices()
-	cpuPtr.Reset()
+	cpuReset()
 	mtbReset() // Not Init
 	dpfReset()
 	dskpReset()

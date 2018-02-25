@@ -60,7 +60,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			dwd = memory.ReadDWord(tmpAddr) + 1
 		}
 		memory.WriteDWord(tmpAddr, dwd)
-		cpuPtr.SetOVR(false)
+		cpuSetOVR(false)
 		if dwd == 0 {
 			cpuPtr.pc += 2
 		} else {
@@ -79,7 +79,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			dwd = dg.DwordT(noAccModeInd4Word.argCount) & 0x00007fff
 		}
 		memory.WsPush(0, dwd)
-		cpu.SetOVR(false)
+		cpuSetOVR(false)
 		cpuPtr.pc = resolve32bitEffAddr(cpuPtr, noAccModeInd4Word.ind, noAccModeInd4Word.mode, noAccModeInd4Word.disp31)
 
 	case instrLDSP:
@@ -157,7 +157,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		}
 
 	case instrSNOVR:
-		if cpuPtr.GetOVR() {
+		if cpuGetOVR() {
 			cpuPtr.pc++
 		} else {
 			cpuPtr.pc += 2

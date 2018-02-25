@@ -186,18 +186,18 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case instrWSAVR:
 		unique2Word = iPtr.variant.(unique2WordT)
 		wsav(cpuPtr, &unique2Word)
-		cpu.SetOVK(false)
+		cpuSetOVK(false)
 
 	case instrWSAVS:
 		unique2Word = iPtr.variant.(unique2WordT)
 		wsav(cpuPtr, &unique2Word)
-		cpu.SetOVK(true)
+		cpuSetOVK(true)
 
 	case instrWSSVR:
 		unique2Word = iPtr.variant.(unique2WordT)
 		wssav(cpuPtr, &unique2Word)
-		cpu.SetOVK(false)
-		cpu.SetOVR(false)
+		cpuSetOVK(false)
+		cpuSetOVR(false)
 
 	case instrXPEF:
 		noAccModeInd2Word = iPtr.variant.(noAccModeInd2WordT)

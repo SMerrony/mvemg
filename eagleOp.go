@@ -77,7 +77,7 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		oneAcc1Word = iPtr.variant.(oneAcc1WordT)
 		dwd = cpuPtr.ac[oneAcc1Word.acd]
 		if dwd>>16 != 0 && dwd>>16 != 0xffff {
-			cpuPtr.SetOVR(true)
+			cpuSetOVR(true)
 		}
 		if util.TestDWbit(dwd, 16) {
 			cpuPtr.ac[oneAcc1Word.acd] |= 0xffff0000
@@ -175,11 +175,11 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case instrWDIVS:
 		s64 = int64(util.QWordFromTwoDwords(cpuPtr.ac[0], cpuPtr.ac[1]))
 		if cpuPtr.ac[2] == 0 {
-			cpuPtr.SetOVR(true)
+			cpuSetOVR(true)
 		} else {
 			s32 = int32(cpuPtr.ac[2])
 			if s64/int64(s32) < -2147483648 || s64/int64(s32) > 2147483647 {
-				cpuPtr.SetOVR(true)
+				cpuSetOVR(true)
 			} else {
 				cpuPtr.ac[0] = dg.DwordT(s64 % int64(s32))
 				cpuPtr.ac[1] = dg.DwordT(s64 / int64(s32))

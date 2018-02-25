@@ -81,19 +81,19 @@ func cpuInit(statsChan chan cpuStatT) *CPUT {
 	return &cpu
 }
 
-func (c *CPUT) Reset() {
-	c.pc = 0
+func cpuReset() {
+	cpu.pc = 0
 	for a := 0; a < 4; a++ {
-		c.ac[a] = 0
-		c.fpac[a] = 0
+		cpu.ac[a] = 0
+		cpu.fpac[a] = 0
 	}
-	c.mask = 0
-	c.psr = 0
-	c.carry = false
-	c.atu = false
-	c.ion = false
-	c.pfflag = false
-	c.instrCount = 0
+	cpu.mask = 0
+	cpu.psr = 0
+	cpu.carry = false
+	cpu.atu = false
+	cpu.ion = false
+	cpu.pfflag = false
+	cpu.instrCount = 0
 }
 
 func cpuPrintableStatus() string {
@@ -114,30 +114,30 @@ func cpuCompactPrintableStatus() string {
 }
 
 // GetOVR is a getter for the OVR flag embedded in the PSR
-func (c *CPUT) GetOVR() bool {
-	return util.TestWbit(c.psr, 1)
+func cpuGetOVR() bool {
+	return util.TestWbit(cpu.psr, 1)
 }
 
 // SetOVR is a setter for the OVR flag embedded in the PSR
-func (c *CPUT) SetOVR(newOVR bool) {
+func cpuSetOVR(newOVR bool) {
 	if newOVR {
-		util.SetWbit(&c.psr, 1)
+		util.SetWbit(&cpu.psr, 1)
 	} else {
-		util.ClearWbit(&c.psr, 1)
+		util.ClearWbit(&cpu.psr, 1)
 	}
 }
 
 // GetOVK is a getter for the OVK flag embedded in the PSR
-func (c *CPUT) GetOVK() bool {
-	return util.TestWbit(c.psr, 0)
+func cpuGetOVK() bool {
+	return util.TestWbit(cpu.psr, 0)
 }
 
 // SetOVK is a setter for the OVK flag embedded in the PSR
-func (c *CPUT) SetOVK(newOVK bool) {
+func cpuSetOVK(newOVK bool) {
 	if newOVK {
-		util.SetWbit(&c.psr, 0)
+		util.SetWbit(&cpu.psr, 0)
 	} else {
-		util.ClearWbit(&c.psr, 0)
+		util.ClearWbit(&cpu.psr, 0)
 	}
 }
 
