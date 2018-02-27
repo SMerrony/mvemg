@@ -24,8 +24,9 @@ package main
 import (
 	"fmt"
 	"log"
-	"mvemg/logging"
 	"sync"
+
+	"github.com/SMerrony/dgemug/logging"
 
 	"github.com/SMerrony/dgemug/util"
 )

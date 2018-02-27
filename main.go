@@ -26,7 +26,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"mvemg/logging"
 	"net"
 	"os"
 	"runtime"
@@ -34,6 +33,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/SMerrony/dgemug/logging"
 
 	"github.com/SMerrony/dgemug/util"
 

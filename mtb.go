@@ -23,10 +23,11 @@ package main
 
 import (
 	"log"
-	"mvemg/logging"
 	"os"
 	"sync"
 	"time"
+
+	"github.com/SMerrony/dgemug/logging"
 
 	"github.com/SMerrony/dgemug/util"
 

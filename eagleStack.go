@@ -25,7 +25,8 @@ package main
 
 import (
 	"log"
-	"mvemg/logging"
+
+	"github.com/SMerrony/dgemug/logging"
 
 	"github.com/SMerrony/dgemug/util"
 

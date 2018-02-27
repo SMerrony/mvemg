@@ -23,8 +23,9 @@ package main
 
 import (
 	"log"
-	"mvemg/logging"
 	"net"
+
+	"github.com/SMerrony/dgemug/logging"
 )
 
 var (
