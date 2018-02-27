@@ -23,10 +23,11 @@ package main
 
 import (
 	"fmt"
-	"mvemg/dg"
 	"mvemg/logging"
 	"mvemg/memory"
 	"mvemg/util"
+
+	"github.com/SMerrony/dgemug"
 )
 
 // decodedInstrT defines the MV/Em internal decode of an opcode and any

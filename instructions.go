@@ -22,7 +22,7 @@
 package main
 
 import (
-	"mvemg/dg"
+	"github.com/SMerrony/dgemug"
 )
 
 // addressing modes, the values _are_ significant

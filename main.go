@@ -26,7 +26,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"mvemg/dg"
 	"mvemg/logging"
 	"mvemg/memory"
 	"mvemg/util"
@@ -37,6 +36,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/SMerrony/dgemug"
 )
 
 // import "github.com/pkg/profile"

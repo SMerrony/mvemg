@@ -23,9 +23,10 @@ package main
 
 import (
 	"log"
-	"mvemg/dg"
 	"mvemg/memory"
 	"mvemg/util"
+
+	"github.com/SMerrony/dgemug"
 )
 
 func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {

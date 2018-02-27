@@ -27,13 +27,14 @@ import (
 	"bufio"
 	"fmt"
 	"log"
-	"mvemg/dg"
 	"mvemg/logging"
 	"mvemg/memory"
 	"mvemg/util"
 	"os"
 	"sync"
 	"time"
+
+	"github.com/SMerrony/dgemug"
 )
 
 // Physical characteristics of the emulated disk

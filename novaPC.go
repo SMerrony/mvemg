@@ -23,7 +23,8 @@ package main
 
 import (
 	"log"
-	"mvemg/dg"
+
+	"github.com/SMerrony/dgemug"
 )
 
 func novaPC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {

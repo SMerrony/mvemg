@@ -38,13 +38,14 @@ package main
 import (
 	"bufio"
 	"log"
-	"mvemg/dg"
 	"mvemg/logging"
 	"mvemg/memory"
 	"mvemg/util"
 	"os"
 	"sync"
 	"time"
+
+	"github.com/SMerrony/dgemug"
 )
 
 const (

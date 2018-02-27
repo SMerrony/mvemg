@@ -27,7 +27,8 @@ package util
 import (
 	"fmt"
 	"math/bits"
-	"mvemg/dg"
+
+	"github.com/SMerrony/dgemug"
 )
 
 // BoolToInt converts a bool to 1 or 0

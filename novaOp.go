@@ -23,8 +23,9 @@ package main
 
 import (
 	"log"
-	"mvemg/dg"
 	"mvemg/util"
+
+	"github.com/SMerrony/dgemug"
 )
 
 func novaOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {

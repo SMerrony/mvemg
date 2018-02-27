@@ -23,11 +23,12 @@ package memory
 
 import (
 	"log"
-	"mvemg/dg"
 	"mvemg/logging"
 	"mvemg/util"
 	"runtime/debug"
 	"sync"
+
+	"github.com/SMerrony/dgemug"
 )
 
 const (

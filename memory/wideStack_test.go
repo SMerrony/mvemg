@@ -22,8 +22,9 @@
 package memory
 
 import (
-	"mvemg/dg"
 	"testing"
+
+	"github.com/SMerrony/dgemug"
 )
 
 func TestAdvanceWSP(t *testing.T) {

@@ -23,10 +23,11 @@ package main
 
 import (
 	"log"
-	"mvemg/dg"
 	"net"
 	"os"
 	"sync"
+
+	"github.com/SMerrony/dgemug"
 )
 
 var (

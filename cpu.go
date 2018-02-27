@@ -24,11 +24,13 @@ package main
 import (
 	"fmt"
 	"log"
-	"mvemg/dg"
+	//"github.com/SMerrony/dgemug"
 	"mvemg/util"
 	"runtime"
 	"sync"
 	"time"
+
+	"github.com/SMerrony/dgemug"
 )
 
 // TODO sbrBits is currently an abstraction of the Segment Base Registers - may need to represent physically

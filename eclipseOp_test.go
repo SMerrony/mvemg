@@ -23,7 +23,7 @@ package main
 
 import "testing"
 
-import "mvemg/dg"
+import "github.com/SMerrony/dgemug"
 
 func TestDIV(t *testing.T) {
 	cpuPtr := cpuInit(nil)

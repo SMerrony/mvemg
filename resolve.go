@@ -23,10 +23,11 @@ package main
 
 import (
 	"log"
-	"mvemg/dg"
 	"mvemg/logging"
 	"mvemg/memory"
 	"mvemg/util"
+
+	"github.com/SMerrony/dgemug"
 )
 
 func resolve16bitEclipseAddr(cpuPtr *CPUT, ind byte, mode int, disp int16) dg.PhysAddrT {

@@ -22,8 +22,9 @@
 package memory
 
 import (
-	"mvemg/dg"
 	"mvemg/logging"
+
+	"github.com/SMerrony/dgemug"
 )
 
 // Some Page Zero special locations for the Narrow Stack

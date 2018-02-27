@@ -23,10 +23,11 @@ package main
 
 import (
 	"log"
-	"mvemg/dg"
 	"mvemg/logging"
 	"mvemg/memory"
 	"mvemg/util"
+
+	"github.com/SMerrony/dgemug"
 )
 
 func eclipseOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {

@@ -23,13 +23,14 @@ package main
 
 import (
 	"log"
-	"mvemg/dg"
 	"mvemg/logging"
 	"mvemg/memory"
 	"mvemg/util"
 	"os"
 	"sync"
 	"time"
+
+	"github.com/SMerrony/dgemug"
 
 	"github.com/SMerrony/simhtape/pkg/simhtape"
 )

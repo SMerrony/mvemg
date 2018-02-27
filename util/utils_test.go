@@ -22,8 +22,9 @@
 package util
 
 import (
-	"mvemg/dg"
 	"testing"
+
+	"github.com/SMerrony/dgemug"
 )
 
 func TestBoolToInt(t *testing.T) {

@@ -23,9 +23,10 @@ package main
 
 import (
 	"log"
-	"mvemg/dg"
 	"mvemg/logging"
 	"mvemg/util"
+
+	"github.com/SMerrony/dgemug"
 )
 
 func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
