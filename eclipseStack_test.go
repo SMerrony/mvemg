@@ -22,7 +22,7 @@
 package main
 
 import "testing"
-import "mvemg/memory"
+import "github.com/SMerrony/dgemug/memory"
 
 func TestSave(t *testing.T) {
 	cpuPtr := cpuInit(nil)

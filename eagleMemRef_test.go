@@ -22,8 +22,9 @@
 package main
 
 import (
-	"mvemg/memory"
 	"testing"
+
+	"github.com/SMerrony/dgemug/memory"
 )
 
 func TestXSTB(t *testing.T) {

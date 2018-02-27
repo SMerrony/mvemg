@@ -27,7 +27,6 @@ import (
 	"fmt"
 	"log"
 	"mvemg/logging"
-	"mvemg/memory"
 	"mvemg/util"
 	"net"
 	"os"
@@ -36,6 +35,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/SMerrony/dgemug/memory"
 
 	"github.com/SMerrony/dgemug"
 )

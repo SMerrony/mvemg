@@ -24,7 +24,7 @@ package main
 import (
 	"testing"
 
-	"mvemg/memory"
+	"github.com/SMerrony/dgemug/memory"
 )
 
 func TestResolve16bitEclipseAddr(t *testing.T) {
