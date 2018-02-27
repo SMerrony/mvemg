@@ -24,10 +24,11 @@ package main
 import (
 	"fmt"
 	"log"
-	"mvemg/util"
 	"net"
 	"os"
 	"time"
+
+	"github.com/SMerrony/dgemug/util"
 )
 
 const (

@@ -23,7 +23,8 @@ package main
 
 import (
 	"log"
-	"mvemg/util"
+
+	"github.com/SMerrony/dgemug/util"
 
 	"github.com/SMerrony/dgemug"
 )

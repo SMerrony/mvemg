@@ -39,10 +39,11 @@ import (
 	"bufio"
 	"log"
 	"mvemg/logging"
-	"mvemg/util"
 	"os"
 	"sync"
 	"time"
+
+	"github.com/SMerrony/dgemug/util"
 
 	"github.com/SMerrony/dgemug/memory"
 

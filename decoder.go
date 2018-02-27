@@ -24,7 +24,8 @@ package main
 import (
 	"fmt"
 	"mvemg/logging"
-	"mvemg/util"
+
+	"github.com/SMerrony/dgemug/util"
 
 	"github.com/SMerrony/dgemug/memory"
 

@@ -25,10 +25,11 @@ import (
 	"fmt"
 	"log"
 	//"github.com/SMerrony/dgemug"
-	"mvemg/util"
 	"runtime"
 	"sync"
 	"time"
+
+	"github.com/SMerrony/dgemug/util"
 
 	"github.com/SMerrony/dgemug"
 )

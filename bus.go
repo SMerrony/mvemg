@@ -25,8 +25,9 @@ import (
 	"fmt"
 	"log"
 	"mvemg/logging"
-	"mvemg/util"
 	"sync"
+
+	"github.com/SMerrony/dgemug/util"
 )
 
 type (
