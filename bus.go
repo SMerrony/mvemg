@@ -27,7 +27,6 @@ import (
 	"sync"
 
 	"github.com/SMerrony/dgemug/logging"
-
 	"github.com/SMerrony/dgemug/util"
 )
 
@@ -107,26 +106,10 @@ func busSetDataInFunc(devNum int, fn DataInFunc) {
 }
 
 func busDataIn(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
-	//var pio pioMsgT
-	//logging.DebugPrint(logging.DEBUG_LOG, "DEBUG: Bus Data In function called for dev #0%o\n", iPtr.ioDev)
-	d[iPtr.ioDev].devMu.RLock()
 	if d[iPtr.ioDev].dataInFunc == nil {
 		log.Fatalf("ERROR: busDataIn called for device %d with no function set", iPtr.ioDev)
 	}
-	d[iPtr.ioDev].devMu.RUnlock()
-	if d[iPtr.ioDev].dataInFunc != nil {
-		d[iPtr.ioDev].dataInFunc(cpuPtr, iPtr, abc)
-	}
-	// else {
-	// 	pio.cpuPtr = cpuPtr
-	// 	pio.iPtr = iPtr
-	// 	pio.IO = 'I'
-	// 	pio.abc = abc
-	// 	d[iPtr.ioDev].pioChan <- pio
-	// 	_ = <-d[iPtr.ioDev].pioDoneChan
-	// }
-
-	// logging.DebugPrint(logging.DEBUG_LOG, "INFO: Bus Data In function called for dev #0%o\n", iPtr.ioDev)
+	d[iPtr.ioDev].dataInFunc(cpuPtr, iPtr, abc)
 }
 
 func busSetDataOutFunc(devNum int, fn DataOutFunc) {
@@ -138,27 +121,12 @@ func busSetDataOutFunc(devNum int, fn DataOutFunc) {
 }
 
 func busDataOut(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
-	//var pio pioMsgT
-	d[iPtr.ioDev].devMu.Lock()
 	if d[iPtr.ioDev].dataOutFunc == nil {
 		logging.DebugLogsDump()
 		log.Fatalf("ERROR: busDataOut called for device %d with no function set",
 			iPtr.ioDev)
 	}
-	d[iPtr.ioDev].devMu.Unlock()
-	if d[iPtr.ioDev].dataOutFunc != nil {
-		d[iPtr.ioDev].dataOutFunc(cpuPtr, iPtr, abc)
-		//logging.DebugPrint(logging.DebugLog, "INFO: Bus Data Out function called for dev #0%o\n", iPtr.ioDev)
-	}
-	// else {
-	// 	pio.cpuPtr = cpuPtr
-	// 	pio.iPtr = iPtr
-	// 	pio.IO = 'O'
-	// 	pio.abc = abc
-	// 	d[iPtr.ioDev].pioChan <- pio
-	// 	_ = <-d[iPtr.ioDev].pioDoneChan
-	// 	//logging.DebugPrint(logging.DebugLog, "INFO: Bus Data Out sent PIO msg to dev #0%o\n", iPtr.ioDev)
-	// }
+	d[iPtr.ioDev].dataOutFunc(cpuPtr, iPtr, abc)
 }
 
 func busSetResetFunc(devNum int, resetFn ResetFunc) {
