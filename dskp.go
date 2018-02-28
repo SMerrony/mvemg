@@ -289,54 +289,43 @@ func dskpCreateBlank(imgName string) bool {
 }
 
 // Handle the DIA/B/C PIO commands
-func dskpDataIn(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
+func dskpDataIn(abc byte, flag byte) (datum dg.WordT) {
 	dskpData.dskpDataMu.Lock()
 	switch abc {
 	case 'A':
-		cpuPtr.ac[iPtr.acd] = dg.DwordT(dskpData.statusRegA)
+		datum = dskpData.statusRegA
 		if debugLogging {
-			logging.DebugPrint(logging.DskpLog, "DIA [Read Status A] returning %s for DRV=%d, PC: %d\n", util.WordToBinStr(dskpData.statusRegA), 0, cpuPtr.pc)
+			logging.DebugPrint(logging.DskpLog, "DIA [Read Status A] returning %s for DRV=%d\n", util.WordToBinStr(dskpData.statusRegA), 0)
 		}
 	case 'B':
-		cpuPtr.ac[iPtr.acd] = dg.DwordT(dskpData.statusRegB)
+		datum = dskpData.statusRegB
 		if debugLogging {
-			logging.DebugPrint(logging.DskpLog, "DIB [Read Status B] returning %s for DRV=%d, PC: %d\n", util.WordToBinStr(dskpData.statusRegB), 0, cpuPtr.pc)
+			logging.DebugPrint(logging.DskpLog, "DIB [Read Status B] returning %s for DRV=%d\n", util.WordToBinStr(dskpData.statusRegB), 0)
 		}
 	case 'C':
-		cpuPtr.ac[iPtr.acd] = dg.DwordT(dskpData.statusRegC)
+		datum = dskpData.statusRegC
 		if debugLogging {
-			logging.DebugPrint(logging.DskpLog, "DIC [Read Status C] returning %s for DRV=%d, PC: %d\n", util.WordToBinStr(dskpData.statusRegC), 0, cpuPtr.pc)
+			logging.DebugPrint(logging.DskpLog, "DIC [Read Status C] returning %s for DRV=%d\n", util.WordToBinStr(dskpData.statusRegC), 0)
 		}
 	}
 	dskpData.dskpDataMu.Unlock()
-	dskpHandleFlag(iPtr.f)
+	dskpHandleFlag(flag)
+	return datum
 }
 
 // Handle the DOA/B/C PIO commands
-func dskpDataOut(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
+func dskpDataOut(datum dg.WordT, abc byte, flag byte) {
 	dskpData.dskpDataMu.Lock()
 	switch abc {
 	case 'A':
-		dskpData.commandRegA = util.DwordGetLowerWord(cpuPtr.ac[iPtr.acd])
-		if debugLogging {
-			logging.DebugPrint(logging.DskpLog, "DOA [Load Cmd Reg A] from AC%d containing %s, PC: %d\n",
-				iPtr.acd, util.WordToBinStr(dskpData.commandRegA), cpuPtr.pc)
-		}
+		dskpData.commandRegA = datum
 	case 'B':
-		dskpData.commandRegB = util.DwordGetLowerWord(cpuPtr.ac[iPtr.acd])
-		if debugLogging {
-			logging.DebugPrint(logging.DskpLog, "DOB [Load Cmd Reg B] from AC%d containing %s, PC: %d\n",
-				iPtr.acd, util.WordToBinStr(dskpData.commandRegB), cpuPtr.pc)
-		}
+		dskpData.commandRegB = datum
 	case 'C':
-		dskpData.commandRegC = util.DwordGetLowerWord(cpuPtr.ac[iPtr.acd])
-		if debugLogging {
-			logging.DebugPrint(logging.DskpLog, "DOC [Load Cmd Reg C] from AC%d containing %s, PC: %d\n",
-				iPtr.acd, util.WordToBinStr(dskpData.commandRegC), cpuPtr.pc)
-		}
+		dskpData.commandRegC = datum
 	}
 	dskpData.dskpDataMu.Unlock()
-	dskpHandleFlag(iPtr.f)
+	dskpHandleFlag(flag)
 }
 
 func dskpDoPioCommand() {

@@ -26,6 +26,8 @@ import (
 	"log"
 	"sync"
 
+	"github.com/SMerrony/dgemug"
+
 	"github.com/SMerrony/dgemug/logging"
 	"github.com/SMerrony/dgemug/util"
 )
@@ -35,10 +37,10 @@ type (
 	ResetFunc func()
 
 	// DataOutFunc stores a DOx func pointer
-	DataOutFunc func(*CPUT, *novaDataIoT, byte)
+	DataOutFunc func(datum dg.WordT, abc byte, flag byte)
 
 	// DataInFunc stores a DIx func pointer
-	DataInFunc func(*CPUT, *novaDataIoT, byte)
+	DataInFunc func(abc byte, flag byte) (datum dg.WordT)
 )
 
 // type pioMsgT struct {
@@ -106,10 +108,11 @@ func busSetDataInFunc(devNum int, fn DataInFunc) {
 }
 
 func busDataIn(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
+
 	if d[iPtr.ioDev].dataInFunc == nil {
 		log.Fatalf("ERROR: busDataIn called for device %d with no function set", iPtr.ioDev)
 	}
-	d[iPtr.ioDev].dataInFunc(cpuPtr, iPtr, abc)
+	cpuPtr.ac[iPtr.acd] = dg.DwordT(d[iPtr.ioDev].dataInFunc(abc, iPtr.f))
 }
 
 func busSetDataOutFunc(devNum int, fn DataOutFunc) {
@@ -126,7 +129,7 @@ func busDataOut(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 		log.Fatalf("ERROR: busDataOut called for device %d with no function set",
 			iPtr.ioDev)
 	}
-	d[iPtr.ioDev].dataOutFunc(cpuPtr, iPtr, abc)
+	d[iPtr.ioDev].dataOutFunc(util.DwordGetLowerWord(cpuPtr.ac[iPtr.acd]), abc, iPtr.f)
 }
 
 func busSetResetFunc(devNum int, resetFn ResetFunc) {

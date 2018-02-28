@@ -85,13 +85,13 @@ func ttiReset() {
 }
 
 // This is called from Bus to implement DIA from the TTI devTTIice
-func ttiDataIn(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
+func ttiDataIn(abc byte, flag byte) (datum dg.WordT) {
 	oneCharBufMu.Lock()
-	cpuPtr.ac[iPtr.acd] = dg.DwordT(oneCharBuf) // grab the char from the buffer
+	datum = dg.WordT(oneCharBuf) // grab the char from the buffer
 	oneCharBufMu.Unlock()
 	switch abc {
 	case 'A':
-		switch iPtr.f {
+		switch flag {
 		case 'S':
 			busSetBusy(devTTI, true)
 			busSetDone(devTTI, false)
@@ -99,17 +99,17 @@ func ttiDataIn(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 			busSetBusy(devTTI, false)
 			busSetDone(devTTI, false)
 		}
-
 	default:
 		log.Fatalf("ERROR: unexpected source buffer <%c> for DOx ac,TTO instruction\n", abc)
 	}
+	return datum
 }
 
 // this is only here to support NIO commands to TTI
-func ttiDataOut(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
+func ttiDataOut(datum dg.WordT, abc byte, flag byte) {
 	switch abc {
 	case 'N':
-		switch iPtr.f {
+		switch flag {
 		case 'S':
 			busSetBusy(devTTI, true)
 			busSetDone(devTTI, false)

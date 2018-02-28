@@ -152,7 +152,7 @@ type DpfStatT struct {
 
 var (
 	dpfData                      dpfDataT
-	dataWd, wd                   dg.WordT
+	wd                           dg.WordT
 	ssc                          dg.WordT
 	bytesRead, bytesWritten, wIx int
 	err                          error
@@ -241,15 +241,15 @@ func dpfCreateBlank(imgName string) bool {
 }
 
 // dpfDataIn implements the DIA/B/C I/O instructions for this device
-func dpfDataIn(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
+func dpfDataIn(abc byte, flag byte) (data dg.WordT) {
 	dpfData.dpfMu.RLock()
 	switch abc {
 	case 'A':
 		switch dpfData.instructionMode {
 		case dpfInsModeNormal:
-			cpuPtr.ac[iPtr.acd] = dg.DwordT(dpfData.rwStatus)
+			data = dpfData.rwStatus
 			if debugLogging {
-				logging.DebugPrint(logging.DpfLog, "DIA [Read Data Txfr Status] (Normal mode) returning %s for DRV=%d\n",
+				logging.DebugPrint(logging.DpfLog, "DIA [Read Data Txfr Status] (Normal mode returning %s for DRV=%d\n",
 					util.WordToBinStr(dpfData.rwStatus), dpfData.drive)
 			}
 		case dpfInsModeAlt1:
@@ -260,21 +260,17 @@ func dpfDataIn(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 	case 'B':
 		switch dpfData.instructionMode {
 		case dpfInsModeNormal:
-			cpuPtr.ac[iPtr.acd] = dg.DwordT(dpfData.driveStatus & 0xfeff)
-			if debugLogging {
-				logging.DebugPrint(logging.DpfLog, "DIB [Read Drive Status] (normal mode) DRV=%d, %s to AC%d, PC: %d\n",
-					dpfData.drive, util.WordToBinStr(dpfData.driveStatus), iPtr.acd, cpuPtr.pc)
-			}
+			data = dpfData.driveStatus & 0xfeff
 		case dpfInsModeAlt1:
-			cpuPtr.ac[iPtr.acd] = dg.DwordT(0x8000) | (dg.DwordT(dpfData.ema) & 0x01f)
+			data = dg.WordT(0x8000) | dg.WordT(dpfData.ema)&0x01f
 			//			if dpfData.mapEnabled {
-			//				cpuPtr.ac[iPtr.acd] = dg_dword(dpfData.ema&0x1f) | 0x8000
+			//				data = dg_dword(dpfData.ema&0x1f) | 0x8000
 			//			} else {
-			//				cpuPtr.ac[iPtr.acd] = dg_dword(dpfData.ema & 0x1f)
+			//				data = dg_dword(dpfData.ema & 0x1f)
 			//			}
 			if debugLogging {
-				logging.DebugPrint(logging.DpfLog, "DIB [Read EMA] (Alt Mode 1) returning: %d, PC: %d\n",
-					cpuPtr.ac[iPtr.acd], cpuPtr.pc)
+				logging.DebugPrint(logging.DpfLog, "DIB [Read EMA] (Alt Mode 1) returning: %d\n",
+					data)
 			}
 		case dpfInsModeAlt2:
 			log.Fatal("DPF DIB (Alt Mode 2) not yet implemented")
@@ -287,39 +283,40 @@ func dpfDataIn(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 		ssc |= (dg.WordT(dpfData.surface) & 0x1f) << 10
 		ssc |= (dg.WordT(dpfData.sector) & 0x1f) << 5
 		ssc |= (dg.WordT(dpfData.sectCnt) & 0x1f)
-		cpuPtr.ac[iPtr.acd] = dg.DwordT(ssc)
+		data = ssc
 		if debugLogging {
 			logging.DebugPrint(logging.DpfLog, "DPF DIC returning: %s\n", util.WordToBinStr(ssc))
 		}
 	}
 	dpfData.dpfMu.RUnlock()
 
-	dpfHandleFlag(iPtr.f)
+	dpfHandleFlag(flag)
+
+	return data
 }
 
 // dpfDataOut implements the DOA/B/C instructions for this device
 // NIO is also routed here with a dummy abc flag value of N
-func dpfDataOut(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
+func dpfDataOut(datum dg.WordT, abc byte, flag byte) {
 	dpfData.dpfMu.Lock()
-	dataWd = util.DwordGetLowerWord(cpuPtr.ac[iPtr.acd])
 	switch abc {
 	case 'A':
-		dpfData.command = extractDpfCommand(dataWd)
-		dpfData.drive = extractDpfDriveNo(dataWd)
-		dpfData.ema = extractDpfEMA(dataWd)
-		if util.TestWbit(dataWd, 0) {
+		dpfData.command = extractDpfCommand(datum)
+		dpfData.drive = extractDpfDriveNo(datum)
+		dpfData.ema = extractDpfEMA(datum)
+		if util.TestWbit(datum, 0) {
 			dpfData.rwStatus &= ^dg.WordT(dpfRwdone)
 		}
-		if util.TestWbit(dataWd, 1) {
+		if util.TestWbit(datum, 1) {
 			dpfData.rwStatus &= ^dg.WordT(dpfDrive0Done)
 		}
-		if util.TestWbit(dataWd, 2) {
+		if util.TestWbit(datum, 2) {
 			dpfData.rwStatus &= ^dg.WordT(dpfDrive1Done)
 		}
-		if util.TestWbit(dataWd, 3) {
+		if util.TestWbit(datum, 3) {
 			dpfData.rwStatus &= ^dg.WordT(dpfDrive2Done)
 		}
-		if util.TestWbit(dataWd, 4) {
+		if util.TestWbit(datum, 4) {
 			dpfData.rwStatus &= ^dg.WordT(dpfDrive3Done)
 		}
 		dpfData.instructionMode = dpfInsModeNormal
@@ -339,52 +336,52 @@ func dpfDataOut(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 		}
 		dpfData.lastDOAwasSeek = (dpfData.command == dpfCmdSeek)
 		if debugLogging {
-			logging.DebugPrint(logging.DpfLog, "DOA [Specify Cmd,Drv,EMA] to DRV=%d with data %s at PC: %d\n",
-				dpfData.drive, util.WordToBinStr(dataWd), cpuPtr.pc)
+			logging.DebugPrint(logging.DpfLog, "DOA [Specify Cmd,Drv,EMA] to DRV=%d with data %s\n",
+				dpfData.drive, util.WordToBinStr(datum))
 			logging.DebugPrint(logging.DpfLog, "... CMD: %s, DRV: %d, EMA: %d\n",
 				cmdDecode[dpfData.command], dpfData.drive, dpfData.ema)
 		}
 	case 'B':
-		if util.TestWbit(dataWd, 0) {
+		if util.TestWbit(datum, 0) {
 			dpfData.ema |= 0x01
 		} else {
 			dpfData.ema &= 0xfe
 		}
-		dpfData.memAddr = dataWd & 0x7fff
+		dpfData.memAddr = datum & 0x7fff
 		if debugLogging {
-			logging.DebugPrint(logging.DpfLog, "DOB [Specify Memory Addr] with data %s at PC: %d\n",
-				util.WordToBinStr(dataWd), cpuPtr.pc)
+			logging.DebugPrint(logging.DpfLog, "DOB [Specify Memory Addr] with data %s\n",
+				util.WordToBinStr(datum))
 			logging.DebugPrint(logging.DpfLog, "... MEM Addr: %d\n", dpfData.memAddr)
 			logging.DebugPrint(logging.DpfLog, "... EMA: %d\n", dpfData.ema)
 		}
 	case 'C':
 		if dpfData.lastDOAwasSeek {
-			dpfData.cylinder = dataWd & 0x03ff // mask off lower 10 bits
+			dpfData.cylinder = datum & 0x03ff // mask off lower 10 bits
 			if debugLogging {
-				logging.DebugPrint(logging.DpfLog, "DOC [Specify Cylinder] after SEEK with data %s at PC: %d\n",
-					util.WordToBinStr(dataWd), cpuPtr.pc)
+				logging.DebugPrint(logging.DpfLog, "DOC [Specify Cylinder] after SEEK with data %s\n",
+					util.WordToBinStr(datum))
 				logging.DebugPrint(logging.DpfLog, "... CYL: %d\n", dpfData.cylinder)
 			}
 		} else {
-			dpfData.mapEnabled = util.TestWbit(dataWd, 0)
-			dpfData.surface = extractsurface(dataWd)
-			dpfData.sector = extractSector(dataWd)
-			dpfData.sectCnt = extractSectCnt(dataWd)
+			dpfData.mapEnabled = util.TestWbit(datum, 0)
+			dpfData.surface = extractsurface(datum)
+			dpfData.sector = extractSector(datum)
+			dpfData.sectCnt = extractSectCnt(datum)
 			if debugLogging {
-				logging.DebugPrint(logging.DpfLog, "DOC [Specify Surf,Sect,Cnt] (not after seek) with data %s at PC: %d\n",
-					util.WordToBinStr(dataWd), cpuPtr.pc)
+				logging.DebugPrint(logging.DpfLog, "DOC [Specify Surf,Sect,Cnt] (not after seek) with data %s\n",
+					util.WordToBinStr(datum))
 				logging.DebugPrint(logging.DpfLog, "... MAP: %d, SURF: %d, SECT: %d, SECCNT: %d\n",
 					util.BoolToInt(dpfData.mapEnabled), dpfData.surface, dpfData.sector, dpfData.sectCnt)
 			}
 		}
 	case 'N': // dummy value for NIO - we just handle the flag below
 		if debugLogging {
-			logging.DebugPrint(logging.DpfLog, "NIO%c received\n", iPtr.f)
+			logging.DebugPrint(logging.DpfLog, "NIO%c received\n", flag)
 		}
 	}
 	dpfData.dpfMu.Unlock()
 
-	dpfHandleFlag(iPtr.f)
+	dpfHandleFlag(flag)
 }
 
 func dpfDoCommand() {

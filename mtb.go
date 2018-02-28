@@ -29,8 +29,6 @@ import (
 
 	"github.com/SMerrony/dgemug/logging"
 
-	"github.com/SMerrony/dgemug/util"
-
 	"github.com/SMerrony/dgemug/memory"
 
 	"github.com/SMerrony/dgemug"
@@ -312,63 +310,50 @@ readLoop:
 }
 
 // This is called from Bus to implement DIx from the MTB device
-func mtbDataIn(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
+func mtbDataIn(abc byte, flag byte) (data dg.WordT) {
 
 	mtb.mtbDataMu.RLock()
 	switch abc {
 	case 'A': /* Read status register 1 - see p.IV-18 of Peripherals guide */
-		cpuPtr.ac[iPtr.acd] = dg.DwordT(mtb.statusReg1)
-		logging.DebugPrint(logging.MtbLog, "DIA - Read Status Reg 1 %s to AC%d, PC: %d\n",
-			util.WordToBinStr(mtb.statusReg1), iPtr.acd, cpuPtr.pc)
-
+		data = mtb.statusReg1
 	case 'B': /* Read memory addr register 1 - see p.IV-19 of Peripherals guide */
-		cpuPtr.ac[iPtr.acd] = dg.DwordT(mtb.memAddrReg)
-		logging.DebugPrint(logging.MtbLog, "DIB - Read Mem Addr Reg 1 <%d> to AC%d, PC: %d\n",
-			mtb.memAddrReg, iPtr.acd, cpuPtr.pc)
-
+		data = dg.WordT(mtb.memAddrReg)
 	case 'C': /* Read status register 2 - see p.IV-18 of Peripherals guide */
-		cpuPtr.ac[iPtr.acd] = dg.DwordT(mtb.statusReg2)
-		logging.DebugPrint(logging.MtbLog, "DIC - Read Status Reg 2 %s to AC%d, PC: %d\n",
-			util.WordToBinStr(mtb.statusReg2), iPtr.acd, cpuPtr.pc)
+		data = mtb.statusReg2
 	}
 	mtb.mtbDataMu.RUnlock()
 
-	mtbHandleFlag(iPtr.f)
+	mtbHandleFlag(flag)
+
+	return data
 }
 
 // This is called from Bus to implement DOx from the MTB device
-func mtbDataOut(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
-
-	ac16 := util.DwordGetLowerWord(cpuPtr.ac[iPtr.acd])
-
+func mtbDataOut(datum dg.WordT, abc byte, flag byte) {
 	mtb.mtbDataMu.Lock()
 	switch abc {
 	case 'A': // Specify Command and Drive - p.IV-17
 		// which command?
 		for c := 0; c < mtbCmdCount; c++ {
-			if (ac16 & mtbCmdMask) == commandSet[c] {
+			if (datum & mtbCmdMask) == commandSet[c] {
 				mtb.currentCmd = c
 				break
 			}
 		}
 		// which unit?
-		mtb.currentUnit = mtbExtractUnit(ac16)
-		logging.DebugPrint(logging.MtbLog, "DOA - Specify Command and Drive - internal cmd #: %d, unit: %d, PC: %d\n",
-			mtb.currentCmd, mtb.currentUnit, cpuPtr.pc)
-
+		mtb.currentUnit = mtbExtractUnit(datum)
+		logging.DebugPrint(logging.MtbLog, "DOA - Specify Command and Drive - internal cmd #: %d, unit: %d\n",
+			mtb.currentCmd, mtb.currentUnit)
 	case 'B':
-		mtb.memAddrReg = dg.PhysAddrT(ac16)
-		logging.DebugPrint(logging.MtbLog, "DOB - Write Memory Address Register from AC%d, Value: %d, PC: %d\n",
-			iPtr.acd, ac16, cpuPtr.pc)
-
+		mtb.memAddrReg = dg.PhysAddrT(datum)
 	case 'C':
-		mtb.negWordCntReg = int(int16(ac16))
-		logging.DebugPrint(logging.MtbLog, "DOC - Set (neg) Word Count to %d, PC: %d\n",
-			mtb.negWordCntReg, cpuPtr.pc)
+		mtb.negWordCntReg = int(int16(datum))
+		logging.DebugPrint(logging.MtbLog, "DOC - Set (neg) Word Count to %d\n",
+			mtb.negWordCntReg)
 	}
 	mtb.mtbDataMu.Unlock()
 
-	mtbHandleFlag(iPtr.f)
+	mtbHandleFlag(flag)
 }
 
 func mtbExtractUnit(word dg.WordT) int {

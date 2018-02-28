@@ -25,7 +25,7 @@ import (
 	"log"
 	"net"
 
-	"github.com/SMerrony/dgemug/logging"
+	dg "github.com/SMerrony/dgemug"
 )
 
 var (
@@ -63,14 +63,12 @@ func ttoReset() {
 }
 
 // This is called from Bus to implement DOA to the TTO device
-func ttoDataOut(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
+func ttoDataOut(datum dg.WordT, abc byte, flag byte) {
 	var ascii byte
 	switch abc {
 	case 'A':
-		ascii = byte(cpuPtr.ac[iPtr.acd])
-		logging.DebugPrint(logging.DebugLog, "ttoDataOut: AC# %d contains %d                                 yielding ASCII char<%c>\n",
-			iPtr.acd, cpuPtr.ac[iPtr.acd], ascii)
-		if iPtr.f == 'S' {
+		ascii = byte(datum)
+		if flag == 'S' {
 			busSetBusy(devTTO, true)
 			busSetDone(devTTO, false)
 		}
@@ -78,7 +76,7 @@ func ttoDataOut(cpuPtr *CPUT, iPtr *novaDataIoT, abc byte) {
 		busSetBusy(devTTO, false)
 		busSetDone(devTTO, true)
 	case 'N':
-		switch iPtr.f {
+		switch flag {
 		case 'S':
 			busSetBusy(devTTO, true)
 			busSetDone(devTTO, false)
