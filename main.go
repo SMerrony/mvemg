@@ -67,7 +67,7 @@ var (
 	cpuPtr        *CPUT
 	cpuStatsChan  chan cpuStatT
 	dpfStatsChan  chan devices.Disk6061StatT
-	dskpStatsChan chan devices.Disk6061StatT
+	dskpStatsChan chan devices.Disk6239StatT
 	mtbStatsChan  chan devices.MtStatT
 	ttiSCPchan    chan byte
 )
@@ -113,7 +113,7 @@ func main() {
 		// See statusCollector.go for details
 		cpuStatsChan = make(chan cpuStatT, 3)
 		dpfStatsChan = make(chan devices.Disk6061StatT, 3)
-		dskpStatsChan = make(chan dskpStatsChan, 3)
+		dskpStatsChan = make(chan devices.Disk6239StatT, 3)
 		mtbStatsChan = make(chan devices.MtStatT, 3)
 
 		ttiSCPchan = make(chan byte, ScpBuffSize)
@@ -150,7 +150,8 @@ func main() {
 		devices.BusAddDevice(devDPF, "DPF", pmbDPF, false, true, true)
 		devices.Disk6061Init(devDPF, dpfStatsChan, logging.DpfLog, debugLogging)
 
-		dskpInit(dskpStatsChan)
+		devices.BusAddDevice(devDSKP, "DSKP", pmbDSKP, false, true, true)
+		devices.Disk6239Init(devDSKP, dskpStatsChan, logging.DskpLog, debugLogging)
 
 		// say hello...
 		devices.TtoPutChar(asciiFF)
@@ -302,7 +303,7 @@ func attach(cmd []string) {
 		}
 
 	case "DSKP":
-		if dskpAttach(0, cmd[2]) {
+		if devices.Disk6239Attach(0, cmd[2]) {
 			devices.TtoPutNLString(" *** DSKP Disk Image Attached ***")
 		} else {
 			devices.TtoPutNLString(" *** Could not ATTach DSKP Disk Image ***")
@@ -399,7 +400,7 @@ func createBlank(cmd []string) {
 		}
 	case "DSKP":
 		devices.TtoPutNLString("Attempting to CREATE new empty DSKP-type disk image, please wait...")
-		if dskpCreateBlank(cmd[2]) {
+		if devices.Disk6239CreateBlank(cmd[2]) {
 			devices.TtoPutNLString("Empty MV/Em DSKP-type disk image created")
 		} else {
 			devices.TtoPutNLString(" *** Error: could not create empty disk image ***")

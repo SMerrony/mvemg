@@ -56,7 +56,7 @@ const (
 func statusCollector(
 	cpuChan chan cpuStatT,
 	dpfChan chan devices.Disk6061StatT,
-	dskpChan chan dskpStatT,
+	dskpChan chan devices.Disk6239StatT,
 	mtbChan chan devices.MtStatT) {
 
 	var (
@@ -67,7 +67,7 @@ func statusCollector(
 		thisDpfIOcnt, lastDpfIOcnt             uint64
 		thisDskpIOcnt, lastDskpIOcnt           uint64
 		dpfStats                               devices.Disk6061StatT
-		dskpStats                              dskpStatT
+		dskpStats                              devices.Disk6239StatT
 		mtbStats                               devices.MtStatT
 	)
 
@@ -133,18 +133,18 @@ func statusCollector(
 					dpfStats.Sector))
 
 			case dskpStats = <-dskpChan:
-				thisDskpIOcnt = dskpStats.writes + dskpStats.reads
+				thisDskpIOcnt = dskpStats.Writes + dskpStats.Reads
 				dskpIops = float64(thisDskpIOcnt-lastDskpIOcnt) / time.Since(lastDskpTime).Seconds()
 				lastDskpIOcnt = thisDskpIOcnt
 				lastDskpTime = time.Now()
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statDSKProw, dasherERASEEOL))
 				statusSendString(conn, fmt.Sprintf("DSKP (DPJ0) - Attached: %c  IOPS: %.f  SECNUM: %08d",
-					util.BoolToYN(dskpStats.imageAttached),
+					util.BoolToYN(dskpStats.ImageAttached),
 					dskpIops,
 					//dskpStats.cylinder,
 					//dskpStats.head,
 					//dskpStats.sector,
-					dskpStats.sectorNo))
+					dskpStats.SectorNo))
 
 			case mtbStats = <-mtbChan:
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statMTBrow, dasherERASEEOL))
