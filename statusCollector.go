@@ -28,6 +28,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/SMerrony/dgemug/devices"
+
 	"github.com/SMerrony/dgemug/util"
 )
 
@@ -53,9 +55,9 @@ const (
 // status as often as it sees fit.
 func statusCollector(
 	cpuChan chan cpuStatT,
-	dpfChan chan DpfStatT,
+	dpfChan chan devices.Disk6061StatT,
 	dskpChan chan dskpStatT,
-	mtbChan chan mtbStatT) {
+	mtbChan chan devices.MtStatT) {
 
 	var (
 		cpuStats                               cpuStatT
@@ -64,9 +66,9 @@ func statusCollector(
 		lastCPUtime, lastDpfTime, lastDskpTime time.Time
 		thisDpfIOcnt, lastDpfIOcnt             uint64
 		thisDskpIOcnt, lastDskpIOcnt           uint64
-		dpfStats                               DpfStatT
+		dpfStats                               devices.Disk6061StatT
 		dskpStats                              dskpStatT
-		mtbStats                               mtbStatT
+		mtbStats                               devices.MtStatT
 	)
 
 	l, err := net.Listen("tcp", "localhost:"+StatPort)
@@ -118,17 +120,17 @@ func statusCollector(
 					cpuStats.heapSizeMB))
 
 			case dpfStats = <-dpfChan:
-				thisDpfIOcnt = dpfStats.writes + dpfStats.reads
+				thisDpfIOcnt = dpfStats.Writes + dpfStats.Reads
 				dpfIops = float64(thisDpfIOcnt-lastDpfIOcnt) / time.Since(lastDpfTime).Seconds()
 				lastDpfIOcnt = thisDpfIOcnt
 				lastDpfTime = time.Now()
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statDPFrow, dasherERASEEOL))
 				statusSendString(conn, fmt.Sprintf("DPF  (DPF0) - Attached: %c  IOPS: %.f CYL: %04d  HD: %02d  SECT: %03d",
-					util.BoolToYN(dpfStats.imageAttached),
+					util.BoolToYN(dpfStats.ImageAttached),
 					dpfIops,
-					dpfStats.cylinder,
-					dpfStats.head,
-					dpfStats.sector))
+					dpfStats.Cylinder,
+					dpfStats.Head,
+					dpfStats.Sector))
 
 			case dskpStats = <-dskpChan:
 				thisDskpIOcnt = dskpStats.writes + dskpStats.reads
@@ -147,10 +149,10 @@ func statusCollector(
 			case mtbStats = <-mtbChan:
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statMTBrow, dasherERASEEOL))
 				statusSendString(conn, fmt.Sprintf("MTB  (MTC0) - Attached: %c  File: %s  Mem Addr: %010d  Curr Cmd: %d",
-					util.BoolToYN(mtbStats.imageAttached[0]),
-					mtbStats.fileName[0],
-					mtbStats.memAddrReg,
-					mtbStats.currentCmd))
+					util.BoolToYN(mtbStats.ImageAttached[0]),
+					mtbStats.FileName[0],
+					mtbStats.MemAddrReg,
+					mtbStats.CurrentCmd))
 			}
 		}
 	}

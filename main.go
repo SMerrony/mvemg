@@ -34,13 +34,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/SMerrony/dgemug/logging"
-
-	"github.com/SMerrony/dgemug/util"
-
-	"github.com/SMerrony/dgemug/memory"
-
 	"github.com/SMerrony/dgemug"
+	"github.com/SMerrony/dgemug/devices"
+	"github.com/SMerrony/dgemug/logging"
+	"github.com/SMerrony/dgemug/memory"
+	"github.com/SMerrony/dgemug/util"
 )
 
 // import "github.com/pkg/profile"
@@ -68,9 +66,9 @@ var (
 	breakpoints   []dg.PhysAddrT
 	cpuPtr        *CPUT
 	cpuStatsChan  chan cpuStatT
-	dpfStatsChan  chan DpfStatT
-	dskpStatsChan chan dskpStatT
-	mtbStatsChan  chan mtbStatT
+	dpfStatsChan  chan devices.Disk6061StatT
+	dskpStatsChan chan devices.Disk6061StatT
+	mtbStatsChan  chan devices.MtStatT
 	ttiSCPchan    chan byte
 )
 
@@ -114,9 +112,9 @@ func main() {
 		// create the channels used for near-real-time status monitoring
 		// See statusCollector.go for details
 		cpuStatsChan = make(chan cpuStatT, 3)
-		dpfStatsChan = make(chan DpfStatT, 3)
-		dskpStatsChan = make(chan dskpStatT, 3)
-		mtbStatsChan = make(chan mtbStatT, 3)
+		dpfStatsChan = make(chan devices.Disk6061StatT, 3)
+		dskpStatsChan = make(chan dskpStatsChan, 3)
+		mtbStatsChan = make(chan devices.MtStatT, 3)
 
 		ttiSCPchan = make(chan byte, ScpBuffSize)
 
@@ -135,20 +133,28 @@ func main() {
 		 ***/
 
 		memory.MemInit(debugLogging)
-		busInit()
-		busAddDevice(devSCP, "SCP", pmbSCP, true, false, false)
+		devices.BusInit()
+		devices.BusAddDevice(devSCP, "SCP", pmbSCP, true, false, false)
 		instructionsInit()
 		decoderGenAllPossOpcodes()
 		cpuPtr = cpuInit(cpuStatsChan)
-		ttoInit(conn)
-		ttiInit(conn, cpuPtr, ttiSCPchan)
-		mtbInit(mtbStatsChan)
-		DpfInit(dpfStatsChan)
+
+		devices.BusAddDevice(devTTO, "TTO", pmbTTO, true, true, false)
+		devices.TtoInit(devTTO, conn)
+
+		ttiInit(devTTI, conn, cpuPtr, ttiSCPchan)
+
+		devices.BusAddDevice(devMTB, "MTB", pmbMTB, false, true, true)
+		devices.MtInit(devMTB, mtbStatsChan, logging.MtbLog)
+
+		devices.BusAddDevice(devDPF, "DPF", pmbDPF, false, true, true)
+		devices.Disk6061Init(devDPF, dpfStatsChan, logging.DpfLog, debugLogging)
+
 		dskpInit(dskpStatsChan)
 
 		// say hello...
-		ttoPutChar(asciiFF)
-		ttoPutStringNL(" *** Welcome to the MV/Emulator - Type HE for help ***")
+		devices.TtoPutChar(asciiFF)
+		devices.TtoPutStringNL(" *** Welcome to the MV/Emulator - Type HE for help ***")
 
 		// kick off the status monitor routine
 		go statusCollector(cpuStatsChan, dpfStatsChan, dskpStatsChan, mtbStatsChan)
@@ -165,7 +171,7 @@ func main() {
 		cpuPtr.scpIO = true
 		cpuPtr.cpuMu.Unlock()
 		for {
-			ttoPutNLString("SCP-CLI> ")
+			devices.TtoPutNLString("SCP-CLI> ")
 			command := scpGetLine()
 			//log.Println("INFO: Got SCP command: " + command)
 			doCommand(command)
@@ -182,10 +188,10 @@ func scpGetLine() string {
 		//cc = ttiGetChar()
 		// handle the DASHER Delete key
 		if cc == dasherDELETE && len(line) > 0 {
-			ttoPutChar(dasherCURSORLEFT)
+			devices.TtoPutChar(dasherCURSORLEFT)
 			line = line[:len(line)-1]
 		} else {
-			ttoPutChar(cc)
+			devices.TtoPutChar(cc)
 			line = append(line, cc)
 		}
 	}
@@ -197,7 +203,7 @@ func scpGetLine() string {
 
 // Exit cleanly, tidying up as much as we can
 func cleanExit() {
-	ttoPutNLString(" *** MV/Emulator stopping at user request ***")
+	devices.TtoPutNLString(" *** MV/Emulator stopping at user request ***")
 	if *cpuprofile != "" {
 		pprof.StopCPUProfile()
 	}
@@ -225,7 +231,7 @@ func doCommand(cmd string) {
 	switch words[0] {
 	// SCP-like commands
 	case ".":
-		ttoPutString(cpuPrintableStatus())
+		devices.TtoPutString(cpuPrintableStatus())
 	case "B":
 		boot(words)
 	case "CO":
@@ -247,7 +253,7 @@ func doCommand(cmd string) {
 	case "BREAK":
 		breakSet(words)
 	case "CHECK":
-		ttoPutStringNL(mtbScanImage(0))
+		devices.TtoPutStringNL(devices.MtScanImage(0))
 	case "CREATE":
 		createBlank(words)
 	case "DET":
@@ -265,7 +271,7 @@ func doCommand(cmd string) {
 	case "SH", "SHO", "SHOW":
 		show(words)
 	default:
-		ttoPutNLString(cmdUnknown)
+		devices.TtoPutNLString(cmdUnknown)
 	}
 }
 
@@ -274,7 +280,7 @@ func doCommand(cmd string) {
 // Attach an image file to an emulated device
 func attach(cmd []string) {
 	if len(cmd) < 3 {
-		ttoPutNLString(" *** ATT command requires arguments: <dev> and <image> ***")
+		devices.TtoPutNLString(" *** ATT command requires arguments: <dev> and <image> ***")
 		return
 	}
 	if debugLogging {
@@ -282,34 +288,34 @@ func attach(cmd []string) {
 	}
 	switch cmd[1] {
 	case "MTB":
-		if mtbAttach(0, cmd[2]) {
-			ttoPutNLString(" *** Tape Image Attached ***")
+		if devices.MtAttach(0, cmd[2]) {
+			devices.TtoPutNLString(" *** Tape Image Attached ***")
 		} else {
-			ttoPutNLString(" *** Could not ATTach Tape Image ***")
+			devices.TtoPutNLString(" *** Could not ATTach Tape Image ***")
 		}
 
 	case "DPF":
-		if dpfAttach(0, cmd[2]) {
-			ttoPutNLString(" *** DPF Disk Image Attached ***")
+		if devices.Disk6061Attach(0, cmd[2]) {
+			devices.TtoPutNLString(" *** DPF Disk Image Attached ***")
 		} else {
-			ttoPutNLString(" *** Could not ATTach DPF Disk Image ***")
+			devices.TtoPutNLString(" *** Could not ATTach DPF Disk Image ***")
 		}
 
 	case "DSKP":
 		if dskpAttach(0, cmd[2]) {
-			ttoPutNLString(" *** DSKP Disk Image Attached ***")
+			devices.TtoPutNLString(" *** DSKP Disk Image Attached ***")
 		} else {
-			ttoPutNLString(" *** Could not ATTach DSKP Disk Image ***")
+			devices.TtoPutNLString(" *** Could not ATTach DSKP Disk Image ***")
 		}
 
 	default:
-		ttoPutNLString(" *** Unknown or unimplemented Device for ATT command ***")
+		devices.TtoPutNLString(" *** Unknown or unimplemented Device for ATT command ***")
 	}
 }
 
 func boot(cmd []string) {
 	if len(cmd) != 2 {
-		ttoPutNLString(" *** B command requires <devicenumber> ***")
+		devices.TtoPutNLString(" *** B command requires <devicenumber> ***")
 		return
 	}
 	if debugLogging {
@@ -318,54 +324,54 @@ func boot(cmd []string) {
 	dev, err := strconv.ParseInt(cmd[1], 8, 16) // FIXME Input Radix used here
 	devNum := int(dev)
 	if err != nil {
-		ttoPutNLString(" *** Expecting <devicenumber> after B ***")
+		devices.TtoPutNLString(" *** Expecting <devicenumber> after B ***")
 		return
 	}
-	if !busIsAttached(devNum) {
-		ttoPutNLString(" *** Device is not ATTached ***")
+	if !devices.BusIsAttached(devNum) {
+		devices.TtoPutNLString(" *** Device is not ATTached ***")
 		return
 	}
-	if !busIsBootable(devNum) {
-		ttoPutNLString(" *** Device is not bootable ***")
+	if !devices.BusIsBootable(devNum) {
+		devices.TtoPutNLString(" *** Device is not bootable ***")
 		return
 	}
 	memory.MemInit(debugLogging)
 	switch devNum {
 	case devMTB:
-		mtbLoadTBoot()
+		devices.MtLoadTBoot()
 		cpu.cpuMu.Lock()
 		cpu.sr = 0x8000 | devMTB
 		cpu.ac[0] = devMTB
 		cpu.pc = 10
 		cpu.cpuMu.Unlock()
 	default:
-		ttoPutNLString(" *** Booting from that device not yet implemented ***")
+		devices.TtoPutNLString(" *** Booting from that device not yet implemented ***")
 	}
 }
 
 func breakSet(cmd []string) {
 	if len(cmd) != 2 {
-		ttoPutNLString(" *** BREAK command requires a single physical <address> argument ***")
+		devices.TtoPutNLString(" *** BREAK command requires a single physical <address> argument ***")
 		return
 	}
 	pAddr, err := strconv.Atoi(cmd[1])
 	if err != nil {
-		ttoPutNLString(" *** BREAK command could not parse <address> argument ***")
+		devices.TtoPutNLString(" *** BREAK command could not parse <address> argument ***")
 		return
 	}
 	breakpoints = append(breakpoints, dg.PhysAddrT(pAddr))
 
-	ttoPutNLString("BREAKpoint set")
+	devices.TtoPutNLString("BREAKpoint set")
 }
 
 func breakClear(cmd []string) {
 	if len(cmd) != 2 {
-		ttoPutNLString(" *** NOBREAK command requires a single physical <address> argument ***")
+		devices.TtoPutNLString(" *** NOBREAK command requires a single physical <address> argument ***")
 		return
 	}
 	pAddr, err := strconv.Atoi(cmd[1])
 	if err != nil {
-		ttoPutNLString(" *** NOBREAK command could not parse <address> argument ***")
+		devices.TtoPutNLString(" *** NOBREAK command could not parse <address> argument ***")
 		return
 	}
 	cAddr := dg.PhysAddrT(pAddr)
@@ -373,39 +379,39 @@ func breakClear(cmd []string) {
 		if addr == cAddr {
 			breakpoints[ix] = breakpoints[len(breakpoints)-1]
 			breakpoints = breakpoints[:len(breakpoints)-1]
-			ttoPutNLString(" *** Cleared breakpoint ***")
+			devices.TtoPutNLString(" *** Cleared breakpoint ***")
 		}
 	}
 }
 
 func createBlank(cmd []string) {
 	if len(cmd) < 3 {
-		ttoPutNLString(" *** Expecting DPF|DSKP <filename> args for CREATE command ***")
+		devices.TtoPutNLString(" *** Expecting DPF|DSKP <filename> args for CREATE command ***")
 		return
 	}
 	switch cmd[1] {
 	case "DPF":
-		ttoPutNLString("Attempting to CREATE new empty DPF-type disk image, please wait...")
-		if dpfCreateBlank(cmd[2]) {
-			ttoPutNLString("Empty MV/Em DPF-type disk image created")
+		devices.TtoPutNLString("Attempting to CREATE new empty DPF-type disk image, please wait...")
+		if devices.Disk6061CreateBlank(cmd[2]) {
+			devices.TtoPutNLString("Empty MV/Em DPF-type disk image created")
 		} else {
-			ttoPutNLString(" *** Error: could not create empty disk image ***")
+			devices.TtoPutNLString(" *** Error: could not create empty disk image ***")
 		}
 	case "DSKP":
-		ttoPutNLString("Attempting to CREATE new empty DSKP-type disk image, please wait...")
+		devices.TtoPutNLString("Attempting to CREATE new empty DSKP-type disk image, please wait...")
 		if dskpCreateBlank(cmd[2]) {
-			ttoPutNLString("Empty MV/Em DSKP-type disk image created")
+			devices.TtoPutNLString("Empty MV/Em DSKP-type disk image created")
 		} else {
-			ttoPutNLString(" *** Error: could not create empty disk image ***")
+			devices.TtoPutNLString(" *** Error: could not create empty disk image ***")
 		}
 	default:
-		ttoPutNLString(" *** CREATE not yet supported for that device type ***")
+		devices.TtoPutNLString(" *** CREATE not yet supported for that device type ***")
 	}
 }
 
 func detach(cmd []string) {
 	if len(cmd) < 2 {
-		ttoPutNLString(" *** DET command requires argument: <dev> ***")
+		devices.TtoPutNLString(" *** DET command requires argument: <dev> ***")
 		return
 	}
 	if debugLogging {
@@ -413,13 +419,13 @@ func detach(cmd []string) {
 	}
 	switch cmd[1] {
 	case "MTB":
-		if mtbDetach(0) {
-			ttoPutNLString(" *** Tape Image Detached ***")
+		if devices.MtDetach(0) {
+			devices.TtoPutNLString(" *** Tape Image Detached ***")
 		} else {
-			ttoPutNLString(" *** Could not DETach Tape Image ***")
+			devices.TtoPutNLString(" *** Could not DETach Tape Image ***")
 		}
 	default:
-		ttoPutNLString(" *** Unknown or unimplemented Device for DET command ***")
+		devices.TtoPutNLString(" *** Unknown or unimplemented Device for DET command ***")
 	}
 }
 
@@ -432,13 +438,13 @@ func disassemble(cmd []string) {
 		skipDecode        int
 	)
 	if len(cmd) == 1 {
-		ttoPutNLString(" *** DIS command requires an address ***")
+		devices.TtoPutNLString(" *** DIS command requires an address ***")
 		return
 	}
 	cmd1 := cmd[1]
 	intVal1, err := strconv.Atoi(cmd1)
 	if err != nil {
-		ttoPutNLString(" *** Invalid address ***")
+		devices.TtoPutNLString(" *** Invalid address ***")
 		return
 	}
 	if cmd1[0] == '+' {
@@ -451,14 +457,14 @@ func disassemble(cmd []string) {
 		} else {
 			intVal2, err := strconv.Atoi(cmd[2])
 			if err != nil {
-				ttoPutNLString(" *** Invalid address ***")
+				devices.TtoPutNLString(" *** Invalid address ***")
 				return
 			}
 			highAddr = dg.PhysAddrT(intVal2)
 		}
 	}
 	if highAddr < lowAddr {
-		ttoPutNLString(" *** Invalid address range ***")
+		devices.TtoPutNLString(" *** Invalid address range ***")
 		return
 	}
 	for addr := lowAddr; addr <= highAddr; addr++ {
@@ -487,18 +493,18 @@ func disassemble(cmd []string) {
 		} else {
 			skipDecode--
 		}
-		ttoPutNLString(display)
+		devices.TtoPutNLString(display)
 	}
 }
 
 func doScript(cmd []string) {
 	if len(cmd) < 2 {
-		ttoPutNLString(" *** DO command required <scriptfile> ***")
+		devices.TtoPutNLString(" *** DO command required <scriptfile> ***")
 		return
 	}
 	scriptFile, err := os.Open(cmd[1])
 	if err != nil {
-		ttoPutNLString(" *** Could not open MV/Em command script ***")
+		devices.TtoPutNLString(" *** Could not open MV/Em command script ***")
 		if debugLogging {
 			logging.DebugPrint(logging.DebugLog, "WARN: Could not open MV/Em command script <%s>\n", cmd[1])
 		}
@@ -510,7 +516,7 @@ func doScript(cmd []string) {
 	for scanner.Scan() {
 		doCmd := scanner.Text()
 		if doCmd[0] != '#' {
-			ttoPutNLString(doCmd)
+			devices.TtoPutNLString(doCmd)
 			doCommand(doCmd)
 		}
 	}
@@ -522,66 +528,66 @@ func examine(cmd []string) {
 	switch cmd[1] {
 	case "A":
 		if len(cmd) < 3 {
-			ttoPutNLString(" *** Examine Accumulator - invalid AC number ***")
+			devices.TtoPutNLString(" *** Examine Accumulator - invalid AC number ***")
 			return
 		}
 		exAc, err := strconv.Atoi(cmd[2])
 		if err != nil || exAc < 0 || exAc > 3 {
-			ttoPutNLString(" *** Examine Accumulator - invalid AC number ***")
+			devices.TtoPutNLString(" *** Examine Accumulator - invalid AC number ***")
 			return
 		}
 		prompt := fmt.Sprintf("AC%d = %d - Enter new val or just ENTER> ", exAc, cpu.ac[exAc])
-		ttoPutNLString(prompt)
+		devices.TtoPutNLString(prompt)
 		resp := scpGetLine()
 		if len(resp) > 0 {
 			newVal, err := strconv.Atoi(resp)
 			if err != nil {
-				ttoPutNLString(" *** Could not parse new AC value ***")
+				devices.TtoPutNLString(" *** Could not parse new AC value ***")
 				return
 			}
 			cpu.ac[exAc] = dg.DwordT(newVal)
 			prompt = fmt.Sprintf("AC%d = %d", exAc, cpu.ac[exAc])
-			ttoPutNLString(prompt)
+			devices.TtoPutNLString(prompt)
 		}
 	case "M":
 		if len(cmd) < 3 {
-			ttoPutNLString(" *** Examine Memory - invalid address ***")
+			devices.TtoPutNLString(" *** Examine Memory - invalid address ***")
 			return
 		}
 		exMem, err := strconv.Atoi(cmd[2])
 		if err != nil || exMem < 0 || exMem > memory.MemSizeWords {
-			ttoPutNLString(" *** Examine Memory - invalid address ***")
+			devices.TtoPutNLString(" *** Examine Memory - invalid address ***")
 			return
 		}
 		prompt := fmt.Sprintf("Location %d contains %d - Enter new val or just ENTER> ", exMem, memory.ReadWord(dg.PhysAddrT(exMem)))
-		ttoPutNLString(prompt)
+		devices.TtoPutNLString(prompt)
 		resp := scpGetLine()
 		if len(resp) > 0 {
 			newVal, err := strconv.Atoi(resp)
 			if err != nil {
-				ttoPutNLString(" *** Could not parse new value ***")
+				devices.TtoPutNLString(" *** Could not parse new value ***")
 				return
 			}
 			memory.WriteWord(dg.PhysAddrT(exMem), dg.WordT(newVal))
 			prompt = fmt.Sprintf("Location %d = %d", exMem, memory.ReadWord(dg.PhysAddrT(exMem)))
-			ttoPutNLString(prompt)
+			devices.TtoPutNLString(prompt)
 		}
 	case "P":
 		prompt := fmt.Sprintf("PC = %d - Enter new val or just ENTER> ", cpu.pc)
-		ttoPutNLString(prompt)
+		devices.TtoPutNLString(prompt)
 		resp := scpGetLine()
 		if len(resp) > 0 {
 			newVal, err := strconv.Atoi(resp)
 			if err != nil {
-				ttoPutNLString(" *** Could not parse new PC value ***")
+				devices.TtoPutNLString(" *** Could not parse new PC value ***")
 				return
 			}
 			cpu.pc = dg.PhysAddrT(newVal)
 			prompt = fmt.Sprintf("PC = %d", cpu.pc)
-			ttoPutNLString(prompt)
+			devices.TtoPutNLString(prompt)
 		}
 	default:
-		ttoPutNLString(" *** Expecting A, M, or P for E(xamine) command ***")
+		devices.TtoPutNLString(" *** Expecting A, M, or P for E(xamine) command ***")
 		return
 	}
 }
@@ -600,16 +606,16 @@ func printableBreakpointList() string {
 // reset should bring the emulator back to its initial state
 func reset() {
 	memory.MemInit(debugLogging)
-	busResetAllIODevices()
+	devices.BusResetAllIODevices()
 	cpuReset()
-	mtbReset() // Not Init
-	dpfReset()
-	dskpReset()
+	// mtbReset() // Not Init
+	// dpfReset()
+	// dskpReset()
 }
 
 func set(cmd []string) {
 	if len(cmd) < 3 {
-		ttoPutNLString(" *** Expecting SET subcommand ***")
+		devices.TtoPutNLString(" *** Expecting SET subcommand ***")
 		return
 	}
 	switch cmd[1] {
@@ -622,14 +628,14 @@ func set(cmd []string) {
 		}
 
 	default:
-		ttoPutNLString(" *** Unknown SET subcommand ***")
+		devices.TtoPutNLString(" *** Unknown SET subcommand ***")
 	}
 }
 
 // showHelp - Display SCP and Emulator help on the DASHER-compatible console
 // N.B. Ensure this fits on a 24x80 screen
 func showHelp() {
-	ttoPutString("\014                          \024SCP-CLI Commands\025" +
+	devices.TtoPutString("\014                          \024SCP-CLI Commands\025" +
 		"                          \034MV/Emulator\035\012" +
 		" .                      - Display state of CPU\012" +
 		" B #                    - Boot from device #\012" +
@@ -639,7 +645,7 @@ func showHelp() {
 		" RE                     - REset the system\012" +
 		" SS                     - Single Step one instruction\012" +
 		" ST <addr>              - STart processing at specified address\012")
-	ttoPutString("\012                          \024Emulator Commands\025\012" +
+	devices.TtoPutString("\012                          \024Emulator Commands\025\012" +
 		" ATT <dev> <file> [RW]  - ATTach the image file to named device (RO)\012" +
 		" BREAK/NOBREAK <addr>   - Set or clear a BREAKpoint\012" +
 		" CHECK                  - CHECK validity of attached TAPE image\012" +
@@ -655,50 +661,50 @@ func showHelp() {
 // Show various emulator states to the user
 func show(cmd []string) {
 	if len(cmd) == 1 {
-		ttoPutNLString(" *** SHOW requires argument ***")
+		devices.TtoPutNLString(" *** SHOW requires argument ***")
 		return
 	}
 	switch cmd[1] {
 	case "DEV":
-		ttoPutNLString(busGetPrintableDevList())
+		devices.TtoPutNLString(devices.BusGetPrintableDevList())
 	case "BREAK":
-		ttoPutNLString(printableBreakpointList())
+		devices.TtoPutNLString(printableBreakpointList())
 	case "LOGGING":
 		resp := fmt.Sprintf("Logging is currently turned %s", util.BoolToOnOff(debugLogging))
-		ttoPutNLString(resp)
+		devices.TtoPutNLString(resp)
 	default:
-		ttoPutNLString(" *** Invalid SHOW type ***")
+		devices.TtoPutNLString(" *** Invalid SHOW type ***")
 	}
 }
 
 // Attempt to execute the opcode at PC
 func singleStep() {
-	ttoPutString(cpuPrintableStatus())
+	devices.TtoPutString(cpuPrintableStatus())
 	// FETCH
 	thisOp := memory.ReadWord(cpu.pc)
 	// DECODE
 	if iPtr, ok := instructionDecode(thisOp, cpu.pc, cpu.sbr[cpu.pc>>29].lef, cpu.sbr[cpu.pc>>29].io, cpu.atu, true); ok {
-		ttoPutNLString(iPtr.disassembly)
+		devices.TtoPutNLString(iPtr.disassembly)
 		// EXECUTE
 		if cpuExecute(iPtr) {
-			ttoPutString(cpuPrintableStatus())
+			devices.TtoPutString(cpuPrintableStatus())
 		} else {
-			ttoPutNLString(" *** Error: could not execute instruction")
+			devices.TtoPutNLString(" *** Error: could not execute instruction")
 		}
 	} else {
-		ttoPutNLString(" *** Error: could not decode opcode")
+		devices.TtoPutNLString(" *** Error: could not decode opcode")
 	}
 }
 
 // start running at user-provided PC
 func start(cmd []string) {
 	if len(cmd) < 2 {
-		ttoPutNLString(" *** ST command requires start address ***")
+		devices.TtoPutNLString(" *** ST command requires start address ***")
 		return
 	}
 	newPc, err := strconv.Atoi(cmd[1])
 	if err != nil || newPc < 0 {
-		ttoPutNLString(" *** Could not parse new PC value ***")
+		devices.TtoPutNLString(" *** Could not parse new PC value ***")
 		return
 	}
 	cpu.pc = dg.PhysAddrT(newPc)
@@ -758,7 +764,7 @@ RunLoop: // performance-critical section starts here
 					cpu.scpIO = true
 					cpu.cpuMu.Unlock()
 					msg := fmt.Sprintf(" *** BREAKpoint hit at physical address %d. ***", cpu.pc)
-					ttoPutNLString(msg)
+					devices.TtoPutNLString(msg)
 					log.Println(msg)
 
 					break RunLoop
@@ -789,19 +795,19 @@ RunLoop: // performance-critical section starts here
 
 	// run halted due to either error or console escape
 	log.Println(errDetail)
-	ttoPutNLString(errDetail)
+	devices.TtoPutNLString(errDetail)
 	if debugLogging {
 		logging.DebugPrint(logging.DebugLog, "%s\n", cpuPrintableStatus())
 	}
-	ttoPutString(cpuPrintableStatus())
+	devices.TtoPutString(cpuPrintableStatus())
 
 	errDetail = " *** CPU halting ***"
 	log.Println(errDetail)
-	ttoPutNLString(errDetail)
+	devices.TtoPutNLString(errDetail)
 
 	errDetail = fmt.Sprintf(" *** MV/Em executed %d instructions ***", cpu.instrCount)
 	log.Println(errDetail)
-	ttoPutNLString(errDetail)
+	devices.TtoPutNLString(errDetail)
 
 	// instruction counts, first by Mnemonic, then by count
 	m := make(map[int]string)

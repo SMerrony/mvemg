@@ -24,6 +24,7 @@ package main
 import (
 	"log"
 
+	"github.com/SMerrony/dgemug/devices"
 	"github.com/SMerrony/dgemug/logging"
 
 	"github.com/SMerrony/dgemug/util"
@@ -74,7 +75,7 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			}
 		}
 
-		if busIsAttached(novaDataIo.ioDev) && busIsIODevice(novaDataIo.ioDev) {
+		if devices.BusIsAttached(novaDataIo.ioDev) && devices.BusIsIODevice(novaDataIo.ioDev) {
 			switch iPtr.ix {
 			case instrDOA, instrDIA:
 				abc = 'A'
@@ -85,9 +86,11 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			}
 			switch iPtr.ix {
 			case instrDIA, instrDIB, instrDIC:
-				busDataIn(cpuPtr, &novaDataIo, abc)
+				cpuPtr.ac[novaDataIo.acd] = dg.DwordT(devices.BusDataIn(novaDataIo.ioDev, abc, novaDataIo.f))
+				//busDataIn(cpuPtr, &novaDataIo, abc)
 			case instrDOA, instrDOB, instrDOC:
-				busDataOut(cpuPtr, &novaDataIo, abc)
+				devices.BusDataOut(novaDataIo.ioDev, util.DwordGetLowerWord(cpuPtr.ac[novaDataIo.acd]), abc, novaDataIo.f)
+				//busDataOut(cpuPtr, &novaDataIo, abc)
 			}
 		} else {
 			logging.DebugPrint(logging.DebugLog, "WARN: I/O attempted to unattached or non-I/O capable device 0#%o\n", novaDataIo.ioDev)
@@ -103,7 +106,7 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrIORST:
 		// oneAcc1Word = iPtr.variant.(oneAcc1WordT) // <== this is just an assertion really
-		busResetAllIODevices()
+		devices.BusResetAllIODevices()
 		cpuPtr.ion = false
 		// TODO More to do for SMP support - HaHa!
 
@@ -125,7 +128,7 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		var novaDataIo novaDataIoT
 		novaDataIo.f = ioFlagsDev.f
 		novaDataIo.ioDev = ioFlagsDev.ioDev
-		busDataOut(cpuPtr, &novaDataIo, 'N') // DUMMY FLAG
+		devices.BusDataOut(novaDataIo.ioDev, util.DwordGetLowerWord(cpuPtr.ac[novaDataIo.acd]), 'N', novaDataIo.f) // DUMMY FLAG
 
 	case instrPRTSEL:
 		if debugLogging {
@@ -143,8 +146,8 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			busy = cpuPtr.ion
 			done = cpuPtr.pfflag
 		} else {
-			busy = busGetBusy(ioTestDev.ioDev)
-			done = busGetDone(ioTestDev.ioDev)
+			busy = devices.BusGetBusy(ioTestDev.ioDev)
+			done = devices.BusGetDone(ioTestDev.ioDev)
 		}
 		switch ioTestDev.t {
 		case bnTest:
@@ -204,7 +207,7 @@ func inten(cpuPtr *CPUT) bool {
 }
 
 func iorst(cpuPtr *CPUT) bool {
-	busResetAllIODevices()
+	devices.BusResetAllIODevices()
 	cpuPtr.pc++
 	return true
 }

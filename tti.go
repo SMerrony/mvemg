@@ -1,6 +1,6 @@
 // tti - console input
 
-// Copyright (C) 2017  Steve Merrony
+// Copyright (C) 2018  Steve Merrony
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -28,20 +28,23 @@ import (
 	"sync"
 
 	"github.com/SMerrony/dgemug"
+	"github.com/SMerrony/dgemug/devices"
 )
 
 var (
 	tti          net.Conn
+	devNum       int
 	oneCharBuf   byte
 	oneCharBufMu sync.Mutex
 )
 
-func ttiInit(c net.Conn, cpuPtr *CPUT, ch chan<- byte) {
+func ttiInit(dev int, c net.Conn, cpuPtr *CPUT, ch chan<- byte) {
+	devNum = dev
 	tti = c
-	busAddDevice(devTTI, "TTI", pmbTTI, true, true, false)
-	busSetResetFunc(devTTI, ttiReset)
-	busSetDataInFunc(devTTI, ttiDataIn)
-	busSetDataOutFunc(devTTI, ttiDataOut)
+	devices.BusAddDevice(devNum, "TTI", pmbTTI, true, true, false)
+	devices.BusSetResetFunc(devNum, ttiReset)
+	devices.BusSetDataInFunc(devNum, ttiDataIn)
+	devices.BusSetDataOutFunc(devNum, ttiDataOut)
 	go ttiListener(cpuPtr, ch)
 }
 
@@ -74,7 +77,7 @@ func ttiListener(cpuPtr *CPUT, scpChan chan<- byte) {
 				oneCharBufMu.Lock()
 				oneCharBuf = b[c]
 				oneCharBufMu.Unlock()
-				busSetDone(devTTI, true)
+				devices.BusSetDone(devNum, true)
 			}
 		}
 	}
@@ -84,7 +87,7 @@ func ttiReset() {
 	log.Println("INFO: TTI Reset")
 }
 
-// This is called from Bus to implement DIA from the TTI devTTIice
+// This is called from Bus to implement DIA from the TTI devNumice
 func ttiDataIn(abc byte, flag byte) (datum dg.WordT) {
 	oneCharBufMu.Lock()
 	datum = dg.WordT(oneCharBuf) // grab the char from the buffer
@@ -93,11 +96,11 @@ func ttiDataIn(abc byte, flag byte) (datum dg.WordT) {
 	case 'A':
 		switch flag {
 		case 'S':
-			busSetBusy(devTTI, true)
-			busSetDone(devTTI, false)
+			devices.BusSetBusy(devNum, true)
+			devices.BusSetDone(devNum, false)
 		case 'C':
-			busSetBusy(devTTI, false)
-			busSetDone(devTTI, false)
+			devices.BusSetBusy(devNum, false)
+			devices.BusSetDone(devNum, false)
 		}
 	default:
 		log.Fatalf("ERROR: unexpected source buffer <%c> for DOx ac,TTO instruction\n", abc)
@@ -111,11 +114,11 @@ func ttiDataOut(datum dg.WordT, abc byte, flag byte) {
 	case 'N':
 		switch flag {
 		case 'S':
-			busSetBusy(devTTI, true)
-			busSetDone(devTTI, false)
+			devices.BusSetBusy(devNum, true)
+			devices.BusSetDone(devNum, false)
 		case 'C':
-			busSetBusy(devTTI, false)
-			busSetDone(devTTI, false)
+			devices.BusSetBusy(devNum, false)
+			devices.BusSetDone(devNum, false)
 		}
 	default:
 		log.Fatalf("ERROR: unexpected call to ttiDataOut with abc(n) flag set to %c\n", abc)
