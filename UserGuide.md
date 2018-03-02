@@ -65,7 +65,7 @@ The following commands have been implemented...
 > HElp - display a 1-screen summary of available commands.
 
 #### RE ####
-> REset the system - not yet implemented.
+> REset the system to near-start-up state, attached devices are left attached (but reset)
 
 #### SS ####
 > Single-Step one instruction from the PC.
@@ -107,12 +107,6 @@ attempts to boot from device 22 (MTB) and finally displays the status of the CPU
 
 #### NOBREAK `<addr>`
 > Clear any breakpoint at the given address.
-
-#### RESTORE `<stateFileName>`
-> Not yet implemented
-
-#### SAVE `<stateFileName>`
-> Not yet implemented
 
 #### SET LOGGING ON|OFF ####
 Turn on or off debug-level logging of the emulator.  This slows the emulator down by a factor of approx. 9 times.  The logs are held in circular buffers in memory and dumped to disk when the current run ends.

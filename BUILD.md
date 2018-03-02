@@ -9,7 +9,8 @@ This guide currently applies to the development version of MV/Em written in Go.
 
 ### Obtain Required Packages
 
-* `go get githb.com/SMerrony/aosvs-tools/simhTape`
+* `go get github.com/SMerrony/aosvs-tools/simhTape`
+* `go get github.com/SMerrony/dgemug/...`
 
 ### Obtain MV/Em Source Code
 
