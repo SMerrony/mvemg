@@ -55,6 +55,11 @@ const (
 	// ScpBuffSize is the char buffer length for SCP input lines
 	ScpBuffSize = 135
 
+	// memSizeWords defines the size of MV/Em's emulated RAM in 16-bit words
+	MemSizeWords = 8388608
+	// MemSizeLCPID is the code returned by the LCPID to indicate the size of RAM
+	MemSizeLCPID = 0x3F
+
 	cmdUnknown = " *** UNKNOWN SCP-CLI COMMAND ***"
 	cmdNYI     = "Command Not Yet Implemented"
 )
@@ -132,7 +137,7 @@ func main() {
 		 *   NO IACs, LPT or ISC
 		 ***/
 
-		memory.MemInit(debugLogging)
+		memory.MemInit(MemSizeWords, debugLogging)
 		devices.BusInit()
 		devices.BusAddDevice(devSCP, "SCP", pmbSCP, true, false, false)
 		instructionsInit()
@@ -336,7 +341,7 @@ func boot(cmd []string) {
 		devices.TtoPutNLString(" *** Device is not bootable ***")
 		return
 	}
-	memory.MemInit(debugLogging)
+	memory.MemInit(MemSizeWords, debugLogging)
 	switch devNum {
 	case devMTB:
 		devices.MtLoadTBoot()
@@ -556,7 +561,7 @@ func examine(cmd []string) {
 			return
 		}
 		exMem, err := strconv.Atoi(cmd[2])
-		if err != nil || exMem < 0 || exMem > memory.MemSizeWords {
+		if err != nil || exMem < 0 || exMem > MemSizeWords {
 			devices.TtoPutNLString(" *** Examine Memory - invalid address ***")
 			return
 		}
@@ -606,7 +611,7 @@ func printableBreakpointList() string {
 
 // reset should bring the emulator back to its initial state
 func reset() {
-	memory.MemInit(debugLogging)
+	memory.MemInit(MemSizeWords, debugLogging)
 	devices.BusResetAllIODevices()
 	cpuReset()
 	// mtbReset() // Not Init

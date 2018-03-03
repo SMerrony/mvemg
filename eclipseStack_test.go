@@ -28,6 +28,7 @@ func TestSave(t *testing.T) {
 	cpuPtr := cpuInit(nil)
 	var iPtr decodedInstrT
 	var unique2Word unique2WordT
+	memory.MemInit(10000, false)
 	// set nsb & nfp to 256
 	memory.WriteWord(memory.NspLoc, 256)
 	memory.WriteWord(memory.NfpLoc, 256)

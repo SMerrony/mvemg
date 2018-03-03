@@ -32,6 +32,7 @@ func TestXSTB(t *testing.T) {
 	var iPtr decodedInstrT
 	var oneAccMode2Word oneAccMode2WordT
 	iPtr.ix = instrXSTB
+	memory.MemInit(10000, false)
 	memory.WriteWord(7, 0) // write 0 into Word at normal addr 7
 	oneAccMode2Word.disp16 = 7
 	oneAccMode2Word.mode = absoluteMode
