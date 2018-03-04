@@ -25,6 +25,10 @@ GOTEST = ${GOCMD}	test -race
 GOGET = ${GOCMD}	get
 BINARY_NAME = mvemg
 
+INSTRGEN = dginstr
+INSTRSRC = ${HOME}/go/src/github.com/SMerrony/dgemug/cmd/dginstrs.csv
+INSTRGO = instructionDefinitions.go
+
 # Values for program version etc.
 # VERSION = 0.1
 # BUILD = `git rev-parse HEAD`
@@ -32,7 +36,9 @@ BINARY_NAME = mvemg
 
 # LDFLAGS = -ldflags "-X main.Version=${VERSION} -X main.Build=${BUILD} -X main.ReleaseType=${RELEASETYPE}"
 
-all: build test
+all: generate build test
+generate:
+	${INSTRGEN} -action=makego -cputype=mv -csv=${INSTRSRC} -go=${INSTRGO}
 build: 
 	${GOBUILD} ${LDFLAGS} -o ${BINARY_NAME} -v
 test: 
