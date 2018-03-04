@@ -339,11 +339,11 @@ const (
 func instructionsInit() {
 	instructionSet[instrADC] = instrChars{"ADC", 0x8400, 0x8700, 1, NOVA_TWOACC_MULT_OP_FMT, NOVA_OP}
 	instructionSet[instrADD] = instrChars{"ADD", 0x8600, 0x8700, 1, NOVA_TWOACC_MULT_OP_FMT, NOVA_OP}
-	instructionSet[instrADDI] = instrChars{"ADDI", 0xe7f8, 0xe7ff, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_OP}
+	instructionSet[instrADDI] = instrChars{"ADDI", 0xe7f8, 0xe7ff, 2, ONEACC_IMM_2_WORD_FMT, ECLIPSE_OP}
 	instructionSet[instrADI] = instrChars{"ADI", 0x8008, 0x87ff, 1, IMM_ONEACC_FMT, ECLIPSE_OP}
-	instructionSet[instrANC] = instrChars{"ANC", 0x8188, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrANC] = instrChars{"ANC", 0x8188, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP}
 	instructionSet[instrAND] = instrChars{"AND", 0x8700, 0x8700, 1, NOVA_TWOACC_MULT_OP_FMT, NOVA_OP}
-	instructionSet[instrANDI] = instrChars{"ANDI", 0xc7f8, 0xe7ff, 2, ONEACC_IMMWD_2_WORD_FMT, EAGLE_OP}
+	instructionSet[instrANDI] = instrChars{"ANDI", 0xc7f8, 0xe7ff, 2, ONEACC_IMMWD_2_WORD_FMT, ECLIPSE_OP}
 	instructionSet[instrBAM] = instrChars{"BAM", 0x97c8, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_OP}
 	instructionSet[instrBKPT] = instrChars{"BKPT", 0xc789, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_PC}
 	instructionSet[instrBLM] = instrChars{"BLM", 0xb7c8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_MEMREF}
@@ -399,7 +399,7 @@ func instructionsInit() {
 	instructionSet[instrFXTD] = instrChars{"FXTD", 0xa779, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_OP}
 	instructionSet[instrFXTE] = instrChars{"FXTE", 0xc749, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_OP}
 	instructionSet[instrHALT] = instrChars{"HALT", 0x647f, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_IO}
-	instructionSet[instrHLV] = instrChars{"HLV", 0xc6f8, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrHLV] = instrChars{"HLV", 0xc6f8, 0xe7ff, 1, ONEACC_1_WORD_FMT, ECLIPSE_OP}
 	instructionSet[instrHXL] = instrChars{"HXL", 0x8308, 0x87ff, 1, IMM_ONEACC_FMT, ECLIPSE_OP}
 	instructionSet[instrHXR] = instrChars{"HXR", 0x8348, 0x87ff, 1, IMM_ONEACC_FMT, ECLIPSE_OP}
 	instructionSet[instrINC] = instrChars{"INC", 0x8300, 0x8700, 1, NOVA_TWOACC_MULT_OP_FMT, NOVA_OP}

@@ -25,6 +25,34 @@ import "testing"
 
 import "github.com/SMerrony/dgemug"
 
+func TestADDI(t *testing.T) {
+	cpuPtr := cpuInit(nil)
+	var iPtr decodedInstrT
+	var oneAccImm2Word oneAccImm2WordT
+	iPtr.ix = instrADDI
+	oneAccImm2Word.immS16 = 3
+	oneAccImm2Word.acd = 0
+	cpuPtr.ac[0] = 0xffff // -1
+	iPtr.variant = oneAccImm2Word
+	if !eclipseOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute ADDI")
+	}
+	if cpuPtr.ac[0] != 2 {
+		t.Errorf("Expected %x, got %x", 2, cpuPtr.ac[0])
+	}
+
+	oneAccImm2Word.immS16 = -3
+	oneAccImm2Word.acd = 0
+	cpuPtr.ac[0] = 0xffff // -1
+	iPtr.variant = oneAccImm2Word
+	if !eclipseOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute ADDI")
+	}
+	if cpuPtr.ac[0] != 0xfffc {
+		t.Errorf("Expected %x, got %x", -4, cpuPtr.ac[0])
+	}
+}
+
 func TestDIV(t *testing.T) {
 	cpuPtr := cpuInit(nil)
 	var iPtr decodedInstrT

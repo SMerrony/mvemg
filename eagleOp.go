@@ -35,7 +35,6 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	//var addr dg_phys_addr
 
 	var (
-		wd                 dg.WordT
 		dwd                dg.DwordT
 		lobyte             bool
 		res, s32           int32
@@ -45,7 +44,6 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		immOneAcc          immOneAccT
 		oneAcc1Word        oneAcc1WordT
 		oneAccImm2Word     oneAccImm2WordT
-		oneAccImmWd2Word   oneAccImmWd2WordT
 		oneAccImm3Word     oneAccImm3WordT
 		oneAccImmDwd3Word  oneAccImmDwd3WordT
 		oneAccMode3Word    oneAccMode3WordT // LLDB, LLEFB
@@ -54,18 +52,6 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	)
 
 	switch iPtr.ix {
-
-	case instrADDI:
-		oneAccImm2Word = iPtr.variant.(oneAccImm2WordT)
-		// signed 16-bit add immediate
-		s16 = int16(util.DwordGetLowerWord(cpuPtr.ac[oneAccImm2Word.acd]))
-		s16 += oneAccImm2Word.immS16
-		cpuPtr.ac[oneAccImm2Word.acd] = dg.DwordT(s16) & 0X0000FFFF
-
-	case instrANDI:
-		oneAccImmWd2Word = iPtr.variant.(oneAccImmWd2WordT)
-		wd = util.DwordGetLowerWord(cpuPtr.ac[oneAccImmWd2Word.acd])
-		cpuPtr.ac[oneAccImmWd2Word.acd] = dg.DwordT(wd&oneAccImmWd2Word.immWord) & 0x0000ffff
 
 	case instrCRYTC:
 		cpuPtr.carry = !cpuPtr.carry

@@ -40,13 +40,27 @@ func eclipseOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		wd                 dg.WordT
 		dwd                dg.DwordT
 		bitNum             uint
+		s16                int16
 		immOneAcc          immOneAccT
+		oneAccImm2Word     oneAccImm2WordT
 		oneAccImmWd2Word   oneAccImmWd2WordT
 		oneAccModeInt2Word oneAccModeInd2WordT
 		twoAcc1Word        twoAcc1WordT
 	)
 
 	switch iPtr.ix {
+
+	case instrADDI:
+		oneAccImm2Word = iPtr.variant.(oneAccImm2WordT)
+		// signed 16-bit add immediate
+		s16 = int16(util.DwordGetLowerWord(cpuPtr.ac[oneAccImm2Word.acd]))
+		s16 += oneAccImm2Word.immS16
+		cpuPtr.ac[oneAccImm2Word.acd] = dg.DwordT(s16) & 0X0000FFFF
+
+	case instrANDI:
+		oneAccImmWd2Word = iPtr.variant.(oneAccImmWd2WordT)
+		wd = util.DwordGetLowerWord(cpuPtr.ac[oneAccImmWd2Word.acd])
+		cpuPtr.ac[oneAccImmWd2Word.acd] = dg.DwordT(wd&oneAccImmWd2Word.immWord) & 0x0000ffff
 
 	case instrADI: // 16-bit unsigned Add Immediate
 		immOneAcc = iPtr.variant.(immOneAccT)
