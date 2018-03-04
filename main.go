@@ -150,7 +150,7 @@ func main() {
 		ttiInit(devTTI, conn, cpuPtr, ttiSCPchan)
 
 		devices.BusAddDevice(devMTB, "MTB", pmbMTB, false, true, true)
-		devices.MtInit(devMTB, mtbStatsChan, logging.MtbLog)
+		devices.MtInit(devMTB, mtbStatsChan, logging.MtLog)
 
 		devices.BusAddDevice(devDPF, "DPF", pmbDPF, false, true, true)
 		devices.Disk6061Init(devDPF, dpfStatsChan, logging.DpfLog, debugLogging)
