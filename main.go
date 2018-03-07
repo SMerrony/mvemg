@@ -62,6 +62,8 @@ const (
 
 	cmdUnknown = " *** UNKNOWN SCP-CLI COMMAND ***"
 	cmdNYI     = "Command Not Yet Implemented"
+
+	defaultRadix = 8
 )
 
 var (
@@ -75,6 +77,8 @@ var (
 	dskpStatsChan chan devices.Disk6239StatT
 	mtbStatsChan  chan devices.MtStatT
 	ttiSCPchan    chan byte
+
+	inputRadix int = defaultRadix
 )
 
 // flags
@@ -182,6 +186,22 @@ func main() {
 			//log.Println("INFO: Got SCP command: " + command)
 			doCommand(command)
 		}
+	}
+}
+
+func fmtRadixVerb() string {
+	switch inputRadix {
+	case 2:
+		return "%b"
+	case 8:
+		return "%#o"
+	case 10:
+		return "%d."
+	case 16:
+		return "%#x"
+	default:
+		log.Fatalf("ERROR: Invalid input radix %d", inputRadix)
+		return ""
 	}
 }
 
@@ -327,7 +347,7 @@ func boot(cmd []string) {
 	if debugLogging {
 		logging.DebugPrint(logging.DebugLog, "INFO: Boot called  with parm <%s>\n", cmd[1])
 	}
-	dev, err := strconv.ParseInt(cmd[1], 8, 16) // FIXME Input Radix used here
+	dev, err := strconv.ParseInt(cmd[1], inputRadix, 16)
 	devNum := int(dev)
 	if err != nil {
 		devices.TtoPutNLString(" *** Expecting <devicenumber> after B ***")
@@ -360,7 +380,7 @@ func breakSet(cmd []string) {
 		devices.TtoPutNLString(" *** BREAK command requires a single physical <address> argument ***")
 		return
 	}
-	pAddr, err := strconv.Atoi(cmd[1])
+	pAddr, err := strconv.ParseInt(cmd[1], inputRadix, 16)
 	if err != nil {
 		devices.TtoPutNLString(" *** BREAK command could not parse <address> argument ***")
 		return
@@ -375,7 +395,7 @@ func breakClear(cmd []string) {
 		devices.TtoPutNLString(" *** NOBREAK command requires a single physical <address> argument ***")
 		return
 	}
-	pAddr, err := strconv.Atoi(cmd[1])
+	pAddr, err := strconv.ParseInt(cmd[1], inputRadix, 16)
 	if err != nil {
 		devices.TtoPutNLString(" *** NOBREAK command could not parse <address> argument ***")
 		return
@@ -448,7 +468,7 @@ func disassemble(cmd []string) {
 		return
 	}
 	cmd1 := cmd[1]
-	intVal1, err := strconv.Atoi(cmd1)
+	intVal1, err := strconv.ParseInt(cmd[1], inputRadix, 16)
 	if err != nil {
 		devices.TtoPutNLString(" *** Invalid address ***")
 		return
@@ -461,7 +481,7 @@ func disassemble(cmd []string) {
 		if len(cmd) == 2 {
 			highAddr = lowAddr
 		} else {
-			intVal2, err := strconv.Atoi(cmd[2])
+			intVal2, err := strconv.ParseInt(cmd[2], inputRadix, 16)
 			if err != nil {
 				devices.TtoPutNLString(" *** Invalid address ***")
 				return
@@ -477,7 +497,7 @@ func disassemble(cmd []string) {
 		word = memory.ReadWord(addr)
 		byte1 = dg.ByteT(word >> 8)
 		byte2 = dg.ByteT(word & 0x00ff)
-		display = fmt.Sprintf("%09d: %02X %02X %03o %03o %s \"", addr, byte1, byte2, byte1, byte2,
+		display = fmt.Sprintf(fmtRadixVerb()+": %02X %02X %03o %03o %s \"", addr, byte1, byte2, byte1, byte2,
 			util.WordToBinStr(word))
 		if byte1 >= ' ' && byte1 <= '~' {
 			display += string(byte1)
@@ -537,22 +557,22 @@ func examine(cmd []string) {
 			devices.TtoPutNLString(" *** Examine Accumulator - invalid AC number ***")
 			return
 		}
-		exAc, err := strconv.Atoi(cmd[2])
+		exAc, err := strconv.ParseInt(cmd[2], inputRadix, 16)
 		if err != nil || exAc < 0 || exAc > 3 {
 			devices.TtoPutNLString(" *** Examine Accumulator - invalid AC number ***")
 			return
 		}
-		prompt := fmt.Sprintf("AC%d = %d - Enter new val or just ENTER> ", exAc, cpu.ac[exAc])
+		prompt := fmt.Sprintf("AC%d = "+fmtRadixVerb()+" - Enter new val or just ENTER> ", exAc, cpu.ac[exAc])
 		devices.TtoPutNLString(prompt)
 		resp := scpGetLine()
 		if len(resp) > 0 {
-			newVal, err := strconv.Atoi(resp)
+			newVal, err := strconv.ParseInt(resp, inputRadix, 16)
 			if err != nil {
 				devices.TtoPutNLString(" *** Could not parse new AC value ***")
 				return
 			}
 			cpu.ac[exAc] = dg.DwordT(newVal)
-			prompt = fmt.Sprintf("AC%d = %d", exAc, cpu.ac[exAc])
+			prompt = fmt.Sprintf("AC%d = "+fmtRadixVerb(), exAc, cpu.ac[exAc])
 			devices.TtoPutNLString(prompt)
 		}
 	case "M":
@@ -560,36 +580,36 @@ func examine(cmd []string) {
 			devices.TtoPutNLString(" *** Examine Memory - invalid address ***")
 			return
 		}
-		exMem, err := strconv.Atoi(cmd[2])
+		exMem, err := strconv.ParseInt(cmd[2], inputRadix, 16)
 		if err != nil || exMem < 0 || exMem > MemSizeWords {
 			devices.TtoPutNLString(" *** Examine Memory - invalid address ***")
 			return
 		}
-		prompt := fmt.Sprintf("Location %d contains %d - Enter new val or just ENTER> ", exMem, memory.ReadWord(dg.PhysAddrT(exMem)))
+		prompt := fmt.Sprintf("Location "+fmtRadixVerb()+" contains "+fmtRadixVerb()+" - Enter new val or just ENTER> ", exMem, memory.ReadWord(dg.PhysAddrT(exMem)))
 		devices.TtoPutNLString(prompt)
 		resp := scpGetLine()
 		if len(resp) > 0 {
-			newVal, err := strconv.Atoi(resp)
+			newVal, err := strconv.ParseInt(resp, inputRadix, 16)
 			if err != nil {
 				devices.TtoPutNLString(" *** Could not parse new value ***")
 				return
 			}
 			memory.WriteWord(dg.PhysAddrT(exMem), dg.WordT(newVal))
-			prompt = fmt.Sprintf("Location %d = %d", exMem, memory.ReadWord(dg.PhysAddrT(exMem)))
+			prompt = fmt.Sprintf("Location "+fmtRadixVerb()+" = "+fmtRadixVerb()+"", exMem, memory.ReadWord(dg.PhysAddrT(exMem)))
 			devices.TtoPutNLString(prompt)
 		}
 	case "P":
-		prompt := fmt.Sprintf("PC = %d - Enter new val or just ENTER> ", cpu.pc)
+		prompt := fmt.Sprintf("PC = "+fmtRadixVerb()+" - Enter new val or just ENTER> ", cpu.pc)
 		devices.TtoPutNLString(prompt)
 		resp := scpGetLine()
 		if len(resp) > 0 {
-			newVal, err := strconv.Atoi(resp)
+			newVal, err := strconv.ParseInt(resp, inputRadix, 16)
 			if err != nil {
 				devices.TtoPutNLString(" *** Could not parse new PC value ***")
 				return
 			}
 			cpu.pc = dg.PhysAddrT(newVal)
-			prompt = fmt.Sprintf("PC = %d", cpu.pc)
+			prompt = fmt.Sprintf("PC = "+fmtRadixVerb(), cpu.pc)
 			devices.TtoPutNLString(prompt)
 		}
 	default:
@@ -604,7 +624,7 @@ func printableBreakpointList() string {
 	}
 	res := "BREAKpoint(s) at: "
 	for _, b := range breakpoints {
-		res += fmt.Sprintf("%d. ", b)
+		res += fmt.Sprintf(fmtRadixVerb()+" ", b)
 	}
 	return res
 }
@@ -708,7 +728,7 @@ func start(cmd []string) {
 		devices.TtoPutNLString(" *** ST command requires start address ***")
 		return
 	}
-	newPc, err := strconv.Atoi(cmd[1])
+	newPc, err := strconv.ParseInt(cmd[1], inputRadix, 16)
 	if err != nil || newPc < 0 {
 		devices.TtoPutNLString(" *** Could not parse new PC value ***")
 		return
@@ -769,7 +789,7 @@ RunLoop: // performance-critical section starts here
 				if bAddr == cpu.pc {
 					cpu.scpIO = true
 					cpu.cpuMu.Unlock()
-					msg := fmt.Sprintf(" *** BREAKpoint hit at physical address %d. ***", cpu.pc)
+					msg := fmt.Sprintf(" *** BREAKpoint hit at physical address "+fmtRadixVerb()+" ***", cpu.pc)
 					devices.TtoPutNLString(msg)
 					log.Println(msg)
 
