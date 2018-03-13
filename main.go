@@ -44,14 +44,12 @@ import (
 // import "github.com/pkg/profile"
 
 const (
+	// Displayable name of emulator
+	appName = "MV/Em"
 	// Version number
 	Version = "v0.1.0"
 	// ReleaseType - Alpha, Beta, Production etc.
 	ReleaseType = "Prerelease"
-	// StatPort is the port for the real-time status monitor
-	StatPort = "9999"
-	// ScpPort is  the port for the SCP master console
-	ScpPort = "10000"
 	// ScpBuffSize is the char buffer length for SCP input lines
 	ScpBuffSize = 135
 
@@ -83,9 +81,11 @@ var (
 
 // flags
 var (
-	doFlag     = flag.String("do", "", "run script `file` at startup")
-	cpuprofile = flag.String("cpuprofile", "", "write cpu profile `file`")
-	memprofile = flag.String("memprofile", "", "write memory profile to `file`")
+	consolePortFlag = flag.String("consoleport", "10000", "local port for the system console")
+	doFlag          = flag.String("do", "", "run script `file` at startup")
+	statusPortFlag  = flag.String("statusport", "9999", "local port for status monitoring")
+	cpuprofile      = flag.String("cpuprofile", "", "write cpu profile `file`")
+	memprofile      = flag.String("memprofile", "", "write memory profile to `file`")
 )
 
 func main() {
@@ -100,9 +100,9 @@ func main() {
 		}
 	}
 
-	log.Println("INFO: MV/Em will not start until console connected")
+	log.Printf("INFO: %s will not start until console connected to port %s.\n", appName, *consolePortFlag)
 
-	l, err := net.Listen("tcp", "localhost:"+ScpPort)
+	l, err := net.Listen("tcp", "localhost:"+*consolePortFlag)
 	if err != nil {
 		log.Println("ERROR: Could not listen on console port: ", err.Error())
 		os.Exit(1)
@@ -167,7 +167,7 @@ func main() {
 		devices.TtoPutStringNL(" *** Welcome to the MV/Emulator - Type HE for help ***")
 
 		// kick off the status monitor routine
-		go statusCollector(cpuStatsChan, dpfStatsChan, dskpStatsChan, mtbStatsChan)
+		go statusCollector(*statusPortFlag, cpuStatsChan, dpfStatsChan, dskpStatsChan, mtbStatsChan)
 
 		// run any command specified on the command line
 		if *doFlag != "" {

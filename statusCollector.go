@@ -1,6 +1,6 @@
 // statusCollector.go
 
-// Copyright (C) 2017  Steve Merrony
+// Copyright (C) 2017,2018  Steve Merrony
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -29,7 +29,6 @@ import (
 	"time"
 
 	"github.com/SMerrony/dgemug/devices"
-
 	"github.com/SMerrony/dgemug/util"
 )
 
@@ -39,7 +38,8 @@ const (
 	statCPUrow2       = 5
 	statDPFrow        = 7
 	statDSKProw       = 9
-	statMTBrow        = 11
+	statMTrow         = 11
+	statMTrow2        = 12
 	statInternalsRow  = 20
 	statInternalsRow2 = 21
 )
@@ -54,6 +54,7 @@ const (
 // on the monitor page.  It is therefore the responsibility of the sender to update the
 // status as often as it sees fit.
 func statusCollector(
+	statusPort string,
 	cpuChan chan cpuStatT,
 	dpfChan chan devices.Disk6061StatT,
 	dskpChan chan devices.Disk6239StatT,
@@ -68,10 +69,10 @@ func statusCollector(
 		thisDskpIOcnt, lastDskpIOcnt           uint64
 		dpfStats                               devices.Disk6061StatT
 		dskpStats                              devices.Disk6239StatT
-		mtbStats                               devices.MtStatT
+		mtStats                                devices.MtStatT
 	)
 
-	l, err := net.Listen("tcp", "localhost:"+StatPort)
+	l, err := net.Listen("tcp", "localhost:"+statusPort)
 	if err != nil {
 		log.Println("ERROR: Could not listen on stats port: ", err.Error())
 		os.Exit(1)
@@ -86,8 +87,7 @@ func statusCollector(
 			os.Exit(1)
 		}
 
-		statusSendString(conn, fmt.Sprintf("%c                             MV/Em Status\012", dasherERASEPAGE))
-		statusSendString(conn, "                             ============")
+		statusSendString(conn, fmt.Sprintf("%c                             %c%s Status%c\012", dasherERASEPAGE, dasherUNDERLINE, appName, dasherNORMAL))
 
 		for {
 			// blocking wait for a status update to arrive
@@ -110,7 +110,7 @@ func statusCollector(
 					cpuStats.ac[2],
 					cpuStats.ac[3]))
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statInternalsRow, dasherERASEEOL))
-				statusSendString(conn, fmt.Sprintf("MV/Em - Version: %s (%s) built with %s",
+				statusSendString(conn, fmt.Sprintf("        Version: %s (%s) built with %s",
 					Version, ReleaseType,
 					cpuStats.goVersion))
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statInternalsRow2, dasherERASEEOL))
@@ -146,13 +146,14 @@ func statusCollector(
 					//dskpStats.sector,
 					dskpStats.SectorNo))
 
-			case mtbStats = <-mtbChan:
-				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statMTBrow, dasherERASEEOL))
-				statusSendString(conn, fmt.Sprintf("MTB  (MTC0) - Attached: %c  File: %s  Mem Addr: %010d  Curr Cmd: %d",
-					util.BoolToYN(mtbStats.ImageAttached[0]),
-					mtbStats.FileName[0],
-					mtbStats.MemAddrReg,
-					mtbStats.CurrentCmd))
+			case mtStats = <-mtbChan:
+				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statMTrow, dasherERASEEOL))
+				statusSendString(conn, fmt.Sprintf("MTA  (MTC0) - Attached: %c  Mem Addr: %06o  Curr Cmd: %d",
+					util.BoolToYN(mtStats.ImageAttached[0]),
+					mtStats.MemAddrReg,
+					mtStats.CurrentCmd))
+				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statMTrow2, dasherERASEEOL))
+				statusSendString(conn, fmt.Sprintf("              Image file: %s", mtStats.FileName[0]))
 			}
 		}
 	}
