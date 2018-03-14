@@ -66,9 +66,16 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 				logging.DebugPrint(logging.DebugLog, "INFO: I/O Reset due to DIC 0,CPU instruction\n")
 				return iorst(cpuPtr)
 			case instrDOB: // MKSO
-				logging.DebugPrint(logging.DebugLog, "INFO: Handling DOB %d, CPU instruction as MSKO\n", novaDataIo.acd)
 				novaDataIo = iPtr.variant.(novaDataIoT)
-				return msko(cpuPtr, novaDataIo.acd)
+				logging.DebugPrint(logging.DebugLog, "INFO: Handling DOB %d, CPU instruction as MSKO with flags\n", novaDataIo.acd)
+				msko(cpuPtr, novaDataIo.acd)
+				switch novaDataIo.f {
+				case 'S':
+					cpuPtr.ion = true
+				case 'C':
+					cpuPtr.ion = false
+				}
+				return true
 			case instrDOC: // HALT
 				logging.DebugPrint(logging.DebugLog, "INFO: CPU Halting due to DOC %d,CPU (HALT) instruction\n", novaDataIo.acd)
 				return halt()
