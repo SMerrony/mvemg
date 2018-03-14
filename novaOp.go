@@ -63,8 +63,6 @@ func novaOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		shifter = util.DwordGetLowerWord(wideShifter)
 		if wideShifter > 65535 {
 			cpuPtr.carry = !cpuPtr.carry
-		} else {
-			cpuPtr.carry = false
 		}
 
 	case instrADD: // unsigned
@@ -72,8 +70,6 @@ func novaOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		shifter = util.DwordGetLowerWord(wideShifter)
 		if wideShifter > 65535 {
 			cpuPtr.carry = !cpuPtr.carry
-		} else {
-			cpuPtr.carry = false
 		}
 
 	case instrAND:
@@ -174,11 +170,11 @@ func novaOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	}
 
 	// No-Load?
-	if novaTwoAccMultOp.nl != '#' {
-		cpuPtr.ac[novaTwoAccMultOp.acd] = dg.DwordT(shifter) & 0x0000ffff
-	} else {
+	if novaTwoAccMultOp.nl == '#' {
 		// don't load the result from the shifter, restore the Carry flag
 		cpuPtr.carry = savedCry
+	} else {
+		cpuPtr.ac[novaTwoAccMultOp.acd] = dg.DwordT(shifter) & 0x0000ffff
 	}
 
 	cpuPtr.pc += pcInc
