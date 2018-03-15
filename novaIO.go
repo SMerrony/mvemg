@@ -220,7 +220,8 @@ func iorst(cpuPtr *CPUT) bool {
 }
 
 func msko(cpuPtr *CPUT, destAc int) bool {
-	cpuPtr.mask = util.DwordGetLowerWord(cpuPtr.ac[destAc])
+	//cpuPtr.mask = util.DwordGetLowerWord(cpuPtr.ac[destAc])
+	devices.BusSetIrqMask(util.DwordGetLowerWord(cpuPtr.ac[destAc]))
 	cpuPtr.pc++
 	return true
 }

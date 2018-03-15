@@ -743,6 +743,7 @@ func run() {
 		thisOp      dg.WordT
 		iPtr        *decodedInstrT
 		ok          bool
+		indIrq      byte
 		errDetail   string
 		instrCounts [maxInstrs]int
 	)
@@ -780,6 +781,26 @@ RunLoop: // performance-critical section starts here
 		if !cpuExecute(iPtr) {
 			errDetail = " *** Error: could not execute instruction (or CPU HALT encountered) ***"
 			break
+		}
+
+		// INTERRUPT?
+		if cpu.ion && cpu.irq {
+			if debugLogging {
+				logging.DebugPrint(logging.DebugLog, "<<< Interrupt >>>\n")
+			}
+			// disable further interrupts, reset the irq
+			cpu.ion, cpu.irq = false, false
+			// TODO - disable User MAP
+			// store PC in location zero
+			memory.WriteWord(0, dg.WordT(cpu.pc))
+			// fetch service routine address from location one
+			if util.TestWbit(memory.ReadWord(1), 0) {
+				indIrq = '@'
+			} else {
+				indIrq = ' '
+			}
+			cpu.pc = resolve16bitEclipseAddr(&cpu, indIrq, absoluteMode, 1)
+			// next time round RunLoop the interrupt service routine will be started...
 		}
 
 		// BREAKPOINT?

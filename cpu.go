@@ -46,15 +46,15 @@ type sbrBits struct {
 type CPUT struct {
 	cpuMu sync.RWMutex
 	// representations of physical attributes
-	pc                      dg.PhysAddrT // 32-bit PC
-	ac                      [4]dg.DwordT // 4 x 32-bit Accumulators
-	mask                    dg.WordT     // interrupt mask
-	psr                     dg.WordT     // Processor Status Register - see PoP A-4
-	carry, atu, ion, pfflag bool         // flag bits
-	sbr                     [8]sbrBits   // SBRs (see above)
-	fpac                    [4]dg.QwordT // 4 x 64-bit Floating Point Accumulators
-	fpsr                    dg.QwordT    // 64-bit Floating-Point Status Register
-	sr                      dg.WordT     // Not sure about this... fake Switch Register
+	pc dg.PhysAddrT // 32-bit PC
+	ac [4]dg.DwordT // 4 x 32-bit Accumulators
+	// mask                    dg.WordT     // interrupt mask - moved to bus
+	psr                          dg.WordT     // Processor Status Register - see PoP A-4
+	carry, atu, ion, irq, pfflag bool         // flag bits
+	sbr                          [8]sbrBits   // SBRs (see above)
+	fpac                         [4]dg.QwordT // 4 x 64-bit Floating Point Accumulators
+	fpsr                         dg.QwordT    // 64-bit Floating-Point Status Register
+	sr                           dg.WordT     // Not sure about this... fake Switch Register
 
 	// emulator internals
 	instrCount uint64 // how many instructions executed during the current run, running at 2 MIPS this will loop round roughly every 100 million years!
@@ -91,7 +91,6 @@ func cpuReset() {
 		cpu.ac[a] = 0
 		cpu.fpac[a] = 0
 	}
-	cpu.mask = 0
 	cpu.psr = 0
 	cpu.carry = false
 	cpu.atu = false
