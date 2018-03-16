@@ -227,7 +227,10 @@ func intds(cpuPtr *CPUT) bool {
 
 func inta(cpuPtr *CPUT, destAc int) bool {
 	// load the AC with the device code of the highest priority interrupt
-	cpuPtr.ac[destAc] = dg.DwordT(devices.BusGetHighestPriorityInt())
+	intDevNum := devices.BusGetHighestPriorityInt()
+	cpuPtr.ac[destAc] = dg.DwordT(intDevNum)
+	// and clear it - I THINK this is the right place to do this...
+	devices.InterruptingDev[intDevNum] = false
 	cpuPtr.pc++
 	return true
 }
