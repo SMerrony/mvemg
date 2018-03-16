@@ -784,12 +784,12 @@ RunLoop: // performance-critical section starts here
 		}
 
 		// INTERRUPT?
-		if cpu.ion && cpu.irq {
+		if cpu.ion && devices.IRQ {
 			if debugLogging {
 				logging.DebugPrint(logging.DebugLog, "<<< Interrupt >>>\n")
 			}
 			// disable further interrupts, reset the irq
-			cpu.ion, cpu.irq = false, false
+			cpu.ion, devices.IRQ = false, false
 			// TODO - disable User MAP
 			// store PC in location zero
 			memory.WriteWord(0, dg.WordT(cpu.pc))
@@ -799,7 +799,7 @@ RunLoop: // performance-critical section starts here
 			} else {
 				indIrq = ' '
 			}
-			cpu.pc = resolve16bitEclipseAddr(&cpu, indIrq, absoluteMode, 1)
+			cpu.pc = resolve16bitEclipseAddr(&cpu, indIrq, absoluteMode, int16(memory.ReadWord(1)))
 			// next time round RunLoop the interrupt service routine will be started...
 		}
 

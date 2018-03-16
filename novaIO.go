@@ -35,12 +35,12 @@ import (
 func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	var (
-		abc        byte
-		busy, done bool
-		ioFlagsDev ioFlagsDevT
-		ioTestDev  ioTestDevT
-		novaDataIo novaDataIoT
-		//oneAcc1Word oneAcc1WordT
+		abc         byte
+		busy, done  bool
+		ioFlagsDev  ioFlagsDevT
+		ioTestDev   ioTestDevT
+		novaDataIo  novaDataIoT
+		oneAcc1Word oneAcc1WordT
 	)
 
 	// The Eclipse LEF instruction is handled funkily...
@@ -61,7 +61,15 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 				logging.DebugPrint(logging.DebugLog, "INFO: Interpreting DIA n,CPU as READS n instruction\n")
 				return reads(cpuPtr, novaDataIo.acd)
 			case instrDIB: // INTA
-				log.Fatalf("ERROR: DIB n,CPU (INTA )not yet implemented, location %d\n", cpuPtr.pc)
+				logging.DebugPrint(logging.DebugLog, "INFO: Interpreting DIB n,CPU as INTA n instruction\n")
+				inta(cpuPtr, novaDataIo.acd)
+				switch novaDataIo.f {
+				case 'S':
+					cpuPtr.ion = true
+				case 'C':
+					cpuPtr.ion = false
+				}
+				return true
 			case instrDIC: // IORST
 				logging.DebugPrint(logging.DebugLog, "INFO: I/O Reset due to DIC 0,CPU instruction\n")
 				return iorst(cpuPtr)
@@ -110,6 +118,16 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case instrHALT:
 		logging.DebugPrint(logging.DebugLog, "INFO: CPU Halting due to HALT instruction\n")
 		return halt()
+
+	case instrINTA:
+		oneAcc1Word = iPtr.variant.(oneAcc1WordT)
+		return inta(cpuPtr, oneAcc1Word.acd)
+
+	case instrINTDS:
+		return intds(cpuPtr)
+
+	case instrINTEN:
+		return inten(cpuPtr)
 
 	case instrIORST:
 		// oneAcc1Word = iPtr.variant.(oneAcc1WordT) // <== this is just an assertion really
@@ -203,6 +221,13 @@ func halt() bool {
 
 func intds(cpuPtr *CPUT) bool {
 	cpuPtr.ion = false
+	cpuPtr.pc++
+	return true
+}
+
+func inta(cpuPtr *CPUT, destAc int) bool {
+	// load the AC with the device code of the highest priority interrupt
+	cpuPtr.ac[destAc] = dg.DwordT(devices.BusGetHighestPriorityInt())
 	cpuPtr.pc++
 	return true
 }

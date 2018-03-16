@@ -416,9 +416,9 @@ func instructionsInit() {
 	instructionSet[instrHXL] = instrChars{"HXL", 0x8308, 0x87ff, 1, IMM_ONEACC_FMT, ECLIPSE_OP}
 	instructionSet[instrHXR] = instrChars{"HXR", 0x8348, 0x87ff, 1, IMM_ONEACC_FMT, ECLIPSE_OP}
 	instructionSet[instrINC] = instrChars{"INC", 0x8300, 0x8700, 1, NOVA_TWOACC_MULT_OP_FMT, NOVA_OP}
-	instructionSet[instrINTA] = instrChars{"INTA", 0x633f, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_IO}
-	instructionSet[instrINTDS] = instrChars{"INTDS", 0x60bf, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_IO}
-	instructionSet[instrINTEN] = instrChars{"INTEN", 0x607f, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_IO}
+	instructionSet[instrINTA] = instrChars{"INTA", 0x633f, 0xe7ff, 1, ONEACC_1_WORD_FMT, NOVA_IO}
+	instructionSet[instrINTDS] = instrChars{"INTDS", 0x60bf, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_IO}
+	instructionSet[instrINTEN] = instrChars{"INTEN", 0x607f, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_IO}
 	instructionSet[instrIOR] = instrChars{"IOR", 0x8108, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP}
 	instructionSet[instrIORI] = instrChars{"IORI", 0x87f8, 0xe7ff, 2, ONEACC_IMMWD_2_WORD_FMT, ECLIPSE_OP}
 	instructionSet[instrIORST] = instrChars{"IORST", 0x653f, 0xe73f, 1, ONEACC_1_WORD_FMT, NOVA_IO}
