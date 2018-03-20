@@ -1,4 +1,4 @@
-# FAST_SCRIPT.TXT
+# FULLSPEED.DO
 # Comments begin with the hash symbol in the first column
 #
 # This script has logging and debugging turned off, so the emulator runs

@@ -80,8 +80,7 @@ func ttiListener(cpuPtr *CPUT, scpChan chan<- byte) {
 				devices.BusSetDone(devNum, true)
 				// send IRQ if not masked out
 				if !devices.BusIsDevMasked(devNum) {
-					devices.InterruptingDev[devNum] = true
-					devices.IRQ = true
+					devices.BusSendInterrupt(devNum)
 				}
 			}
 		}

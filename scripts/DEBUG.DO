@@ -1,4 +1,4 @@
-# DEBUG_SCRIPT.TXT
+# DEBUG.DO
 # Comments begin with the hash symbol in the first column
 #
 # This script has logging and debugging turned on, so the emulator runs

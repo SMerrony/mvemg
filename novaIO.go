@@ -230,7 +230,7 @@ func inta(cpuPtr *CPUT, destAc int) bool {
 	intDevNum := devices.BusGetHighestPriorityInt()
 	cpuPtr.ac[destAc] = dg.DwordT(intDevNum)
 	// and clear it - I THINK this is the right place to do this...
-	devices.InterruptingDev[intDevNum] = false
+	devices.BusClearInterrupt(intDevNum)
 	cpuPtr.pc++
 	return true
 }
