@@ -51,4 +51,5 @@ run:
 	${GOBUILD} -o ${BINARY_NAME} -v ./...
 	./${BINARY_NAME}
 deps:
-	${GOGET} github.com/SMerrony/aosvs-tools/simhTape
+	${GOGET} github.com/SMerrony/dgemug/...
+	${GOGET} github.com/SMerrony/simhtape
