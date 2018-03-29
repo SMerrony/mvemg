@@ -370,6 +370,13 @@ func boot(cmd []string) {
 		cpu.ac[0] = devMTB
 		cpu.pc = 10
 		cpu.cpuMu.Unlock()
+	case devDPF:
+		devices.Disk6061LoadDKBT()
+		cpu.cpuMu.Lock()
+		cpu.sr = 0x8000 | devDPF
+		cpu.ac[0] = devDPF
+		cpu.pc = 10
+		cpu.cpuMu.Unlock()
 	default:
 		devices.TtoPutNLString(" *** Booting from that device not yet implemented ***")
 	}

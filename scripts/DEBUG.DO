@@ -23,6 +23,6 @@ ATT DPF DISK1.DPF
 ATT DSKP DISK1.DSKP
 #
 # Boot device 22 (MTB) - this doesn't start the CPU yet
-B 22
+# B 22
 # and COntinue to commence the run...
-CO
+# CO
