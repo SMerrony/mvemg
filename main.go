@@ -38,7 +38,6 @@ import (
 	"github.com/SMerrony/dgemug/dg"
 	"github.com/SMerrony/dgemug/logging"
 	"github.com/SMerrony/dgemug/memory"
-	"github.com/SMerrony/dgemug/util"
 )
 
 // import "github.com/pkg/profile"
@@ -505,7 +504,7 @@ func disassemble(cmd []string) {
 		byte1 = dg.ByteT(word >> 8)
 		byte2 = dg.ByteT(word & 0x00ff)
 		display = fmt.Sprintf(fmtRadixVerb()+": %02X %02X %03o %03o %s \"", addr, byte1, byte2, byte1, byte2,
-			util.WordToBinStr(word))
+			memory.WordToBinStr(word))
 		if byte1 >= ' ' && byte1 <= '~' {
 			display += string(byte1)
 		} else {
@@ -703,7 +702,7 @@ func show(cmd []string) {
 	case "BREAK":
 		devices.TtoPutNLString(printableBreakpointList())
 	case "LOGGING":
-		resp := fmt.Sprintf("Logging is currently turned %s", util.BoolToOnOff(debugLogging))
+		resp := fmt.Sprintf("Logging is currently turned %s", memory.BoolToOnOff(debugLogging))
 		devices.TtoPutNLString(resp)
 	default:
 		devices.TtoPutNLString(" *** Invalid SHOW type ***")

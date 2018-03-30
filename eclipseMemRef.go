@@ -5,13 +5,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/SMerrony/dgemug/logging"
-
-	"github.com/SMerrony/dgemug/util"
-
-	"github.com/SMerrony/dgemug/memory"
-
 	"github.com/SMerrony/dgemug/dg"
+	"github.com/SMerrony/dgemug/logging"
+	"github.com/SMerrony/dgemug/memory"
 )
 
 func eclipseMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
@@ -24,15 +20,15 @@ func eclipseMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrBLM:
 		/* AC0 - unused, AC1 - no. wds to move, AC2 - src, AC3 - dest */
-		numWds := util.DwordGetLowerWord(cpuPtr.ac[1])
+		numWds := memory.DwordGetLowerWord(cpuPtr.ac[1])
 		if numWds == 0 {
 			if debugLogging {
 				logging.DebugPrint(logging.DebugLog, "BLM called with AC1 == 0, not moving anything\n")
 			}
 			break
 		}
-		src := util.DwordGetLowerWord(cpuPtr.ac[2])
-		dest := util.DwordGetLowerWord(cpuPtr.ac[3])
+		src := memory.DwordGetLowerWord(cpuPtr.ac[2])
+		dest := memory.DwordGetLowerWord(cpuPtr.ac[3])
 		if debugLogging {
 			logging.DebugPrint(logging.DebugLog, fmt.Sprintf("BLM moving %d words from %d to %d\n", numWds, src, dest))
 		}
@@ -68,10 +64,10 @@ func eclipseMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 func cmp(cpuPtr *CPUT) {
 	var str1len, str2len int16
-	str2len = int16(util.DwordGetLowerWord(cpuPtr.ac[0]))
-	str1len = int16(util.DwordGetLowerWord(cpuPtr.ac[1]))
-	str1bp := util.DwordGetLowerWord(cpuPtr.ac[3])
-	str2bp := util.DwordGetLowerWord(cpuPtr.ac[2])
+	str2len = int16(memory.DwordGetLowerWord(cpuPtr.ac[0]))
+	str1len = int16(memory.DwordGetLowerWord(cpuPtr.ac[1]))
+	str1bp := memory.DwordGetLowerWord(cpuPtr.ac[3])
+	str2bp := memory.DwordGetLowerWord(cpuPtr.ac[2])
 	var byte1, byte2 dg.ByteT
 	res := 0
 	for {

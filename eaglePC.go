@@ -24,13 +24,9 @@ package main
 import (
 	"log"
 
-	"github.com/SMerrony/dgemug/logging"
-
-	"github.com/SMerrony/dgemug/util"
-
-	"github.com/SMerrony/dgemug/memory"
-
 	"github.com/SMerrony/dgemug/dg"
+	"github.com/SMerrony/dgemug/logging"
+	"github.com/SMerrony/dgemug/memory"
 )
 
 func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
@@ -78,7 +74,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		noAccModeInd4Word = iPtr.variant.(noAccModeInd4WordT)
 		cpuPtr.ac[3] = dg.DwordT(cpuPtr.pc) + 4
 		if noAccModeInd4Word.argCount >= 0 {
-			dwd = util.DwordFromTwoWords(cpuPtr.psr, dg.WordT(noAccModeInd4Word.argCount))
+			dwd = memory.DwordFromTwoWords(cpuPtr.psr, dg.WordT(noAccModeInd4Word.argCount))
 		} else {
 			dwd = dg.DwordT(noAccModeInd4Word.argCount) & 0x00007fff
 		}
@@ -144,7 +140,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrNSALA:
 		oneAccImm2Word = iPtr.variant.(oneAccImm2WordT)
-		wd = ^util.DwordGetLowerWord(cpuPtr.ac[oneAccImm2Word.acd])
+		wd = ^memory.DwordGetLowerWord(cpuPtr.ac[oneAccImm2Word.acd])
 		if dg.WordT(oneAccImm2Word.immS16)&wd == 0 {
 			cpuPtr.pc += 3
 		} else {
@@ -153,7 +149,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrNSANA:
 		oneAccImm2Word = iPtr.variant.(oneAccImm2WordT)
-		wd = util.DwordGetLowerWord(cpuPtr.ac[oneAccImm2Word.acd])
+		wd = memory.DwordGetLowerWord(cpuPtr.ac[oneAccImm2Word.acd])
 		if dg.WordT(oneAccImm2Word.immS16)&wd == 0 {
 			cpuPtr.pc += 3
 		} else {
@@ -362,7 +358,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case instrXNDO: // Narrow Do Until Greater Than
 		threeWordDo = iPtr.variant.(threeWordDoT)
 		loopVarAddr := resolve16bitEagleAddr(cpuPtr, threeWordDo.ind, threeWordDo.mode, threeWordDo.disp15)
-		loopVar := int32(util.SexWordToDword(util.DwordGetLowerWord(memory.ReadDWord(loopVarAddr))))
+		loopVar := int32(memory.SexWordToDword(memory.DwordGetLowerWord(memory.ReadDWord(loopVarAddr))))
 		loopVar++
 		memory.WriteDWord(loopVarAddr, dg.DwordT(loopVar))
 		acVar := int32(cpuPtr.ac[threeWordDo.acd])
@@ -420,7 +416,7 @@ func wpopb(cpuPtr *CPUT) {
 	cpuPtr.ac[1] = memory.WsPop(0) // 4
 	cpuPtr.ac[0] = memory.WsPop(0) // 5
 	dwd = memory.WsPop(0)          // 6
-	cpuPtr.psr = util.DwordGetUpperWord(dwd)
+	cpuPtr.psr = memory.DwordGetUpperWord(dwd)
 	// TODO Set WFP is crossing rings
 	wsFramSz2 := (int(dwd&0x00007fff) * 2) + 12
 	memory.WriteDWord(memory.WspLoc, wspSav-dg.DwordT(wsFramSz2))

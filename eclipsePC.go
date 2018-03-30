@@ -4,13 +4,9 @@ package main
 import (
 	"log"
 
-	"github.com/SMerrony/dgemug/logging"
-
-	"github.com/SMerrony/dgemug/util"
-
-	"github.com/SMerrony/dgemug/memory"
-
 	"github.com/SMerrony/dgemug/dg"
+	"github.com/SMerrony/dgemug/logging"
+	"github.com/SMerrony/dgemug/memory"
 )
 
 func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
@@ -28,7 +24,7 @@ func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrCLM: // signed compare to limits
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
-		acs = int16(util.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs]))
+		acs = int16(memory.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs]))
 		if twoAcc1Word.acs == twoAcc1Word.acd {
 			l = int16(memory.ReadWord(cpuPtr.pc + 1))
 			h = int16(memory.ReadWord(cpuPtr.pc + 2))
@@ -38,8 +34,8 @@ func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 				inc = 4
 			}
 		} else {
-			l = int16(memory.ReadWord(dg.PhysAddrT(util.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acd]))))
-			h = int16(memory.ReadWord(dg.PhysAddrT(util.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acd]) + 1)))
+			l = int16(memory.ReadWord(dg.PhysAddrT(memory.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acd]))))
+			h = int16(memory.ReadWord(dg.PhysAddrT(memory.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acd]) + 1)))
 			if acs < l || acs > h {
 				inc = 1
 			} else {
@@ -54,7 +50,7 @@ func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case instrDSPA:
 		oneAccModeInt2Word = iPtr.variant.(oneAccModeInd2WordT)
 		tableStart := resolve16bitEclipseAddr(cpuPtr, oneAccModeInt2Word.ind, oneAccModeInt2Word.mode, oneAccModeInt2Word.disp15)
-		offset := util.DwordGetLowerWord(cpuPtr.ac[oneAccModeInt2Word.acd])
+		offset := memory.DwordGetLowerWord(cpuPtr.ac[oneAccModeInt2Word.acd])
 		lowLimit := memory.ReadWord(tableStart - 2)
 		hiLimit := memory.ReadWord(tableStart - 1)
 		if debugLogging {
@@ -97,8 +93,8 @@ func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrSGT: //16-bit signed numbers
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
-		acs = int16(util.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs]))
-		acd = int16(util.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acd]))
+		acs = int16(memory.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs]))
+		acd = int16(memory.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acd]))
 		if acs > acd {
 			cpuPtr.pc += 2
 		} else {

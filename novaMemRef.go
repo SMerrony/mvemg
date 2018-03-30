@@ -24,11 +24,8 @@ package main
 import (
 	"log"
 
-	"github.com/SMerrony/dgemug/util"
-
-	"github.com/SMerrony/dgemug/memory"
-
 	"github.com/SMerrony/dgemug/dg"
+	"github.com/SMerrony/dgemug/memory"
 )
 
 func novaMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
@@ -70,7 +67,7 @@ func novaMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrSTA:
 		novaOneAccEffAddr = iPtr.variant.(novaOneAccEffAddrT)
-		shifter = util.DwordGetLowerWord(cpuPtr.ac[novaOneAccEffAddr.acd])
+		shifter = memory.DwordGetLowerWord(cpuPtr.ac[novaOneAccEffAddr.acd])
 		effAddr = resolve16bitEclipseAddr(cpuPtr, novaOneAccEffAddr.ind, novaOneAccEffAddr.mode, novaOneAccEffAddr.disp15)
 		memory.WriteWord(effAddr, shifter)
 

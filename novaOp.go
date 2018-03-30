@@ -24,10 +24,8 @@ package main
 import (
 	"log"
 
-	"github.com/SMerrony/dgemug/memory"
-	"github.com/SMerrony/dgemug/util"
-
 	"github.com/SMerrony/dgemug/dg"
+	"github.com/SMerrony/dgemug/memory"
 )
 
 func novaOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
@@ -43,8 +41,8 @@ func novaOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	novaTwoAccMultOp = iPtr.variant.(novaTwoAccMultOpT)
 
-	tmpAcS = util.DwordGetLowerWord(cpuPtr.ac[novaTwoAccMultOp.acs])
-	tmpAcD = util.DwordGetLowerWord(cpuPtr.ac[novaTwoAccMultOp.acd])
+	tmpAcS = memory.DwordGetLowerWord(cpuPtr.ac[novaTwoAccMultOp.acs])
+	tmpAcD = memory.DwordGetLowerWord(cpuPtr.ac[novaTwoAccMultOp.acd])
 	savedCry = cpuPtr.carry
 
 	// Preset Carry if required
@@ -61,14 +59,14 @@ func novaOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	switch iPtr.ix {
 	case instrADC:
 		wideShifter = dg.DwordT(tmpAcD) + dg.DwordT(^tmpAcS)
-		shifter = util.DwordGetLowerWord(wideShifter)
+		shifter = memory.DwordGetLowerWord(wideShifter)
 		if wideShifter > 65535 {
 			cpuPtr.carry = !cpuPtr.carry
 		}
 
 	case instrADD: // unsigned
 		wideShifter = dg.DwordT(tmpAcD) + dg.DwordT(tmpAcS)
-		shifter = util.DwordGetLowerWord(wideShifter)
+		shifter = memory.DwordGetLowerWord(wideShifter)
 		if wideShifter > 65535 {
 			cpuPtr.carry = !cpuPtr.carry
 		}
@@ -121,7 +119,7 @@ func novaOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			shifter |= 0x8000
 		}
 	case 'S':
-		shifter = util.SwapBytes(shifter)
+		shifter = memory.SwapBytes(shifter)
 	}
 
 	// Skip?

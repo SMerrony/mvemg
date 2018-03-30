@@ -25,11 +25,9 @@ import (
 	"log"
 
 	"github.com/SMerrony/dgemug/devices"
-	"github.com/SMerrony/dgemug/logging"
-
-	"github.com/SMerrony/dgemug/util"
-
 	"github.com/SMerrony/dgemug/dg"
+	"github.com/SMerrony/dgemug/logging"
+	"github.com/SMerrony/dgemug/memory"
 )
 
 func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
@@ -44,7 +42,7 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	)
 
 	// The Eclipse LEF instruction is handled funkily...
-	if cpuPtr.atu && cpuPtr.sbr[util.GetSegment(cpuPtr.pc)].lef {
+	if cpuPtr.atu && cpuPtr.sbr[memory.GetSegment(cpuPtr.pc)].lef {
 		iPtr.ix = instrLEF
 		log.Fatalf("ERROR: LEF not yet implemented, location %d\n", cpuPtr.pc)
 	}
@@ -104,7 +102,7 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 				cpuPtr.ac[novaDataIo.acd] = dg.DwordT(devices.BusDataIn(novaDataIo.ioDev, abc, novaDataIo.f))
 				//busDataIn(cpuPtr, &novaDataIo, abc)
 			case instrDOA, instrDOB, instrDOC:
-				devices.BusDataOut(novaDataIo.ioDev, util.DwordGetLowerWord(cpuPtr.ac[novaDataIo.acd]), abc, novaDataIo.f)
+				devices.BusDataOut(novaDataIo.ioDev, memory.DwordGetLowerWord(cpuPtr.ac[novaDataIo.acd]), abc, novaDataIo.f)
 				//busDataOut(cpuPtr, &novaDataIo, abc)
 			}
 		} else {
@@ -153,14 +151,14 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		var novaDataIo novaDataIoT
 		novaDataIo.f = ioFlagsDev.f
 		novaDataIo.ioDev = ioFlagsDev.ioDev
-		devices.BusDataOut(novaDataIo.ioDev, util.DwordGetLowerWord(cpuPtr.ac[novaDataIo.acd]), 'N', novaDataIo.f) // DUMMY FLAG
+		devices.BusDataOut(novaDataIo.ioDev, memory.DwordGetLowerWord(cpuPtr.ac[novaDataIo.acd]), 'N', novaDataIo.f) // DUMMY FLAG
 
 	case instrPRTSEL:
 		if debugLogging {
 			logging.DebugPrint(logging.DebugLog, "INFO: PRTSEL AC0: %d, PC: %d\n", cpuPtr.ac[0], cpuPtr.pc)
 		}
 		// only handle the query mode, setting is a no-op on this 'single-channel' machine
-		if util.DwordGetLowerWord(cpuPtr.ac[0]) == 0xffff {
+		if memory.DwordGetLowerWord(cpuPtr.ac[0]) == 0xffff {
 			// return default I/O channel if -1 passed in
 			cpuPtr.ac[0] = 0
 		}
@@ -248,8 +246,8 @@ func iorst(cpuPtr *CPUT) bool {
 }
 
 func msko(cpuPtr *CPUT, destAc int) bool {
-	//cpuPtr.mask = util.DwordGetLowerWord(cpuPtr.ac[destAc])
-	devices.BusSetIrqMask(util.DwordGetLowerWord(cpuPtr.ac[destAc]))
+	//cpuPtr.mask = memory.DwordGetLowerWord(cpuPtr.ac[destAc])
+	devices.BusSetIrqMask(memory.DwordGetLowerWord(cpuPtr.ac[destAc]))
 	cpuPtr.pc++
 	return true
 }

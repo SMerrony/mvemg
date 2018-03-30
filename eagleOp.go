@@ -24,11 +24,8 @@ package main
 import (
 	"log"
 
-	"github.com/SMerrony/dgemug/util"
-
-	"github.com/SMerrony/dgemug/memory"
-
 	"github.com/SMerrony/dgemug/dg"
+	"github.com/SMerrony/dgemug/memory"
 )
 
 func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
@@ -120,7 +117,7 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrSEX: // Sign EXtend
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
-		cpuPtr.ac[twoAcc1Word.acd] = util.SexWordToDword(util.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs]))
+		cpuPtr.ac[twoAcc1Word.acd] = memory.SexWordToDword(memory.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs]))
 
 	case instrSSPT: /* NO-OP - see p.8-5 of MV/10000 Sys Func Chars */
 		log.Println("INFO: SSPT is a No-Op on this machine, continuing")
@@ -162,7 +159,7 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		cpuPtr.ac[twoAcc1Word.acd] = ^cpuPtr.ac[twoAcc1Word.acs]
 
 	case instrWDIVS:
-		s64 = int64(util.QwordFromTwoDwords(cpuPtr.ac[0], cpuPtr.ac[1]))
+		s64 = int64(memory.QwordFromTwoDwords(cpuPtr.ac[0], cpuPtr.ac[1]))
 		if cpuPtr.ac[2] == 0 {
 			cpuSetOVR(true)
 		} else {
@@ -246,7 +243,7 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrZEX:
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
-		cpuPtr.ac[twoAcc1Word.acd] = 0 | dg.DwordT(util.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs]))
+		cpuPtr.ac[twoAcc1Word.acd] = 0 | dg.DwordT(memory.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs]))
 
 	default:
 		log.Fatalf("ERROR: EAGLE_OP instruction <%s> not yet implemented\n", iPtr.mnemonic)

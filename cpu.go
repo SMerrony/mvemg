@@ -31,7 +31,6 @@ import (
 
 	"github.com/SMerrony/dgemug/devices"
 	"github.com/SMerrony/dgemug/memory"
-	"github.com/SMerrony/dgemug/util"
 
 	"github.com/SMerrony/dgemug/dg"
 )
@@ -104,7 +103,7 @@ func cpuPrintableStatus() string {
 	cpu.cpuMu.RLock()
 	res := fmt.Sprintf("%c          AC0         AC1         AC2         AC3        PC CRY ATU%c", asciiNL, asciiNL)
 	res += fmt.Sprintf("%#11o %#11o %#11o %#11o %#11o", cpu.ac[0], cpu.ac[1], cpu.ac[2], cpu.ac[3], cpu.pc)
-	res += fmt.Sprintf("  %d   %d", util.BoolToInt(cpu.carry), util.BoolToInt(cpu.atu))
+	res += fmt.Sprintf("  %d   %d", memory.BoolToInt(cpu.carry), memory.BoolToInt(cpu.atu))
 	cpu.cpuMu.RUnlock()
 	return res
 }
@@ -112,7 +111,7 @@ func cpuPrintableStatus() string {
 func cpuCompactPrintableStatus() string {
 	cpu.cpuMu.RLock()
 	res := fmt.Sprintf("AC0: %#o AC1: %#o AC2: %#o AC3: %#o CRY: %d PC: %#o",
-		cpu.ac[0], cpu.ac[1], cpu.ac[2], cpu.ac[3], util.BoolToInt(cpu.carry), cpu.pc)
+		cpu.ac[0], cpu.ac[1], cpu.ac[2], cpu.ac[3], memory.BoolToInt(cpu.carry), cpu.pc)
 	cpu.cpuMu.RUnlock()
 	return res
 }

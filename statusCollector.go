@@ -29,7 +29,7 @@ import (
 	"time"
 
 	"github.com/SMerrony/dgemug/devices"
-	"github.com/SMerrony/dgemug/util"
+	"github.com/SMerrony/dgemug/memory"
 )
 
 const (
@@ -100,8 +100,8 @@ func statusCollector(
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statCPUrow, dasherERASEEOL))
 				statusSendString(conn, fmt.Sprintf("PC:  %010d   Interrupts: %s    ATU: %s     IPS: %.fk/sec",
 					cpuStats.pc,
-					util.BoolToOnOff(cpuStats.ion),
-					util.BoolToOnOff(cpuStats.atu),
+					memory.BoolToOnOff(cpuStats.ion),
+					memory.BoolToOnOff(cpuStats.atu),
 					ips))
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statCPUrow2, dasherERASEEOL))
 				statusSendString(conn, fmt.Sprintf("AC0: %010d   AC1: %010d   AC2: %010d   AC3: %010d",
@@ -126,7 +126,7 @@ func statusCollector(
 				lastDpfTime = time.Now()
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statDPFrow, dasherERASEEOL))
 				statusSendString(conn, fmt.Sprintf("DPF  (DPF0) - Attached: %c  IOPS: %.f CYL: %04d  HD: %02d  SECT: %03d",
-					util.BoolToYN(dpfStats.ImageAttached),
+					memory.BoolToYN(dpfStats.ImageAttached),
 					dpfIops,
 					dpfStats.Cylinder,
 					dpfStats.Head,
@@ -139,7 +139,7 @@ func statusCollector(
 				lastDskpTime = time.Now()
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statDSKProw, dasherERASEEOL))
 				statusSendString(conn, fmt.Sprintf("DSKP (DPJ0) - Attached: %c  IOPS: %.f  SECNUM: %08d",
-					util.BoolToYN(dskpStats.ImageAttached),
+					memory.BoolToYN(dskpStats.ImageAttached),
 					dskpIops,
 					//dskpStats.cylinder,
 					//dskpStats.head,
@@ -149,7 +149,7 @@ func statusCollector(
 			case mtStats = <-mtbChan:
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statMTrow, dasherERASEEOL))
 				statusSendString(conn, fmt.Sprintf("MTA  (MTC0) - Attached: %c  Mem Addr: %06o  Curr Cmd: %d",
-					util.BoolToYN(mtStats.ImageAttached[0]),
+					memory.BoolToYN(mtStats.ImageAttached[0]),
 					mtStats.MemAddrReg,
 					mtStats.CurrentCmd))
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statMTrow2, dasherERASEEOL))

@@ -26,13 +26,9 @@ package main
 import (
 	"log"
 
-	"github.com/SMerrony/dgemug/logging"
-
-	"github.com/SMerrony/dgemug/util"
-
-	"github.com/SMerrony/dgemug/memory"
-
 	"github.com/SMerrony/dgemug/dg"
+	"github.com/SMerrony/dgemug/logging"
+	"github.com/SMerrony/dgemug/memory"
 )
 
 func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
@@ -262,11 +258,11 @@ func wsav(cpuPtr *CPUT, u2wd *unique2WordT) {
 // wssav is common to WSSVR and WSSVS
 func wssav(cpuPtr *CPUT, u2wd *unique2WordT) {
 	wfpSav := memory.ReadDWord(memory.WfpLoc)
-	memory.WsPush(0, util.DwordFromTwoWords(cpuPtr.psr, 0)) // 1
-	memory.WsPush(0, cpuPtr.ac[0])                          // 2
-	memory.WsPush(0, cpuPtr.ac[1])                          // 3
-	memory.WsPush(0, cpuPtr.ac[2])                          // 4
-	memory.WsPush(0, wfpSav)                                // 5
+	memory.WsPush(0, memory.DwordFromTwoWords(cpuPtr.psr, 0)) // 1
+	memory.WsPush(0, cpuPtr.ac[0])                            // 2
+	memory.WsPush(0, cpuPtr.ac[1])                            // 3
+	memory.WsPush(0, cpuPtr.ac[2])                            // 4
+	memory.WsPush(0, wfpSav)                                  // 5
 	dwd := cpuPtr.ac[3] & 0x7fffffff
 	if cpuPtr.carry {
 		dwd |= 0x80000000

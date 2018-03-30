@@ -24,13 +24,9 @@ package main
 import (
 	"log"
 
-	"github.com/SMerrony/dgemug/logging"
-
-	"github.com/SMerrony/dgemug/util"
-
-	"github.com/SMerrony/dgemug/memory"
-
 	"github.com/SMerrony/dgemug/dg"
+	"github.com/SMerrony/dgemug/logging"
+	"github.com/SMerrony/dgemug/memory"
 )
 
 func eagleIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
@@ -52,11 +48,11 @@ func eagleIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case instrCIO:
 		// TODO handle I/O channel
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
-		word = util.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs])
+		word = memory.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs])
 		mapRegAddr = int(word & 0x0fff)
 		rw = memory.TestWbit(word, 0)
 		if rw { // write command
-			dataWord = util.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acd])
+			dataWord = memory.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acd])
 			memory.BmcdchWriteReg(mapRegAddr, dataWord)
 		} else { // read command
 			dataWord = memory.BmcdchReadReg(mapRegAddr)
@@ -69,12 +65,12 @@ func eagleIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		if twoAccImm2Word.acs == twoAccImm2Word.acd {
 			cmd = twoAccImm2Word.immWord
 		} else {
-			cmd = twoAccImm2Word.immWord | util.DwordGetLowerWord(cpuPtr.ac[twoAccImm2Word.acs])
+			cmd = twoAccImm2Word.immWord | memory.DwordGetLowerWord(cpuPtr.ac[twoAccImm2Word.acs])
 		}
 		mapRegAddr = int(cmd & 0x0fff)
 		rw = memory.TestWbit(cmd, 0)
 		if rw { // write command
-			dataWord = util.DwordGetLowerWord(cpuPtr.ac[twoAccImm2Word.acd])
+			dataWord = memory.DwordGetLowerWord(cpuPtr.ac[twoAccImm2Word.acd])
 			memory.BmcdchWriteReg(mapRegAddr, dataWord)
 		} else { // read command
 			dataWord = memory.BmcdchReadReg(mapRegAddr)
