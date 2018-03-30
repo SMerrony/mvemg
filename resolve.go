@@ -26,11 +26,9 @@ import (
 
 	"github.com/SMerrony/dgemug/logging"
 
-	"github.com/SMerrony/dgemug/util"
-
 	"github.com/SMerrony/dgemug/memory"
 
-	"github.com/SMerrony/dgemug"
+	"github.com/SMerrony/dgemug/dg"
 )
 
 func resolve16bitEclipseAddr(cpuPtr *CPUT, ind byte, mode int, disp int16) dg.PhysAddrT {
@@ -56,7 +54,7 @@ func resolve16bitEclipseAddr(cpuPtr *CPUT, ind byte, mode int, disp int16) dg.Ph
 	// handle indirection
 	if ind == '@' { // down the rabbit hole...
 		indAddr = memory.ReadWord(dg.PhysAddrT(intEff))
-		for util.TestWbit(indAddr, 0) {
+		for memory.TestWbit(indAddr, 0) {
 			indAddr = memory.ReadWord(dg.PhysAddrT(indAddr))
 		}
 		intEff = int32(indAddr)
@@ -96,7 +94,7 @@ func resolve16bitEagleAddr(cpuPtr *CPUT, ind byte, mode int, disp int16) dg.Phys
 	// handle indirection
 	if ind == '@' { // down the rabbit hole...
 		indAddr = memory.ReadWord(dg.PhysAddrT(intEff))
-		for util.TestWbit(indAddr, 0) {
+		for memory.TestWbit(indAddr, 0) {
 			indAddr, ok = memory.ReadWordTrap(dg.PhysAddrT(indAddr & 0x7fff))
 			if !ok {
 				log.Fatalf("ERROR: PC=%d", cpuPtr.pc)
@@ -121,7 +119,7 @@ func resolve16bitEagleAddr(cpuPtr *CPUT, ind byte, mode int, disp int16) dg.Phys
 // Resolve32bitByteAddr returns the word address and low-byte flag for a given 32-bit byte address
 func resolve32bitByteAddr(byteAddr dg.DwordT) (wordAddr dg.PhysAddrT, loByte bool) {
 	wa := dg.PhysAddrT(byteAddr) >> 1
-	lb := util.TestDwbit(byteAddr, 31)
+	lb := memory.TestDwbit(byteAddr, 31)
 	return wa, lb
 }
 
@@ -144,7 +142,7 @@ func resolve32bitEffAddr(cpuPtr *CPUT, ind byte, mode int, disp int32) dg.PhysAd
 	// handle indirection
 	if ind == '@' { // down the rabbit hole...
 		indAddr := memory.ReadDWord(eff)
-		for util.TestDwbit(indAddr, 0) {
+		for memory.TestDwbit(indAddr, 0) {
 			indAddr = memory.ReadDWord(dg.PhysAddrT(indAddr))
 		}
 		eff = dg.PhysAddrT(indAddr)
@@ -159,7 +157,7 @@ func resolve32bitEffAddr(cpuPtr *CPUT, ind byte, mode int, disp int32) dg.PhysAd
 func resolve32bitIndirectableAddr(iAddr dg.DwordT) dg.PhysAddrT {
 	eff := iAddr
 	// handle indirection
-	for util.TestDwbit(eff, 0) {
+	for memory.TestDwbit(eff, 0) {
 		eff = memory.ReadDWord(dg.PhysAddrT(eff))
 	}
 	return dg.PhysAddrT(eff)
@@ -172,7 +170,7 @@ func resolveEclipseBitAddr(cpuPtr *CPUT, twoAcc1Word *twoAcc1WordT) (wordAddr dg
 	if twoAcc1Word.acd == twoAcc1Word.acs {
 		wordAddr = 0
 	} else {
-		if util.TestDwbit(cpuPtr.ac[twoAcc1Word.acs], 0) {
+		if memory.TestDwbit(cpuPtr.ac[twoAcc1Word.acs], 0) {
 			log.Fatal("ERROR: Indirect 16-bit BIT pointers not yet supported")
 		}
 		wordAddr = dg.PhysAddrT(cpuPtr.ac[twoAcc1Word.acs]) & 0x7fff // mask off lower 15 bits
@@ -190,7 +188,7 @@ func resolveEagleBitAddr(cpuPtr *CPUT, twoAcc1Word *twoAcc1WordT) (wordAddr dg.P
 	if twoAcc1Word.acd == twoAcc1Word.acs {
 		wordAddr = 0
 	} else {
-		if util.TestDwbit(cpuPtr.ac[twoAcc1Word.acs], 0) {
+		if memory.TestDwbit(cpuPtr.ac[twoAcc1Word.acs], 0) {
 			log.Fatal("ERROR: Indirect 32-bit BIT pointers not yet supported")
 		}
 		wordAddr = dg.PhysAddrT(cpuPtr.ac[twoAcc1Word.acs])

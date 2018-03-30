@@ -34,8 +34,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/SMerrony/dgemug"
 	"github.com/SMerrony/dgemug/devices"
+	"github.com/SMerrony/dgemug/dg"
 	"github.com/SMerrony/dgemug/logging"
 	"github.com/SMerrony/dgemug/memory"
 	"github.com/SMerrony/dgemug/util"
@@ -801,7 +801,7 @@ RunLoop: // performance-critical section starts here
 			// store PC in location zero
 			memory.WriteWord(0, dg.WordT(cpu.pc))
 			// fetch service routine address from location one
-			if util.TestWbit(memory.ReadWord(1), 0) {
+			if memory.TestWbit(memory.ReadWord(1), 0) {
 				indIrq = '@'
 			} else {
 				indIrq = ' '

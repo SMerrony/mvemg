@@ -4,7 +4,7 @@ package main
 import (
 	"testing"
 
-	"github.com/SMerrony/dgemug"
+	"github.com/SMerrony/dgemug/dg"
 )
 
 func Test2bitImm(t *testing.T) {

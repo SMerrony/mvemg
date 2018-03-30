@@ -24,9 +24,10 @@ package main
 import (
 	"log"
 
+	"github.com/SMerrony/dgemug/memory"
 	"github.com/SMerrony/dgemug/util"
 
-	"github.com/SMerrony/dgemug"
+	"github.com/SMerrony/dgemug/dg"
 )
 
 func novaOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
@@ -107,14 +108,14 @@ func novaOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	switch novaTwoAccMultOp.sh {
 	case 'L':
 		tmpCry = cpuPtr.carry
-		cpuPtr.carry = util.TestWbit(shifter, 0)
+		cpuPtr.carry = memory.TestWbit(shifter, 0)
 		shifter <<= 1
 		if tmpCry {
 			shifter |= 0x0001
 		}
 	case 'R':
 		tmpCry = cpuPtr.carry
-		cpuPtr.carry = util.TestWbit(shifter, 15)
+		cpuPtr.carry = memory.TestWbit(shifter, 15)
 		shifter >>= 1
 		if tmpCry {
 			shifter |= 0x8000

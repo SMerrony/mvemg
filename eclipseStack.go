@@ -29,7 +29,7 @@ import (
 
 	"github.com/SMerrony/dgemug/memory"
 
-	"github.com/SMerrony/dgemug"
+	"github.com/SMerrony/dgemug/dg"
 )
 
 func eclipseStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
@@ -89,7 +89,7 @@ func eclipseStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		// memory.WriteWord(memory.NspLoc, memory.ReadWord(memory.NfpLoc)) // ???
 		// //memory.WriteWord(memory.NfpLoc, memory.ReadWord(memory.NspLoc)) // ???
 		// word := memory.NsPop(0, debugLogging)
-		// cpuPtr.carry = util.TestWbit(word, 0)
+		// cpuPtr.carry = memory.TestWbit(word, 0)
 		// cpuPtr.pc = dg.PhysAddrT(word) & 0x7fff
 		// //nfpSave := memory.NsPop(0)               // 1
 		// cpuPtr.ac[3] = dg.DwordT(memory.NsPop(0, debugLogging)) // 2
@@ -102,7 +102,7 @@ func eclipseStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		nfpSav := memory.ReadWord(memory.NfpLoc)
 		memory.WriteWord(memory.NspLoc, nfpSav)
 		pwd1 := memory.NsPop(0, debugLogging) // 1
-		cpuPtr.carry = util.TestWbit(pwd1, 0)
+		cpuPtr.carry = memory.TestWbit(pwd1, 0)
 		cpuPtr.pc = dg.PhysAddrT(pwd1 & 0x07fff)
 		cpuPtr.ac[3] = dg.DwordT(memory.NsPop(0, debugLogging)) // 2
 		cpuPtr.ac[2] = dg.DwordT(memory.NsPop(0, debugLogging)) // 3

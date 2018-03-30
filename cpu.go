@@ -24,15 +24,16 @@ package main
 import (
 	"fmt"
 	"log"
-	//"github.com/SMerrony/dgemug"
+	//"github.com/SMerrony/dgemug/dg"
 	"runtime"
 	"sync"
 	"time"
 
 	"github.com/SMerrony/dgemug/devices"
+	"github.com/SMerrony/dgemug/memory"
 	"github.com/SMerrony/dgemug/util"
 
-	"github.com/SMerrony/dgemug"
+	"github.com/SMerrony/dgemug/dg"
 )
 
 // TODO sbrBits is currently an abstraction of the Segment Base Registers - may need to represent physically
@@ -101,7 +102,7 @@ func cpuReset() {
 
 func cpuPrintableStatus() string {
 	cpu.cpuMu.RLock()
-	res := fmt.Sprintf("%c      AC0       AC1       AC2       AC3        PC CRY ATU%c", asciiNL, asciiNL)
+	res := fmt.Sprintf("%c          AC0         AC1         AC2         AC3        PC CRY ATU%c", asciiNL, asciiNL)
 	res += fmt.Sprintf("%#11o %#11o %#11o %#11o %#11o", cpu.ac[0], cpu.ac[1], cpu.ac[2], cpu.ac[3], cpu.pc)
 	res += fmt.Sprintf("  %d   %d", util.BoolToInt(cpu.carry), util.BoolToInt(cpu.atu))
 	cpu.cpuMu.RUnlock()
@@ -118,29 +119,29 @@ func cpuCompactPrintableStatus() string {
 
 // GetOVR is a getter for the OVR flag embedded in the PSR
 func cpuGetOVR() bool {
-	return util.TestWbit(cpu.psr, 1)
+	return memory.TestWbit(cpu.psr, 1)
 }
 
 // SetOVR is a setter for the OVR flag embedded in the PSR
 func cpuSetOVR(newOVR bool) {
 	if newOVR {
-		util.SetWbit(&cpu.psr, 1)
+		memory.SetWbit(&cpu.psr, 1)
 	} else {
-		util.ClearWbit(&cpu.psr, 1)
+		memory.ClearWbit(&cpu.psr, 1)
 	}
 }
 
 // GetOVK is a getter for the OVK flag embedded in the PSR
 func cpuGetOVK() bool {
-	return util.TestWbit(cpu.psr, 0)
+	return memory.TestWbit(cpu.psr, 0)
 }
 
 // SetOVK is a setter for the OVK flag embedded in the PSR
 func cpuSetOVK(newOVK bool) {
 	if newOVK {
-		util.SetWbit(&cpu.psr, 0)
+		memory.SetWbit(&cpu.psr, 0)
 	} else {
-		util.ClearWbit(&cpu.psr, 0)
+		memory.ClearWbit(&cpu.psr, 0)
 	}
 }
 

@@ -10,7 +10,7 @@ import (
 
 	"github.com/SMerrony/dgemug/memory"
 
-	"github.com/SMerrony/dgemug"
+	"github.com/SMerrony/dgemug/dg"
 )
 
 func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
@@ -109,7 +109,7 @@ func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		addr, bit = resolveEclipseBitAddr(cpuPtr, &twoAcc1Word)
 		wd := memory.ReadWord(addr)
-		if util.TestWbit(wd, int(bit)) {
+		if memory.TestWbit(wd, int(bit)) {
 			cpuPtr.pc += 2
 		} else {
 			cpuPtr.pc++
@@ -122,7 +122,7 @@ func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		addr, bit = resolveEclipseBitAddr(cpuPtr, &twoAcc1Word)
 		wd := memory.ReadWord(addr)
-		if !util.TestWbit(wd, int(bit)) {
+		if !memory.TestWbit(wd, int(bit)) {
 			cpuPtr.pc += 2
 		} else {
 			cpuPtr.pc++

@@ -30,7 +30,7 @@ import (
 
 	"github.com/SMerrony/dgemug/memory"
 
-	"github.com/SMerrony/dgemug"
+	"github.com/SMerrony/dgemug/dg"
 )
 
 func eclipseOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
@@ -77,7 +77,7 @@ func eclipseOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			logging.DebugPrint(logging.DebugLog, "... BTO Addr: %d, Bit: %d, Before: %s\n",
 				addr, bitNum, util.WordToBinStr(wd))
 		}
-		util.SetWbit(&wd, bitNum)
+		memory.SetWbit(&wd, bitNum)
 		memory.WriteWord(addr, wd)
 		if debugLogging {
 			logging.DebugPrint(logging.DebugLog, "... BTO                     Result: %s\n", util.WordToBinStr(wd))
@@ -91,7 +91,7 @@ func eclipseOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		if debugLogging {
 			logging.DebugPrint(logging.DebugLog, "... BTZ Addr: %d, Bit: %d, Before: %s\n", addr, bitNum, util.WordToBinStr(wd))
 		}
-		util.ClearWbit(&wd, bitNum)
+		memory.ClearWbit(&wd, bitNum)
 		memory.WriteWord(addr, wd)
 		if debugLogging {
 			logging.DebugPrint(logging.DebugLog, "... BTZ                     Result: %s\n",
@@ -189,7 +189,7 @@ func eclipseOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrSTB:
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
-		hiLo := util.TestDwbit(cpuPtr.ac[twoAcc1Word.acs], 31)
+		hiLo := memory.TestDwbit(cpuPtr.ac[twoAcc1Word.acs], 31)
 		addr = dg.PhysAddrT(util.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs])) >> 1
 		byt = dg.ByteT(cpuPtr.ac[twoAcc1Word.acd])
 		memory.WriteByte(addr, hiLo, byt)

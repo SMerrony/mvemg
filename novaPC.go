@@ -24,7 +24,7 @@ package main
 import (
 	"log"
 
-	"github.com/SMerrony/dgemug"
+	"github.com/SMerrony/dgemug/dg"
 )
 
 func novaPC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {

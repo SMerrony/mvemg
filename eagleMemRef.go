@@ -30,7 +30,7 @@ import (
 
 	"github.com/SMerrony/dgemug/memory"
 
-	"github.com/SMerrony/dgemug"
+	"github.com/SMerrony/dgemug/dg"
 )
 
 func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
@@ -87,7 +87,7 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		offset = dg.PhysAddrT(cpuPtr.ac[twoAcc1Word.acd]) >> 4
 		bitNum := uint(cpuPtr.ac[twoAcc1Word.acd] & 0x0f)
 		wd = memory.ReadWord(addr + offset)
-		util.SetWbit(&wd, bitNum)
+		memory.SetWbit(&wd, bitNum)
 		memory.WriteWord(addr+offset, wd)
 
 	case instrWBTZ:
@@ -100,7 +100,7 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		offset = dg.PhysAddrT(cpuPtr.ac[twoAcc1Word.acd]) >> 4
 		bitNum := uint(cpuPtr.ac[twoAcc1Word.acd] & 0x0f)
 		wd = memory.ReadWord(addr + offset)
-		util.ClearWbit(&wd, bitNum)
+		memory.ClearWbit(&wd, bitNum)
 		memory.WriteWord(addr+offset, wd)
 
 	case instrWCMV:
@@ -118,7 +118,7 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case instrWLDB:
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		wordAddr = dg.PhysAddrT(cpuPtr.ac[twoAcc1Word.acs]) >> 1
-		lowByte = util.TestDwbit(cpuPtr.ac[twoAcc1Word.acs], 31)
+		lowByte = memory.TestDwbit(cpuPtr.ac[twoAcc1Word.acs], 31)
 		byt = memory.ReadByte(wordAddr, lowByte)
 		cpuPtr.ac[twoAcc1Word.acd] = dg.DwordT(byt)
 
@@ -401,7 +401,7 @@ func wcst(cpuPtr *CPUT) {
 	for tIx = 0; tIx < 16; tIx++ {
 		wd := memory.ReadWord(delimTabAddr + tIx)
 		for bit := 0; bit < 16; bit++ {
-			if util.TestWbit(wd, bit) {
+			if memory.TestWbit(wd, bit) {
 				table[(int(tIx)*16)+bit] = true
 			}
 		}

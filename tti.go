@@ -27,8 +27,8 @@ import (
 	"os"
 	"sync"
 
-	"github.com/SMerrony/dgemug"
 	"github.com/SMerrony/dgemug/devices"
+	"github.com/SMerrony/dgemug/dg"
 )
 
 var (

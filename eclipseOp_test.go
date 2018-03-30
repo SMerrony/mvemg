@@ -23,7 +23,7 @@ package main
 
 import "testing"
 
-import "github.com/SMerrony/dgemug"
+import "github.com/SMerrony/dgemug/dg"
 
 func TestADDI(t *testing.T) {
 	cpuPtr := cpuInit(nil)

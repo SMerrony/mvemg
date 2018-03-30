@@ -32,7 +32,7 @@ import (
 
 	"github.com/SMerrony/dgemug/memory"
 
-	"github.com/SMerrony/dgemug"
+	"github.com/SMerrony/dgemug/dg"
 )
 
 func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
@@ -127,26 +127,26 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		cpuPtr.fpsr = 0
 		any := false
 		// set the ANY bit?
-		if util.GetQwbits(tmpQwd, 1, 4) != 0 {
-			util.SetQwbit(&cpuPtr.fpsr, 0)
+		if memory.GetQwbits(tmpQwd, 1, 4) != 0 {
+			memory.SetQwbit(&cpuPtr.fpsr, 0)
 			any = true
 		}
 		// copy bits 1-11
 		for b := 1; b <= 11; b++ {
-			if util.TestQwbit(tmpQwd, b) {
-				util.SetQwbit(&cpuPtr.fpsr, uint(b))
+			if memory.TestQwbit(tmpQwd, b) {
+				memory.SetQwbit(&cpuPtr.fpsr, uint(b))
 			}
 		}
 		// bits 28-31
 		if any {
 			for b := 28; b <= 31; b++ {
-				if util.TestQwbit(tmpQwd, b) {
-					util.SetQwbit(&cpuPtr.fpsr, uint(b))
+				if memory.TestQwbit(tmpQwd, b) {
+					memory.SetQwbit(&cpuPtr.fpsr, uint(b))
 				}
 			}
 			for b := 33; b <= 63; b++ {
-				if util.TestQwbit(tmpQwd, b) {
-					util.SetQwbit(&cpuPtr.fpsr, uint(b))
+				if memory.TestQwbit(tmpQwd, b) {
+					memory.SetQwbit(&cpuPtr.fpsr, uint(b))
 				}
 			}
 		}

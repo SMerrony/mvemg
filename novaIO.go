@@ -29,7 +29,7 @@ import (
 
 	"github.com/SMerrony/dgemug/util"
 
-	"github.com/SMerrony/dgemug"
+	"github.com/SMerrony/dgemug/dg"
 )
 
 func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {

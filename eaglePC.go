@@ -30,7 +30,7 @@ import (
 
 	"github.com/SMerrony/dgemug/memory"
 
-	"github.com/SMerrony/dgemug"
+	"github.com/SMerrony/dgemug/dg"
 )
 
 func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
@@ -242,7 +242,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrWSKBO:
 		wskb = iPtr.variant.(wskbT)
-		if util.TestDwbit(cpuPtr.ac[0], wskb.bitNum) {
+		if memory.TestDwbit(cpuPtr.ac[0], wskb.bitNum) {
 			cpuPtr.pc += 2
 		} else {
 			cpuPtr.pc++
@@ -250,7 +250,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrWSKBZ:
 		wskb = iPtr.variant.(wskbT)
-		if !util.TestDwbit(cpuPtr.ac[0], wskb.bitNum) {
+		if !memory.TestDwbit(cpuPtr.ac[0], wskb.bitNum) {
 			cpuPtr.pc += 2
 		} else {
 			cpuPtr.pc++
@@ -319,7 +319,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		tmpAddr, bit = resolveEagleBitAddr(cpuPtr, &twoAcc1Word)
 		wd = memory.ReadWord(tmpAddr)
-		if !util.TestWbit(wd, int(bit)) {
+		if !memory.TestWbit(wd, int(bit)) {
 			cpuPtr.pc += 2
 		} else {
 			cpuPtr.pc++
@@ -411,7 +411,7 @@ func wpopb(cpuPtr *CPUT) {
 	wspSav := memory.ReadDWord(memory.WspLoc)
 	// pop off 6 double words
 	dwd := memory.WsPop(0) // 1
-	cpuPtr.carry = util.TestDwbit(dwd, 0)
+	cpuPtr.carry = memory.TestDwbit(dwd, 0)
 	cpuPtr.pc = dg.PhysAddrT(dwd & 0x7fffffff)
 	cpuPtr.ac[3] = memory.WsPop(0) // 2
 	// replace WFP with popped value of AC3

@@ -28,7 +28,7 @@ import (
 
 	"github.com/SMerrony/dgemug/memory"
 
-	"github.com/SMerrony/dgemug"
+	"github.com/SMerrony/dgemug/dg"
 )
 
 func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
@@ -68,7 +68,7 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		if dwd>>16 != 0 && dwd>>16 != 0xffff {
 			cpuSetOVR(true)
 		}
-		if util.TestDwbit(dwd, 16) {
+		if memory.TestDwbit(dwd, 16) {
 			cpuPtr.ac[oneAcc1Word.acd] |= 0xffff0000
 		} else {
 			cpuPtr.ac[oneAcc1Word.acd] &= 0x0000ffff
@@ -77,7 +77,7 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case instrLLDB:
 		oneAccMode3Word = iPtr.variant.(oneAccMode3WordT)
 		addr = resolve32bitEffAddr(cpuPtr, ' ', oneAccMode3Word.mode, oneAccMode3Word.disp31>>1)
-		lobyte = util.TestDwbit(dg.DwordT(oneAccMode3Word.disp31), 31)
+		lobyte = memory.TestDwbit(dg.DwordT(oneAccMode3Word.disp31), 31)
 		cpuPtr.ac[oneAccMode3Word.acd] = dg.DwordT(memory.ReadByte(addr, lobyte))
 
 	case instrLLEF:
@@ -89,7 +89,7 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		oneAccMode3Word = iPtr.variant.(oneAccMode3WordT)
 		addr = resolve32bitEffAddr(cpuPtr, ' ', oneAccMode3Word.mode, oneAccMode3Word.disp31>>1)
 		addr <<= 1
-		if util.TestDwbit(dg.DwordT(oneAccMode3Word.disp31), 31) {
+		if memory.TestDwbit(dg.DwordT(oneAccMode3Word.disp31), 31) {
 			addr |= 1
 		}
 		cpuPtr.ac[oneAccMode3Word.acd] = dg.DwordT(addr)

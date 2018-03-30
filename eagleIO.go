@@ -30,7 +30,7 @@ import (
 
 	"github.com/SMerrony/dgemug/memory"
 
-	"github.com/SMerrony/dgemug"
+	"github.com/SMerrony/dgemug/dg"
 )
 
 func eagleIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
@@ -54,7 +54,7 @@ func eagleIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		word = util.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs])
 		mapRegAddr = int(word & 0x0fff)
-		rw = util.TestWbit(word, 0)
+		rw = memory.TestWbit(word, 0)
 		if rw { // write command
 			dataWord = util.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acd])
 			memory.BmcdchWriteReg(mapRegAddr, dataWord)
@@ -72,7 +72,7 @@ func eagleIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			cmd = twoAccImm2Word.immWord | util.DwordGetLowerWord(cpuPtr.ac[twoAccImm2Word.acs])
 		}
 		mapRegAddr = int(cmd & 0x0fff)
-		rw = util.TestWbit(cmd, 0)
+		rw = memory.TestWbit(cmd, 0)
 		if rw { // write command
 			dataWord = util.DwordGetLowerWord(cpuPtr.ac[twoAccImm2Word.acd])
 			memory.BmcdchWriteReg(mapRegAddr, dataWord)
