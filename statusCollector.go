@@ -98,13 +98,13 @@ func statusCollector(
 				ips = float64(iCount) / (time.Since(lastCPUtime).Seconds() * 1000)
 				lastCPUtime = time.Now()
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statCPUrow, dasherERASEEOL))
-				statusSendString(conn, fmt.Sprintf("PC:  %010d   Interrupts: %s    ATU: %s     IPS: %.fk/sec",
+				statusSendString(conn, fmt.Sprintf("PC:  %011o   Interrupts: %s    ATU: %s     IPS: %.fk/sec",
 					cpuStats.pc,
 					memory.BoolToOnOff(cpuStats.ion),
 					memory.BoolToOnOff(cpuStats.atu),
 					ips))
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statCPUrow2, dasherERASEEOL))
-				statusSendString(conn, fmt.Sprintf("AC0: %010d   AC1: %010d   AC2: %010d   AC3: %010d",
+				statusSendString(conn, fmt.Sprintf("AC0: %011o   AC1: %011o   AC2: %011o   AC3: %011o",
 					cpuStats.ac[0],
 					cpuStats.ac[1],
 					cpuStats.ac[2],
@@ -125,7 +125,7 @@ func statusCollector(
 				lastDpfIOcnt = thisDpfIOcnt
 				lastDpfTime = time.Now()
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statDPFrow, dasherERASEEOL))
-				statusSendString(conn, fmt.Sprintf("DPF  (DPF0) - Attached: %c  IOPS: %.f CYL: %04d  HD: %02d  SECT: %03d",
+				statusSendString(conn, fmt.Sprintf("DPF  (DPF0) - Attached: %c  IOPS: %.f CYL: %04d.  HD: %02d.  SECT: %03d.",
 					memory.BoolToYN(dpfStats.ImageAttached),
 					dpfIops,
 					dpfStats.Cylinder,
@@ -138,7 +138,7 @@ func statusCollector(
 				lastDskpIOcnt = thisDskpIOcnt
 				lastDskpTime = time.Now()
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statDSKProw, dasherERASEEOL))
-				statusSendString(conn, fmt.Sprintf("DSKP (DPJ0) - Attached: %c  IOPS: %.f  SECNUM: %08d",
+				statusSendString(conn, fmt.Sprintf("DSKP (DPJ0) - Attached: %c  IOPS: %.f  SECNUM: %08d.",
 					memory.BoolToYN(dskpStats.ImageAttached),
 					dskpIops,
 					//dskpStats.cylinder,
