@@ -1,20 +1,21 @@
-
+# binaries
 mvemg
-
+mvemg.exe
 mvemg.test
-
 debug*
+
+disks/
+tapes/
 
 *.1
 *.9trk
 *.DPF
 *.DSKP
 *.log
+*log#
 *.out
 *.pprof
 *.svg
 *.tap
 
 # *.json
-mvemg.exe
-#mvem_debug.log#

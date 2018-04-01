@@ -12,15 +12,15 @@ SET LOGGING ON
 BREAK 0
 #
 # Attach a SimH-standard tape image
-# ATT MTB 31133_1.9trk
-# ATT MTB TAPE1.9trk
-ATT MTB FAKE3900.9trk
+# ATT MTB tapes/31133_1.9trk
+# ATT MTB tapes/TAPE1.9trk
+ATT MTB tapes/FAKE3900.9trk
 #
 # Attach a 6061-type disk image
-ATT DPF DISK1.DPF
+ATT DPF disks/DISK1.DPF
 #
 # and a 6239-type disk image
-ATT DSKP DISK1.DSKP
+ATT DSKP disks/DISK1.DSKP
 #
 # Boot device 22 (MTB) - this doesn't start the CPU yet
 # B 22

@@ -9,13 +9,13 @@
 SET LOGGING OFF
 #
 # Attach a SimH-standard tape image
-ATT MTB test.9trk
+ATT MTB tapes/test.9trk
 #
 # Attach a 6061-type disk image
-ATT DPF DISK1.DPF
+ATT DPF disks/DISK1.DPF
 #
 # and a 6239-type disk image
-ATT DSKP DISK1.DSKP
+ATT DSKP disks/DISK1.DSKP
 #
 # Boot device 22 (MTB) - this doesn't start the CPU yet
 B 22
