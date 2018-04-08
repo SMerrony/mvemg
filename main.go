@@ -52,7 +52,7 @@ const (
 	// ScpBuffSize is the char buffer length for SCP input lines
 	ScpBuffSize = 135
 
-	// memSizeWords defines the size of MV/Em's emulated RAM in 16-bit words
+	// MemSizeWords defines the size of MV/Em's emulated RAM in 16-bit words
 	MemSizeWords = 8388608
 	// MemSizeLCPID is the code returned by the LCPID to indicate the size of RAM
 	MemSizeLCPID = 0x3F

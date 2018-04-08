@@ -101,17 +101,17 @@ func cpuReset() {
 
 func cpuPrintableStatus() string {
 	cpu.cpuMu.RLock()
-	res := fmt.Sprintf("%c          AC0         AC1         AC2         AC3        PC CRY ATU%c", asciiNL, asciiNL)
+	res := fmt.Sprintf("%c          AC0         AC1         AC2         AC3        PC CRY ATU ION%c", asciiNL, asciiNL)
 	res += fmt.Sprintf("%#11o %#11o %#11o %#11o %#11o", cpu.ac[0], cpu.ac[1], cpu.ac[2], cpu.ac[3], cpu.pc)
-	res += fmt.Sprintf("  %d   %d", memory.BoolToInt(cpu.carry), memory.BoolToInt(cpu.atu))
+	res += fmt.Sprintf("  %d   %d   %d", memory.BoolToInt(cpu.carry), memory.BoolToInt(cpu.atu), memory.BoolToInt(cpu.ion))
 	cpu.cpuMu.RUnlock()
 	return res
 }
 
 func cpuCompactPrintableStatus() string {
 	cpu.cpuMu.RLock()
-	res := fmt.Sprintf("AC0: %#o AC1: %#o AC2: %#o AC3: %#o CRY: %d PC: %#o",
-		cpu.ac[0], cpu.ac[1], cpu.ac[2], cpu.ac[3], memory.BoolToInt(cpu.carry), cpu.pc)
+	res := fmt.Sprintf("AC0: %#o AC1: %#o AC2: %#o AC3: %#o CRY: %d ION: %d PC: %#o",
+		cpu.ac[0], cpu.ac[1], cpu.ac[2], cpu.ac[3], memory.BoolToInt(cpu.carry), memory.BoolToInt(cpu.ion), cpu.pc)
 	cpu.cpuMu.RUnlock()
 	return res
 }

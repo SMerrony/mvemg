@@ -9,7 +9,8 @@
 SET LOGGING OFF
 #
 # Attach a SimH-standard tape image
-ATT MTB tapes/test.9trk
+# ATT MTB tapes/test.9trk
+ATT MTB tapes/FAKE3900.9trk
 #
 # Attach a 6061-type disk image
 ATT DPF disks/DISK1.DPF
