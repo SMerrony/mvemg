@@ -46,17 +46,30 @@ func eagleIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	switch iPtr.ix {
 
 	case instrCIO:
-		// TODO handle I/O channel
 		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
 		word = memory.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs])
 		mapRegAddr = int(word & 0x0fff)
+		ioChan := memory.GetWbits(word, 1, 3)
+		if debugLogging {
+			logging.DebugPrint(logging.DebugLog, "... Channel: %d.\n", ioChan)
+		}
+		// N.B. Channel 7 => all channels
+		if ioChan != 0 && ioChan != 7 {
+			log.Fatalf("ERROR: Attempt to use CIO on unsupported IO Channel %d.", ioChan)
+		}
 		rw = memory.TestWbit(word, 0)
 		if rw { // write command
 			dataWord = memory.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acd])
 			memory.BmcdchWriteReg(mapRegAddr, dataWord)
+			if debugLogging {
+				logging.DebugPrint(logging.DebugLog, "... Write %#o to register %#o\n", dataWord, mapRegAddr)
+			}
 		} else { // read command
 			dataWord = memory.BmcdchReadReg(mapRegAddr)
 			cpuPtr.ac[twoAcc1Word.acd] = dg.DwordT(dataWord)
+			if debugLogging {
+				logging.DebugPrint(logging.DebugLog, "... Read %#o from register %#o\n", dataWord, mapRegAddr)
+			}
 		}
 
 	case instrCIOI:
