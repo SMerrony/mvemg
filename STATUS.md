@@ -1,6 +1,6 @@
 # MVEmg Status
 
-Updated 20th March 2018
+Updated 9th April 2018
 
 ## What Works?
 
@@ -11,5 +11,5 @@ Updated 20th March 2018
 
 ## What's Next?
 
-* File 3 - INSTL - seems to install Disk Bootstrap, hangs trying to install System Bootstrap (File 4)
+* File 3 - INSTL - seems to install Disk Bootstrap, ~~hangs~~ file not found trying to install System Bootstrap (File 4)
 * File 1 - FIXUP - hangs during startup
