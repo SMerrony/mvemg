@@ -60,11 +60,19 @@ func resolve16bitEclipseAddr(cpuPtr *CPUT, ind byte, mode int, disp int16) dg.Ph
 		intEff = int32(indAddr)
 	}
 
+	// Handle wrap-around
+	if intEff < 0 {
+		intEff += 65536
+	}
+	if intEff > 65535 {
+		intEff -= 65536
+	}
+
 	// mask off to Eclipse range
 	eff = dg.PhysAddrT(intEff) & 0x7fff
 
 	if debugLogging {
-		logging.DebugPrint(logging.DebugLog, "... resolve16bitEclipseAddr got: %d., returning %d.\n", disp, eff)
+		logging.DebugPrint(logging.DebugLog, "... resolve16bitEclipseAddr got: %#o, returning %#o\n", disp, eff)
 	}
 	return eff
 }
@@ -111,7 +119,7 @@ func resolve16bitEagleAddr(cpuPtr *CPUT, ind byte, mode int, disp int16) dg.Phys
 	eff = dg.PhysAddrT(intEff)
 
 	if debugLogging {
-		logging.DebugPrint(logging.DebugLog, "... resolve16bitEagleAddr got: %d., returning %d.\n", disp, eff)
+		logging.DebugPrint(logging.DebugLog, "... resolve16bitEagleAddr got: %#o, returning %#o\n", disp, eff)
 	}
 	return eff
 }
@@ -149,7 +157,7 @@ func resolve32bitEffAddr(cpuPtr *CPUT, ind byte, mode int, disp int32) dg.PhysAd
 	}
 
 	if debugLogging {
-		logging.DebugPrint(logging.DebugLog, "... resolve32bitEffAddr got: %d., returning %d.\n", disp, eff)
+		logging.DebugPrint(logging.DebugLog, "... resolve32bitEffAddr got: %#o, returning %#o\n", disp, eff)
 	}
 	return eff
 }

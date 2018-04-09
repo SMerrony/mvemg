@@ -685,7 +685,7 @@ func decode15bitDisp(d15 dg.WordT, mode int) int16 {
 		}
 	}
 	if debugLogging {
-		logging.DebugPrint(logging.DebugLog, "... decode15bitDisp got: %d, returning: %d\n", d15, disp16)
+		logging.DebugPrint(logging.DebugLog, "... decode15bitDisp got: %#o, returning: %#o\n", d15, disp16)
 	}
 	return disp16
 }
@@ -713,7 +713,7 @@ func decode16bitByteDisp(d16 dg.WordT) (int16, bool) {
 	loHi := memory.TestWbit(d16, 15)
 	disp16 = int16(d16 >> 1)
 	if debugLogging {
-		logging.DebugPrint(logging.DebugLog, "... decode16bitByteDisp got: %d, returning %d\n", d16, disp16)
+		logging.DebugPrint(logging.DebugLog, "... decode16bitByteDisp got: %#o, returning %#o\n", d16, disp16)
 	}
 	return disp16, loHi
 }
@@ -731,7 +731,7 @@ func decode31bitDisp(d1, d2 dg.WordT, mode int) int32 {
 		disp32++ // see p.1-12 of PoP
 	}
 	if debugLogging {
-		logging.DebugPrint(logging.DebugLog, "... decode31bitDisp got: %d %d, returning: %d\n", d1, d2, disp32)
+		logging.DebugPrint(logging.DebugLog, "... decode31bitDisp got: %#o %#o, returning: %#o\n", d1, d2, disp32)
 	}
 	return disp32
 }

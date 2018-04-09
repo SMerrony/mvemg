@@ -53,7 +53,7 @@ const (
 	ScpBuffSize = 135
 
 	// MemSizeWords defines the size of MV/Em's emulated RAM in 16-bit words
-	MemSizeWords = 8388608
+	MemSizeWords = 8388608 // = 040 000 000 (8) = 0x80 0000
 	// MemSizeLCPID is the code returned by the LCPID to indicate the size of RAM
 	MemSizeLCPID = 0x3F
 
@@ -386,7 +386,7 @@ func breakSet(cmd []string) {
 		devices.TtoPutNLString(" *** BREAK command requires a single physical <address> argument ***")
 		return
 	}
-	pAddr, err := strconv.ParseInt(cmd[1], inputRadix, 16)
+	pAddr, err := strconv.ParseInt(cmd[1], inputRadix, 32)
 	if err != nil {
 		devices.TtoPutNLString(" *** BREAK command could not parse <address> argument ***")
 		return
@@ -474,7 +474,7 @@ func disassemble(cmd []string) {
 		return
 	}
 	cmd1 := cmd[1]
-	intVal1, err := strconv.ParseInt(cmd[1], inputRadix, 16)
+	intVal1, err := strconv.ParseInt(cmd[1], inputRadix, 32)
 	if err != nil {
 		devices.TtoPutNLString(" *** Invalid address ***")
 		return
@@ -487,7 +487,7 @@ func disassemble(cmd []string) {
 		if len(cmd) == 2 {
 			highAddr = lowAddr
 		} else {
-			intVal2, err := strconv.ParseInt(cmd[2], inputRadix, 16)
+			intVal2, err := strconv.ParseInt(cmd[2], inputRadix, 32)
 			if err != nil {
 				devices.TtoPutNLString(" *** Invalid address ***")
 				return
