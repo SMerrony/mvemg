@@ -124,9 +124,9 @@ func eagleIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			mapRegAddr = int(cpuPtr.ac[0] & 0x7ff)
 			wAddr = dg.PhysAddrT(cpuPtr.ac[2])
 			if debugLogging {
-				logging.DebugPrint(logging.DebugLog, "WLMP called with AC1 = 0 - MapRegAddr was %d, 1st DWord was %d\n",
+				logging.DebugPrint(logging.DebugLog, "WLMP called with AC1 = 0 - MapRegAddr was %#o, 1st DWord was %#o\n",
 					mapRegAddr, memory.ReadDWord(wAddr))
-				logging.DebugPrint(logging.MapLog, "WLMP called with AC1 = 0 - MapRegAddr was %d, 1st DWord was %d\n",
+				logging.DebugPrint(logging.MapLog, "WLMP called with AC1 = 0 - MapRegAddr was %#o, 1st DWord was %#o\n",
 					mapRegAddr, memory.ReadDWord(wAddr))
 			}
 			// memory.BmcdchWriteSlot(mapRegAddr, memory.ReadDWord(wAddr))
@@ -136,12 +136,12 @@ func eagleIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			for {
 				dwd, ok = memory.ReadDwordTrap(dg.PhysAddrT(cpuPtr.ac[2]))
 				if !ok {
-					log.Fatalf("ERROR: Memory access failed at PC: %d\n", cpuPtr.pc)
+					log.Fatalf("ERROR: Memory access failed at PC: %#o\n", cpuPtr.pc)
 				}
 				memory.BmcdchWriteSlot(int(cpuPtr.ac[0]&0x07ff), dwd)
 				if debugLogging {
-					logging.DebugPrint(logging.DebugLog, "WLMP writing slot %d\n", 1+(cpuPtr.ac[0]&0x7ff))
-					logging.DebugPrint(logging.MapLog, "WLMP writing slot %d\n", 1+(cpuPtr.ac[0]&0x7ff))
+					logging.DebugPrint(logging.DebugLog, "WLMP writing slot %#o\n", 1+(cpuPtr.ac[0]&0x7ff))
+					logging.DebugPrint(logging.MapLog, "WLMP writing slot %#o\n", 1+(cpuPtr.ac[0]&0x7ff))
 				}
 				cpuPtr.ac[2] += 2
 				cpuPtr.ac[0]++
