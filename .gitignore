@@ -5,7 +5,8 @@ mvemg.test
 debug*
 
 disks/
-tapes/
+tapes/*
+!tapes/*.csv
 
 *.1
 *.9trk
