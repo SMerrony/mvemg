@@ -62,7 +62,8 @@ func eagleIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			dataWord = memory.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acd])
 			memory.BmcdchWriteReg(mapRegAddr, dataWord)
 			if debugLogging {
-				logging.DebugPrint(logging.DebugLog, "... Write %#o to register %#o\n", dataWord, mapRegAddr)
+				logging.DebugPrint(logging.MapLog, "CIO write to register %#o with %#o\n", mapRegAddr, dataWord)
+				logging.DebugPrint(logging.DebugLog, "... Written %#o to register %#o\n", dataWord, mapRegAddr)
 			}
 		} else { // read command
 			dataWord = memory.BmcdchReadReg(mapRegAddr)
@@ -85,6 +86,10 @@ func eagleIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		if rw { // write command
 			dataWord = memory.DwordGetLowerWord(cpuPtr.ac[twoAccImm2Word.acd])
 			memory.BmcdchWriteReg(mapRegAddr, dataWord)
+			if debugLogging {
+				logging.DebugPrint(logging.MapLog, "CIOI write to register %#o with %#o\n", mapRegAddr, dataWord)
+				logging.DebugPrint(logging.DebugLog, "... Written %#o to register %#o\n", dataWord, mapRegAddr)
+			}
 		} else { // read command
 			dataWord = memory.BmcdchReadReg(mapRegAddr)
 			cpuPtr.ac[twoAccImm2Word.acd] = dg.DwordT(dataWord)
@@ -140,8 +145,8 @@ func eagleIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 				}
 				memory.BmcdchWriteSlot(int(cpuPtr.ac[0]&0x07ff), dwd)
 				if debugLogging {
-					logging.DebugPrint(logging.DebugLog, "WLMP writing slot %#o\n", 1+(cpuPtr.ac[0]&0x7ff))
-					logging.DebugPrint(logging.MapLog, "WLMP writing slot %#o\n", 1+(cpuPtr.ac[0]&0x7ff))
+					logging.DebugPrint(logging.DebugLog, "WLMP written slot: %#o, data: %#o\n", cpuPtr.ac[0]&0x7ff, dwd)
+					logging.DebugPrint(logging.MapLog, "WLMP written slot: %#o, data: %#o\n", cpuPtr.ac[0]&0x7ff, dwd)
 				}
 				cpuPtr.ac[2] += 2
 				cpuPtr.ac[0]++

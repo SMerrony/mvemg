@@ -142,6 +142,9 @@ func main() {
 
 		memory.MemInit(MemSizeWords, debugLogging)
 		devices.BusInit()
+		devices.BusAddDevice(devBMC, "BMCDCH", 0, true, true, false)
+		devices.BusSetResetFunc(devBMC, memory.BmcdchReset) // created by memory, needs bus!
+
 		devices.BusAddDevice(devSCP, "SCP", pmbSCP, true, false, false)
 		instructionsInit()
 		decoderGenAllPossOpcodes()
