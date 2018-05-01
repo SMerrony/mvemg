@@ -101,7 +101,7 @@ func cpuReset() {
 
 func cpuPrintableStatus() string {
 	cpu.cpuMu.RLock()
-	res := fmt.Sprintf("%c          AC0         AC1         AC2         AC3        PC CRY ATU ION%c", asciiNL, asciiNL)
+	res := fmt.Sprintf("%c        AC0         AC1         AC2         AC3          PC CRY ATU ION%c", asciiNL, asciiNL)
 	res += fmt.Sprintf("%#11o %#11o %#11o %#11o %#11o", cpu.ac[0], cpu.ac[1], cpu.ac[2], cpu.ac[3], cpu.pc)
 	res += fmt.Sprintf("  %d   %d   %d", memory.BoolToInt(cpu.carry), memory.BoolToInt(cpu.atu), memory.BoolToInt(cpu.ion))
 	cpu.cpuMu.RUnlock()

@@ -33,6 +33,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/SMerrony/dgemug/devices"
 	"github.com/SMerrony/dgemug/dg"
@@ -766,6 +767,8 @@ func run() {
 	cpu.scpIO = false
 	cpu.cpuMu.Unlock()
 
+	startTime := time.Now()
+
 	// initial read lock taken before loop starts to eliminate one lock/unlock per cycle
 	cpu.cpuMu.RLock()
 
@@ -849,6 +852,9 @@ RunLoop: // performance-critical section starts here
 	cpu.scpIO = true
 	cpu.cpuMu.Unlock()
 
+	runTime := time.Since(startTime).Seconds()
+	avgMips := float64(cpu.instrCount/1000000) / runTime
+
 	// run halted due to either error or console escape
 	log.Println(errDetail)
 	devices.TtoPutNLString(errDetail)
@@ -861,7 +867,7 @@ RunLoop: // performance-critical section starts here
 	log.Println(errDetail)
 	devices.TtoPutNLString(errDetail)
 
-	errDetail = fmt.Sprintf(" *** MV/Em executed %d instructions ***", cpu.instrCount)
+	errDetail = fmt.Sprintf(" *** MV/Em executed %d instructions, average MIPS: %.1f ***", cpu.instrCount, avgMips)
 	log.Println(errDetail)
 	devices.TtoPutNLString(errDetail)
 
