@@ -111,7 +111,7 @@ func statusCollector(
 					cpuStats.ac[3]))
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statInternalsRow, dasherERASEEOL))
 				statusSendString(conn, fmt.Sprintf("        Version: %s (%s) built with %s",
-					Version, ReleaseType,
+					appVersion, appReleaseType,
 					cpuStats.goVersion))
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statInternalsRow2, dasherERASEEOL))
 				statusSendString(conn, fmt.Sprintf("        Host CPUs: %d  Goroutines: %d  Heap: %dMB",

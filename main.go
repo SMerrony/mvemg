@@ -46,10 +46,10 @@ import (
 const (
 	// Displayable name of emulator
 	appName = "MV/Em"
-	// Version number
-	Version = "v0.1.0"
-	// ReleaseType - Alpha, Beta, Production etc.
-	ReleaseType = "Prerelease"
+	// appVersion number
+	appVersion = "v0.1.0"
+	// appReleaseType - Alpha, Beta, Production etc.
+	appReleaseType = "Prerelease"
 	// ScpBuffSize is the char buffer length for SCP input lines
 	ScpBuffSize = 135
 
@@ -76,7 +76,7 @@ var (
 	mtbStatsChan  chan devices.MtStatT
 	ttiSCPchan    chan byte
 
-	inputRadix int = defaultRadix
+	inputRadix = defaultRadix
 )
 
 // flags
