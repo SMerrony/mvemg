@@ -81,9 +81,9 @@ var (
 
 // flags
 var (
-	consolePortFlag = flag.String("consoleport", "10000", "local port for the system console")
+	consoleAddrFlag = flag.String("consoleaddr", "localhost:10000", "network interface/port for console")
 	doFlag          = flag.String("do", "", "run script `file` at startup")
-	statusPortFlag  = flag.String("statusport", "9999", "local port for status monitoring")
+	statusAddrFlag  = flag.String("statusaddr", "localhost:9999", "network interface/port for status monitoring")
 	cpuprofile      = flag.String("cpuprofile", "", "write cpu profile `file`")
 	memprofile      = flag.String("memprofile", "", "write memory profile to `file`")
 )
@@ -100,9 +100,9 @@ func main() {
 		}
 	}
 
-	log.Printf("INFO: %s will not start until console connected to port %s.\n", appName, *consolePortFlag)
+	log.Printf("INFO: %s will not start until console connected to  %s.\n", appName, *consoleAddrFlag)
 
-	l, err := net.Listen("tcp", "localhost:"+*consolePortFlag)
+	l, err := net.Listen("tcp", *consoleAddrFlag)
 	if err != nil {
 		log.Println("ERROR: Could not listen on console port: ", err.Error())
 		os.Exit(1)
@@ -170,7 +170,7 @@ func main() {
 		devices.TtoPutStringNL(" *** Welcome to the MV/Emulator - Type HE for help ***")
 
 		// kick off the status monitor routine
-		go statusCollector(*statusPortFlag, cpuStatsChan, dpfStatsChan, dskpStatsChan, mtbStatsChan)
+		go statusCollector(*statusAddrFlag, cpuStatsChan, dpfStatsChan, dskpStatsChan, mtbStatsChan)
 
 		// run any command specified on the command line
 		if *doFlag != "" {

@@ -29,6 +29,13 @@ You should immediately be greeted with the welcome message...
 ### Internal Status Monitor ###
 You may optionally connect a DASHER emulator to port 9999 after the console has been connected.  This will display a frequently updated status view of the CPU and certain key devices while the CPU is running.
 
+### Other Command-line Options
+For a full list of options type 
+
+  `./mvemg -help`
+
+You may change the default console and status monitor addresses using the `-consoleaddr` and `-statusaddr` flags respectively.
+
 ## Emulator Commands ##
 MV/Em commands are all entered at the console terminal which behaves rather like the SCP on a real MV/10000 but 
 with additional commands to control the emulation; so there are two groups of commands: SCP-CLI commands and Emulator 

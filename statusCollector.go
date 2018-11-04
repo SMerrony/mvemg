@@ -54,7 +54,7 @@ const (
 // on the monitor page.  It is therefore the responsibility of the sender to update the
 // status as often as it sees fit.
 func statusCollector(
-	statusPort string,
+	statusAddr string,
 	cpuChan chan cpuStatT,
 	dpfChan chan devices.Disk6061StatT,
 	dskpChan chan devices.Disk6239StatT,
@@ -72,7 +72,7 @@ func statusCollector(
 		mtStats                                devices.MtStatT
 	)
 
-	l, err := net.Listen("tcp", "localhost:"+statusPort)
+	l, err := net.Listen("tcp", statusAddr)
 	if err != nil {
 		log.Println("ERROR: Could not listen on stats port: ", err.Error())
 		os.Exit(1)
