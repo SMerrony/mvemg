@@ -24,8 +24,71 @@ package main
 import (
 	"testing"
 
+	"github.com/SMerrony/dgemug/dg"
+
 	"github.com/SMerrony/dgemug/memory"
 )
+
+func TestWBTZ(t *testing.T) {
+	cpuPtr := cpuInit(nil)
+	var iPtr decodedInstrT
+	var twoAcc1Word twoAcc1WordT
+	iPtr.ix = instrWBTZ
+	memory.MemInit(10000, false)
+
+	// case where acs == acd
+	twoAcc1Word.acs = 0
+	twoAcc1Word.acd = 0
+	iPtr.variant = twoAcc1Word
+	var wordOffset dg.DwordT = 73 << 4
+	var bitNum dg.DwordT = 3
+	cpuPtr.ac[0] = wordOffset | bitNum
+	memory.WriteWord(73, 0xffff)
+	if !eagleMemRef(cpuPtr, &iPtr) {
+		t.Error("Failed to execute WBTZ")
+	}
+	w := memory.ReadWord(73)
+	if w != 0xefff {
+		t.Errorf("Expected %x, got %x", 0xefff, w)
+	}
+
+	// case where acs != acd
+	twoAcc1Word.acs = 1
+	twoAcc1Word.acd = 0
+	iPtr.variant = twoAcc1Word
+	wordOffset = 33 << 4
+	bitNum = 3
+	cpuPtr.ac[0] = wordOffset | bitNum
+	cpuPtr.ac[1] = 40
+	memory.WriteWord(73, 0xffff)
+	if !eagleMemRef(cpuPtr, &iPtr) {
+		t.Error("Failed to execute WBTZ")
+	}
+	w = memory.ReadWord(73)
+	if w != 0xefff {
+		t.Errorf("Expected %x, got %x", 0xefff, w)
+	}
+
+	// case where acs != acd and acs is indirect
+	twoAcc1Word.acs = 1
+	twoAcc1Word.acd = 0
+	iPtr.variant = twoAcc1Word
+	wordOffset = 33 << 4
+	bitNum = 3
+	cpuPtr.ac[0] = wordOffset | bitNum
+	// put an indirect address in ac1 pointing to 60
+	cpuPtr.ac[1] = 0x80000000 | 60
+	// put 40 in location 60
+	memory.WriteDWord(60, 40) // DWord!!!
+	memory.WriteWord(73, 0xffff)
+	if !eagleMemRef(cpuPtr, &iPtr) {
+		t.Error("Failed to execute WBTZ")
+	}
+	w = memory.ReadWord(73)
+	if w != 0xefff {
+		t.Errorf("Expected %x, got %x", 0xefff, w)
+	}
+}
 
 func TestXSTB(t *testing.T) {
 	cpuPtr := cpuInit(nil)
