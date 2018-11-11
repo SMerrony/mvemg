@@ -1,6 +1,6 @@
 # Building MV/Em
 
-This guide currently applies to the development version of MV/Em written in Go.
+This guide applies to the development version of MV/Em written in Go known as 'mvemg'.
 
 ## Prerequisites
 
@@ -11,11 +11,12 @@ This guide currently applies to the development version of MV/Em written in Go.
 
 * `go get github.com/SMerrony/aosvs-tools/simhTape`
 * `go get github.com/SMerrony/dgemug/...`
+* Install the `dginstr` command provided by dgemug as per the instructions in its README.md, ensure it is available on your PATH
 
 ### Obtain MV/Em Source Code
 
 * `cd ~/go/src`
-* `git clone http://stephenmerrony.co.uk:6000/steve/mvemg.git`
+* `git clone https://github.com/SMerrony/mvemg.git`
 
 ## Build
 

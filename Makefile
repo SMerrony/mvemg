@@ -26,7 +26,7 @@ GOGET = ${GOCMD}	get
 BINARY_NAME = mvemg
 
 INSTRGEN = dginstr
-INSTRSRC = ${HOME}/go/src/github.com/SMerrony/dgemug/cmd/dginstrs.csv
+INSTRSRC = ${HOME}/go/src/github.com/SMerrony/dgemug/cmd/dginstr/dginstrs.csv
 INSTRGO = instructionDefinitions.go
 
 # Values for program version etc.
