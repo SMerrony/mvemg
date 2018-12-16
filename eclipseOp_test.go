@@ -53,66 +53,6 @@ func TestADDI(t *testing.T) {
 	}
 }
 
-func TestDIV(t *testing.T) {
-	cpuPtr := cpuInit(nil)
-	var iPtr decodedInstrT
-	iPtr.ix = instrDIV
-	cpuPtr.ac[0] = 0 // hi dividend
-	cpuPtr.ac[1] = 6 // lo dividend
-	cpuPtr.ac[2] = 2 // divisor
-	if !eclipseOp(cpuPtr, &iPtr) {
-		t.Error("Failed to execute DIV")
-	}
-	if cpuPtr.ac[1] != 3 || cpuPtr.ac[0] != 0 || cpuPtr.ac[2] != 2 {
-		t.Errorf("Expected 3, 0, 2, got: %d, %d, %d",
-			cpuPtr.ac[1], cpuPtr.ac[0], cpuPtr.ac[2])
-	}
-
-	cpuPtr.ac[0] = 0 // hi dividend
-	cpuPtr.ac[1] = 6 // lo dividend
-	cpuPtr.ac[2] = 4 // divisor
-	if !eclipseOp(cpuPtr, &iPtr) {
-		t.Error("Failed to execute DIV")
-	}
-	if cpuPtr.ac[1] != 1 || cpuPtr.ac[0] != 2 || cpuPtr.ac[2] != 4 {
-		t.Errorf("Expected 1, 2, 4, got: %d, %d, %d",
-			cpuPtr.ac[1], cpuPtr.ac[0], cpuPtr.ac[2])
-	}
-
-	cpuPtr.ac[0] = 0      // hi dividend
-	cpuPtr.ac[1] = 0xf000 // lo dividend
-	cpuPtr.ac[2] = 2      // divisor
-	if !eclipseOp(cpuPtr, &iPtr) {
-		t.Error("Failed to execute DIV")
-	}
-	if cpuPtr.ac[1] != 0x7800 || cpuPtr.ac[0] != 0 || cpuPtr.ac[2] != 2 {
-		t.Errorf("Expected 30720, 0, 2, got: %d, %d, %d",
-			cpuPtr.ac[1], cpuPtr.ac[0], cpuPtr.ac[2])
-	}
-
-	cpuPtr.ac[0] = 1      // hi dividend
-	cpuPtr.ac[1] = 0xf000 // lo dividend
-	cpuPtr.ac[2] = 2      // divisor
-	if !eclipseOp(cpuPtr, &iPtr) {
-		t.Error("Failed to execute DIV")
-	}
-	if cpuPtr.ac[1] != 0xf800 || cpuPtr.ac[0] != 0 || cpuPtr.ac[2] != 2 {
-		t.Errorf("Expected 63488, 0, 2, got: %d, %d, %d",
-			cpuPtr.ac[1], cpuPtr.ac[0], cpuPtr.ac[2])
-	}
-
-	cpuPtr.ac[0] = 0xf000 // hi dividends- SHOULD CAUSE EXCEPTION
-	cpuPtr.ac[1] = 0xf000 // lo dividend
-	cpuPtr.ac[2] = 512    // divisor
-	if !eclipseOp(cpuPtr, &iPtr) {
-		t.Error("Failed to execute DIV")
-	}
-	if cpuPtr.ac[1] != 61440 || cpuPtr.ac[0] != 61440 || cpuPtr.ac[2] != 512 {
-		t.Errorf("Expected 61440, 61440, 512, got: %d, %d, %d",
-			cpuPtr.ac[1], cpuPtr.ac[0], cpuPtr.ac[2])
-	}
-}
-
 func TestHXL(t *testing.T) {
 	cpuPtr := cpuInit(nil)
 	var iPtr decodedInstrT

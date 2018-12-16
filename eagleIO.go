@@ -120,6 +120,16 @@ func eagleIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		cpuPtr.ac[1] = ucodeRev
 		cpuPtr.ac[2] = MemSizeLCPID // TODO Check this
 
+	case instrPRTSEL:
+		if debugLogging {
+			logging.DebugPrint(logging.DebugLog, "INFO: PRTSEL AC0: %d, PC: %d\n", cpuPtr.ac[0], cpuPtr.pc)
+		}
+		// only handle the query mode, setting is a no-op on this 'single-channel' machine
+		if memory.DwordGetLowerWord(cpuPtr.ac[0]) == 0xffff {
+			// return default I/O channel if -1 passed in
+			cpuPtr.ac[0] = 0
+		}
+
 	case instrREADS:
 		oneAcc1Word = iPtr.variant.(oneAcc1WordT)
 		return reads(cpuPtr, oneAcc1Word.acd)

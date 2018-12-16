@@ -153,16 +153,6 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		novaDataIo.ioDev = ioFlagsDev.ioDev
 		devices.BusDataOut(novaDataIo.ioDev, memory.DwordGetLowerWord(cpuPtr.ac[novaDataIo.acd]), 'N', novaDataIo.f) // DUMMY FLAG
 
-	case instrPRTSEL:
-		if debugLogging {
-			logging.DebugPrint(logging.DebugLog, "INFO: PRTSEL AC0: %d, PC: %d\n", cpuPtr.ac[0], cpuPtr.pc)
-		}
-		// only handle the query mode, setting is a no-op on this 'single-channel' machine
-		if memory.DwordGetLowerWord(cpuPtr.ac[0]) == 0xffff {
-			// return default I/O channel if -1 passed in
-			cpuPtr.ac[0] = 0
-		}
-
 	case instrSKP:
 		ioTestDev = iPtr.variant.(ioTestDevT)
 		if ioTestDev.ioDev == devCPU {

@@ -24,6 +24,7 @@ const (
 	NOVA_MEMREF = iota
 	NOVA_OP
 	NOVA_IO
+	NOVA_MATH
 	NOVA_PC
 	ECLIPSE_MEMREF
 	ECLIPSE_OP
@@ -114,7 +115,6 @@ const (
 	instrDIC
 	instrDIV
 	instrDIVS
-	instrDIVX
 	instrDLSH
 	instrDOA
 	instrDOB
@@ -350,7 +350,7 @@ func instructionsInit() {
 	instructionSet[instrANC] = instrChars{"ANC", 0x8188, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP}
 	instructionSet[instrAND] = instrChars{"AND", 0x8700, 0x8700, 1, NOVA_TWOACC_MULT_OP_FMT, NOVA_OP}
 	instructionSet[instrANDI] = instrChars{"ANDI", 0xc7f8, 0xe7ff, 2, ONEACC_IMMWD_2_WORD_FMT, ECLIPSE_OP}
-	instructionSet[instrBAM] = instrChars{"BAM", 0x97c8, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_OP}
+	instructionSet[instrBAM] = instrChars{"BAM", 0x97c8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_MEMREF}
 	instructionSet[instrBKPT] = instrChars{"BKPT", 0xc789, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_PC}
 	instructionSet[instrBLM] = instrChars{"BLM", 0xb7c8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_MEMREF}
 	instructionSet[instrBTO] = instrChars{"BTO", 0x8408, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP}
@@ -361,14 +361,14 @@ func instructionsInit() {
 	instructionSet[instrCMP] = instrChars{"CMP", 0xdfa8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_MEMREF}
 	instructionSet[instrCMT] = instrChars{"CMT", 0xefa8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_MEMREF}
 	instructionSet[instrCMV] = instrChars{"CMV", 0xd7a8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_MEMREF}
-	instructionSet[instrCOB] = instrChars{"COB", 0x8588, 0x87ff, 1, TWOACC_1_WORD_FMT, NOVA_OP}
+	instructionSet[instrCOB] = instrChars{"COB", 0x8588, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP}
 	instructionSet[instrCOM] = instrChars{"COM", 0x8000, 0x8700, 1, NOVA_TWOACC_MULT_OP_FMT, NOVA_OP}
 	instructionSet[instrCRYTC] = instrChars{"CRYTC", 0xa7e9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
 	instructionSet[instrCRYTO] = instrChars{"CRYTO", 0xa7c9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
 	instructionSet[instrCRYTZ] = instrChars{"CRYTZ", 0xa7d9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
-	instructionSet[instrCTR] = instrChars{"CTR", 0xe7a8, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_OP}
+	instructionSet[instrCTR] = instrChars{"CTR", 0xe7a8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_OP}
 	instructionSet[instrCVWN] = instrChars{"CVWN", 0xe669, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_OP}
-	instructionSet[instrDAD] = instrChars{"DAD", 0x8088, 0x87ff, 1, TWOACC_1_WORD_FMT, NOVA_OP}
+	instructionSet[instrDAD] = instrChars{"DAD", 0x8088, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP}
 	instructionSet[instrDEQUE] = instrChars{"DEQUE", 0xe7c9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
 	instructionSet[instrDERR] = instrChars{"DERR", 0x8f09, 0x8fcf, 1, DERR_FMT, EAGLE_OP}
 	instructionSet[instrDHXL] = instrChars{"DHXL", 0x8388, 0x87ff, 1, IMM_ONEACC_FMT, ECLIPSE_OP}
@@ -376,19 +376,18 @@ func instructionsInit() {
 	instructionSet[instrDIA] = instrChars{"DIA", 0x6100, 0xe700, 1, NOVA_DATA_IO_FMT, NOVA_IO}
 	instructionSet[instrDIB] = instrChars{"DIB", 0x6300, 0xe700, 1, NOVA_DATA_IO_FMT, NOVA_IO}
 	instructionSet[instrDIC] = instrChars{"DIC", 0x6500, 0xe700, 1, NOVA_DATA_IO_FMT, NOVA_IO}
-	instructionSet[instrDIV] = instrChars{"DIV", 0xd7c8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_OP}
-	instructionSet[instrDIVS] = instrChars{"DIVS", 0xdfc8, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_OP}
-	instructionSet[instrDIVX] = instrChars{"DIVX", 0xbfc8, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_OP}
+	instructionSet[instrDIV] = instrChars{"DIV", 0xd7c8, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_MATH}
+	instructionSet[instrDIVS] = instrChars{"DIVS", 0xdfc8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_OP}
 	instructionSet[instrDLSH] = instrChars{"DLSH", 0x82c8, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP}
 	instructionSet[instrDOA] = instrChars{"DOA", 0x6200, 0xe700, 1, NOVA_DATA_IO_FMT, NOVA_IO}
 	instructionSet[instrDOB] = instrChars{"DOB", 0x6400, 0xe700, 1, NOVA_DATA_IO_FMT, NOVA_IO}
 	instructionSet[instrDOC] = instrChars{"DOC", 0x6600, 0xe700, 1, NOVA_DATA_IO_FMT, NOVA_IO}
-	instructionSet[instrDSB] = instrChars{"DSB", 0x80c8, 0x87ff, 1, TWOACC_1_WORD_FMT, NOVA_OP}
+	instructionSet[instrDSB] = instrChars{"DSB", 0x80c8, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP}
 	instructionSet[instrDSPA] = instrChars{"DSPA", 0xc478, 0xe4ff, 2, ONEACC_MODE_IND_2_WORD_E_FMT, ECLIPSE_PC}
 	instructionSet[instrDSZ] = instrChars{"DSZ", 0x1800, 0xf800, 1, NOVA_NOACC_EFF_ADDR_FMT, NOVA_MEMREF}
 	instructionSet[instrDSZTS] = instrChars{"DSZTS", 0xc7d9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_PC}
 	instructionSet[instrECLID] = instrChars{"ECLID", 0xffc8, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_IO}
-	instructionSet[instrEDIT] = instrChars{"EDIT", 0xf7a8, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_OP}
+	instructionSet[instrEDIT] = instrChars{"EDIT", 0xf7a8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_OP}
 	instructionSet[instrEDSZ] = instrChars{"EDSZ", 0x9c38, 0xfcff, 2, NOACC_MODE_IND_2_WORD_E_FMT, ECLIPSE_PC}
 	instructionSet[instrEISZ] = instrChars{"EISZ", 0x9438, 0xfcff, 2, NOACC_MODE_IND_2_WORD_E_FMT, ECLIPSE_PC}
 	instructionSet[instrEJMP] = instrChars{"EJMP", 0x8438, 0xfcff, 2, NOACC_MODE_IND_2_WORD_E_FMT, ECLIPSE_PC}
@@ -400,12 +399,12 @@ func instructionsInit() {
 	instructionSet[instrENQT] = instrChars{"ENQT", 0xc7f9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
 	instructionSet[instrESTA] = instrChars{"ESTA", 0xc438, 0xe4ff, 2, ONEACC_MODE_IND_2_WORD_E_FMT, ECLIPSE_OP}
 	instructionSet[instrESTB] = instrChars{"ESTB", 0xa478, 0xe4ff, 2, ONEACC_MODE_2_WORD_E_FMT, ECLIPSE_OP}
-	instructionSet[instrFNS] = instrChars{"FNS", 0x86a8, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_PC}
+	instructionSet[instrFNS] = instrChars{"FNS", 0x86a8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_PC}
 	instructionSet[instrFPOP] = instrChars{"FPOP", 0xeee8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_STACK}
 	instructionSet[instrFPSH] = instrChars{"FPSH", 0xe6e8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_STACK}
-	instructionSet[instrFSA] = instrChars{"FSA", 0x8ea8, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_PC}
-	instructionSet[instrFXTD] = instrChars{"FXTD", 0xa779, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_OP}
-	instructionSet[instrFXTE] = instrChars{"FXTE", 0xc749, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_OP}
+	instructionSet[instrFSA] = instrChars{"FSA", 0x8ea8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_PC}
+	instructionSet[instrFXTD] = instrChars{"FXTD", 0xa779, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_OP}
+	instructionSet[instrFXTE] = instrChars{"FXTE", 0xc749, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_OP}
 	instructionSet[instrHALT] = instrChars{"HALT", 0x647f, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_IO}
 	instructionSet[instrHLV] = instrChars{"HLV", 0xc6f8, 0xe7ff, 1, ONEACC_1_WORD_FMT, ECLIPSE_OP}
 	instructionSet[instrHXL] = instrChars{"HXL", 0x8308, 0x87ff, 1, IMM_ONEACC_FMT, ECLIPSE_OP}
@@ -431,7 +430,7 @@ func instructionsInit() {
 	instructionSet[instrLDATS] = instrChars{"LDATS", 0x8649, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_OP}
 	instructionSet[instrLDB] = instrChars{"LDB", 0x85c8, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP}
 	instructionSet[instrLDSP] = instrChars{"LDSP", 0x8519, 0x87ff, 3, ONEACC_MODE_IND_3_WORD_FMT, EAGLE_PC}
-	instructionSet[instrLEF] = instrChars{"LEF", 0x6000, 0xe000, 1, NOVA_ONEACC_EFF_ADDR_FMT, NOVA_MEMREF}
+	instructionSet[instrLEF] = instrChars{"LEF", 0x6000, 0xe000, 1, NOVA_ONEACC_EFF_ADDR_FMT, ECLIPSE_MEMREF}
 	instructionSet[instrLFDMS] = instrChars{"LFDMS", 0x81e9, 0x87ff, 3, ONEACC_MODE_IND_3_WORD_FMT, EAGLE_FPU}
 	instructionSet[instrLJMP] = instrChars{"LJMP", 0xa6d9, 0xe7ff, 3, NOACC_MODE_IND_3_WORD_FMT, EAGLE_PC}
 	instructionSet[instrLJSR] = instrChars{"LJSR", 0xa6e9, 0xe7ff, 3, NOACC_MODE_IND_3_WORD_FMT, EAGLE_PC}
@@ -450,7 +449,7 @@ func instructionsInit() {
 	instructionSet[instrLNSBI] = instrChars{"LNSBI", 0x8658, 0x87ff, 3, NOACC_MODE_IMM_IND_3_WORD_FMT, EAGLE_MEMREF}
 	instructionSet[instrLNSTA] = instrChars{"LNSTA", 0x83d9, 0x87ff, 3, ONEACC_MODE_IND_3_WORD_FMT, EAGLE_MEMREF}
 	instructionSet[instrLNSUB] = instrChars{"LNSUB", 0x8258, 0x87ff, 3, ONEACC_MODE_IND_3_WORD_FMT, EAGLE_MEMREF}
-	instructionSet[instrLOB] = instrChars{"LOB", 0x8508, 0x87ff, 1, TWOACC_1_WORD_FMT, NOVA_OP}
+	instructionSet[instrLOB] = instrChars{"LOB", 0x8508, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP}
 	instructionSet[instrLPEF] = instrChars{"LPEF", 0xa6f9, 0xe7ff, 3, NOACC_MODE_IND_3_WORD_FMT, EAGLE_STACK}
 	instructionSet[instrLPEFB] = instrChars{"LPEFB", 0xc6f9, 0xe7ff, 3, NOACC_MODE_3_WORD_FMT, EAGLE_STACK}
 	instructionSet[instrLPHY] = instrChars{"LPHY", 0x87e9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
@@ -464,7 +463,7 @@ func instructionsInit() {
 	instructionSet[instrLWSTA] = instrChars{"LWSTA", 0x84f9, 0x87ff, 3, ONEACC_MODE_IND_3_WORD_FMT, EAGLE_MEMREF}
 	instructionSet[instrMOV] = instrChars{"MOV", 0x8200, 0x8700, 1, NOVA_TWOACC_MULT_OP_FMT, NOVA_OP}
 	instructionSet[instrMSP] = instrChars{"MSP", 0x86f8, 0xe7ff, 1, ONEACC_1_WORD_FMT, ECLIPSE_OP}
-	instructionSet[instrMUL] = instrChars{"MUL", 0xc7c8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_OP}
+	instructionSet[instrMUL] = instrChars{"MUL", 0xc7c8, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_MATH}
 	instructionSet[instrMULS] = instrChars{"MULS", 0xcfc8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_OP}
 	instructionSet[instrNADD] = instrChars{"NADD", 0x8049, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP}
 	instructionSet[instrNADDI] = instrChars{"NADDI", 0xc639, 0xe7ff, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_OP}
@@ -483,7 +482,7 @@ func instructionsInit() {
 	instructionSet[instrPOPB] = instrChars{"POPB", 0x8fc8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_STACK}
 	instructionSet[instrPOPJ] = instrChars{"POPJ", 0x9fc8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_STACK}
 	instructionSet[instrPRTRST] = instrChars{"PRTRST", 0x85d9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_IO}
-	instructionSet[instrPRTSEL] = instrChars{"PRTSEL", 0x783f, 0xffff, 1, UNIQUE_1_WORD_FMT, NOVA_IO}
+	instructionSet[instrPRTSEL] = instrChars{"PRTSEL", 0x783f, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_IO}
 	instructionSet[instrPSH] = instrChars{"PSH", 0x8648, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_STACK}
 	instructionSet[instrPSHJ] = instrChars{"PSHJ", 0x84b8, 0xfcff, 2, NOACC_MODE_IND_2_WORD_E_FMT, ECLIPSE_STACK}
 	instructionSet[instrPSHR] = instrChars{"PSHR", 0x87c8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_STACK}

@@ -24,6 +24,7 @@ package main
 import (
 	"fmt"
 	"log"
+
 	//"github.com/SMerrony/dgemug/dg"
 	"runtime"
 	"sync"
@@ -155,6 +156,8 @@ func cpuExecute(iPtr *decodedInstrT) (rc bool) {
 		rc = novaOp(&cpu, iPtr)
 	case NOVA_IO:
 		rc = novaIO(&cpu, iPtr)
+	case NOVA_MATH:
+		rc = novaMath(&cpu, iPtr)
 	case NOVA_PC:
 		rc = novaPC(&cpu, iPtr)
 	case ECLIPSE_MEMREF:

@@ -348,6 +348,9 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrXJMP:
 		noAccModeInd2Word = iPtr.variant.(noAccModeInd2WordT)
+		if noAccModeInd2Word.mode == pcMode {
+			noAccModeInd2Word.disp15++
+		}
 		cpuPtr.pc = resolve16bitEagleAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15)
 
 	case instrXJSR:
