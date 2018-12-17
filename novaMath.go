@@ -57,7 +57,7 @@ func novaMath(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		cpuPtr.ac[1] = dg.DwordT(memory.DwordGetLowerWord(dwd))
 
 	default:
-		log.Fatalf("ERROR: NOVA_MEMREF instruction <%s> not yet implemented\n", iPtr.mnemonic)
+		log.Fatalf("ERROR: NOVA_MATH instruction <%s> not yet implemented\n", iPtr.mnemonic)
 		return false
 	}
 
