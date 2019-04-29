@@ -1,6 +1,6 @@
 # MVEmg Status
 
-Updated 29th April 2018
+Updated 3rd October 2018
 
 ## What Works?
 
@@ -8,7 +8,7 @@ Updated 29th April 2018
 
 * File 0 - TBOOT - loads and runs OK
 * File 2 - DFMTR - seems to format and verify both type 6061 and type 6239 disks
-* File 3 - INSTL - appears to run to completion on 6061 DPF type disk (29th April 2018) and 6239 DPJ type disk (33d Oct 2018)
+* File 3 - INSTL - appears to run to completion on 6061 DPF type disk (29th April 2018) and 6239 DPJ type disk (3rd Oct 2018)
 
 ## What's Next?
 

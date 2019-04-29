@@ -11,7 +11,7 @@
             "host": "127.0.0.1",
             "program": "${fileDirname}",
             "env": {},
-            "args": ["-do=DEBUG_SCRIPT.TXT"],
+            "args": ["-do=scripts/DEBUG.DO"],
             "showLog": true
         }
     ]
