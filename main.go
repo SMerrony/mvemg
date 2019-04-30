@@ -249,7 +249,7 @@ func cleanExit() {
 		}
 		f.Close()
 	}
-	logging.DebugLogsDump()
+	logging.DebugLogsDump("logs/")
 	os.Exit(0)
 }
 
@@ -530,10 +530,14 @@ func disassemble(cmd []string) {
 		}
 		display += "\" "
 		if skipDecode == 0 {
-			instrTmp, _ := instructionDecode(word, addr, cpu.sbr[cpu.pc>>29].lef, cpu.sbr[cpu.pc>>29].io, cpu.atu, true)
-			display += instrTmp.disassembly
-			if instrTmp.instrLength > 1 {
-				skipDecode = instrTmp.instrLength - 1
+			instrTmp, ok := instructionDecode(word, addr, cpu.sbr[cpu.pc>>29].lef, cpu.sbr[cpu.pc>>29].io, cpu.atu, true)
+			if ok {
+				display += instrTmp.disassembly
+				if instrTmp.instrLength > 1 {
+					skipDecode = instrTmp.instrLength - 1
+				}
+			} else {
+				display += " *** Could not decode ***"
 			}
 		} else {
 			skipDecode--
