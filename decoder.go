@@ -196,6 +196,8 @@ const numPosOpcodes = 65536
 
 var opCodeLookup [numPosOpcodes]int
 
+// decoderGenAllPossOpcodes builds an array keyed by every possible DG Word
+// containing the corresponding Op Code.  LEF is not included or handled here.
 func decoderGenAllPossOpcodes() {
 	for opcode := 0; opcode < numPosOpcodes; opcode++ {
 		mnem, found := instructionMatch(dg.WordT(opcode), false, false, false)
@@ -208,15 +210,16 @@ func decoderGenAllPossOpcodes() {
 }
 
 // InstructionFind looks up an opcode in the opcode lookup table and returns
-// the corresponding mnemonic
-func instructionLookup(opcode dg.WordT, lefMode bool, ioOn bool, atuOn bool) (int, bool) {
-	if opCodeLookup[opcode] != -1 {
-		// if opCodeLookup[opcode] == instrLEF && lefMode {
-		// 	return "", false
-		// }
-		return opCodeLookup[opcode], true
+// the corresponding mnemonic.  This needs to be as quick as possible
+func instructionLookup(opcode dg.WordT, lefMode bool, ioOn bool, atuOn bool) int {
+	if lefMode {
+		// special case, if LEF mode is enabled then ALL I/O instructions
+		// must be interpreted as LEF
+		if memory.GetWbits(opcode, 0, 3) == 3 { // an I/O instruction
+			return instrLEF
+		}
 	}
-	return -1, false
+	return opCodeLookup[opcode]
 }
 
 // instructionMatch looks for a match for the opcode in the instruction set and returns
@@ -258,8 +261,8 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 
 	decodedInstr.disassembly = "; Unknown instruction"
 
-	ix, found := instructionLookup(opcode, lefMode, ioOn, autOn)
-	if !found {
+	ix := instructionLookup(opcode, lefMode, ioOn, autOn)
+	if ix == -1 {
 		logging.DebugPrint(logging.DebugLog, "INFO: instructionDecode failed to find anything with instructionLookup for location %d., containing 0x%X\n", pc, opcode)
 		return &decodedInstr, false
 	}
