@@ -84,3 +84,7 @@ func TestDecode15bitDisp(t *testing.T) {
 		t.Error("PC Mode: Expected -299, got ", res)
 	}
 }
+
+// func TestLookupLEF(t testing.T) {
+
+// }

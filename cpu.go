@@ -79,7 +79,7 @@ const cpuStatPeriodMs = 333 // 125 // i.e. we send stats every 1/8th of a second
 var cpu CPUT
 
 func cpuInit(statsChan chan cpuStatT) *CPUT {
-	devices.BusAddDevice(devCPU, "CPU", pmbCPU, true, false, false)
+	devices.BusAddDevice(deviceMap, devCPU, true)
 	if statsChan != nil {
 		go cpuStatSender(statsChan)
 	}
@@ -102,9 +102,13 @@ func cpuReset() {
 
 func cpuPrintableStatus() string {
 	cpu.cpuMu.RLock()
-	res := fmt.Sprintf("%c        AC0         AC1         AC2         AC3          PC CRY ATU ION%c", asciiNL, asciiNL)
+	res := fmt.Sprintf("%c        AC0         AC1         AC2         AC3          PC CRY LEF ATU ION%c", asciiNL, asciiNL)
 	res += fmt.Sprintf("%#11o %#11o %#11o %#11o %#11o", cpu.ac[0], cpu.ac[1], cpu.ac[2], cpu.ac[3], cpu.pc)
-	res += fmt.Sprintf("  %d   %d   %d", memory.BoolToInt(cpu.carry), memory.BoolToInt(cpu.atu), memory.BoolToInt(cpu.ion))
+	res += fmt.Sprintf("  %d   %d   %d   %d",
+		memory.BoolToInt(cpu.carry),
+		memory.BoolToInt(cpu.sbr[memory.GetSegment(cpu.pc)].lef),
+		memory.BoolToInt(cpu.atu),
+		memory.BoolToInt(cpu.ion))
 	cpu.cpuMu.RUnlock()
 	return res
 }
@@ -112,7 +116,8 @@ func cpuPrintableStatus() string {
 func cpuCompactPrintableStatus() string {
 	cpu.cpuMu.RLock()
 	res := fmt.Sprintf("AC0: %#o AC1: %#o AC2: %#o AC3: %#o CRY: %d ION: %d PC: %#o",
-		cpu.ac[0], cpu.ac[1], cpu.ac[2], cpu.ac[3], memory.BoolToInt(cpu.carry), memory.BoolToInt(cpu.ion), cpu.pc)
+		cpu.ac[0], cpu.ac[1], cpu.ac[2], cpu.ac[3],
+		memory.BoolToInt(cpu.carry), memory.BoolToInt(cpu.ion), cpu.pc)
 	cpu.cpuMu.RUnlock()
 	return res
 }

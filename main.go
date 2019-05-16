@@ -145,26 +145,26 @@ func main() {
 
 		memory.MemInit(MemSizeWords, debugLogging)
 		devices.BusInit()
-		devices.BusAddDevice(devBMC, "BMCDCH", 0, true, true, false)
+		devices.BusAddDevice(deviceMap, devBMC, true)
 		devices.BusSetResetFunc(devBMC, memory.BmcdchReset) // created by memory, needs bus!
 
-		devices.BusAddDevice(devSCP, "SCP", pmbSCP, true, false, false)
+		devices.BusAddDevice(deviceMap, devSCP, true)
 		instructionsInit()
 		decoderGenAllPossOpcodes()
 		cpuPtr = cpuInit(cpuStatsChan)
 
-		devices.BusAddDevice(devTTO, "TTO", pmbTTO, true, true, false)
+		devices.BusAddDevice(deviceMap, devTTO, true)
 		devices.TtoInit(devTTO, conn)
 
-		ttiInit(devTTI, conn, cpuPtr, ttiSCPchan)
+		ttiInit(conn, cpuPtr, ttiSCPchan)
 
-		devices.BusAddDevice(devMTB, "MTB", pmbMTB, false, true, true)
+		devices.BusAddDevice(deviceMap, devMTB, false)
 		devices.MtInit(devMTB, mtbStatsChan, logging.MtLog)
 
-		devices.BusAddDevice(devDPF, "DPF", pmbDPF, false, true, true)
+		devices.BusAddDevice(deviceMap, devDPF, false)
 		devices.Disk6061Init(devDPF, dpfStatsChan, logging.DpfLog, debugLogging)
 
-		devices.BusAddDevice(devDSKP, "DSKP", pmbDSKP, false, true, true)
+		devices.BusAddDevice(deviceMap, devDSKP, false)
 		dskp.Disk6239Init(devDSKP, dskpStatsChan, logging.DskpLog, debugLogging)
 
 		// say hello...

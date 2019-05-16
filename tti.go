@@ -38,13 +38,12 @@ var (
 	oneCharBufMu sync.Mutex
 )
 
-func ttiInit(dev int, c net.Conn, cpuPtr *CPUT, ch chan<- byte) {
-	devNum = dev
+func ttiInit(c net.Conn, cpuPtr *CPUT, ch chan<- byte) {
 	tti = c
-	devices.BusAddDevice(devNum, "TTI", pmbTTI, true, true, false)
-	devices.BusSetResetFunc(devNum, ttiReset)
-	devices.BusSetDataInFunc(devNum, ttiDataIn)
-	devices.BusSetDataOutFunc(devNum, ttiDataOut)
+	devices.BusAddDevice(deviceMap, devTTI, true)
+	devices.BusSetResetFunc(devTTI, ttiReset)
+	devices.BusSetDataInFunc(devTTI, ttiDataIn)
+	devices.BusSetDataOutFunc(devTTI, ttiDataOut)
 	go ttiListener(cpuPtr, ch)
 }
 

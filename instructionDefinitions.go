@@ -192,6 +192,7 @@ const (
 	instrLPHY
 	instrLPSHJ
 	instrLPSR
+	instrLRB
 	instrLSH
 	instrLWDO
 	instrLWDSZ
@@ -218,7 +219,6 @@ const (
 	instrPOP
 	instrPOPB
 	instrPOPJ
-	instrPRTRST
 	instrPRTSEL
 	instrPSH
 	instrPSHJ
@@ -455,6 +455,7 @@ func instructionsInit() {
 	instructionSet[instrLPHY] = instrChars{"LPHY", 0x87e9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
 	instructionSet[instrLPSHJ] = instrChars{"LPSHJ", 0xC6C9, 0xE7FF, 3, NOACC_MODE_IND_3_WORD_FMT, EAGLE_PC}
 	instructionSet[instrLPSR] = instrChars{"LPSR", 0xa799, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP}
+	instructionSet[instrLRB] = instrChars{"LRB", 0x8548, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP}
 	instructionSet[instrLSH] = instrChars{"LSH", 0x8288, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP}
 	instructionSet[instrLWDO] = instrChars{"LWDO", 0x8798, 0x87ff, 4, LNDO_4_WORD_FMT, EAGLE_PC}
 	instructionSet[instrLWDSZ] = instrChars{"LWDSZ", 0x86f9, 0xe7ff, 3, NOACC_MODE_IND_3_WORD_FMT, EAGLE_PC}
@@ -481,7 +482,6 @@ func instructionsInit() {
 	instructionSet[instrPOP] = instrChars{"POP", 0x8688, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_STACK}
 	instructionSet[instrPOPB] = instrChars{"POPB", 0x8fc8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_STACK}
 	instructionSet[instrPOPJ] = instrChars{"POPJ", 0x9fc8, 0xffff, 1, UNIQUE_1_WORD_FMT, ECLIPSE_STACK}
-	instructionSet[instrPRTRST] = instrChars{"PRTRST", 0x85d9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_IO}
 	instructionSet[instrPRTSEL] = instrChars{"PRTSEL", 0x783f, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_IO}
 	instructionSet[instrPSH] = instrChars{"PSH", 0x8648, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_STACK}
 	instructionSet[instrPSHJ] = instrChars{"PSHJ", 0x84b8, 0xfcff, 2, NOACC_MODE_IND_2_WORD_E_FMT, ECLIPSE_STACK}

@@ -216,6 +216,7 @@ func instructionLookup(opcode dg.WordT, lefMode bool, ioOn bool, atuOn bool) int
 		// special case, if LEF mode is enabled then ALL I/O instructions
 		// must be interpreted as LEF
 		if memory.GetWbits(opcode, 0, 3) == 3 { // an I/O instruction
+			logging.DebugPrint(logging.DebugLog, "DEBUG: instructionLookup() returning LEF\n")
 			return instrLEF
 		}
 	}
@@ -225,6 +226,7 @@ func instructionLookup(opcode dg.WordT, lefMode bool, ioOn bool, atuOn bool) int
 // instructionMatch looks for a match for the opcode in the instruction set and returns
 // the corresponding mnemonic.  It is used only by the decoderGenAllPossOpcodes() above when
 // MV/Em is initialising.
+// N.B. LEF is ignored here.
 func instructionMatch(opcode dg.WordT, lefMode bool, ioOn bool, atuOn bool) (int, bool) {
 	var tail dg.WordT
 	//for mnem, insChar := range instructionSet {
@@ -255,13 +257,13 @@ func instructionMatch(opcode dg.WordT, lefMode bool, ioOn bool, atuOn bool) (int
 }
 
 // instructionDecode decodes an opcode
-func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool, autOn bool, disassemble bool) (*decodedInstrT, bool) {
+func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool, atuOn bool, disassemble bool) (*decodedInstrT, bool) {
 	var decodedInstr decodedInstrT
 	var secondWord, thirdWord, fourthWord dg.WordT
 
 	decodedInstr.disassembly = "; Unknown instruction"
 
-	ix := instructionLookup(opcode, lefMode, ioOn, autOn)
+	ix := instructionLookup(opcode, lefMode, ioOn, atuOn)
 	if ix == -1 {
 		logging.DebugPrint(logging.DebugLog, "INFO: instructionDecode failed to find anything with instructionLookup for location %d., containing 0x%X\n", pc, opcode)
 		return &decodedInstr, false
