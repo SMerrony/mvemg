@@ -1,6 +1,6 @@
 // deviceInfo.go
 
-// Copyright (C) 2017  Steve Merrony
+// Copyright (C) 2017,2019  Steve Merrony
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -30,7 +30,7 @@ import (
 // Device IDs and PMBs
 // Standard device codes in octal, Priority Mask Bits in decimal
 // as per DG docs!
-// N.B. add to deviceToString() when new codes added here
+// N.B. add to deviceMap below when new codes added here
 const (
 	devMax = 0100
 
@@ -63,38 +63,39 @@ const (
 	ucodeRev   = 0x04
 )
 
+var deviceMap = devices.DeviceMapT{
+	devPWRFL: {DgMnemonic: "PWRFL", PMB: 0, IsIO: true, IsBootable: false},
+	devWCS:   {DgMnemonic: "WCS", PMB: 99, IsIO: true, IsBootable: false},
+	devMAP:   {DgMnemonic: "MAP", PMB: 99, IsIO: true, IsBootable: false},
+	devPSC:   {DgMnemonic: "PSC", PMB: 13, IsIO: false, IsBootable: false},
+	devBMC:   {DgMnemonic: "BMC", PMB: 99, IsIO: true, IsBootable: false},
+	devTTI:   {DgMnemonic: "TTI", PMB: 14, IsIO: true, IsBootable: false},
+	devTTO:   {DgMnemonic: "TTO", PMB: 15, IsIO: true, IsBootable: false},
+	devRTC:   {DgMnemonic: "RTC", PMB: 13, IsIO: true, IsBootable: false},
+	devLPT:   {DgMnemonic: "LPT", PMB: 12, IsIO: true, IsBootable: false},
+	devMTB:   {DgMnemonic: "MTB", PMB: 10, IsIO: true, IsBootable: true},
+	devMTJ:   {DgMnemonic: "MTJ", PMB: 10, IsIO: true, IsBootable: true},
+	devDSKP:  {DgMnemonic: "DSKP", PMB: 7, IsIO: true, IsBootable: true},
+	devDPF:   {DgMnemonic: "DPF", PMB: 7, IsIO: true, IsBootable: true},
+	devISC:   {DgMnemonic: "ISC", PMB: 4, IsIO: true, IsBootable: false},
+	devPIT:   {DgMnemonic: "PIT", PMB: 11, IsIO: false, IsBootable: false},
+	devSCP:   {DgMnemonic: "SCP", PMB: 15, IsIO: true, IsBootable: false},
+	devIAC1:  {DgMnemonic: "IAC1", PMB: 11, IsIO: true, IsBootable: false},
+	devMTB1:  {DgMnemonic: "MTB1", PMB: 10, IsIO: true, IsBootable: true},
+	devMTJ1:  {DgMnemonic: "MTJ1", PMB: 10, IsIO: true, IsBootable: true},
+	devDSKP1: {DgMnemonic: "DSKP1", PMB: 7, IsIO: true, IsBootable: true},
+	devIAC:   {DgMnemonic: "IAC", PMB: 11, IsIO: true, IsBootable: false},
+	devDPF1:  {DgMnemonic: "DPF1", PMB: 7, IsIO: true, IsBootable: true},
+	devFPU:   {DgMnemonic: "FPU", PMB: 99, IsIO: true, IsBootable: false},
+	devCPU:   {DgMnemonic: "CPU", PMB: 0, IsIO: true, IsBootable: false},
+}
+
 // deviceToString is used for disassembly
+// If the device code is known, then an assember mnemonic is returned, otherwise just the code
 func deviceToString(devNum int) string {
 	de, known := deviceMap[devNum]
 	if known {
 		return de.DgMnemonic
 	}
 	return fmt.Sprintf("%#o", devNum)
-}
-
-var deviceMap = devices.DeviceMapT{
-	devPWRFL: {"PWRFL", 0, true, false},
-	devWCS:   {"WCS", 99, true, false},
-	devMAP:   {"MAP", 99, true, false},
-	devPSC:   {"PSC", 13, false, false},
-	devBMC:   {"BMC", 99, true, false},
-	devTTI:   {"TTI", 14, true, false},
-	devTTO:   {"TTO", 15, true, false},
-	devRTC:   {"RTC", 13, true, false},
-	devLPT:   {"LPT", 12, true, false},
-	devMTB:   {"MTB", 10, true, true},
-	devMTJ:   {"MTJ", 10, true, true},
-	devDSKP:  {"DSKP", 7, true, true},
-	devDPF:   {"DPF", 7, true, true},
-	devISC:   {"ISC", 4, true, false},
-	devPIT:   {"PIT", 11, false, false},
-	devSCP:   {"SCP", 15, true, false},
-	devIAC1:  {"IAC1", 11, true, false},
-	devMTB1:  {"MTB1", 10, true, true},
-	devMTJ1:  {"MTJ1", 10, true, true},
-	devDSKP1: {"DSKP1", 7, true, true},
-	devIAC:   {"IAC", 11, true, false},
-	devDPF1:  {"DPF1", 7, true, true},
-	devFPU:   {"FPU", 99, true, false},
-	devCPU:   {"CPU", 0, true, false},
 }
