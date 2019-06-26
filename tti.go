@@ -33,7 +33,6 @@ import (
 
 var (
 	tti          net.Conn
-	devNum       int
 	oneCharBuf   byte
 	oneCharBufMu sync.Mutex
 )
@@ -76,10 +75,10 @@ func ttiListener(cpuPtr *CPUT, scpChan chan<- byte) {
 				oneCharBufMu.Lock()
 				oneCharBuf = b[c]
 				oneCharBufMu.Unlock()
-				devices.BusSetDone(devNum, true)
+				devices.BusSetDone(devTTI, true)
 				// send IRQ if not masked out
-				if !devices.BusIsDevMasked(devNum) {
-					devices.BusSendInterrupt(devNum)
+				if !devices.BusIsDevMasked(devTTI) {
+					devices.BusSendInterrupt(devTTI)
 				}
 			}
 		}
@@ -90,7 +89,7 @@ func ttiReset() {
 	log.Println("INFO: TTI Reset")
 }
 
-// This is called from Bus to implement DIA from the TTI devNumice
+// This is called from Bus to implement DIA from the TTI device
 func ttiDataIn(abc byte, flag byte) (datum dg.WordT) {
 	oneCharBufMu.Lock()
 	datum = dg.WordT(oneCharBuf) // grab the char from the buffer
@@ -99,11 +98,11 @@ func ttiDataIn(abc byte, flag byte) (datum dg.WordT) {
 	case 'A':
 		switch flag {
 		case 'S':
-			devices.BusSetBusy(devNum, true)
-			devices.BusSetDone(devNum, false)
+			devices.BusSetBusy(devTTI, true)
+			devices.BusSetDone(devTTI, false)
 		case 'C':
-			devices.BusSetBusy(devNum, false)
-			devices.BusSetDone(devNum, false)
+			devices.BusSetBusy(devTTI, false)
+			devices.BusSetDone(devTTI, false)
 		}
 	default:
 		log.Fatalf("ERROR: unexpected source buffer <%c> for DOx ac,TTO instruction\n", abc)
@@ -117,11 +116,11 @@ func ttiDataOut(datum dg.WordT, abc byte, flag byte) {
 	case 'N':
 		switch flag {
 		case 'S':
-			devices.BusSetBusy(devNum, true)
-			devices.BusSetDone(devNum, false)
+			devices.BusSetBusy(devTTI, true)
+			devices.BusSetDone(devTTI, false)
 		case 'C':
-			devices.BusSetBusy(devNum, false)
-			devices.BusSetDone(devNum, false)
+			devices.BusSetBusy(devTTI, false)
+			devices.BusSetDone(devTTI, false)
 		}
 	default:
 		log.Fatalf("ERROR: unexpected call to ttiDataOut with abc(n) flag set to %c\n", abc)
