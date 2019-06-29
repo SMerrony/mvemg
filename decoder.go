@@ -352,9 +352,9 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		}
 	case NOACC_MODE_IND_2_WORD_E_FMT, NOACC_MODE_IND_2_WORD_X_FMT:
 		var noAccModeInd2Word noAccModeInd2WordT
-		if debugLogging {
-			logging.DebugPrint(logging.DebugLog, "X_FMT: Mnemonic is <%s>\n", decodedInstr.mnemonic)
-		}
+		// if debugLogging {
+		// 	logging.DebugPrint(logging.DebugLog, "X_FMT: Mnemonic is <%s>\n", decodedInstr.mnemonic)
+		// }
 		switch ix {
 		case instrXJMP, instrXJSR, instrXNDSZ, instrXNISZ, instrXPEF, instrXWDSZ:
 			noAccModeInd2Word.mode = int(memory.GetWbits(opcode, 3, 2))
