@@ -46,7 +46,7 @@ test:
 clean: 
 	${GOCLEAN}
 	rm -f ${BINARY_NAME} debug debug.test
-	rm -f *.log *.pprof
+	rm -f logs/*.log *.pprof
 run:
 	${GOBUILD} -o ${BINARY_NAME} -v ./...
 	./${BINARY_NAME}

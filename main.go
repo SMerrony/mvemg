@@ -56,7 +56,7 @@ const (
 	// MemSizeWords defines the size of MV/Em's emulated RAM in 16-bit words
 	MemSizeWords = 8388608 // = 040 000 000 (8) = 0x80 0000
 	// MemSizeLCPID is the code returned by the LCPID to indicate the size of RAM
-	MemSizeLCPID = 0x3F
+	MemSizeLCPID = ((MemSizeWords * 2) / (256 * 1024)) - 1 // 0x3F
 
 	cmdUnknown = " *** UNKNOWN SCP-CLI COMMAND ***"
 	cmdNYI     = "Command Not Yet Implemented"
