@@ -1,6 +1,6 @@
 // mvemg project main.go
 
-// Copyright (C) 2017  Steve Merrony
+// Copyright (C) 2017,2018,2019  Steve Merrony
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -295,6 +295,8 @@ func doCommand(cmd string) {
 		doScript(words)
 	case "exit", "EXIT", "QUIT":
 		cleanExit()
+	case "LOAD":
+		devices.TtoPutNLString(memory.LoadFromASCIIFile(words[1]))
 	case "NOBREAK":
 		breakClear(words)
 	case "SET":
@@ -574,6 +576,10 @@ func doScript(cmd []string) {
 
 // examine mimics the E command from later SCP-CLIs
 func examine(cmd []string) {
+	if len(cmd) < 2 {
+		devices.TtoPutNLString(" *** Examine - missing parameter ***")
+		return
+	}
 	switch cmd[1] {
 	case "A":
 		if len(cmd) < 3 {
@@ -685,7 +691,7 @@ func set(cmd []string) {
 // N.B. Ensure this fits on a 24x80 screen
 func showHelp() {
 	devices.TtoPutString("\014                          \024SCP-CLI Commands\025" +
-		"                          \034MV/Emulator\035\012" +
+		"                               \034MV/EMG\035\012" +
 		" .                      - Display state of CPU\012" +
 		" B #                    - Boot from device #\012" +
 		" CO                     - COntinue CPU Processing\012" +
@@ -703,6 +709,7 @@ func showHelp() {
 		" DIS <from> <to>|+<#>   - DISassemble physical memory range or # from PC\012" +
 		" DO <file>              - DO (i.e. run) emulator commands from script <file>\012" +
 		" EXIT                   - EXIT the emulator\012" +
+		" LOAD <file>            - Load ASCII octal file directly into memory\012" +
 		" SET LOGGING ON|OFF     - Turn on or off debug logging (logs dumped end of run)\012" +
 		" SHOW BREAK/DEV/LOGGING - SHOW list of BREAKpoints/DEVices configured\012")
 }
@@ -764,6 +771,7 @@ func start(cmd []string) {
 func run() {
 	var (
 		thisOp      dg.WordT
+		prevPC      dg.PhysAddrT
 		iPtr        *decodedInstrT
 		ok          bool
 		indIrq      byte
@@ -837,7 +845,7 @@ RunLoop: // performance-critical section starts here
 				if bAddr == cpu.pc {
 					cpu.scpIO = true
 					cpu.cpuMu.Unlock()
-					msg := fmt.Sprintf(" *** BREAKpoint hit at physical address "+fmtRadixVerb()+" ***", cpu.pc)
+					msg := fmt.Sprintf(" *** BREAKpoint hit at physical address "+fmtRadixVerb()+" (previous PC "+fmtRadixVerb()+") ***", cpu.pc, prevPC)
 					devices.TtoPutNLString(msg)
 					log.Println(msg)
 
