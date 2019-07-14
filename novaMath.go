@@ -40,7 +40,7 @@ func novaMath(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		lw := memory.DwordGetLowerWord(cpuPtr.ac[1])
 		dwd = memory.DwordFromTwoWords(uw, lw)
 		quot := memory.DwordGetLowerWord(cpuPtr.ac[2])
-		if uw > quot || quot == 0 {
+		if uw >= quot || quot == 0 {
 			cpuPtr.carry = true
 		} else {
 			cpuPtr.carry = false
