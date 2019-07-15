@@ -96,9 +96,9 @@ func eagleIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		}
 
 	case instrECLID: // seems to be the same as LCPID
-		dwd = cpuModelNo << 16
-		dwd |= ucodeRev << 8
-		dwd |= MemSizeLCPID
+		dwd = (cpuModelNo & 0xffff) << 16
+		dwd |= (ucodeRev & 0x0f) << 8
+		dwd |= MemSizeLCPID & 0x0f
 		cpuPtr.ac[0] = dwd
 
 	case instrINTDS:
@@ -108,17 +108,17 @@ func eagleIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		return inten(cpuPtr)
 
 	case instrLCPID: // seems to be the same as ECLID
-		dwd = cpuModelNo << 16
-		dwd |= ucodeRev << 8
-		dwd |= MemSizeLCPID
+		dwd = (cpuModelNo & 0xffff) << 16
+		dwd |= (ucodeRev & 0x0f) << 8
+		dwd |= MemSizeLCPID & 0x0f
 		cpuPtr.ac[0] = dwd
 
 		// MSKO is handled via DOB n,CPU
 
 	case instrNCLID:
-		cpuPtr.ac[0] = cpuModelNo
-		cpuPtr.ac[1] = ucodeRev
-		cpuPtr.ac[2] = MemSizeLCPID // TODO Check this
+		cpuPtr.ac[0] = cpuModelNo & 0xffff
+		cpuPtr.ac[1] = ucodeRev & 0xffff
+		cpuPtr.ac[2] = MemSizeLCPID & 0x00ff // TODO Check this
 
 	case instrPRTSEL:
 		if debugLogging {

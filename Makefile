@@ -41,6 +41,8 @@ generate:
 	${INSTRGEN} -action=makego -cputype=mv -csv=${INSTRSRC} -go=${INSTRGO}
 build: 
 	${GOBUILD} ${LDFLAGS} -o ${BINARY_NAME} -v
+buildrace: 
+	${GOBUILD} -race ${LDFLAGS} -o ${BINARY_NAME} -v	
 test: 
 	${GOTEST} ./...
 clean: 

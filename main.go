@@ -866,6 +866,8 @@ RunLoop: // performance-critical section starts here
 		// instruction counting
 		instrCounts[iPtr.ix]++
 
+		prevPC = cpu.pc
+
 		// N.B. RLock still in effect as we loop around
 	}
 

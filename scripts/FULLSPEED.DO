@@ -10,7 +10,8 @@ SET LOGGING OFF
 #
 # Attach a SimH-standard tape image
 # ATT MTB tapes/test.9trk
-ATT MTB tapes/FAKE3900.9trk
+# ATT MTB tapes/FAKE3900.9trk
+ATT MTB tapes/STARTER.9trk
 #
 # Attach a 6061-type disk image
 ATT DPF disks/DISK1.DPF
@@ -19,6 +20,6 @@ ATT DPF disks/DISK1.DPF
 ATT DSKP disks/DISK1.DSKP
 #
 # Boot device 22 (MTB) - this doesn't start the CPU yet
-B 22
+# B 22
 # and COntinue to commence the run...
-CO
+# CO
