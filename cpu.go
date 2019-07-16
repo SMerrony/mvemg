@@ -1,6 +1,6 @@
 // cpu.go
 
-// Copyright (C) 2017  Steve Merrony
+// Copyright (C) 2017,2019  Steve Merrony
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -36,6 +36,13 @@ import (
 	"github.com/SMerrony/dgemug/dg"
 )
 
+const (
+	maxPosS16 = 1<<15 - 1
+	minNegS16 = -(maxPosS16 + 1)
+	maxPosS32 = 1<<31 - 1
+	minNegS32 = -(maxPosS32 + 1)
+)
+
 // TODO sbrBits is currently an abstraction of the Segment Base Registers - may need to represent physically
 // via a 32-bit DWord in the future
 type sbrBits struct {
@@ -50,7 +57,7 @@ type CPUT struct {
 	pc dg.PhysAddrT // 32-bit PC
 	ac [4]dg.DwordT // 4 x 32-bit Accumulators
 	// mask                    dg.WordT     // interrupt mask - moved to bus
-	psr                     dg.WordT     // Processor Status Register - see PoP A-4
+	psr                     dg.WordT     // Processor Status Register - see PoP 2-11 & A-4
 	carry, atu, ion, pfflag bool         // flag bits
 	sbr                     [8]sbrBits   // SBRs (see above)
 	fpac                    [4]dg.QwordT // 4 x 64-bit Floating Point Accumulators
@@ -97,6 +104,7 @@ func cpuReset() {
 	cpu.atu = false
 	cpu.ion = false
 	cpu.pfflag = false
+	cpuSetOVR(false)
 	cpu.instrCount = 0
 }
 
@@ -136,7 +144,7 @@ func cpuSetOVR(newOVR bool) {
 	}
 }
 
-// GetOVK is a getter for the OVK flag embedded in the PSR
+// GetOVK is a getter for the OVK mask embedded in the PSR
 func cpuGetOVK() bool {
 	return memory.TestWbit(cpu.psr, 0)
 }

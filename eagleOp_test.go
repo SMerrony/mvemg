@@ -33,16 +33,20 @@ func TestNADD(t *testing.T) {
 	// test neg + neg
 	cpuPtr.ac[0] = 0xffff // -1
 	cpuPtr.ac[1] = 0xffff // -1
+	cpuPtr.carry = true
 	iPtr.variant = twoAcc1Word
 	if !eagleOp(cpuPtr, &iPtr) {
 		t.Error("Failed to execute NADD")
 	}
-	if cpuPtr.ac[1] != 0xfffffffe {
+	if cpuPtr.ac[1] != 0xfffffffe { // sign-extended
 		t.Errorf("Expected %x, got %x", 0xfffffffe, cpuPtr.ac[1])
+	}
+	if cpuPtr.carry {
+		t.Error("Unexpected CARRY")
 	}
 
 	// test neg + pos
-	cpuPtr.ac[0] = 0x0001 // -1
+	cpuPtr.ac[0] = 0x0001 //
 	cpuPtr.ac[1] = 0xffff // -1
 
 	if !eagleOp(cpuPtr, &iPtr) {
@@ -50,6 +54,19 @@ func TestNADD(t *testing.T) {
 	}
 	if cpuPtr.ac[1] != 0 {
 		t.Errorf("Expected %x, got %x", 0, cpuPtr.ac[1])
+	}
+	if cpuPtr.carry {
+		t.Error("Unexpected CARRY")
+	}
+
+	// test CARRY
+	cpuPtr.ac[0] = maxPosS16
+	cpuPtr.ac[1] = 10
+	if !eagleOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute NADD")
+	}
+	if !cpuPtr.carry {
+		t.Error("Should have set CARRY")
 	}
 }
 
@@ -84,6 +101,60 @@ func TestNSUB(t *testing.T) {
 	}
 }
 
+func TestWADC(t *testing.T) {
+	cpuPtr := cpuInit(nil)
+	var iPtr decodedInstrT
+	var twoAcc1Word twoAcc1WordT
+	iPtr.ix = instrWADC
+	twoAcc1Word.acs = 1
+	twoAcc1Word.acd = 1
+	iPtr.variant = twoAcc1Word
+	// test neg - neg
+	cpuPtr.ac[0] = 0
+	cpuPtr.ac[1] = 1
+	if !eagleOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute WADC")
+	}
+	if int32(cpuPtr.ac[1]) != -1 {
+		t.Errorf("Expected %x, got %x", -1, cpuPtr.ac[1])
+	}
+}
+
+func TestWADI(t *testing.T) {
+	cpuPtr := cpuInit(nil)
+	var iPtr decodedInstrT
+	var immOneAcc immOneAccT
+	iPtr.ix = instrWADI
+	immOneAcc.acd = 1
+	immOneAcc.immU16 = 4
+	iPtr.variant = immOneAcc
+
+	cpuPtr.ac[0] = 0
+	cpuPtr.ac[1] = 76
+	if !eagleOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute WADI")
+	}
+	if int32(cpuPtr.ac[1]) != 80 {
+		t.Errorf("Expected %d, got %d", 80, cpuPtr.ac[1])
+	}
+	if cpuPtr.carry {
+		t.Error("Unexpected CARRY")
+	}
+
+	cpuPtr.ac[0] = 0
+	cpuPtr.ac[1] = maxPosS32 - 2
+	immOneAcc.immU16 = 4
+	if !eagleOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute WADI")
+	}
+	// if int32(cpuPtr.ac[1]) != 80 {
+	// 	t.Errorf("Expected %d, got %d", 80, cpuPtr.ac[1])
+	// }
+	if !cpuPtr.carry {
+		t.Error("Expected CARRY")
+	}
+}
+
 func TestWANDI(t *testing.T) {
 	cpuPtr := cpuInit(nil)
 	var iPtr decodedInstrT
@@ -111,6 +182,60 @@ func TestWANDI(t *testing.T) {
 	}
 }
 
+func TestWINC(t *testing.T) {
+	cpuPtr := cpuInit(nil)
+	var iPtr decodedInstrT
+	var twoAcc1Word twoAcc1WordT
+	iPtr.ix = instrWINC
+	twoAcc1Word.acs = 1
+	twoAcc1Word.acd = 1
+	iPtr.variant = twoAcc1Word
+	// test neg - neg
+	cpuPtr.ac[0] = 0
+	cpuPtr.ac[1] = 1
+	if !eagleOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute WADC")
+	}
+	if int32(cpuPtr.ac[1]) != 2 {
+		t.Errorf("Expected %x, got %x", 2, cpuPtr.ac[1])
+	}
+	if cpuPtr.carry {
+		t.Error("Unexpected CARRY")
+	}
+
+	cpuPtr.ac[1] = 0xffffffff
+	if !eagleOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute WADC")
+	}
+	if int32(cpuPtr.ac[1]) != 0 {
+		t.Errorf("Expected %x, got %x", 0, cpuPtr.ac[1])
+	}
+	if !cpuPtr.carry {
+		t.Error("Expected CARRY")
+	}
+}
+
+func TestWNADI(t *testing.T) {
+	cpuPtr := cpuInit(nil)
+	var iPtr decodedInstrT
+	var oneAccImm2Word oneAccImm2WordT
+	iPtr.ix = instrWNADI
+	oneAccImm2Word.acd = 0
+	oneAccImm2Word.immS16 = -32
+	iPtr.variant = oneAccImm2Word
+	cpuPtr.ac[0] = 'x'
+
+	if !eagleOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute WNADI")
+	}
+	if cpuPtr.ac[0] != 'X' {
+		t.Errorf("Expected %d, got %d", 'X', cpuPtr.ac[0])
+	}
+	if cpuPtr.carry {
+		t.Error("Unexpected CARRY")
+	}
+}
+
 func TestWNEG(t *testing.T) {
 	cpuPtr := cpuInit(nil)
 	var iPtr decodedInstrT
@@ -127,7 +252,9 @@ func TestWNEG(t *testing.T) {
 	if cpuPtr.ac[1] != 0xffffffdb {
 		t.Errorf("Expected 0xffffffdb, got %x", cpuPtr.ac[1])
 	}
-
+	if cpuPtr.carry {
+		t.Error("Unexpected CARRY")
+	}
 	// convert back to test conversion from negative
 	cpuPtr.ac[0] = cpuPtr.ac[1]
 	if !eagleOp(cpuPtr, &iPtr) {
@@ -136,4 +263,42 @@ func TestWNEG(t *testing.T) {
 	if cpuPtr.ac[1] != 37 {
 		t.Errorf("Expected 37, got %d", cpuPtr.ac[1])
 	}
+	if cpuPtr.carry {
+		t.Error("Unexpected CARRY")
+	}
+}
+
+func TestWSBI(t *testing.T) {
+	cpuPtr := cpuInit(nil)
+	var iPtr decodedInstrT
+	var immOneAcc immOneAccT
+	iPtr.ix = instrWSBI
+	immOneAcc.acd = 1
+	immOneAcc.immU16 = 4
+	iPtr.variant = immOneAcc
+
+	cpuPtr.ac[0] = 0
+	cpuPtr.ac[1] = 76
+	if !eagleOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute WSBI")
+	}
+	if int32(cpuPtr.ac[1]) != 72 {
+		t.Errorf("Expected %d, got %d", 80, cpuPtr.ac[1])
+	}
+	if cpuPtr.carry {
+		t.Error("Unexpected CARRY")
+	}
+
+	// cpuPtr.ac[0] = 0
+	// cpuPtr.ac[1] = uint32(minNegS32) + 2
+	// immOneAcc.immU16 = 4
+	// if !eagleOp(cpuPtr, &iPtr) {
+	// 	t.Error("Failed to execute WSBI")
+	// }
+	// // if int32(cpuPtr.ac[1]) != 80 {
+	// // 	t.Errorf("Expected %d, got %d", 80, cpuPtr.ac[1])
+	// // }
+	// if !cpuPtr.carry {
+	// 	t.Error("Expected CARRY")
+	// }
 }
