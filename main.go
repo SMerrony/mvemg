@@ -783,11 +783,10 @@ func run() {
 	// for it to follow the debugLogging setting...
 	disassembly := debugLogging
 
-	cpu.instrCount = 0 // reset instruction counter each run for MIPS calc.
-
-	// direct console input to the VM
 	cpu.cpuMu.Lock()
-	cpu.scpIO = false
+
+	cpu.instrCount = 0 // reset instruction counter each run for MIPS calc.
+	cpu.scpIO = false  // direct console input to the VM
 	cpu.cpuMu.Unlock()
 
 	startTime := time.Now()
