@@ -94,6 +94,7 @@ func cpuInit(statsChan chan cpuStatT) *CPUT {
 }
 
 func cpuReset() {
+	cpu.cpuMu.Lock()
 	cpu.pc = 0
 	for a := 0; a < 4; a++ {
 		cpu.ac[a] = 0
@@ -106,6 +107,7 @@ func cpuReset() {
 	cpu.pfflag = false
 	cpuSetOVR(false)
 	cpu.instrCount = 0
+	cpu.cpuMu.Unlock()
 }
 
 func cpuPrintableStatus() string {
