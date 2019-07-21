@@ -76,9 +76,9 @@ func resolve16bitEclipseAddr(cpuPtr *CPUT, ind byte, mode int, disp int16) dg.Ph
 	// mask off to Eclipse range
 	eff = dg.PhysAddrT(intEff) & 0x7fff
 
-	if debugLogging {
-		logging.DebugPrint(logging.DebugLog, "... resolve16bitEclipseAddr got: %#o, returning %#o\n", disp, eff)
-	}
+	// if debugLogging {
+	// 	logging.DebugPrint(logging.DebugLog, "... resolve16bitEclipseAddr got: %#o, returning %#o\n", disp, eff)
+	// }
 	return eff
 }
 

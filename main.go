@@ -76,7 +76,9 @@ var (
 	mtbStatsChan  chan devices.MtStatT
 	ttiSCPchan    chan byte
 
+	dpf  devices.Disk6061T
 	dskp devices.Disk6239DataT
+	mtb  devices.MagTape6026T
 
 	inputRadix = defaultRadix
 )
@@ -159,10 +161,10 @@ func main() {
 		ttiInit(conn, cpuPtr, ttiSCPchan)
 
 		devices.BusAddDevice(deviceMap, devMTB, false)
-		devices.MtInit(devMTB, mtbStatsChan, logging.MtLog)
+		mtb.MtInit(devMTB, mtbStatsChan, logging.MtLog, debugLogging)
 
 		devices.BusAddDevice(deviceMap, devDPF, false)
-		devices.Disk6061Init(devDPF, dpfStatsChan, logging.DpfLog, debugLogging)
+		dpf.Disk6061Init(devDPF, dpfStatsChan, logging.DpfLog, debugLogging)
 
 		devices.BusAddDevice(deviceMap, devDSKP, false)
 		dskp.Disk6239Init(devDSKP, dskpStatsChan, logging.DskpLog, debugLogging)
@@ -284,7 +286,7 @@ func doCommand(cmd string) {
 	case "BREAK":
 		breakSet(words)
 	case "CHECK":
-		devices.TtoPutStringNL(devices.MtScanImage(0))
+		devices.TtoPutStringNL(mtb.MtScanImage(0))
 	case "CREATE":
 		createBlank(words)
 	case "DET":
@@ -321,14 +323,14 @@ func attach(cmd []string) {
 	}
 	switch cmd[1] {
 	case "MTB":
-		if devices.MtAttach(0, cmd[2]) {
+		if mtb.MtAttach(0, cmd[2]) {
 			devices.TtoPutNLString(" *** Tape Image Attached ***")
 		} else {
 			devices.TtoPutNLString(" *** Could not ATTach Tape Image ***")
 		}
 
 	case "DPF":
-		if devices.Disk6061Attach(0, cmd[2]) {
+		if dpf.Disk6061Attach(0, cmd[2]) {
 			devices.TtoPutNLString(" *** DPF Disk Image Attached ***")
 		} else {
 			devices.TtoPutNLString(" *** Could not ATTach DPF Disk Image ***")
@@ -371,14 +373,14 @@ func boot(cmd []string) {
 	memory.MemInit(MemSizeWords, debugLogging)
 	switch devNum {
 	case devMTB:
-		devices.MtLoadTBoot()
+		mtb.MtLoadTBoot()
 		cpu.cpuMu.Lock()
 		cpu.sr = 0x8000 | devMTB
 		cpu.ac[0] = devMTB
 		cpu.pc = 10
 		cpu.cpuMu.Unlock()
 	case devDPF:
-		devices.Disk6061LoadDKBT()
+		dpf.Disk6061LoadDKBT()
 		cpu.cpuMu.Lock()
 		cpu.sr = 0x8000 | devDPF
 		cpu.ac[0] = devDPF
@@ -439,7 +441,7 @@ func createBlank(cmd []string) {
 	switch cmd[1] {
 	case "DPF":
 		devices.TtoPutNLString("Attempting to CREATE new empty DPF-type disk image, please wait...")
-		if devices.Disk6061CreateBlank(cmd[2]) {
+		if dpf.Disk6061CreateBlank(cmd[2]) {
 			devices.TtoPutNLString("Empty MV/Em DPF-type disk image created")
 		} else {
 			devices.TtoPutNLString(" *** Error: could not create empty disk image ***")
@@ -466,7 +468,7 @@ func detach(cmd []string) {
 	}
 	switch cmd[1] {
 	case "MTB":
-		if devices.MtDetach(0) {
+		if mtb.MtDetach(0) {
 			devices.TtoPutNLString(" *** Tape Image Detached ***")
 		} else {
 			devices.TtoPutNLString(" *** Could not DETach Tape Image ***")
