@@ -55,8 +55,10 @@ const (
 
 	// MemSizeWords defines the size of MV/Em's emulated RAM in 16-bit words
 	MemSizeWords = 8388608 // = 040 000 000 (8) = 0x80 0000
-	// MemSizeLCPID is the code returned by the LCPID to indicate the size of RAM
+	// MemSizeLCPID is the code returned by the LCPID to indicate the size of RAM in half megabytes
 	MemSizeLCPID = ((MemSizeWords * 2) / (256 * 1024)) - 1 // 0x3F
+	// MemSizeNCLID is the code returned by NCLID to indicate size of RAM in 32Kb increments
+	MemSizeNCLID = ((MemSizeWords * 2) / (32 * 1024)) - 1
 
 	cmdUnknown = " *** UNKNOWN SCP-CLI COMMAND ***"
 	cmdNYI     = "Command Not Yet Implemented"
@@ -76,6 +78,7 @@ var (
 	mtbStatsChan  chan devices.MtStatT
 	ttiSCPchan    chan byte
 
+	bus  devices.BusT
 	dpf  devices.Disk6061T
 	dskp devices.Disk6239DataT
 	mtb  devices.MagTape6026T
@@ -146,28 +149,28 @@ func main() {
 		 ***/
 
 		memory.MemInit(MemSizeWords, debugLogging)
-		devices.BusInit()
-		devices.BusAddDevice(deviceMap, devBMC, true)
-		devices.BusSetResetFunc(devBMC, memory.BmcdchReset) // created by memory, needs bus!
+		bus.BusInit()
+		bus.AddDevice(deviceMap, devBMC, true)
+		bus.SetResetFunc(devBMC, memory.BmcdchReset) // created by memory, needs bus!
 
-		devices.BusAddDevice(deviceMap, devSCP, true)
+		bus.AddDevice(deviceMap, devSCP, true)
 		instructionsInit()
 		decoderGenAllPossOpcodes()
 		cpuPtr = cpuInit(cpuStatsChan)
 
-		devices.BusAddDevice(deviceMap, devTTO, true)
-		devices.TtoInit(devTTO, conn)
+		bus.AddDevice(deviceMap, devTTO, true)
+		devices.TtoInit(devTTO, &bus, conn)
 
 		ttiInit(conn, cpuPtr, ttiSCPchan)
 
-		devices.BusAddDevice(deviceMap, devMTB, false)
-		mtb.MtInit(devMTB, mtbStatsChan, logging.MtLog, debugLogging)
+		bus.AddDevice(deviceMap, devMTB, false)
+		mtb.MtInit(devMTB, &bus, mtbStatsChan, logging.MtLog, debugLogging)
 
-		devices.BusAddDevice(deviceMap, devDPF, false)
-		dpf.Disk6061Init(devDPF, dpfStatsChan, logging.DpfLog, debugLogging)
+		bus.AddDevice(deviceMap, devDPF, false)
+		dpf.Disk6061Init(devDPF, &bus, dpfStatsChan, logging.DpfLog, debugLogging)
 
-		devices.BusAddDevice(deviceMap, devDSKP, false)
-		dskp.Disk6239Init(devDSKP, dskpStatsChan, logging.DskpLog, debugLogging)
+		bus.AddDevice(deviceMap, devDSKP, false)
+		dskp.Disk6239Init(devDSKP, &bus, dskpStatsChan, logging.DskpLog, debugLogging)
 
 		// say hello...
 		devices.TtoPutChar(asciiFF)
@@ -362,11 +365,11 @@ func boot(cmd []string) {
 		devices.TtoPutNLString(" *** Expecting <devicenumber> after B ***")
 		return
 	}
-	if !devices.BusIsAttached(devNum) {
+	if !bus.IsAttached(devNum) {
 		devices.TtoPutNLString(" *** Device is not ATTached ***")
 		return
 	}
-	if !devices.BusIsBootable(devNum) {
+	if !bus.IsBootable(devNum) {
 		devices.TtoPutNLString(" *** Device is not bootable ***")
 		return
 	}
@@ -384,14 +387,14 @@ func boot(cmd []string) {
 		cpu.cpuMu.Lock()
 		cpu.sr = 0x8000 | devDPF
 		cpu.ac[0] = devDPF
-		cpu.pc = 10
+		cpu.pc = 0377
 		cpu.cpuMu.Unlock()
 	case devDSKP:
 		dskp.Disk6239LoadDKBT()
 		cpu.cpuMu.Lock()
 		cpu.sr = 0x8000 | devDSKP
 		cpu.ac[0] = devDSKP
-		cpu.pc = 10
+		cpu.pc = 0377
 		cpu.cpuMu.Unlock()
 	default:
 		devices.TtoPutNLString(" *** Booting from that device not yet implemented ***")
@@ -663,7 +666,7 @@ func printableBreakpointList() string {
 // reset should bring the emulator back to its initial state
 func reset() {
 	memory.MemInit(MemSizeWords, debugLogging)
-	devices.BusResetAllIODevices()
+	bus.ResetAllIODevices()
 	cpuReset()
 	// mtbReset() // Not Init
 	// dpfReset()
@@ -724,7 +727,7 @@ func show(cmd []string) {
 	}
 	switch cmd[1] {
 	case "DEV":
-		devices.TtoPutNLString(devices.BusGetPrintableDevList())
+		devices.TtoPutNLString(bus.GetPrintableDevList())
 	case "BREAK":
 		devices.TtoPutNLString(printableBreakpointList())
 	case "LOGGING":
@@ -820,12 +823,13 @@ RunLoop: // performance-critical section starts here
 		}
 
 		// INTERRUPT?
-		if cpu.ion && devices.IRQ {
+		if cpu.ion && bus.GetIRQ() {
 			if debugLogging {
 				logging.DebugPrint(logging.DebugLog, "<<< Interrupt >>>\n")
 			}
 			// disable further interrupts, reset the irq
-			cpu.ion, devices.IRQ = false, false
+			cpu.ion = false
+			bus.SetIRQ(false)
 			// TODO - disable User MAP
 			// store PC in location zero
 			memory.WriteWord(0, dg.WordT(cpu.pc))

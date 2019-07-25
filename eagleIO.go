@@ -118,7 +118,7 @@ func eagleIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case instrNCLID:
 		cpuPtr.ac[0] = cpuModelNo & 0xffff
 		cpuPtr.ac[1] = ucodeRev & 0xffff
-		cpuPtr.ac[2] = MemSizeLCPID & 0x00ff // TODO Check this
+		cpuPtr.ac[2] = MemSizeNCLID & 0x00ff
 
 	case instrPRTSEL:
 		if debugLogging {

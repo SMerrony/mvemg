@@ -24,7 +24,6 @@ package main
 import (
 	"log"
 
-	"github.com/SMerrony/dgemug/devices"
 	"github.com/SMerrony/dgemug/dg"
 	"github.com/SMerrony/dgemug/logging"
 	"github.com/SMerrony/dgemug/memory"
@@ -88,7 +87,7 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			}
 		}
 
-		if devices.BusIsAttached(novaDataIo.ioDev) && devices.BusIsIODevice(novaDataIo.ioDev) {
+		if bus.IsAttached(novaDataIo.ioDev) && bus.IsIODevice(novaDataIo.ioDev) {
 			switch iPtr.ix {
 			case instrDOA, instrDIA:
 				abc = 'A'
@@ -99,10 +98,10 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			}
 			switch iPtr.ix {
 			case instrDIA, instrDIB, instrDIC:
-				cpuPtr.ac[novaDataIo.acd] = dg.DwordT(devices.BusDataIn(novaDataIo.ioDev, abc, novaDataIo.f))
+				cpuPtr.ac[novaDataIo.acd] = dg.DwordT(bus.DataIn(novaDataIo.ioDev, abc, novaDataIo.f))
 				//busDataIn(cpuPtr, &novaDataIo, abc)
 			case instrDOA, instrDOB, instrDOC:
-				devices.BusDataOut(novaDataIo.ioDev, memory.DwordGetLowerWord(cpuPtr.ac[novaDataIo.acd]), abc, novaDataIo.f)
+				bus.DataOut(novaDataIo.ioDev, memory.DwordGetLowerWord(cpuPtr.ac[novaDataIo.acd]), abc, novaDataIo.f)
 				//busDataOut(cpuPtr, &novaDataIo, abc)
 			}
 		} else {
@@ -130,7 +129,7 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrIORST:
 		// oneAcc1Word = iPtr.variant.(oneAcc1WordT) // <== this is just an assertion really
-		devices.BusResetAllIODevices()
+		bus.ResetAllIODevices()
 		cpuPtr.ion = false
 		// TODO More to do for SMP support - HaHa!
 
@@ -152,7 +151,7 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		var novaDataIo novaDataIoT
 		novaDataIo.f = ioFlagsDev.f
 		novaDataIo.ioDev = ioFlagsDev.ioDev
-		devices.BusDataOut(novaDataIo.ioDev, memory.DwordGetLowerWord(cpuPtr.ac[novaDataIo.acd]), 'N', novaDataIo.f) // DUMMY FLAG
+		bus.DataOut(novaDataIo.ioDev, memory.DwordGetLowerWord(cpuPtr.ac[novaDataIo.acd]), 'N', novaDataIo.f) // DUMMY FLAG
 
 	case instrSKP:
 		ioTestDev = iPtr.variant.(ioTestDevT)
@@ -160,8 +159,8 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			busy = cpuPtr.ion
 			done = cpuPtr.pfflag
 		} else {
-			busy = devices.BusGetBusy(ioTestDev.ioDev)
-			done = devices.BusGetDone(ioTestDev.ioDev)
+			busy = bus.GetBusy(ioTestDev.ioDev)
+			done = bus.GetDone(ioTestDev.ioDev)
 		}
 		switch ioTestDev.t {
 		case bnTest:
@@ -216,10 +215,10 @@ func intds(cpuPtr *CPUT) bool {
 
 func inta(cpuPtr *CPUT, destAc int) bool {
 	// load the AC with the device code of the highest priority interrupt
-	intDevNum := devices.BusGetHighestPriorityInt()
+	intDevNum := bus.GetHighestPriorityInt()
 	cpuPtr.ac[destAc] = dg.DwordT(intDevNum)
 	// and clear it - I THINK this is the right place to do this...
-	devices.BusClearInterrupt(intDevNum)
+	bus.ClearInterrupt(intDevNum)
 	cpuPtr.pc++
 	return true
 }
@@ -231,14 +230,14 @@ func inten(cpuPtr *CPUT) bool {
 }
 
 func iorst(cpuPtr *CPUT) bool {
-	devices.BusResetAllIODevices()
+	bus.ResetAllIODevices()
 	cpuPtr.pc++
 	return true
 }
 
 func msko(cpuPtr *CPUT, destAc int) bool {
 	//cpuPtr.mask = memory.DwordGetLowerWord(cpuPtr.ac[destAc])
-	devices.BusSetIrqMask(memory.DwordGetLowerWord(cpuPtr.ac[destAc]))
+	bus.SetIrqMask(memory.DwordGetLowerWord(cpuPtr.ac[destAc]))
 	cpuPtr.pc++
 	return true
 }

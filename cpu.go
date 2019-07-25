@@ -30,7 +30,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/SMerrony/dgemug/devices"
 	"github.com/SMerrony/dgemug/memory"
 
 	"github.com/SMerrony/dgemug/dg"
@@ -86,7 +85,7 @@ const cpuStatPeriodMs = 333 // 125 // i.e. we send stats every 1/8th of a second
 var cpu CPUT
 
 func cpuInit(statsChan chan cpuStatT) *CPUT {
-	devices.BusAddDevice(deviceMap, devCPU, true)
+	bus.AddDevice(deviceMap, devCPU, true)
 	if statsChan != nil {
 		go cpuStatSender(statsChan)
 	}

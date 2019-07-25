@@ -27,7 +27,6 @@ import (
 	"os"
 	"sync"
 
-	"github.com/SMerrony/dgemug/devices"
 	"github.com/SMerrony/dgemug/dg"
 )
 
@@ -39,10 +38,10 @@ var (
 
 func ttiInit(c net.Conn, cpuPtr *CPUT, ch chan<- byte) {
 	tti = c
-	devices.BusAddDevice(deviceMap, devTTI, true)
-	devices.BusSetResetFunc(devTTI, ttiReset)
-	devices.BusSetDataInFunc(devTTI, ttiDataIn)
-	devices.BusSetDataOutFunc(devTTI, ttiDataOut)
+	bus.AddDevice(deviceMap, devTTI, true)
+	bus.SetResetFunc(devTTI, ttiReset)
+	bus.SetDataInFunc(devTTI, ttiDataIn)
+	bus.SetDataOutFunc(devTTI, ttiDataOut)
 	go ttiListener(cpuPtr, ch)
 }
 
@@ -75,10 +74,10 @@ func ttiListener(cpuPtr *CPUT, scpChan chan<- byte) {
 				oneCharBufMu.Lock()
 				oneCharBuf = b[c]
 				oneCharBufMu.Unlock()
-				devices.BusSetDone(devTTI, true)
+				bus.SetDone(devTTI, true)
 				// send IRQ if not masked out
-				if !devices.BusIsDevMasked(devTTI) {
-					devices.BusSendInterrupt(devTTI)
+				if !bus.IsDevMasked(devTTI) {
+					bus.SendInterrupt(devTTI)
 				}
 			}
 		}
@@ -98,11 +97,11 @@ func ttiDataIn(abc byte, flag byte) (datum dg.WordT) {
 	case 'A':
 		switch flag {
 		case 'S':
-			devices.BusSetBusy(devTTI, true)
-			devices.BusSetDone(devTTI, false)
+			bus.SetBusy(devTTI, true)
+			bus.SetDone(devTTI, false)
 		case 'C':
-			devices.BusSetBusy(devTTI, false)
-			devices.BusSetDone(devTTI, false)
+			bus.SetBusy(devTTI, false)
+			bus.SetDone(devTTI, false)
 		}
 	default:
 		log.Fatalf("ERROR: unexpected source buffer <%c> for DOx ac,TTO instruction\n", abc)
@@ -116,11 +115,11 @@ func ttiDataOut(datum dg.WordT, abc byte, flag byte) {
 	case 'N':
 		switch flag {
 		case 'S':
-			devices.BusSetBusy(devTTI, true)
-			devices.BusSetDone(devTTI, false)
+			bus.SetBusy(devTTI, true)
+			bus.SetDone(devTTI, false)
 		case 'C':
-			devices.BusSetBusy(devTTI, false)
-			devices.BusSetDone(devTTI, false)
+			bus.SetBusy(devTTI, false)
+			bus.SetDone(devTTI, false)
 		}
 	default:
 		log.Fatalf("ERROR: unexpected call to ttiDataOut with abc(n) flag set to %c\n", abc)
