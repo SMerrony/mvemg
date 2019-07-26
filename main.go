@@ -78,6 +78,7 @@ var (
 	mtbStatsChan  chan devices.MtStatT
 	ttiSCPchan    chan byte
 
+	tti  devices.TtiT
 	tto  devices.TtoT
 	bus  devices.BusT
 	dpf  devices.Disk6061T
@@ -162,7 +163,10 @@ func main() {
 		bus.AddDevice(deviceMap, devTTO, true)
 		tto.Init(devTTO, &bus, conn)
 
-		ttiInit(conn, cpuPtr, ttiSCPchan)
+		bus.AddDevice(deviceMap, devTTI, true)
+		//ttiInit(conn, cpuPtr, ttiSCPchan)
+		tti.Init(devTTI, &bus)
+		go consoleListener(conn, cpuPtr, ttiSCPchan, &tti)
 
 		bus.AddDevice(deviceMap, devMTB, false)
 		mtb.MtInit(devMTB, &bus, mtbStatsChan, logging.MtLog, debugLogging)
@@ -213,6 +217,46 @@ func fmtRadixVerb() string {
 	default:
 		log.Fatalf("ERROR: Invalid input radix %d", inputRadix)
 		return ""
+	}
+}
+
+func consoleListener(con net.Conn, cpuPtr *CPUT, scpChan chan<- byte, tti *devices.TtiT) {
+	b := make([]byte, 80)
+	for {
+		n, err := con.Read(b)
+		if err != nil || n == 0 {
+			log.Println("ERROR: could not read from console port: ", err.Error())
+			os.Exit(1)
+		}
+		//log.Printf("DEBUG: ttiListener() got <%c>\n", b[0])
+		for c := 0; c < n; c++ {
+			// console ESCape?
+			//if b[c] == asciiESC || b[c] == 0 {
+			if b[c] == asciiESC {
+				cpuPtr.cpuMu.Lock()
+				cpuPtr.scpIO = true
+				cpuPtr.cpuMu.Unlock()
+				break // don't want to send the ESC itself to the SCP
+			}
+			cpuPtr.cpuMu.RLock()
+			scp := cpuPtr.scpIO
+			cpuPtr.cpuMu.RUnlock()
+			if scp {
+				// to the SCP
+				scpChan <- b[c]
+			} else {
+				// to the CPU
+				tti.InsertChar(b[c])
+				// oneCharBufMu.Lock()
+				// oneCharBuf = b[c]
+				// oneCharBufMu.Unlock()
+				// bus.SetDone(devTTI, true)
+				// // send IRQ if not masked out
+				// if !bus.IsDevMasked(devTTI) {
+				// 	bus.SendInterrupt(devTTI)
+				// }
+			}
+		}
 	}
 }
 
