@@ -1,6 +1,6 @@
 // resolve.go
 
-// Copyright (C) 2017  Steve Merrony
+// Copyright (C) 2017,2019  Steve Merrony
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -24,11 +24,9 @@ package main
 import (
 	"log"
 
-	"github.com/SMerrony/dgemug/logging"
-
-	"github.com/SMerrony/dgemug/memory"
-
 	"github.com/SMerrony/dgemug/dg"
+	"github.com/SMerrony/dgemug/logging"
+	"github.com/SMerrony/dgemug/memory"
 )
 
 const (
@@ -39,7 +37,6 @@ const (
 func resolve16bitEclipseAddr(cpuPtr *CPUT, ind byte, mode int, disp int16) dg.PhysAddrT {
 
 	var (
-		eff     dg.PhysAddrT
 		intEff  int32
 		indAddr dg.WordT
 	)
@@ -73,20 +70,16 @@ func resolve16bitEclipseAddr(cpuPtr *CPUT, ind byte, mode int, disp int16) dg.Ph
 		intEff -= 65536
 	}
 
-	// mask off to Eclipse range
-	eff = dg.PhysAddrT(intEff) & 0x7fff
-
 	// if debugLogging {
 	// 	logging.DebugPrint(logging.DebugLog, "... resolve16bitEclipseAddr got: %#o, returning %#o\n", disp, eff)
 	// }
-	return eff
+	return dg.PhysAddrT(intEff) & 0x7fff // mask off to Eclipse range
 }
 
 // This is the same as resolve16bitEclipseAddr, but without the range masking at the end
 func resolve16bitEagleAddr(cpuPtr *CPUT, ind byte, mode int, disp int16) dg.PhysAddrT {
 
 	var (
-		eff     dg.PhysAddrT
 		intEff  int32
 		indAddr dg.WordT
 		ok      bool
@@ -121,12 +114,10 @@ func resolve16bitEagleAddr(cpuPtr *CPUT, ind byte, mode int, disp int16) dg.Phys
 		// intEff = int32(res)
 	}
 
-	eff = dg.PhysAddrT(intEff)
-
-	if debugLogging {
-		logging.DebugPrint(logging.DebugLog, "... resolve16bitEagleAddr got: %#o, returning %#o\n", disp, eff)
-	}
-	return eff
+	// if debugLogging {
+	// 	logging.DebugPrint(logging.DebugLog, "... resolve16bitEagleAddr got: %#o, returning %#o\n", disp, eff)
+	// }
+	return dg.PhysAddrT(intEff)
 }
 
 // Resolve32bitByteAddr returns the word address and low-byte flag for a given 32-bit byte address
@@ -136,9 +127,9 @@ func resolve32bitByteAddr(byteAddr dg.DwordT) (wordAddr dg.PhysAddrT, loByte boo
 	return wordAddr, loByte
 }
 
-func resolve32bitEffAddr(cpuPtr *CPUT, ind byte, mode int, disp int32) dg.PhysAddrT {
+func resolve32bitEffAddr(cpuPtr *CPUT, ind byte, mode int, disp int32) (eff dg.PhysAddrT) {
 
-	eff := dg.PhysAddrT(disp)
+	eff = dg.PhysAddrT(disp)
 
 	// handle addressing mode...
 	switch mode {

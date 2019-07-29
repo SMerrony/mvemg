@@ -1,6 +1,6 @@
 // novaIO.go
 
-// Copyright (C) 2017  Steve Merrony
+// Copyright (C) 2017,2019  Steve Merrony
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -31,14 +31,14 @@ import (
 
 func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
-	var (
-		abc         byte
-		busy, done  bool
-		ioFlagsDev  ioFlagsDevT
-		ioTestDev   ioTestDevT
-		novaDataIo  novaDataIoT
-		oneAcc1Word oneAcc1WordT
-	)
+	// var (
+	// 	abc         byte
+	// 	busy, done  bool
+	// 	ioFlagsDev  ioFlagsDevT
+	// 	ioTestDev   ioTestDevT
+	// 	novaDataIo  novaDataIoT
+	// 	oneAcc1Word oneAcc1WordT
+	// )
 
 	// The Eclipse LEF instruction is handled funkily...
 	if cpuPtr.atu && cpuPtr.sbr[memory.GetSegment(cpuPtr.pc)].lef {
@@ -49,7 +49,7 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	switch iPtr.ix {
 
 	case instrDIA, instrDIB, instrDIC, instrDOA, instrDOB, instrDOC:
-		novaDataIo = iPtr.variant.(novaDataIoT)
+		novaDataIo := iPtr.variant.(novaDataIoT)
 
 		// catch CPU I/O instructions
 		if novaDataIo.ioDev == devCPU {
@@ -71,7 +71,7 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 				logging.DebugPrint(logging.DebugLog, "INFO: I/O Reset due to DIC 0,CPU instruction\n")
 				return iorst(cpuPtr)
 			case instrDOB: // MKSO
-				novaDataIo = iPtr.variant.(novaDataIoT)
+				novaDataIo := iPtr.variant.(novaDataIoT)
 				logging.DebugPrint(logging.DebugLog, "INFO: Handling DOB %d, CPU instruction as MSKO with flags\n", novaDataIo.acd)
 				msko(cpuPtr, novaDataIo.acd)
 				switch novaDataIo.f {
@@ -88,6 +88,7 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		}
 
 		if bus.IsAttached(novaDataIo.ioDev) && bus.IsIODevice(novaDataIo.ioDev) {
+			var abc byte
 			switch iPtr.ix {
 			case instrDOA, instrDIA:
 				abc = 'A'
@@ -118,7 +119,7 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		return halt()
 
 	case instrINTA:
-		oneAcc1Word = iPtr.variant.(oneAcc1WordT)
+		oneAcc1Word := iPtr.variant.(oneAcc1WordT)
 		return inta(cpuPtr, oneAcc1Word.acd)
 
 	case instrINTDS:
@@ -128,13 +129,13 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		return inten(cpuPtr)
 
 	case instrIORST:
-		// oneAcc1Word = iPtr.variant.(oneAcc1WordT) // <== this is just an assertion really
+		// oneAcc1Word := iPtr.variant.(oneAcc1WordT) // <== this is just an assertion really
 		bus.ResetAllIODevices()
 		cpuPtr.ion = false
 		// TODO More to do for SMP support - HaHa!
 
 	case instrNIO:
-		ioFlagsDev = iPtr.variant.(ioFlagsDevT)
+		ioFlagsDev := iPtr.variant.(ioFlagsDevT)
 
 		if ioFlagsDev.ioDev == devCPU {
 			switch ioFlagsDev.f {
@@ -154,7 +155,8 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		bus.DataOut(novaDataIo.ioDev, memory.DwordGetLowerWord(cpuPtr.ac[novaDataIo.acd]), 'N', novaDataIo.f) // DUMMY FLAG
 
 	case instrSKP:
-		ioTestDev = iPtr.variant.(ioTestDevT)
+		var busy, done bool
+		ioTestDev := iPtr.variant.(ioTestDevT)
 		if ioTestDev.ioDev == devCPU {
 			busy = cpuPtr.ion
 			done = cpuPtr.pfflag

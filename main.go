@@ -868,6 +868,7 @@ RunLoop: // performance-critical section starts here
 		}
 
 		// INTERRUPT?
+		cpu.cpuMu.Lock()
 		if cpu.ion && bus.GetIRQ() {
 			if debugLogging {
 				logging.DebugPrint(logging.DebugLog, "<<< Interrupt >>>\n")
@@ -887,6 +888,7 @@ RunLoop: // performance-critical section starts here
 			cpu.pc = resolve16bitEclipseAddr(&cpu, indIrq, absoluteMode, int16(memory.ReadWord(1)))
 			// next time round RunLoop the interrupt service routine will be started...
 		}
+		cpu.cpuMu.Unlock()
 
 		// BREAKPOINT?
 		if len(breakpoints) > 0 {

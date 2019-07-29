@@ -1,6 +1,6 @@
 // decoder.go
 
-// Copyright (C) 2017  Steve Merrony
+// Copyright (C) 2017,2019  Steve Merrony
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -24,11 +24,9 @@ package main
 import (
 	"fmt"
 
-	"github.com/SMerrony/dgemug/logging"
-
-	"github.com/SMerrony/dgemug/memory"
-
 	"github.com/SMerrony/dgemug/dg"
+	"github.com/SMerrony/dgemug/logging"
+	"github.com/SMerrony/dgemug/memory"
 )
 
 // decodedInstrT defines the MV/Em internal decode of an opcode and any
@@ -657,8 +655,6 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 
 /* decoders for (parts of) operands below here... */
 
-var disp16 int16
-
 func decode2bitImm(i dg.WordT) uint16 {
 	// to expand range (by 1!) 1 is subtracted from operand
 	return uint16(i + 1)
@@ -666,7 +662,7 @@ func decode2bitImm(i dg.WordT) uint16 {
 
 // Decode8BitDisp must return signed 16-bit as the result could be
 // either 8-bit signed or 8-bit unsigned
-func decode8bitDisp(d8 dg.ByteT, mode int) int16 {
+func decode8bitDisp(d8 dg.ByteT, mode int) (disp16 int16) {
 	if mode == absoluteMode {
 		disp16 = int16(d8) & 0x00ff // unsigned offset
 	} else {
@@ -676,7 +672,7 @@ func decode8bitDisp(d8 dg.ByteT, mode int) int16 {
 	return disp16
 }
 
-func decode15bitDisp(d15 dg.WordT, mode int) int16 {
+func decode15bitDisp(d15 dg.WordT, mode int) (disp16 int16) {
 	if mode == absoluteMode {
 		disp16 = int16(d15 & 0x7fff) // zero extend
 	} else {
@@ -714,8 +710,8 @@ func decode15bitDisp(d15 dg.WordT, mode int) int16 {
 // 	return disp16
 // }
 
-func decode16bitByteDisp(d16 dg.WordT) (int16, bool) {
-	loHi := memory.TestWbit(d16, 15)
+func decode16bitByteDisp(d16 dg.WordT) (disp16 int16, loHi bool) {
+	loHi = memory.TestWbit(d16, 15)
 	disp16 = int16(d16 >> 1)
 	if debugLogging {
 		logging.DebugPrint(logging.DebugLog, "... decode16bitByteDisp got: %#o, returning %#o\n", d16, disp16)

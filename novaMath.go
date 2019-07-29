@@ -30,15 +30,11 @@ import (
 
 func novaMath(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
-	var (
-		dwd dg.DwordT
-	)
-
 	switch iPtr.ix {
 	case instrDIV: // unsigned divide
 		uw := memory.DwordGetLowerWord(cpuPtr.ac[0])
 		lw := memory.DwordGetLowerWord(cpuPtr.ac[1])
-		dwd = memory.DwordFromTwoWords(uw, lw)
+		dwd := memory.DwordFromTwoWords(uw, lw)
 		quot := memory.DwordGetLowerWord(cpuPtr.ac[2])
 		if uw >= quot || quot == 0 {
 			cpuPtr.carry = true
@@ -52,7 +48,7 @@ func novaMath(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		ac0 := memory.DwordGetLowerWord(cpuPtr.ac[0])
 		ac1 := memory.DwordGetLowerWord(cpuPtr.ac[1])
 		ac2 := memory.DwordGetLowerWord(cpuPtr.ac[2])
-		dwd = (dg.DwordT(ac1) * dg.DwordT(ac2)) + dg.DwordT(ac0)
+		dwd := (dg.DwordT(ac1) * dg.DwordT(ac2)) + dg.DwordT(ac0)
 		cpuPtr.ac[0] = dg.DwordT(memory.DwordGetUpperWord(dwd))
 		cpuPtr.ac[1] = dg.DwordT(memory.DwordGetLowerWord(dwd))
 

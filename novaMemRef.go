@@ -1,6 +1,6 @@
 // novaMemRef.go
 
-// Copyright (C) 2017  Steve Merrony
+// Copyright (C) 2017,2019  Steve Merrony
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -31,16 +31,14 @@ import (
 func novaMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	var (
-		shifter           dg.WordT
-		effAddr           dg.PhysAddrT
-		novaNoAccEffAddr  novaNoAccEffAddrT
-		novaOneAccEffAddr novaOneAccEffAddrT
+		shifter dg.WordT
+		effAddr dg.PhysAddrT
 	)
 
 	switch iPtr.ix {
 
 	case instrDSZ:
-		novaNoAccEffAddr = iPtr.variant.(novaNoAccEffAddrT)
+		novaNoAccEffAddr := iPtr.variant.(novaNoAccEffAddrT)
 		effAddr = resolve16bitEclipseAddr(cpuPtr, novaNoAccEffAddr.ind, novaNoAccEffAddr.mode, novaNoAccEffAddr.disp15)
 		shifter = memory.ReadWord(effAddr)
 		shifter--
@@ -50,7 +48,7 @@ func novaMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		}
 
 	case instrISZ:
-		novaNoAccEffAddr = iPtr.variant.(novaNoAccEffAddrT)
+		novaNoAccEffAddr := iPtr.variant.(novaNoAccEffAddrT)
 		effAddr = resolve16bitEclipseAddr(cpuPtr, novaNoAccEffAddr.ind, novaNoAccEffAddr.mode, novaNoAccEffAddr.disp15)
 		shifter = memory.ReadWord(effAddr)
 		shifter++
@@ -60,13 +58,13 @@ func novaMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		}
 
 	case instrLDA:
-		novaOneAccEffAddr = iPtr.variant.(novaOneAccEffAddrT)
+		novaOneAccEffAddr := iPtr.variant.(novaOneAccEffAddrT)
 		effAddr = resolve16bitEclipseAddr(cpuPtr, novaOneAccEffAddr.ind, novaOneAccEffAddr.mode, novaOneAccEffAddr.disp15)
 		shifter = memory.ReadWord(effAddr)
 		cpuPtr.ac[novaOneAccEffAddr.acd] = 0x0000ffff & dg.DwordT(shifter)
 
 	case instrSTA:
-		novaOneAccEffAddr = iPtr.variant.(novaOneAccEffAddrT)
+		novaOneAccEffAddr := iPtr.variant.(novaOneAccEffAddrT)
 		shifter = memory.DwordGetLowerWord(cpuPtr.ac[novaOneAccEffAddr.acd])
 		effAddr = resolve16bitEclipseAddr(cpuPtr, novaOneAccEffAddr.ind, novaOneAccEffAddr.mode, novaOneAccEffAddr.disp15)
 		memory.WriteWord(effAddr, shifter)

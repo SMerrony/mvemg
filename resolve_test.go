@@ -1,6 +1,6 @@
 // mvemg project resolve_test.go
 
-// Copyright (C) 2017  Steve Merrony
+// Copyright (C) 2017,2019  Steve Merrony
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -30,6 +30,7 @@ import (
 func TestResolve16bitEclipseAddr(t *testing.T) {
 	cpuPtr := cpuInit(nil)
 	cpuPtr.pc = 11
+	memory.MemInit(10000, false)
 	memory.WriteWord(10, 9)
 	memory.WriteWord(11, 10)
 	memory.WriteWord(12, 12)

@@ -1,6 +1,6 @@
 // eagleMemRef.go
 
-// Copyright (C) 2017  Steve Merrony
+// Copyright (C) 2017,2019  Steve Merrony
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -30,72 +30,58 @@ import (
 )
 
 func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
-	var (
-		addr, offset       dg.PhysAddrT
-		byt                dg.ByteT
-		wd                 dg.WordT
-		dwd                dg.DwordT
-		i16a, i16b         int16
-		i32                int32
-		lowByte, ok        bool
-		wordAddr           dg.PhysAddrT
-		immMode2Word       immMode2WordT
-		oneAccMode2Word    oneAccMode2WordT
-		oneAccModeInd2Word oneAccModeInd2WordT
-		oneAccModeInd3Word oneAccModeInd3WordT
-		twoAcc1Word        twoAcc1WordT
-	)
 
 	switch iPtr.ix {
 
 	case instrLNLDA:
-		oneAccModeInd3Word = iPtr.variant.(oneAccModeInd3WordT)
-		addr = resolve32bitEffAddr(cpuPtr, oneAccModeInd3Word.ind, oneAccModeInd3Word.mode, oneAccModeInd3Word.disp31)
+		oneAccModeInd3Word := iPtr.variant.(oneAccModeInd3WordT)
+		addr := resolve32bitEffAddr(cpuPtr, oneAccModeInd3Word.ind, oneAccModeInd3Word.mode, oneAccModeInd3Word.disp31)
 		cpuPtr.ac[oneAccModeInd3Word.acd] = memory.SexWordToDword(memory.ReadWord(addr))
 
 	case instrLNSTA:
-		oneAccModeInd3Word = iPtr.variant.(oneAccModeInd3WordT)
-		addr = resolve32bitEffAddr(cpuPtr, oneAccModeInd3Word.ind, oneAccModeInd3Word.mode, oneAccModeInd3Word.disp31)
-		wd = memory.DwordGetLowerWord(cpuPtr.ac[oneAccModeInd3Word.acd])
+		oneAccModeInd3Word := iPtr.variant.(oneAccModeInd3WordT)
+		addr := resolve32bitEffAddr(cpuPtr, oneAccModeInd3Word.ind, oneAccModeInd3Word.mode, oneAccModeInd3Word.disp31)
+		wd := memory.DwordGetLowerWord(cpuPtr.ac[oneAccModeInd3Word.acd])
 		memory.WriteWord(addr, wd)
 
 	case instrLWLDA:
-		oneAccModeInd3Word = iPtr.variant.(oneAccModeInd3WordT)
-		addr = resolve32bitEffAddr(cpuPtr, oneAccModeInd3Word.ind, oneAccModeInd3Word.mode, oneAccModeInd3Word.disp31)
+		oneAccModeInd3Word := iPtr.variant.(oneAccModeInd3WordT)
+		addr := resolve32bitEffAddr(cpuPtr, oneAccModeInd3Word.ind, oneAccModeInd3Word.mode, oneAccModeInd3Word.disp31)
 		cpuPtr.ac[oneAccModeInd3Word.acd] = memory.ReadDWord(addr)
 
 	case instrLWSTA:
-		oneAccModeInd3Word = iPtr.variant.(oneAccModeInd3WordT)
-		addr = resolve32bitEffAddr(cpuPtr, oneAccModeInd3Word.ind, oneAccModeInd3Word.mode, oneAccModeInd3Word.disp31)
-		dwd = cpuPtr.ac[oneAccModeInd3Word.acd]
-		memory.WriteDWord(addr, dwd)
+		oneAccModeInd3Word := iPtr.variant.(oneAccModeInd3WordT)
+		addr := resolve32bitEffAddr(cpuPtr, oneAccModeInd3Word.ind, oneAccModeInd3Word.mode, oneAccModeInd3Word.disp31)
+		memory.WriteDWord(addr, cpuPtr.ac[oneAccModeInd3Word.acd])
 
 	case instrWBLM:
 		wblm(cpuPtr)
 
 	case instrWBTO:
-		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
+		twoAcc1Word := iPtr.variant.(twoAcc1WordT)
+		var addr dg.PhysAddrT
 		if twoAcc1Word.acs == twoAcc1Word.acd {
 			addr = 0
 		} else {
 			addr = resolve32bitIndirectableAddr(cpuPtr.ac[twoAcc1Word.acs])
 		}
-		offset = dg.PhysAddrT(cpuPtr.ac[twoAcc1Word.acd]) >> 4
+		offset := dg.PhysAddrT(cpuPtr.ac[twoAcc1Word.acd]) >> 4
 		bitNum := uint(cpuPtr.ac[twoAcc1Word.acd] & 0x0f)
-		wd = memory.ReadWord(addr + offset)
+		wd := memory.ReadWord(addr + offset)
 		memory.SetWbit(&wd, bitNum)
 		memory.WriteWord(addr+offset, wd)
 
 	case instrWBTZ:
-		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
+		twoAcc1Word := iPtr.variant.(twoAcc1WordT)
+		var addr dg.PhysAddrT
 		if twoAcc1Word.acs == twoAcc1Word.acd {
 			addr = 0
 		} else {
 			addr = resolve32bitIndirectableAddr(cpuPtr.ac[twoAcc1Word.acs])
 		}
-		offset = dg.PhysAddrT(cpuPtr.ac[twoAcc1Word.acd]) >> 4
+		offset := dg.PhysAddrT(cpuPtr.ac[twoAcc1Word.acd]) >> 4
 		bitNum := uint(cpuPtr.ac[twoAcc1Word.acd] & 0x0f)
-		wd = memory.ReadWord(addr + offset)
+		wd := memory.ReadWord(addr + offset)
 		memory.ClearWbit(&wd, bitNum)
 		memory.WriteWord(addr+offset, wd)
 
@@ -112,19 +98,17 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		wctr(cpuPtr)
 
 	case instrWLDB:
-		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
-		wordAddr = dg.PhysAddrT(cpuPtr.ac[twoAcc1Word.acs]) >> 1
-		lowByte = memory.TestDwbit(cpuPtr.ac[twoAcc1Word.acs], 31)
-		byt = memory.ReadByte(wordAddr, lowByte)
-		cpuPtr.ac[twoAcc1Word.acd] = dg.DwordT(byt)
+		twoAcc1Word := iPtr.variant.(twoAcc1WordT)
+		wordAddr := dg.PhysAddrT(cpuPtr.ac[twoAcc1Word.acs]) >> 1
+		lowByte := memory.TestDwbit(cpuPtr.ac[twoAcc1Word.acs], 31)
+		cpuPtr.ac[twoAcc1Word.acd] = dg.DwordT(memory.ReadByte(wordAddr, lowByte))
 
 	case instrWSTB:
-		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
-		byt = dg.ByteT(cpuPtr.ac[twoAcc1Word.acd] & 0x0ff)
-		memWriteByteBA(byt, cpuPtr.ac[twoAcc1Word.acs])
+		twoAcc1Word := iPtr.variant.(twoAcc1WordT)
+		memWriteByteBA(dg.ByteT(cpuPtr.ac[twoAcc1Word.acd]&0x0ff), cpuPtr.ac[twoAcc1Word.acs])
 
 	case instrXLDB:
-		oneAccMode2Word = iPtr.variant.(oneAccMode2WordT)
+		oneAccMode2Word := iPtr.variant.(oneAccMode2WordT)
 		cpuPtr.ac[oneAccMode2Word.acd] = dg.DwordT(memory.ReadByte(resolve16bitEagleAddr(cpuPtr,
 			' ',
 			oneAccMode2Word.mode,
@@ -132,13 +116,13 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			oneAccMode2Word.bitLow)) & 0x00ff
 
 	case instrXLEF:
-		oneAccModeInd2Word = iPtr.variant.(oneAccModeInd2WordT)
+		oneAccModeInd2Word := iPtr.variant.(oneAccModeInd2WordT)
 		cpuPtr.ac[oneAccModeInd2Word.acd] = dg.DwordT(resolve16bitEagleAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, oneAccModeInd2Word.disp15))
 
 	case instrXLEFB:
-		oneAccMode2Word = iPtr.variant.(oneAccMode2WordT)
+		oneAccMode2Word := iPtr.variant.(oneAccMode2WordT)
 		loBit := oneAccMode2Word.disp16 & 1
-		addr = resolve16bitEagleAddr(cpuPtr, 0, oneAccMode2Word.mode, oneAccMode2Word.disp16/2)
+		addr := resolve16bitEagleAddr(cpuPtr, 0, oneAccMode2Word.mode, oneAccMode2Word.disp16/2)
 		addr <<= 1
 		if loBit == 1 {
 			addr++
@@ -146,10 +130,10 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		cpuPtr.ac[oneAccMode2Word.acd] = dg.DwordT(addr)
 
 	case instrXNADD, instrXNSUB:
-		oneAccModeInd2Word = iPtr.variant.(oneAccModeInd2WordT)
-		addr = resolve16bitEagleAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, oneAccModeInd2Word.disp15)
-		i16b = int16(memory.ReadWord(addr))
-		i16a = int16(memory.DwordGetLowerWord(cpuPtr.ac[oneAccModeInd2Word.acd]))
+		oneAccModeInd2Word := iPtr.variant.(oneAccModeInd2WordT)
+		addr := resolve16bitEagleAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, oneAccModeInd2Word.disp15)
+		i16b := int16(memory.ReadWord(addr))
+		i16a := int16(memory.DwordGetLowerWord(cpuPtr.ac[oneAccModeInd2Word.acd]))
 		if iPtr.ix == instrXNADD {
 			i16a += i16b
 		} else {
@@ -158,9 +142,9 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		cpuPtr.ac[oneAccModeInd2Word.acd] = memory.SexWordToDword(dg.WordT(i16a))
 
 	case instrXNLDA:
-		oneAccModeInd2Word = iPtr.variant.(oneAccModeInd2WordT)
-		addr = resolve16bitEagleAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, oneAccModeInd2Word.disp15)
-		wd, ok = memory.ReadWordTrap(addr)
+		oneAccModeInd2Word := iPtr.variant.(oneAccModeInd2WordT)
+		addr := resolve16bitEagleAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, oneAccModeInd2Word.disp15)
+		wd, ok := memory.ReadWordTrap(addr)
 		if !ok {
 			return false
 		}
@@ -168,8 +152,8 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		cpuPtr.ac[oneAccModeInd2Word.acd] = memory.SexWordToDword(wd)
 
 	case instrXSTB:
-		oneAccMode2Word = iPtr.variant.(oneAccMode2WordT)
-		byt = dg.ByteT(cpuPtr.ac[oneAccMode2Word.acd])
+		oneAccMode2Word := iPtr.variant.(oneAccMode2WordT)
+		byt := dg.ByteT(cpuPtr.ac[oneAccMode2Word.acd])
 		memory.WriteByte(resolve16bitEagleAddr(cpuPtr,
 			' ',
 			oneAccMode2Word.mode,
@@ -178,30 +162,27 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			byt)
 
 	case instrXNSTA:
-		oneAccModeInd2Word = iPtr.variant.(oneAccModeInd2WordT)
-		addr = resolve16bitEagleAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, oneAccModeInd2Word.disp15)
-		wd = memory.DwordGetLowerWord(cpuPtr.ac[oneAccModeInd2Word.acd])
-		memory.WriteWord(addr, wd)
+		oneAccModeInd2Word := iPtr.variant.(oneAccModeInd2WordT)
+		addr := resolve16bitEagleAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, oneAccModeInd2Word.disp15)
+		memory.WriteWord(addr, memory.DwordGetLowerWord(cpuPtr.ac[oneAccModeInd2Word.acd]))
 
 	case instrXWADI:
 		// add 1-4 to signed 32-bit acc
-		immMode2Word = iPtr.variant.(immMode2WordT)
-		addr = resolve16bitEagleAddr(cpuPtr, immMode2Word.ind, immMode2Word.mode, immMode2Word.disp15)
-		i32 = int32(memory.ReadDWord(addr)) + int32(immMode2Word.immU16)
+		immMode2Word := iPtr.variant.(immMode2WordT)
+		addr := resolve16bitEagleAddr(cpuPtr, immMode2Word.ind, immMode2Word.mode, immMode2Word.disp15)
+		i32 := int32(memory.ReadDWord(addr)) + int32(immMode2Word.immU16)
 		// FIXME handle Carry and OVeRflow
 		memory.WriteDWord(addr, dg.DwordT(i32))
 
 	case instrXWLDA:
-		oneAccModeInd2Word = iPtr.variant.(oneAccModeInd2WordT)
-		addr = resolve16bitEagleAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, oneAccModeInd2Word.disp15)
-		dwd = memory.ReadDWord(addr)
-		cpuPtr.ac[oneAccModeInd2Word.acd] = dwd
+		oneAccModeInd2Word := iPtr.variant.(oneAccModeInd2WordT)
+		addr := resolve16bitEagleAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, oneAccModeInd2Word.disp15)
+		cpuPtr.ac[oneAccModeInd2Word.acd] = memory.ReadDWord(addr)
 
 	case instrXWSTA:
-		oneAccModeInd2Word = iPtr.variant.(oneAccModeInd2WordT)
-		addr = resolve16bitEagleAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, oneAccModeInd2Word.disp15)
-		dwd = cpuPtr.ac[oneAccModeInd2Word.acd]
-		memory.WriteDWord(addr, dwd)
+		oneAccModeInd2Word := iPtr.variant.(oneAccModeInd2WordT)
+		addr := resolve16bitEagleAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, oneAccModeInd2Word.disp15)
+		memory.WriteDWord(addr, cpuPtr.ac[oneAccModeInd2Word.acd])
 
 	default:
 		log.Fatalf("ERROR: EAGLE_MEMREF instruction <%s> not yet implemented\n", iPtr.mnemonic)

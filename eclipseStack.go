@@ -1,6 +1,6 @@
 // eclipseStack.go
 
-// Copyright (C) 2017  Steve Merrony
+// Copyright (C) 2017,2019  Steve Merrony
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -29,44 +29,39 @@ import (
 )
 
 func eclipseStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
-	var (
-		addr                dg.PhysAddrT
-		first, last, thisAc int
-		noAccModeInd2Word   noAccModeInd2WordT
-		twoAcc1Word         twoAcc1WordT
-		unique2Word         unique2WordT
-	)
-	acsUp := [8]int{0, 1, 2, 3, 0, 1, 2, 3}
 
 	switch iPtr.ix {
 
 	case instrPOP:
-		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
-		first = twoAcc1Word.acs
-		last = twoAcc1Word.acd
+		twoAcc1Word := iPtr.variant.(twoAcc1WordT)
+		first := twoAcc1Word.acs
+		last := twoAcc1Word.acd
 		if last > first {
 			first += 4
 		}
-		for thisAc = first; thisAc >= last; thisAc-- {
+		acsUp := [8]int{0, 1, 2, 3, 0, 1, 2, 3}
+		for thisAc := first; thisAc >= last; thisAc-- {
 			if debugLogging {
 				logging.DebugPrint(logging.DebugLog, "... narrow popping AC%d\n", acsUp[thisAc])
 			}
+
 			cpuPtr.ac[acsUp[thisAc]] = dg.DwordT(memory.NsPop(0, debugLogging))
 		}
 
 	case instrPOPJ:
-		addr = dg.PhysAddrT(memory.NsPop(0, debugLogging))
+		addr := dg.PhysAddrT(memory.NsPop(0, debugLogging))
 		cpuPtr.pc = addr
 		return true // because PC set
 
 	case instrPSH:
-		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
-		first = twoAcc1Word.acs
-		last = twoAcc1Word.acd
+		twoAcc1Word := iPtr.variant.(twoAcc1WordT)
+		first := twoAcc1Word.acs
+		last := twoAcc1Word.acd
 		if last < first {
 			last += 4
 		}
-		for thisAc = first; thisAc <= last; thisAc++ {
+		acsUp := [8]int{0, 1, 2, 3, 0, 1, 2, 3}
+		for thisAc := first; thisAc <= last; thisAc++ {
 			if debugLogging {
 				logging.DebugPrint(logging.DebugLog, "... narrow pushing AC%d\n", acsUp[thisAc])
 			}
@@ -74,9 +69,9 @@ func eclipseStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		}
 
 	case instrPSHJ:
-		noAccModeInd2Word = iPtr.variant.(noAccModeInd2WordT)
+		noAccModeInd2Word := iPtr.variant.(noAccModeInd2WordT)
 		memory.NsPush(0, dg.WordT(cpuPtr.pc)+2, debugLogging)
-		addr = resolve16bitEclipseAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15)
+		addr := resolve16bitEclipseAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15)
 		cpuPtr.pc = addr
 		return true // because PC set
 
@@ -110,7 +105,7 @@ func eclipseStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		return true // because PC set
 
 	case instrSAVE:
-		unique2Word = iPtr.variant.(unique2WordT)
+		unique2Word := iPtr.variant.(unique2WordT)
 		i := dg.WordT(unique2Word.immU16)
 		nfpSav := memory.ReadWord(memory.NfpLoc)
 		nspSav := memory.ReadWord(memory.NspLoc)
