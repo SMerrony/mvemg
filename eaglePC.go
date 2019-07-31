@@ -193,14 +193,14 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrWSGE: // wide signed
 		twoAcc1Word := iPtr.variant.(twoAcc1WordT)
-		var s32a, s32b int32
+		var s32s, s32d int32
 		if twoAcc1Word.acd == twoAcc1Word.acs {
-			s32a = 0
+			s32d = 0
 		} else {
-			s32a = int32(cpuPtr.ac[twoAcc1Word.acd]) // this does the right thing in Go
+			s32d = int32(cpuPtr.ac[twoAcc1Word.acd]) // this does the right thing in Go
 		}
-		s32b = int32(cpuPtr.ac[twoAcc1Word.acs])
-		if s32b >= s32a {
+		s32s = int32(cpuPtr.ac[twoAcc1Word.acs])
+		if s32s >= s32d {
 			cpuPtr.pc += 2
 		} else {
 			cpuPtr.pc++
@@ -208,14 +208,14 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrWSGT:
 		twoAcc1Word := iPtr.variant.(twoAcc1WordT)
-		var s32a, s32b int32
+		var s32s, s32d int32
 		if twoAcc1Word.acd == twoAcc1Word.acs {
-			s32a = 0
+			s32d = 0
 		} else {
-			s32a = int32(cpuPtr.ac[twoAcc1Word.acd]) // this does the right thing in Go
+			s32d = int32(cpuPtr.ac[twoAcc1Word.acd]) // this does the right thing in Go
 		}
-		s32b = int32(cpuPtr.ac[twoAcc1Word.acs])
-		if s32b > s32a {
+		s32s = int32(cpuPtr.ac[twoAcc1Word.acs])
+		if s32s > s32d {
 			cpuPtr.pc += 2
 		} else {
 			cpuPtr.pc++
@@ -239,14 +239,14 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrWSLE:
 		twoAcc1Word := iPtr.variant.(twoAcc1WordT)
-		var s32a, s32b int32
+		var s32s, s32d int32
 		if twoAcc1Word.acd == twoAcc1Word.acs {
-			s32a = 0
+			s32d = 0
 		} else {
-			s32a = int32(cpuPtr.ac[twoAcc1Word.acd]) // this does the right thing in Go
+			s32d = int32(cpuPtr.ac[twoAcc1Word.acd]) // this does the right thing in Go
 		}
-		s32b = int32(cpuPtr.ac[twoAcc1Word.acs])
-		if s32b <= s32a {
+		s32s = int32(cpuPtr.ac[twoAcc1Word.acs])
+		if s32s <= s32d {
 			cpuPtr.pc += 2
 		} else {
 			cpuPtr.pc++
@@ -262,14 +262,14 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrWSLT:
 		twoAcc1Word := iPtr.variant.(twoAcc1WordT)
-		var s32a, s32b int32
+		var s32s, s32d int32
 		if twoAcc1Word.acd == twoAcc1Word.acs {
-			s32a = 0
+			s32d = 0
 		} else {
-			s32a = int32(cpuPtr.ac[twoAcc1Word.acd]) // this does the right thing in Go
+			s32d = int32(cpuPtr.ac[twoAcc1Word.acd]) // this does the right thing in Go
 		}
-		s32b = int32(cpuPtr.ac[twoAcc1Word.acs])
-		if s32b < s32a {
+		s32s = int32(cpuPtr.ac[twoAcc1Word.acs])
+		if s32s < s32d {
 			cpuPtr.pc += 2
 		} else {
 			cpuPtr.pc++
