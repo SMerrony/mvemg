@@ -98,3 +98,26 @@ func TestISZ(t *testing.T) {
 		t.Errorf("Expected loc 500 to contain 0, got: %x", w)
 	}
 }
+
+func TestSTA(t *testing.T) {
+	cpuPtr := cpuInit(nil)
+	var iPtr decodedInstrT
+	var novaOneAccEffAddr novaOneAccEffAddrT
+	iPtr.ix = instrSTA
+	cpuPtr.ac[1] = 0x12345678
+	novaOneAccEffAddr.acd = 1
+	novaOneAccEffAddr.disp15 = 500
+	novaOneAccEffAddr.ind = ' '
+	novaOneAccEffAddr.mode = absoluteMode
+	memory.MemInit(10000, false)
+	memory.WriteWord(500, 0xfffe)
+	iPtr.variant = novaOneAccEffAddr
+
+	if !novaMemRef(cpuPtr, &iPtr) {
+		t.Error("Failed to execute STA")
+	}
+	w := memory.ReadWord(500)
+	if w != 0x5678 {
+		t.Errorf("Expected loc 500 to contain 0x5678, got: %x", w)
+	}
+}

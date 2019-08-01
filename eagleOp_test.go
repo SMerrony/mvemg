@@ -302,3 +302,21 @@ func TestWSBI(t *testing.T) {
 	// 	t.Error("Expected CARRY")
 	// }
 }
+
+func TestZEX(t *testing.T) {
+	cpuPtr := cpuInit(nil)
+	var iPtr decodedInstrT
+	var twoAcc1Word twoAcc1WordT
+	iPtr.ix = instrZEX
+	cpuPtr.ac[0] = 0x12345678
+	cpuPtr.ac[1] = 0
+	twoAcc1Word.acs = 0
+	twoAcc1Word.acd = 1
+	iPtr.variant = twoAcc1Word
+	if !eagleOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute ZEX")
+	}
+	if cpuPtr.ac[1] != 0x00005678 {
+		t.Errorf("Expected 0x5678, got %x", cpuPtr.ac[1])
+	}
+}

@@ -21,7 +21,7 @@
 GOCMD = go
 GOBUILD = ${GOCMD}	build
 GOCLEAN = ${GOCMD}	clean -cache -testcache
-GOTEST = ${GOCMD}	test -v -race
+GOTEST = ${GOCMD}	test -v -race ./...
 GOGET = ${GOCMD}	get
 BINARY_NAME = mvemg
 
@@ -44,7 +44,7 @@ build:
 buildrace: 
 	${GOBUILD} -race ${LDFLAGS} -o ${BINARY_NAME} -v	
 test: 
-	${GOTEST} ./...
+	${GOTEST} 
 clean: 
 	${GOCLEAN}
 	rm -f ${BINARY_NAME} debug debug.test
