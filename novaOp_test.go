@@ -23,6 +23,144 @@ package main
 
 import "testing"
 
+func TestADC(t *testing.T) {
+	cpuPtr := cpuInit(nil)
+	var iPtr decodedInstrT
+	var novaTwoAccMultOp novaTwoAccMultOpT
+	iPtr.ix = instrADC
+	novaTwoAccMultOp.acs = 0
+	novaTwoAccMultOp.acd = 1
+	iPtr.variant = novaTwoAccMultOp
+	cpuPtr.ac[0] = 0xffff
+	cpuPtr.ac[1] = 3
+	cpuPtr.carry = false
+	if !novaOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute ADC")
+	}
+	if cpuPtr.ac[1] != 3 {
+		t.Errorf("Expected 3, got %d", cpuPtr.ac[1])
+	}
+
+	cpuPtr.ac[0] = 0
+	cpuPtr.ac[1] = 0
+	cpuPtr.carry = false
+	if !novaOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute ADC")
+	}
+	if cpuPtr.ac[1] != 0xffff {
+		t.Errorf("Expected %d, got %d", 0xffff, cpuPtr.ac[1])
+	}
+}
+
+func TestADD(t *testing.T) {
+	cpuPtr := cpuInit(nil)
+	var iPtr decodedInstrT
+	var novaTwoAccMultOp novaTwoAccMultOpT
+	iPtr.ix = instrADD
+
+	// simple ADD
+	novaTwoAccMultOp.acs = 1
+	novaTwoAccMultOp.acd = 2
+	cpuPtr.ac[1] = 1
+	cpuPtr.ac[2] = 2
+	iPtr.variant = novaTwoAccMultOp
+	if !novaOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute MOV")
+	}
+	if cpuPtr.ac[2] != 3 {
+		t.Errorf("Expected 3, got %d", cpuPtr.ac[2])
+	}
+
+	// simple ADD that should set CARRY
+	novaTwoAccMultOp.acs = 1
+	novaTwoAccMultOp.acd = 2
+	cpuPtr.ac[1] = 1
+	cpuPtr.ac[2] = 2
+	cpuPtr.carry = false
+	iPtr.variant = novaTwoAccMultOp
+	if !novaOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute MOV")
+	}
+	if cpuPtr.ac[2] != 3 {
+		t.Errorf("Expected 3, got %d", cpuPtr.ac[2])
+	}
+
+	// simple ADD to self
+	novaTwoAccMultOp.acs = 1
+	novaTwoAccMultOp.acd = 1
+	cpuPtr.ac[1] = 1
+	iPtr.variant = novaTwoAccMultOp
+	if !novaOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute MOV")
+	}
+	if cpuPtr.ac[1] != 2 {
+		t.Errorf("Expected 2 got %d", cpuPtr.ac[1])
+	}
+
+	// ADDR to self
+	novaTwoAccMultOp.acs = 1
+	novaTwoAccMultOp.acd = 1
+	cpuPtr.ac[1] = 1
+	cpuPtr.carry = false
+	novaTwoAccMultOp.sh = 'R'
+	iPtr.variant = novaTwoAccMultOp
+	if !novaOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute MOV")
+	}
+	if cpuPtr.ac[1] != 1 {
+		t.Errorf("Expected 1 got %d", cpuPtr.ac[1])
+	}
+	if cpuPtr.carry {
+		t.Error("Expected CARRY to be clear")
+	}
+
+	// ADDR to self with carry set
+	novaTwoAccMultOp.acs = 1
+	novaTwoAccMultOp.acd = 1
+	cpuPtr.ac[1] = 1
+	cpuPtr.carry = true
+	novaTwoAccMultOp.sh = 'R'
+	iPtr.variant = novaTwoAccMultOp
+	if !novaOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute MOV")
+	}
+	if cpuPtr.ac[1] != 0x8001 {
+		t.Errorf("Expected %#x got %#x", 0x8001, cpuPtr.ac[1])
+	}
+	if cpuPtr.carry {
+		t.Error("Expected CARRY to be clear")
+	}
+}
+
+func TestCOM(t *testing.T) {
+	cpuPtr := cpuInit(nil)
+	var iPtr decodedInstrT
+	var novaTwoAccMultOp novaTwoAccMultOpT
+	iPtr.ix = instrCOM
+	novaTwoAccMultOp.acs = 0
+	novaTwoAccMultOp.acd = 1
+	iPtr.variant = novaTwoAccMultOp
+	cpuPtr.ac[0] = 0xffff
+	cpuPtr.ac[1] = 3
+	cpuPtr.carry = false
+	if !novaOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute COM")
+	}
+	if cpuPtr.ac[1] != 0 {
+		t.Errorf("Expected 0, got %d", cpuPtr.ac[1])
+	}
+
+	cpuPtr.ac[0] = 0
+	cpuPtr.ac[1] = 0xffff
+	cpuPtr.carry = false
+	if !novaOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute COM")
+	}
+	if cpuPtr.ac[1] != 0xffff {
+		t.Errorf("Expected %d, got %d", 0xffff, cpuPtr.ac[1])
+	}
+}
+
 func TestMOV(t *testing.T) {
 	cpuPtr := cpuInit(nil)
 	var iPtr decodedInstrT
@@ -174,82 +312,31 @@ func TestMOV(t *testing.T) {
 	}
 }
 
-func TestADD(t *testing.T) {
+func TestNEG(t *testing.T) {
 	cpuPtr := cpuInit(nil)
 	var iPtr decodedInstrT
 	var novaTwoAccMultOp novaTwoAccMultOpT
-	iPtr.ix = instrADD
-
-	// simple ADD
-	novaTwoAccMultOp.acs = 1
-	novaTwoAccMultOp.acd = 2
-	cpuPtr.ac[1] = 1
-	cpuPtr.ac[2] = 2
-	iPtr.variant = novaTwoAccMultOp
-	if !novaOp(cpuPtr, &iPtr) {
-		t.Error("Failed to execute MOV")
-	}
-	if cpuPtr.ac[2] != 3 {
-		t.Errorf("Expected 3, got %d", cpuPtr.ac[2])
-	}
-
-	// simple ADD that should set CARRY
-	novaTwoAccMultOp.acs = 1
-	novaTwoAccMultOp.acd = 2
-	cpuPtr.ac[1] = 1
-	cpuPtr.ac[2] = 2
-	cpuPtr.carry = false
-	iPtr.variant = novaTwoAccMultOp
-	if !novaOp(cpuPtr, &iPtr) {
-		t.Error("Failed to execute MOV")
-	}
-	if cpuPtr.ac[2] != 3 {
-		t.Errorf("Expected 3, got %d", cpuPtr.ac[2])
-	}
-
-	// simple ADD to self
-	novaTwoAccMultOp.acs = 1
+	iPtr.ix = instrNEG
+	novaTwoAccMultOp.acs = 0
 	novaTwoAccMultOp.acd = 1
-	cpuPtr.ac[1] = 1
 	iPtr.variant = novaTwoAccMultOp
+	cpuPtr.ac[0] = 0
+	cpuPtr.ac[1] = 0
+	cpuPtr.carry = false
 	if !novaOp(cpuPtr, &iPtr) {
-		t.Error("Failed to execute MOV")
+		t.Error("Failed to execute NEG")
 	}
-	if cpuPtr.ac[1] != 2 {
-		t.Errorf("Expected 2 got %d", cpuPtr.ac[1])
+	if cpuPtr.ac[1] != 0 {
+		t.Errorf("Expected 0, got %d", cpuPtr.ac[1])
 	}
 
-	// ADDR to self
-	novaTwoAccMultOp.acs = 1
-	novaTwoAccMultOp.acd = 1
-	cpuPtr.ac[1] = 1
+	cpuPtr.ac[0] = 0xffff
+	cpuPtr.ac[1] = 0
 	cpuPtr.carry = false
-	novaTwoAccMultOp.sh = 'R'
-	iPtr.variant = novaTwoAccMultOp
 	if !novaOp(cpuPtr, &iPtr) {
-		t.Error("Failed to execute MOV")
+		t.Error("Failed to execute NEG")
 	}
 	if cpuPtr.ac[1] != 1 {
-		t.Errorf("Expected 1 got %d", cpuPtr.ac[1])
-	}
-	if cpuPtr.carry {
-		t.Error("Expected CARRY to be clear")
-	}
-
-	// ADDR to self with carry set
-	novaTwoAccMultOp.acs = 1
-	novaTwoAccMultOp.acd = 1
-	cpuPtr.ac[1] = 1
-	cpuPtr.carry = true
-	novaTwoAccMultOp.sh = 'R'
-	iPtr.variant = novaTwoAccMultOp
-	if !novaOp(cpuPtr, &iPtr) {
-		t.Error("Failed to execute MOV")
-	}
-	if cpuPtr.ac[1] != 0x8001 {
-		t.Errorf("Expected %#x got %#x", 0x8001, cpuPtr.ac[1])
-	}
-	if cpuPtr.carry {
-		t.Error("Expected CARRY to be clear")
+		t.Errorf("Expected %d, got %d", 1, cpuPtr.ac[1])
 	}
 }
