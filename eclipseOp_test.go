@@ -1,6 +1,6 @@
 // mvemg project eclipseOp_test.go
 
-// Copyright (C) 2017  Steve Merrony
+// Copyright (C) 2017,2019 Steve Merrony
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -50,6 +50,34 @@ func TestADDI(t *testing.T) {
 	}
 	if cpuPtr.ac[0] != 0xfffc {
 		t.Errorf("Expected %x, got %x", -4, cpuPtr.ac[0])
+	}
+}
+
+func TestANDI(t *testing.T) {
+	cpuPtr := cpuInit(nil)
+	var iPtr decodedInstrT
+	var oneAccImmWd2Word oneAccImmWd2WordT
+	iPtr.ix = instrANDI
+	oneAccImmWd2Word.immWord = 3
+	oneAccImmWd2Word.acd = 0
+	cpuPtr.ac[0] = 0
+	iPtr.variant = oneAccImmWd2Word
+	if !eclipseOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute ANDI")
+	}
+	if cpuPtr.ac[0] != 0 {
+		t.Errorf("Expected %x, got %x", 0, cpuPtr.ac[0])
+	}
+
+	oneAccImmWd2Word.immWord = 0x5555
+	oneAccImmWd2Word.acd = 0
+	cpuPtr.ac[0] = 0x00ff
+	iPtr.variant = oneAccImmWd2Word
+	if !eclipseOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute ANDI")
+	}
+	if cpuPtr.ac[0] != 0x0055 {
+		t.Errorf("Expected %x, got %x", 0x0055, cpuPtr.ac[0])
 	}
 }
 
