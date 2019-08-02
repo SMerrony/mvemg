@@ -215,6 +215,33 @@ func TestWINC(t *testing.T) {
 	}
 }
 
+func TestWLSHI(t *testing.T) {
+	cpuPtr := cpuInit(nil)
+	var iPtr decodedInstrT
+	var oneAccImm2Word oneAccImm2WordT
+	iPtr.ix = instrWLSHI
+	oneAccImm2Word.acd = 0
+	oneAccImm2Word.immS16 = 8 // should shift 1 byte left
+	iPtr.variant = oneAccImm2Word
+	cpuPtr.ac[0] = 0x00001234
+	if !eagleOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute WLSHI")
+	}
+	if cpuPtr.ac[0] != 0x00123400 {
+		t.Errorf("Expected %x, got %x", 0x00123400, cpuPtr.ac[0])
+	}
+
+	oneAccImm2Word.immS16 = -8 // should shift 1 byte right
+	iPtr.variant = oneAccImm2Word
+	cpuPtr.ac[0] = 0x00001234
+	if !eagleOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute WLSHI")
+	}
+	if cpuPtr.ac[0] != 0x00000012 {
+		t.Errorf("Expected %x, got %x", 0x00000012, cpuPtr.ac[0])
+	}
+}
+
 func TestWNADI(t *testing.T) {
 	cpuPtr := cpuInit(nil)
 	var iPtr decodedInstrT
