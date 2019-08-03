@@ -107,11 +107,23 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			}
 		} else {
 			logging.DebugPrint(logging.DebugLog, "WARN: I/O attempted to unattached or non-I/O capable device 0%o\n", novaDataIo.ioDev)
-			if novaDataIo.ioDev != 2 {
+			switch novaDataIo.ioDev {
+			case 0:
+				switch iPtr.ix {
+				case instrDIA:
+					cpuPtr.ac[0] = 056
+				case instrDIB:
+					cpuPtr.ac[0] = 0xffff
+				}
+			case 2, 012, 013: // TODO - ignore for now
+			default:
 				return false
-				// logging.DebugLogsDump("logs/")
-				// log.Fatalf("Illegal I/O device crash - Device No: %o\n", novaDataIo.ioDev) // TODO Exception for ?MMU?
 			}
+			// if novaDataIo.ioDev != 2 {
+			// 	return false
+			// 	// logging.DebugLogsDump("logs/")
+			// 	// log.Fatalf("Illegal I/O device crash - Device No: %o\n", novaDataIo.ioDev) // TODO Exception for ?MMU?
+			// }
 		}
 
 	case instrHALT:
@@ -157,10 +169,14 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case instrSKP:
 		var busy, done bool
 		ioTestDev := iPtr.variant.(ioTestDevT)
-		if ioTestDev.ioDev == devCPU {
+		switch ioTestDev.ioDev {
+		case devCPU:
 			busy = cpuPtr.ion
 			done = cpuPtr.pfflag
-		} else {
+		case 012, 013: // TODO - ignore for now
+			cpuPtr.pc += 2
+			return true
+		default:
 			busy = bus.GetBusy(ioTestDev.ioDev)
 			done = bus.GetDone(ioTestDev.ioDev)
 		}

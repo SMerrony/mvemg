@@ -58,9 +58,6 @@ const (
 	devDPF1  = 067
 	devFPU   = 076
 	devCPU   = 077
-
-	cpuModelNo = 0x224C
-	ucodeRev   = 0x04
 )
 
 var deviceMap = devices.DeviceMapT{

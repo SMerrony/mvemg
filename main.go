@@ -53,6 +53,9 @@ const (
 	// ScpBuffSize is the char buffer length for SCP input lines
 	ScpBuffSize = 135
 
+	cpuModelNo = 0x224C // => MV/10000 according to p.2-19 of AOS/VS Internals
+	ucodeRev   = 0x04
+
 	// MemSizeWords defines the size of MV/Em's emulated RAM in 16-bit words
 	MemSizeWords = 8388608 // = 040 000 000 (8) = 0x80 0000
 	// MemSizeLCPID is the code returned by the LCPID to indicate the size of RAM in half megabytes
@@ -432,14 +435,14 @@ func boot(cmd []string) {
 		cpu.cpuMu.Lock()
 		cpu.sr = 0x8000 | devDPF
 		cpu.ac[0] = devDPF
-		cpu.pc = 0377
+		cpu.pc = 012
 		cpu.cpuMu.Unlock()
 	case devDSKP:
 		dskp.Disk6239LoadDKBT()
 		cpu.cpuMu.Lock()
 		cpu.sr = 0x8000 | devDSKP
 		cpu.ac[0] = devDSKP
-		cpu.pc = 0377
+		cpu.pc = 012
 		cpu.cpuMu.Unlock()
 	default:
 		tto.PutNLString(" *** Booting from that device not yet implemented ***")
