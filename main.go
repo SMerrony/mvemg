@@ -571,8 +571,7 @@ func disassemble(cmd []string) {
 		word = memory.ReadWord(addr)
 		byte1 = dg.ByteT(word >> 8)
 		byte2 = dg.ByteT(word & 0x00ff)
-		display = fmt.Sprintf(fmtRadixVerb()+": %02X %02X %03o %03o %s \"", addr, byte1, byte2, byte1, byte2,
-			memory.WordToBinStr(word))
+		display = fmt.Sprintf(fmtRadixVerb()+": %02X %02X %06o %s \"", addr, byte1, byte2, word, memory.WordToBinStr(word))
 		if byte1 >= ' ' && byte1 <= '~' {
 			display += string(byte1)
 		} else {
