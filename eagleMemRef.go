@@ -170,9 +170,9 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		// add 1-4 to signed 32-bit acc
 		immMode2Word := iPtr.variant.(immMode2WordT)
 		addr := resolve16bitEagleAddr(cpuPtr, immMode2Word.ind, immMode2Word.mode, immMode2Word.disp15)
-		i32 := int32(memory.ReadDWord(addr)) + int32(immMode2Word.immU16)
-		// FIXME handle Carry and OVeRflow
-		memory.WriteDWord(addr, dg.DwordT(i32))
+		s64 := int64(memory.ReadDWord(addr)) + int64(immMode2Word.immU16)
+		cpuPtr.carry = (s64 > maxPosS32) || (s64 < minNegS32) // FIXME handle OVeRflow
+		memory.WriteDWord(addr, dg.DwordT(s64))
 
 	case instrXWLDA:
 		oneAccModeInd2Word := iPtr.variant.(oneAccModeInd2WordT)
