@@ -31,15 +31,6 @@ import (
 
 func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
-	// var (
-	// 	abc         byte
-	// 	busy, done  bool
-	// 	ioFlagsDev  ioFlagsDevT
-	// 	ioTestDev   ioTestDevT
-	// 	novaDataIo  novaDataIoT
-	// 	oneAcc1Word oneAcc1WordT
-	// )
-
 	// The Eclipse LEF instruction is handled funkily...
 	if cpuPtr.atu && cpuPtr.sbr[memory.GetSegment(cpuPtr.pc)].lef {
 		iPtr.ix = instrLEF
@@ -108,22 +99,17 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		} else {
 			logging.DebugPrint(logging.DebugLog, "WARN: I/O attempted to unattached or non-I/O capable device 0%o\n", novaDataIo.ioDev)
 			switch novaDataIo.ioDev {
-			case 0:
-				switch iPtr.ix {
-				case instrDIA:
-					cpuPtr.ac[0] = 056
-				case instrDIB:
-					cpuPtr.ac[0] = 0xffff
-				}
+			// case 0:
+			// 	switch iPtr.ix {
+			// 	case instrDIA:
+			// 		cpuPtr.ac[0] = 056
+			// 	case instrDIB:
+			// 		cpuPtr.ac[0] = 0xffff
+			// 	}
 			case 2, 012, 013: // TODO - ignore for now
 			default:
 				return false
 			}
-			// if novaDataIo.ioDev != 2 {
-			// 	return false
-			// 	// logging.DebugLogsDump("logs/")
-			// 	// log.Fatalf("Illegal I/O device crash - Device No: %o\n", novaDataIo.ioDev) // TODO Exception for ?MMU?
-			// }
 		}
 
 	case instrHALT:
@@ -184,30 +170,18 @@ func novaIO(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		case bnTest:
 			if busy {
 				cpuPtr.pc++
-				// if debugLogging {
-				// 	logging.DebugPrint(logging.DebugLog, "... skipping\n")
-				// }
 			}
 		case bzTest:
 			if !busy {
 				cpuPtr.pc++
-				// if debugLogging {
-				// 	logging.DebugPrint(logging.DebugLog, "... skipping\n")
-				// }
 			}
 		case dnTest:
 			if done {
 				cpuPtr.pc++
-				// if debugLogging {
-				// 	logging.DebugPrint(logging.DebugLog, "... skipping\n")
-				// }
 			}
 		case dzTest:
 			if !done {
 				cpuPtr.pc++
-				// if debugLogging {
-				// 	logging.DebugPrint(logging.DebugLog, "... skipping\n")
-				// }
 			}
 		}
 
