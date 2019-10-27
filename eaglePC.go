@@ -331,20 +331,22 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			dwd = dg.DwordT(noAccModeInd3WordXcall.argCount) & 0x00007fff
 		}
 		memory.WsPush(0, dwd)
-		cpuPtr.pc = resolve16bitEagleAddr(cpuPtr, noAccModeInd3WordXcall.ind, noAccModeInd3WordXcall.mode,
-			noAccModeInd3WordXcall.disp15)
+		cpuPtr.pc = resolve32bitEffAddr(cpuPtr, noAccModeInd3WordXcall.ind, noAccModeInd3WordXcall.mode,
+			int32(noAccModeInd3WordXcall.disp15))
 
 	case instrXJMP:
 		noAccModeInd2Word := iPtr.variant.(noAccModeInd2WordT)
 		if noAccModeInd2Word.mode == pcMode {
 			noAccModeInd2Word.disp15++
 		}
-		cpuPtr.pc = resolve16bitEagleAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15)
+		//cpuPtr.pc = resolve16bitEagleAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15)
+		cpuPtr.pc = resolve32bitEffAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, int32(noAccModeInd2Word.disp15))
 
 	case instrXJSR:
 		noAccModeInd2Word := iPtr.variant.(noAccModeInd2WordT)
 		cpuPtr.ac[3] = dg.DwordT(cpuPtr.pc + 2) // TODO Check this, PoP is self-contradictory on p.11-642
-		cpuPtr.pc = resolve16bitEagleAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15)
+		//cpuPtr.pc = resolve16bitEagleAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15)
+		cpuPtr.pc = resolve32bitEffAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, int32(noAccModeInd2Word.disp15))
 
 	case instrXNDO: // Narrow Do Until Greater Than
 		threeWordDo := iPtr.variant.(threeWordDoT)
@@ -363,7 +365,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrXNISZ: // unsigned narrow increment and skip if zero
 		noAccModeInd2Word := iPtr.variant.(noAccModeInd2WordT)
-		tmpAddr := resolve16bitEagleAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15)
+		tmpAddr := resolve32bitEffAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, int32(noAccModeInd2Word.disp15))
 		wd := memory.ReadWord(tmpAddr)
 		wd++ // N.B. have checked that 0xffff + 1 == 0 in Go
 		memory.WriteWord(tmpAddr, wd)
@@ -375,7 +377,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrXWDSZ:
 		noAccModeInd2Word := iPtr.variant.(noAccModeInd2WordT)
-		tmpAddr := resolve16bitEagleAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15)
+		tmpAddr := resolve32bitEffAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, int32(noAccModeInd2Word.disp15))
 		dwd := memory.ReadDWord(tmpAddr)
 		dwd--
 		memory.WriteDWord(tmpAddr, dwd)
