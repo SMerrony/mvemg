@@ -109,20 +109,20 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrXLDB:
 		oneAccMode2Word := iPtr.variant.(oneAccMode2WordT)
-		cpuPtr.ac[oneAccMode2Word.acd] = dg.DwordT(memory.ReadByte(resolve16bitEagleAddr(cpuPtr,
+		cpuPtr.ac[oneAccMode2Word.acd] = dg.DwordT(memory.ReadByte(resolve32bitEffAddr(cpuPtr,
 			' ',
 			oneAccMode2Word.mode,
-			oneAccMode2Word.disp16),
+			int32(oneAccMode2Word.disp16)),
 			oneAccMode2Word.bitLow)) & 0x00ff
 
 	case instrXLEF:
 		oneAccModeInd2Word := iPtr.variant.(oneAccModeInd2WordT)
-		cpuPtr.ac[oneAccModeInd2Word.acd] = dg.DwordT(resolve16bitEagleAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, oneAccModeInd2Word.disp15))
+		cpuPtr.ac[oneAccModeInd2Word.acd] = dg.DwordT(resolve32bitEffAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, int32(oneAccModeInd2Word.disp15)))
 
 	case instrXLEFB:
 		oneAccMode2Word := iPtr.variant.(oneAccMode2WordT)
 		loBit := oneAccMode2Word.disp16 & 1
-		addr := resolve16bitEagleAddr(cpuPtr, 0, oneAccMode2Word.mode, oneAccMode2Word.disp16/2)
+		addr := resolve32bitEffAddr(cpuPtr, 0, oneAccMode2Word.mode, int32(oneAccMode2Word.disp16)/2)
 		addr <<= 1
 		if loBit == 1 {
 			addr++
@@ -131,7 +131,7 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrXNADD, instrXNSUB:
 		oneAccModeInd2Word := iPtr.variant.(oneAccModeInd2WordT)
-		addr := resolve16bitEagleAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, oneAccModeInd2Word.disp15)
+		addr := resolve32bitEffAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, int32(oneAccModeInd2Word.disp15))
 		i16b := int16(memory.ReadWord(addr))
 		i16a := int16(memory.DwordGetLowerWord(cpuPtr.ac[oneAccModeInd2Word.acd]))
 		if iPtr.ix == instrXNADD {
