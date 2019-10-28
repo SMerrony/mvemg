@@ -350,7 +350,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrXNDO: // Narrow Do Until Greater Than
 		threeWordDo := iPtr.variant.(threeWordDoT)
-		loopVarAddr := resolve16bitEagleAddr(cpuPtr, threeWordDo.ind, threeWordDo.mode, threeWordDo.disp15)
+		loopVarAddr := resolve32bitEffAddr(cpuPtr, threeWordDo.ind, threeWordDo.mode, int32(threeWordDo.disp15))
 		loopVar := int32(memory.SexWordToDword(memory.DwordGetLowerWord(memory.ReadDWord(loopVarAddr))))
 		loopVar++
 		memory.WriteDWord(loopVarAddr, dg.DwordT(loopVar))

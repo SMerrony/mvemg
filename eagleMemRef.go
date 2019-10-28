@@ -143,7 +143,7 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrXNLDA:
 		oneAccModeInd2Word := iPtr.variant.(oneAccModeInd2WordT)
-		addr := resolve16bitEagleAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, oneAccModeInd2Word.disp15)
+		addr := resolve32bitEffAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, int32(oneAccModeInd2Word.disp15))
 		wd, ok := memory.ReadWordTrap(addr)
 		if !ok {
 			return false
@@ -154,34 +154,29 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case instrXSTB:
 		oneAccMode2Word := iPtr.variant.(oneAccMode2WordT)
 		byt := dg.ByteT(cpuPtr.ac[oneAccMode2Word.acd])
-		memory.WriteByte(resolve16bitEagleAddr(cpuPtr,
-			' ',
-			oneAccMode2Word.mode,
-			oneAccMode2Word.disp16),
-			oneAccMode2Word.bitLow,
-			byt)
+		memory.WriteByte(resolve32bitEffAddr(cpuPtr, ' ', oneAccMode2Word.mode, int32(oneAccMode2Word.disp16)), oneAccMode2Word.bitLow, byt)
 
 	case instrXNSTA:
 		oneAccModeInd2Word := iPtr.variant.(oneAccModeInd2WordT)
-		addr := resolve16bitEagleAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, oneAccModeInd2Word.disp15)
+		addr := resolve32bitEffAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, int32(oneAccModeInd2Word.disp15))
 		memory.WriteWord(addr, memory.DwordGetLowerWord(cpuPtr.ac[oneAccModeInd2Word.acd]))
 
 	case instrXWADI:
 		// add 1-4 to signed 32-bit acc
 		immMode2Word := iPtr.variant.(immMode2WordT)
-		addr := resolve16bitEagleAddr(cpuPtr, immMode2Word.ind, immMode2Word.mode, immMode2Word.disp15)
+		addr := resolve32bitEffAddr(cpuPtr, immMode2Word.ind, immMode2Word.mode, int32(immMode2Word.disp15))
 		s64 := int64(memory.ReadDWord(addr)) + int64(immMode2Word.immU16)
 		cpuPtr.carry = (s64 > maxPosS32) || (s64 < minNegS32) // FIXME handle OVeRflow
 		memory.WriteDWord(addr, dg.DwordT(s64))
 
 	case instrXWLDA:
 		oneAccModeInd2Word := iPtr.variant.(oneAccModeInd2WordT)
-		addr := resolve16bitEagleAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, oneAccModeInd2Word.disp15)
+		addr := resolve32bitEffAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, int32(oneAccModeInd2Word.disp15))
 		cpuPtr.ac[oneAccModeInd2Word.acd] = memory.ReadDWord(addr)
 
 	case instrXWSTA:
 		oneAccModeInd2Word := iPtr.variant.(oneAccModeInd2WordT)
-		addr := resolve16bitEagleAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, oneAccModeInd2Word.disp15)
+		addr := resolve32bitEffAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, int32(oneAccModeInd2Word.disp15))
 		memory.WriteDWord(addr, cpuPtr.ac[oneAccModeInd2Word.acd])
 
 	default:

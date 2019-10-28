@@ -188,12 +188,11 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrXPEF:
 		noAccModeInd2Word := iPtr.variant.(noAccModeInd2WordT)
-		// FIXME segment handling, check for overflow
-		memory.WsPush(0, dg.DwordT(resolve16bitEagleAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15)))
+		memory.WsPush(0, dg.DwordT(resolve32bitEffAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, int32(noAccModeInd2Word.disp15))))
 
 	case instrXPEFB:
 		noAccMode2Word := iPtr.variant.(noAccMode2WordT)
-		// FIXME segment handling, check for overflow
+		// FIXME check for overflow
 		eff := dg.DwordT(noAccMode2Word.disp16)
 		switch noAccMode2Word.mode {
 		case absoluteMode: // do nothing
@@ -207,10 +206,10 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		memory.WsPush(0, eff)
 
 	case instrXPSHJ:
-		// FIXME segment handling, check for overflow
+		// FIXME check for overflow
 		immMode2Word := iPtr.variant.(immMode2WordT)
 		memory.WsPush(0, dg.DwordT(cpuPtr.pc+2))
-		cpuPtr.pc = resolve16bitEagleAddr(cpuPtr, immMode2Word.ind, immMode2Word.mode, immMode2Word.disp15)
+		cpuPtr.pc = resolve32bitEffAddr(cpuPtr, immMode2Word.ind, immMode2Word.mode, int32(immMode2Word.disp15))
 		return true
 
 	default:
