@@ -1,4 +1,4 @@
-# Copyright (C) 2017  Steve Merrony
+# Copyright (C) 2017,2019  Steve Merrony
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +29,8 @@ INSTRGEN = dginstr
 INSTRSRC = ${HOME}/go/src/github.com/SMerrony/dgemug/cmd/dginstr/dginstrs.csv
 INSTRGO = instructionDefinitions.go
 
+CLEANLOGS = rm -f logs/*.log *.pprof
+
 # Values for program version etc.
 # VERSION = 0.1
 # BUILD = `git rev-parse HEAD`
@@ -47,8 +49,10 @@ test:
 	${GOTEST} 
 clean: 
 	${GOCLEAN}
+	${CLEANLOGS}
 	rm -f ${BINARY_NAME} debug debug.test
-	rm -f logs/*.log *.pprof
+cleanlogs:
+	${CLEANLOGS}
 run:
 	${GOBUILD} -o ${BINARY_NAME} -v ./...
 	./${BINARY_NAME}
