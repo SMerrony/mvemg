@@ -34,7 +34,7 @@ const (
 	physMask32 = 0x7fffffff
 )
 
-func resolve16bitEclipseAddr(cpuPtr *CPUT, ind byte, mode int, disp int16) dg.PhysAddrT {
+func resolve16bitEffAddr(cpuPtr *CPUT, ind byte, mode int, disp int16, dispOffset int) dg.PhysAddrT {
 
 	var (
 		intEff  int32
@@ -46,7 +46,7 @@ func resolve16bitEclipseAddr(cpuPtr *CPUT, ind byte, mode int, disp int16) dg.Ph
 	case absoluteMode:
 		intEff = int32(disp)
 	case pcMode:
-		intEff = int32(cpuPtr.pc) + int32(disp)
+		intEff = int32(cpuPtr.pc) + int32(disp) + int32(dispOffset)
 	case ac2Mode:
 		intEff = int32(cpuPtr.ac[2]) + int32(disp)
 	case ac3Mode:
@@ -76,50 +76,6 @@ func resolve16bitEclipseAddr(cpuPtr *CPUT, ind byte, mode int, disp int16) dg.Ph
 	return dg.PhysAddrT(intEff) & 0x7fff // mask off to Eclipse range
 }
 
-// This is the same as resolve16bitEclipseAddr, but without the range masking at the end
-// func resolve16bitEagleAddr(cpuPtr *CPUT, ind byte, mode int, disp int16) dg.PhysAddrT {
-
-// 	var (
-// 		intEff  int32
-// 		indAddr dg.WordT
-// 		ok      bool
-// 	)
-
-// 	// handle addressing mode...
-// 	switch mode {
-// 	case absoluteMode:
-// 		intEff = int32(disp)
-// 	case pcMode:
-// 		intEff = int32(cpuPtr.pc) + int32(disp)
-// 	case ac2Mode:
-// 		intEff = int32(cpuPtr.ac[2]) + int32(disp)
-// 	case ac3Mode:
-// 		intEff = int32(cpuPtr.ac[3]) + int32(disp)
-// 	}
-
-// 	// handle indirection
-// 	if ind == '@' { // down the rabbit hole...
-// 		indAddr = memory.ReadWord(dg.PhysAddrT(intEff))
-// 		for memory.TestWbit(indAddr, 0) {
-// 			indAddr, ok = memory.ReadWordTrap(dg.PhysAddrT(indAddr & physMask16))
-// 			if !ok {
-// 				log.Fatalf("ERROR: PC=%d", cpuPtr.pc)
-// 			}
-// 		}
-// 		intEff = int32(indAddr)
-// 		// res, ok := memory.ReadWordTrap(dg.PhysAddrT(indAddr))
-// 		// if !ok {
-// 		// 	log.Fatalf("ERROR: PC=%d", cpuPtr.pc)
-// 		// }
-// 		// intEff = int32(res)
-// 	}
-
-// 	// if debugLogging {
-// 	// 	logging.DebugPrint(logging.DebugLog, "... resolve16bitEagleAddr got: %#o, returning %#o\n", disp, eff)
-// 	// }
-// 	return dg.PhysAddrT(intEff)
-// }
-
 // Resolve32bitByteAddr returns the word address and low-byte flag for a given 32-bit byte address
 func resolve32bitByteAddr(byteAddr dg.DwordT) (wordAddr dg.PhysAddrT, loByte bool) {
 	wordAddr = dg.PhysAddrT(byteAddr) >> 1
@@ -127,7 +83,7 @@ func resolve32bitByteAddr(byteAddr dg.DwordT) (wordAddr dg.PhysAddrT, loByte boo
 	return wordAddr, loByte
 }
 
-func resolve32bitEffAddr(cpuPtr *CPUT, ind byte, mode int, disp int32) (eff dg.PhysAddrT) {
+func resolve32bitEffAddr(cpuPtr *CPUT, ind byte, mode int, disp int32, dispOffset int) (eff dg.PhysAddrT) {
 
 	eff = dg.PhysAddrT(disp)
 
@@ -136,7 +92,7 @@ func resolve32bitEffAddr(cpuPtr *CPUT, ind byte, mode int, disp int32) (eff dg.P
 	case absoluteMode:
 		// nothing to do
 	case pcMode:
-		eff += cpuPtr.pc
+		eff += cpuPtr.pc + dg.PhysAddrT(dispOffset)
 	case ac2Mode:
 		eff += dg.PhysAddrT(cpuPtr.ac[2])
 	case ac3Mode:
@@ -159,7 +115,7 @@ func resolve32bitEffAddr(cpuPtr *CPUT, ind byte, mode int, disp int32) (eff dg.P
 	}
 
 	if debugLogging {
-		logging.DebugPrint(logging.DebugLog, "... resolve32bitEffAddr got: %#o, returning %#o\n", disp, eff)
+		logging.DebugPrint(logging.DebugLog, "... resolve32bitEffAddr got: %#o %s, returning %#o\n", disp, modeToString(mode), eff)
 	}
 	return eff
 }

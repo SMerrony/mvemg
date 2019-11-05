@@ -65,7 +65,7 @@ func eclipseMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrELDA:
 		oneAccModeInt2Word := iPtr.variant.(oneAccModeInd2WordT)
-		addr := resolve16bitEclipseAddr(cpuPtr, oneAccModeInt2Word.ind, oneAccModeInt2Word.mode, oneAccModeInt2Word.disp15)
+		addr := resolve16bitEffAddr(cpuPtr, oneAccModeInt2Word.ind, oneAccModeInt2Word.mode, oneAccModeInt2Word.disp15, iPtr.dispOffset)
 		cpuPtr.ac[oneAccModeInt2Word.acd] = dg.DwordT(memory.ReadWord(addr)) & 0x0ffff
 
 	default:

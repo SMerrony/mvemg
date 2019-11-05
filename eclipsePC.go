@@ -1,4 +1,23 @@
 // eclipsePC.go
+
+// Copyright (C) 2017,2019  Steve Merrony
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 package main
 
 import (
@@ -49,7 +68,7 @@ func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrDSPA:
 		oneAccModeInt2Word = iPtr.variant.(oneAccModeInd2WordT)
-		tableStart := resolve16bitEclipseAddr(cpuPtr, oneAccModeInt2Word.ind, oneAccModeInt2Word.mode, oneAccModeInt2Word.disp15)
+		tableStart := resolve16bitEffAddr(cpuPtr, oneAccModeInt2Word.ind, oneAccModeInt2Word.mode, oneAccModeInt2Word.disp15, iPtr.dispOffset)
 		offset := memory.DwordGetLowerWord(cpuPtr.ac[oneAccModeInt2Word.acd])
 		lowLimit := memory.ReadWord(tableStart - 2)
 		hiLimit := memory.ReadWord(tableStart - 1)
@@ -70,7 +89,7 @@ func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrEISZ:
 		noAccModeInd2Word = iPtr.variant.(noAccModeInd2WordT)
-		addr = resolve16bitEclipseAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15)
+		addr = resolve16bitEffAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15, iPtr.dispOffset)
 		wd = memory.ReadWord(addr)
 		wd++
 		memory.WriteWord(addr, wd)
@@ -82,13 +101,13 @@ func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrEJMP:
 		noAccModeInd2Word = iPtr.variant.(noAccModeInd2WordT)
-		addr = resolve16bitEclipseAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15)
+		addr = resolve16bitEffAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15, iPtr.dispOffset)
 		cpuPtr.pc = addr
 
 	case instrEJSR:
 		noAccModeInd2Word = iPtr.variant.(noAccModeInd2WordT)
 		cpuPtr.ac[3] = dg.DwordT(cpuPtr.pc) + 2
-		addr = resolve16bitEclipseAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15)
+		addr = resolve16bitEffAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15, iPtr.dispOffset)
 		cpuPtr.pc = addr
 
 	case instrSGT: //16-bit signed numbers

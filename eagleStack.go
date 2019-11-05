@@ -55,7 +55,7 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrLPEF:
 		noAccModeInd3Word := iPtr.variant.(noAccModeInd3WordT)
-		memory.WsPush(0, dg.DwordT(resolve32bitEffAddr(cpuPtr, noAccModeInd3Word.ind, noAccModeInd3Word.mode, noAccModeInd3Word.disp31)))
+		memory.WsPush(0, dg.DwordT(resolve32bitEffAddr(cpuPtr, noAccModeInd3Word.ind, noAccModeInd3Word.mode, noAccModeInd3Word.disp31, iPtr.dispOffset)))
 
 	case instrLPEFB:
 		noAccMode3Word := iPtr.variant.(noAccMode3WordT)
@@ -188,7 +188,7 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrXPEF:
 		noAccModeInd2Word := iPtr.variant.(noAccModeInd2WordT)
-		memory.WsPush(0, dg.DwordT(resolve32bitEffAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, int32(noAccModeInd2Word.disp15))))
+		memory.WsPush(0, dg.DwordT(resolve32bitEffAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, int32(noAccModeInd2Word.disp15), iPtr.dispOffset)))
 
 	case instrXPEFB:
 		noAccMode2Word := iPtr.variant.(noAccMode2WordT)
@@ -209,7 +209,7 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		// FIXME check for overflow
 		immMode2Word := iPtr.variant.(immMode2WordT)
 		memory.WsPush(0, dg.DwordT(cpuPtr.pc+2))
-		cpuPtr.pc = resolve32bitEffAddr(cpuPtr, immMode2Word.ind, immMode2Word.mode, int32(immMode2Word.disp15))
+		cpuPtr.pc = resolve32bitEffAddr(cpuPtr, immMode2Word.ind, immMode2Word.mode, int32(immMode2Word.disp15), iPtr.dispOffset)
 		return true
 
 	default:

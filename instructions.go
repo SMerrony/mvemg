@@ -1,6 +1,6 @@
 // instructions.go
 
-// Copyright (C) 2017  Steve Merrony
+// Copyright (C) 2017,2019 Steve Merrony
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -53,24 +53,22 @@ const (
 	dzTest = 3
 )
 
-const maxInstrs = 1000
+const maxInstrs = 750
 
 // the characteristics of each instruction
 type instrChars struct {
-	mnemonic  string   // DG standard assembler mnemonic for opcode
-	bits      dg.WordT // bit-pattern for opcode
-	mask      dg.WordT // mask for unique bits in opcode
-	instrLen  int      // # of words in opcode and any following args
-	instrFmt  int      // opcode layout
-	instrType int      // class of opcode (somewhat arbitrary)
-	//xeqCounter uint64  // count of # times instruction hit during this run
+	mnemonic   string   // DG standard assembler mnemonic for opcode
+	bits       dg.WordT // bit-pattern for opcode
+	mask       dg.WordT // mask for unique bits in opcode
+	instrLen   int      // # of words in opcode and any following args
+	instrFmt   int      // opcode layout
+	instrType  int      // class of opcode (somewhat arbitrary)
+	dispOffset int      // words to start of displacement
 }
 
 // InstructionSet contains the map of all recognised instruction.
 // N.B. Recognised, not implemented necessarily.
 //type InstructionSet map[string]instrChars
-
-//var instructionSet = make(InstructionSet)
 
 var instructionSet [maxInstrs]instrChars
 

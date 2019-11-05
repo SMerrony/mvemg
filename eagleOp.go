@@ -55,18 +55,18 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrLLDB:
 		oneAccMode3Word := iPtr.variant.(oneAccMode3WordT)
-		addr := resolve32bitEffAddr(cpuPtr, ' ', oneAccMode3Word.mode, oneAccMode3Word.disp31>>1)
+		addr := resolve32bitEffAddr(cpuPtr, ' ', oneAccMode3Word.mode, oneAccMode3Word.disp31>>1, iPtr.dispOffset)
 		lobyte := memory.TestDwbit(dg.DwordT(oneAccMode3Word.disp31), 31)
 		cpuPtr.ac[oneAccMode3Word.acd] = dg.DwordT(memory.ReadByte(addr, lobyte))
 
 	case instrLLEF:
 		oneAccModeInd3Word := iPtr.variant.(oneAccModeInd3WordT)
 		cpuPtr.ac[oneAccModeInd3Word.acd] = dg.DwordT(
-			resolve32bitEffAddr(cpuPtr, oneAccModeInd3Word.ind, oneAccModeInd3Word.mode, oneAccModeInd3Word.disp31))
+			resolve32bitEffAddr(cpuPtr, oneAccModeInd3Word.ind, oneAccModeInd3Word.mode, oneAccModeInd3Word.disp31, iPtr.dispOffset))
 
 	case instrLLEFB:
 		oneAccMode3Word := iPtr.variant.(oneAccMode3WordT)
-		addr := resolve32bitEffAddr(cpuPtr, ' ', oneAccMode3Word.mode, oneAccMode3Word.disp31>>1)
+		addr := resolve32bitEffAddr(cpuPtr, ' ', oneAccMode3Word.mode, oneAccMode3Word.disp31>>1, iPtr.dispOffset)
 		addr <<= 1
 		if memory.TestDwbit(dg.DwordT(oneAccMode3Word.disp31), 31) {
 			addr |= 1

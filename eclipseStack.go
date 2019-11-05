@@ -71,7 +71,7 @@ func eclipseStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case instrPSHJ:
 		noAccModeInd2Word := iPtr.variant.(noAccModeInd2WordT)
 		memory.NsPush(0, dg.WordT(cpuPtr.pc)+2, debugLogging)
-		addr := resolve16bitEclipseAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15)
+		addr := resolve16bitEffAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15, iPtr.dispOffset)
 		cpuPtr.pc = addr
 		return true // because PC set
 

@@ -35,63 +35,29 @@ func TestResolve16bitEclipseAddr(t *testing.T) {
 	memory.WriteWord(11, 10)
 	memory.WriteWord(12, 12)
 
-	r := resolve16bitEclipseAddr(cpuPtr, ' ', absoluteMode, 11)
+	r := resolve16bitEffAddr(cpuPtr, ' ', absoluteMode, 11, 0)
 	if r != 11 {
 		t.Error("Expected 11, got ", r)
 	}
 
-	r = resolve16bitEclipseAddr(cpuPtr, ' ', pcMode, 1)
+	r = resolve16bitEffAddr(cpuPtr, ' ', pcMode, 1, 0)
 	if r != 12 {
 		t.Error("Expected 12, got ", r)
 	}
 
-	r = resolve16bitEclipseAddr(cpuPtr, ' ', pcMode, -1)
+	r = resolve16bitEffAddr(cpuPtr, ' ', pcMode, -1, 0)
 	if r != 10 {
 		t.Error("Expected 10, got ", r)
 	}
 
-	r = resolve16bitEclipseAddr(cpuPtr, '@', pcMode, -1)
+	r = resolve16bitEffAddr(cpuPtr, '@', pcMode, -1, 0)
 	if r != 9 {
 		t.Error("Expected 9, got ", r)
 	}
 
 	cpuPtr.ac[2] = 12
-	r = resolve16bitEclipseAddr(cpuPtr, '@', ac2Mode, -1)
+	r = resolve16bitEffAddr(cpuPtr, '@', ac2Mode, -1, 0)
 	if r != 10 {
 		t.Error("Expected 10, got ", r)
 	}
 }
-
-// func TestResolve16bitEagleAddr(t *testing.T) {
-// 	cpuPtr := cpuInit(nil)
-// 	cpuPtr.pc = 11
-// 	memory.WriteWord(10, 9)
-// 	memory.WriteWord(11, 10)
-// 	memory.WriteWord(12, 12)
-
-// 	r := resolve16bitEagleAddr(cpuPtr, ' ', absoluteMode, 11)
-// 	if r != 11 {
-// 		t.Error("Expected 11, got ", r)
-// 	}
-
-// 	r = resolve16bitEagleAddr(cpuPtr, ' ', pcMode, 1)
-// 	if r != 12 {
-// 		t.Error("Expected 12, got ", r)
-// 	}
-
-// 	r = resolve16bitEagleAddr(cpuPtr, ' ', pcMode, -1)
-// 	if r != 10 {
-// 		t.Error("Expected 10, got ", r)
-// 	}
-
-// 	r = resolve16bitEagleAddr(cpuPtr, '@', pcMode, -1)
-// 	if r != 9 {
-// 		t.Error("Expected 9, got ", r)
-// 	}
-
-// 	cpuPtr.ac[2] = 12
-// 	r = resolve16bitEagleAddr(cpuPtr, '@', ac2Mode, -1)
-// 	if r != 10 {
-// 		t.Error("Expected 10, got ", r)
-// 	}
-// }

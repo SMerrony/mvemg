@@ -39,7 +39,7 @@ func novaMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrDSZ:
 		novaNoAccEffAddr := iPtr.variant.(novaNoAccEffAddrT)
-		effAddr = resolve16bitEclipseAddr(cpuPtr, novaNoAccEffAddr.ind, novaNoAccEffAddr.mode, novaNoAccEffAddr.disp15)
+		effAddr = resolve16bitEffAddr(cpuPtr, novaNoAccEffAddr.ind, novaNoAccEffAddr.mode, novaNoAccEffAddr.disp15, iPtr.dispOffset)
 		shifter = memory.ReadWord(effAddr)
 		shifter--
 		memory.WriteWord(effAddr, shifter)
@@ -49,7 +49,7 @@ func novaMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrISZ:
 		novaNoAccEffAddr := iPtr.variant.(novaNoAccEffAddrT)
-		effAddr = resolve16bitEclipseAddr(cpuPtr, novaNoAccEffAddr.ind, novaNoAccEffAddr.mode, novaNoAccEffAddr.disp15)
+		effAddr = resolve16bitEffAddr(cpuPtr, novaNoAccEffAddr.ind, novaNoAccEffAddr.mode, novaNoAccEffAddr.disp15, iPtr.dispOffset)
 		shifter = memory.ReadWord(effAddr)
 		shifter++
 		memory.WriteWord(effAddr, shifter)
@@ -59,14 +59,14 @@ func novaMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrLDA:
 		novaOneAccEffAddr := iPtr.variant.(novaOneAccEffAddrT)
-		effAddr = resolve16bitEclipseAddr(cpuPtr, novaOneAccEffAddr.ind, novaOneAccEffAddr.mode, novaOneAccEffAddr.disp15)
+		effAddr = resolve16bitEffAddr(cpuPtr, novaOneAccEffAddr.ind, novaOneAccEffAddr.mode, novaOneAccEffAddr.disp15, iPtr.dispOffset)
 		shifter = memory.ReadWord(effAddr)
 		cpuPtr.ac[novaOneAccEffAddr.acd] = 0x0000ffff & dg.DwordT(shifter)
 
 	case instrSTA:
 		novaOneAccEffAddr := iPtr.variant.(novaOneAccEffAddrT)
 		shifter = memory.DwordGetLowerWord(cpuPtr.ac[novaOneAccEffAddr.acd])
-		effAddr = resolve16bitEclipseAddr(cpuPtr, novaOneAccEffAddr.ind, novaOneAccEffAddr.mode, novaOneAccEffAddr.disp15)
+		effAddr = resolve16bitEffAddr(cpuPtr, novaOneAccEffAddr.ind, novaOneAccEffAddr.mode, novaOneAccEffAddr.disp15, iPtr.dispOffset)
 		memory.WriteWord(effAddr, shifter)
 
 	default:

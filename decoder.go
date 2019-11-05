@@ -1,6 +1,6 @@
 // decoder.go
 
-// Copyright (C) 2017,2019  Steve Merrony
+// Copyright (C) 2017,2019 Steve Merrony
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -37,6 +37,7 @@ type decodedInstrT struct {
 	instrFmt    int
 	instrType   int
 	instrLength int
+	dispOffset  int
 	disassembly string
 	variant     interface{}
 }
@@ -272,6 +273,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 	decodedInstr.instrFmt = instructionSet[ix].instrFmt
 	decodedInstr.instrType = instructionSet[ix].instrType
 	decodedInstr.instrLength = instructionSet[ix].instrLen
+	decodedInstr.dispOffset = instructionSet[ix].dispOffset
 
 	switch decodedInstr.instrFmt {
 
@@ -364,7 +366,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		noAccModeInd2Word.disp15 = decode15bitDisp(secondWord, noAccModeInd2Word.mode)
 		decodedInstr.variant = noAccModeInd2Word
 		if disassemble {
-			decodedInstr.disassembly += fmt.Sprintf(" %c%d.%s [2-Word OpCode]",
+			decodedInstr.disassembly += fmt.Sprintf(" %c0%o%s [2-Word OpCode]",
 				noAccModeInd2Word.ind, noAccModeInd2Word.disp15, modeToString(noAccModeInd2Word.mode))
 		}
 	case NOACC_MODE_IND_3_WORD_FMT: // eg. LJMP/LJSR, LNISZ, LNDSZ, LWDS
@@ -376,7 +378,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		noAccModeInd3Word.disp31 = decode31bitDisp(secondWord, thirdWord, noAccModeInd3Word.mode)
 		decodedInstr.variant = noAccModeInd3Word
 		if disassemble {
-			decodedInstr.disassembly += fmt.Sprintf(" %c%d.%s [3-Word OpCode]",
+			decodedInstr.disassembly += fmt.Sprintf(" %c0%o%s [3-Word OpCode]",
 				noAccModeInd3Word.ind, noAccModeInd3Word.disp31, modeToString(noAccModeInd3Word.mode))
 		}
 	case NOACC_MODE_IND_3_WORD_XCALL_FMT: // XCALL
@@ -389,7 +391,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		noAccModeInd3WordXcall.argCount = int(thirdWord)
 		decodedInstr.variant = noAccModeInd3WordXcall
 		if disassemble {
-			decodedInstr.disassembly += fmt.Sprintf(" %c%d.%s, %d. [3-Word OpCode]",
+			decodedInstr.disassembly += fmt.Sprintf(" %c%d.%s, 0%o [3-Word OpCode]",
 				noAccModeInd3WordXcall.ind, noAccModeInd3WordXcall.disp15,
 				modeToString(noAccModeInd3WordXcall.mode), noAccModeInd3WordXcall.argCount)
 		}
@@ -681,34 +683,15 @@ func decode15bitDisp(d15 dg.WordT, mode int) (disp16 int16) {
 		} else {
 			disp16 = int16(d15 & 0x7fff) // zero extend
 		}
-		if mode == pcMode {
-			disp16++ // see p.1-12 of PoP
-		}
+		// if mode == pcMode {
+		// 	disp16++ // see p.1-12 of PoP
+		// }
 	}
 	if debugLogging {
 		logging.DebugPrint(logging.DebugLog, "... decode15bitDisp got: %#o, returning: %#o\n", d15, disp16)
 	}
 	return disp16
 }
-
-// func decode15bitEclipseDisp(d15 dg.WordT, mode int) int16 {
-// 	if mode == absoluteMode {
-// 		disp16 = int16(d15 & 0x7fff) // zero extend
-// 	} else {
-// 		if memory.TestWbit(d15, 1) {
-// 			disp16 = int16(d15 | 0xc000) // sign extend
-// 		} else {
-// 			disp16 = int16(d15 & 0x3fff) // zero extend
-// 		}
-// 		if mode == pcMode {
-// 			disp16++ // see p.1-12 of PoP
-// 		}
-// 	}
-// 	if debugLogging {
-// 		logging.DebugPrint(logging.DebugLog, "... decode15bitEclispeDisp got: %d, returning: %d\n", d15, disp16)
-// 	}
-// 	return disp16
-// }
 
 func decode16bitByteDisp(d16 dg.WordT) (disp16 int16, loHi bool) {
 	loHi = memory.TestWbit(d16, 15)
@@ -728,9 +711,6 @@ func decode31bitDisp(d1, d2 dg.WordT, mode int) int32 {
 		disp32 = int32(int16(d1)) & 0x00007fff // zero extend
 	}
 	disp32 = (disp32 << 16) | (int32(d2) & 0x0000ffff)
-	if mode == pcMode {
-		disp32++ // see p.1-12 of PoP
-	}
 	if debugLogging {
 		logging.DebugPrint(logging.DebugLog, "... decode31bitDisp got: %#o %#o, returning: %#o\n", d1, d2, disp32)
 	}
