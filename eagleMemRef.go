@@ -1,6 +1,6 @@
 // eagleMemRef.go
 
-// Copyright (C) 2017,2019  Steve Merrony
+// Copyright (C) 2017,2019 Steve Merrony
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -234,11 +234,8 @@ func wblm(cpuPtr *CPUT) {
 		}
 	}
 	cpuPtr.ac[1] = 0
-	//cpuPtr.ac[2] = dg_dword(dest) // TODO confirm this
-	//cpuPtr.ac[3] = dg_dword(dest)
-	// TESTING..
-	cpuPtr.ac[2] = dg.DwordT(src + 1) // TODO confirm this
-	cpuPtr.ac[3] = dg.DwordT(dest + 1)
+	cpuPtr.ac[2] = dg.DwordT(src) // TODO confirm this
+	cpuPtr.ac[3] = dg.DwordT(dest)
 }
 
 func wcmv(cpuPtr *CPUT) {
