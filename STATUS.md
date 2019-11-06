@@ -1,7 +1,7 @@
 # MVEmg Status
 
-* Last advance: 3rd Oct 2018
-* Last updated: 2nd Nov 2019
+* Last updated: 6th Nov 2019
+* Last significant progress: 3rd Oct 2018
 
 ## What Works?
 
@@ -33,15 +33,8 @@
 
   Page 0 looks to have been corrupted as it contains text fragments.
 
-* File 1 - FIXUP - hangs during startup
+* File 1 - FIXUP - crash during startup
 
-  Crash at 347753 decoded as XJMP @2,PC 
+  Crash at 662 decoded as WBLM 
 
-  0347753: CE 09 147011 11001110 00001001 "  " XJMP @2.,PC [2-Word OpCode] 
-  0347754: 80 01 100001 10000000 00000001 "  "                                    
-  0347755: 00 01 000001 00000000 00000001 "  " JMP  1.                            
-  0347756: D0 40 150100 11010000 01000000 " @" COM L  2,2                         
-  0347757: 00 00 000000 00000000 00000000 "  " JMP  0.                            
-  0347760: 00 00 000000 00000000 00000000 "  " JMP  0. 
-
-  ...reading beyond physical memory  
+  ...reading beyond physical memory in backwards WBLM
