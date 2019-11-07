@@ -683,9 +683,6 @@ func decode15bitDisp(d15 dg.WordT, mode int) (disp16 int16) {
 		} else {
 			disp16 = int16(d15 & 0x7fff) // zero extend
 		}
-		// if mode == pcMode {
-		// 	disp16++ // see p.1-12 of PoP
-		// }
 	}
 	if debugLogging {
 		logging.DebugPrint(logging.DebugLog, "... decode15bitDisp got: %#o, returning: %#o\n", d15, disp16)
