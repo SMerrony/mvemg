@@ -122,7 +122,13 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case instrXLEFB:
 		oneAccMode2Word := iPtr.variant.(oneAccMode2WordT)
 		loBit := oneAccMode2Word.disp16 & 1
-		addr := resolve32bitEffAddr(cpuPtr, 0, oneAccMode2Word.mode, int32(oneAccMode2Word.disp16)/2, iPtr.dispOffset)
+		var extendedDisp int32
+		if oneAccMode2Word.mode == absoluteMode {
+			extendedDisp = 0x1fff_ffff & int32(oneAccMode2Word.disp16>>1)
+		} else {
+			extendedDisp = int32(oneAccMode2Word.disp16) >> 1
+		}
+		addr := resolve32bitEffAddr(cpuPtr, 0, oneAccMode2Word.mode, extendedDisp, iPtr.dispOffset)
 		addr <<= 1
 		if loBit == 1 {
 			addr++
@@ -132,14 +138,14 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case instrXNADD, instrXNSUB:
 		oneAccModeInd2Word := iPtr.variant.(oneAccModeInd2WordT)
 		addr := resolve32bitEffAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, int32(oneAccModeInd2Word.disp15), iPtr.dispOffset)
-		i16b := int16(memory.ReadWord(addr))
-		i16a := int16(memory.DwordGetLowerWord(cpuPtr.ac[oneAccModeInd2Word.acd]))
+		i16mem := int16(memory.ReadWord(addr))
+		i16ac := int16(memory.DwordGetLowerWord(cpuPtr.ac[oneAccModeInd2Word.acd]))
 		if iPtr.ix == instrXNADD {
-			i16a += i16b
+			i16ac += i16mem
 		} else {
-			i16a -= i16b
+			i16ac -= i16mem
 		}
-		cpuPtr.ac[oneAccModeInd2Word.acd] = memory.SexWordToDword(dg.WordT(i16a))
+		cpuPtr.ac[oneAccModeInd2Word.acd] = memory.SexWordToDword(dg.WordT(i16mem))
 
 	case instrXNLDA:
 		oneAccModeInd2Word := iPtr.variant.(oneAccModeInd2WordT)
@@ -148,7 +154,6 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		if !ok {
 			return false
 		}
-		// FIXME check this...
 		cpuPtr.ac[oneAccModeInd2Word.acd] = memory.SexWordToDword(wd)
 
 	case instrXSTB:
@@ -197,9 +202,9 @@ func readByteBA(ba dg.DwordT) dg.ByteT {
 func memWriteByteBA(b dg.ByteT, ba dg.DwordT) {
 	wordAddr, lowByte := resolve32bitByteAddr(ba)
 	memory.WriteByte(wordAddr, lowByte, b)
-	if debugLogging {
-		logging.DebugPrint(logging.DebugLog, "DEBUG: memWriteByte wrote %c to word addr: %d\n", b, wordAddr)
-	}
+	// if debugLogging {
+	// 	logging.DebugPrint(logging.DebugLog, "DEBUG: memWriteByte wrote %c to word addr: %#o\n", b, wordAddr)
+	// }
 }
 
 func copyByte(srcBA, destBA dg.DwordT) {
@@ -220,7 +225,7 @@ func wblm(cpuPtr *CPUT) {
 	src := dg.PhysAddrT(cpuPtr.ac[2])
 	dest := dg.PhysAddrT(cpuPtr.ac[3])
 	if debugLogging {
-		logging.DebugPrint(logging.DebugLog, "DEBUG: WBLM moving %d words from %d to %d\n", numWds, src, dest)
+		logging.DebugPrint(logging.DebugLog, "DEBUG: WBLM moving %#o words from %#o to %#o\n", numWds, src, dest)
 	}
 	for numWds != 0 {
 		memory.WriteWord(dest, memory.ReadWord(src))
@@ -234,13 +239,12 @@ func wblm(cpuPtr *CPUT) {
 		}
 	}
 	cpuPtr.ac[1] = 0
-	cpuPtr.ac[2] = dg.DwordT(src) // TODO confirm this
+	cpuPtr.ac[2] = dg.DwordT(src)
 	cpuPtr.ac[3] = dg.DwordT(dest)
 }
 
 func wcmv(cpuPtr *CPUT) {
 	// ACO destCount, AC1 srcCount, AC2 dest byte ptr, AC3 src byte ptr
-	var destAscend, srcAscend bool
 	destCount := int32(cpuPtr.ac[0])
 	if destCount == 0 {
 		if debugLogging {
@@ -248,12 +252,12 @@ func wcmv(cpuPtr *CPUT) {
 		}
 		return
 	}
-	destAscend = (destCount > 0)
+	destAscend := (destCount > 0)
 	srcCount := int32(cpuPtr.ac[1])
-	srcAscend = (srcCount > 0)
+	srcAscend := (srcCount > 0)
 	if debugLogging {
-		logging.DebugPrint(logging.DebugLog, ".... WCMV moving %d chars from %d to %d\n",
-			srcCount, cpuPtr.ac[3], cpuPtr.ac[2])
+		logging.DebugPrint(logging.DebugLog, ".... WCMV moving %#o chars from %#o to %#o chars at %#o\n",
+			srcCount, cpuPtr.ac[3], destCount, cpuPtr.ac[2])
 	}
 	// set carry if length of src is greater than length of dest
 	if cpuPtr.ac[1] > cpuPtr.ac[2] {
@@ -297,7 +301,7 @@ func wcmv(cpuPtr *CPUT) {
 		}
 	}
 	cpuPtr.ac[0] = 0
-	cpuPtr.ac[1] = dg.DwordT(srcCount)
+	cpuPtr.ac[1] = 0 // we're treating this as atomic...
 }
 
 func getDirection(ac dg.DwordT) int32 {

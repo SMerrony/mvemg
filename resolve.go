@@ -54,7 +54,7 @@ func resolve16bitEffAddr(cpuPtr *CPUT, ind byte, mode int, disp int16, dispOffse
 	}
 
 	// handle indirection
-	if ind == '@' { // down the rabbit hole...
+	if ind == '@' { // || intEff < 0 { // down the rabbit hole...
 		indAddr = memory.ReadWord(dg.PhysAddrT(intEff))
 		for memory.TestWbit(indAddr, 0) {
 			indAddr = memory.ReadWord(dg.PhysAddrT(indAddr))
@@ -100,7 +100,7 @@ func resolve32bitEffAddr(cpuPtr *CPUT, ind byte, mode int, disp int32, dispOffse
 	}
 
 	// handle indirection
-	if ind == '@' { // down the rabbit hole...
+	if ind == '@' || memory.TestDwbit(dg.DwordT(eff), 0) { // down the rabbit hole...
 		indAddr, ok := memory.ReadDwordTrap(eff)
 		if !ok {
 			log.Fatalln("Terminating")
