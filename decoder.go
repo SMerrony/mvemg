@@ -286,7 +286,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		immMode2Word.disp15 = decode15bitDisp(secondWord, immMode2Word.mode)
 		decodedInstr.variant = immMode2Word
 		if disassemble {
-			decodedInstr.disassembly += fmt.Sprintf(" %d.,%d.%s [2-Word OpCode]",
+			decodedInstr.disassembly += fmt.Sprintf(" %#o,%#o%s [2-Word OpCode]",
 				immMode2Word.immU16, immMode2Word.disp15, modeToString(immMode2Word.mode))
 		}
 	case IMM_ONEACC_FMT: // eg. ADI, HXL, NADI, SBI, WADI, WLSI, WSBI
@@ -297,7 +297,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		immOneAcc.acd = int(memory.GetWbits(opcode, 3, 2))
 		decodedInstr.variant = immOneAcc
 		if disassemble {
-			decodedInstr.disassembly += fmt.Sprintf(" %d.,%d", immOneAcc.immU16, immOneAcc.acd)
+			decodedInstr.disassembly += fmt.Sprintf(" %#o,%d", immOneAcc.immU16, immOneAcc.acd)
 		}
 	case IO_FLAGS_DEV_FMT:
 		var ioFlagsDev ioFlagsDevT
@@ -328,7 +328,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		lndo4Word.offsetU16 = uint16(fourthWord)
 		decodedInstr.variant = lndo4Word
 		if disassemble {
-			decodedInstr.disassembly += fmt.Sprintf(" %d,%d.,%c%d.%s [4-Word OpCode]",
+			decodedInstr.disassembly += fmt.Sprintf(" %d,%#o,%c%#o%s [4-Word OpCode]",
 				lndo4Word.acd, lndo4Word.offsetU16, lndo4Word.ind, lndo4Word.disp31,
 				modeToString(lndo4Word.mode))
 		}
@@ -338,7 +338,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		noAccMode2Word.disp16 = uint16(memory.ReadWord(pc + 1))
 		decodedInstr.variant = noAccMode2Word
 		if disassemble {
-			decodedInstr.disassembly += fmt.Sprintf(" %d.,%s [2-Word OpCode]",
+			decodedInstr.disassembly += fmt.Sprintf(" %#o,%s [2-Word OpCode]",
 				noAccMode2Word.disp16, modeToString(noAccMode2Word.mode))
 		}
 	case NOACC_MODE_3_WORD_FMT: // eg. LPEFB,
@@ -347,7 +347,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		noAccMode3Word.immU32 = uint32(memory.ReadDWord(pc + 1))
 		decodedInstr.variant = noAccMode3Word
 		if disassemble {
-			decodedInstr.disassembly += fmt.Sprintf(" %d.,%s [3-Word OpCode]",
+			decodedInstr.disassembly += fmt.Sprintf(" %#o,%s [3-Word OpCode]",
 				noAccMode3Word.immU32, modeToString(noAccMode3Word.mode))
 		}
 	case NOACC_MODE_IND_2_WORD_E_FMT, NOACC_MODE_IND_2_WORD_X_FMT:
@@ -391,7 +391,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		noAccModeInd3WordXcall.argCount = int(thirdWord)
 		decodedInstr.variant = noAccModeInd3WordXcall
 		if disassemble {
-			decodedInstr.disassembly += fmt.Sprintf(" %c%d.%s, 0%o [3-Word OpCode]",
+			decodedInstr.disassembly += fmt.Sprintf(" %c%#o%s, 0%o [3-Word OpCode]",
 				noAccModeInd3WordXcall.ind, noAccModeInd3WordXcall.disp15,
 				modeToString(noAccModeInd3WordXcall.mode), noAccModeInd3WordXcall.argCount)
 		}
@@ -405,7 +405,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		noAccModeImmInd3Word.disp31 = decode31bitDisp(secondWord, thirdWord, noAccModeImmInd3Word.mode)
 		decodedInstr.variant = noAccModeImmInd3Word
 		if disassemble {
-			decodedInstr.disassembly += fmt.Sprintf(" %d.,%c%d.%s [3-Word OpCode]",
+			decodedInstr.disassembly += fmt.Sprintf(" %#o,%c%#o%s [3-Word OpCode]",
 				noAccModeImmInd3Word.immU16, noAccModeImmInd3Word.ind, noAccModeImmInd3Word.disp31,
 				modeToString(noAccModeImmInd3Word.mode))
 		}
@@ -420,7 +420,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		noAccModeInd4Word.argCount = int(fourthWord)
 		decodedInstr.variant = noAccModeInd4Word
 		if disassemble {
-			decodedInstr.disassembly += fmt.Sprintf(" %c%d.%s,%d. [4-Word OpCode]",
+			decodedInstr.disassembly += fmt.Sprintf(" %c%#o%s,%#o [4-Word OpCode]",
 				noAccModeInd4Word.ind, noAccModeInd4Word.disp31, modeToString(noAccModeInd4Word.mode),
 				noAccModeInd4Word.argCount)
 		}
@@ -441,7 +441,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		novaNoAccEffAddr.disp15 = decode8bitDisp(dg.ByteT(opcode&0x00ff), novaNoAccEffAddr.mode) // NB
 		decodedInstr.variant = novaNoAccEffAddr
 		if disassemble {
-			decodedInstr.disassembly += fmt.Sprintf(" %c%d.%s",
+			decodedInstr.disassembly += fmt.Sprintf(" %c%#o%s",
 				novaNoAccEffAddr.ind, novaNoAccEffAddr.disp15, modeToString(novaNoAccEffAddr.mode))
 		}
 	case NOVA_ONEACC_EFF_ADDR_FMT:
@@ -452,7 +452,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		novaOneAccEffAddr.disp15 = decode8bitDisp(dg.ByteT(opcode&0x00ff), novaOneAccEffAddr.mode) // NB
 		decodedInstr.variant = novaOneAccEffAddr
 		if disassemble {
-			decodedInstr.disassembly += fmt.Sprintf(" %d,%c%d.%s",
+			decodedInstr.disassembly += fmt.Sprintf(" %d,%c%#o%s",
 				novaOneAccEffAddr.acd, novaOneAccEffAddr.ind, novaOneAccEffAddr.disp15,
 				modeToString(novaOneAccEffAddr.mode))
 		}
@@ -484,7 +484,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		oneAccImm2Word.immS16 = int16(secondWord)
 		decodedInstr.variant = oneAccImm2Word
 		if disassemble {
-			decodedInstr.disassembly += fmt.Sprintf(" %d.,%d [2-Word OpCode]", oneAccImm2Word.immS16, oneAccImm2Word.acd)
+			decodedInstr.disassembly += fmt.Sprintf(" %#o,%d [2-Word OpCode]", oneAccImm2Word.immS16, oneAccImm2Word.acd)
 		}
 	case ONEACC_IMMWD_2_WORD_FMT: // eg. ANDI, IORI
 		var oneAccImmWd2Word oneAccImmWd2WordT
@@ -493,7 +493,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		oneAccImmWd2Word.immWord = secondWord
 		decodedInstr.variant = oneAccImmWd2Word
 		if disassemble {
-			decodedInstr.disassembly += fmt.Sprintf(" %d.,%d [2-Word OpCode]", oneAccImmWd2Word.immWord, oneAccImmWd2Word.acd)
+			decodedInstr.disassembly += fmt.Sprintf(" %#o,%d [2-Word OpCode]", oneAccImmWd2Word.immWord, oneAccImmWd2Word.acd)
 		}
 	case ONEACC_IMM_3_WORD_FMT: // eg. WADDI, WUGTI
 		var oneAccImm3Word oneAccImm3WordT
@@ -501,7 +501,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		oneAccImm3Word.immU32 = uint32(memory.ReadDWord(pc + 1))
 		decodedInstr.variant = oneAccImm3Word
 		if disassemble {
-			decodedInstr.disassembly += fmt.Sprintf(" %d.,%d [3-Word OpCode]", oneAccImm3Word.immU32, oneAccImm3Word.acd)
+			decodedInstr.disassembly += fmt.Sprintf(" %#o,%d [3-Word OpCode]", oneAccImm3Word.immU32, oneAccImm3Word.acd)
 		}
 	case ONEACC_IMMDWD_3_WORD_FMT: // eg. WANDI, WIORI, WLDAI
 		var oneAccImmDwd3Word oneAccImmDwd3WordT
@@ -509,7 +509,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		oneAccImmDwd3Word.immDword = memory.ReadDWord(pc + 1)
 		decodedInstr.variant = oneAccImmDwd3Word
 		if disassemble {
-			decodedInstr.disassembly += fmt.Sprintf(" %d.,%d [3-Word OpCode]", oneAccImmDwd3Word.immDword, oneAccImmDwd3Word.acd)
+			decodedInstr.disassembly += fmt.Sprintf(" %#o,%d [3-Word OpCode]", oneAccImmDwd3Word.immDword, oneAccImmDwd3Word.acd)
 		}
 	case ONEACC_MODE_2_WORD_X_B_FMT: // eg. XLDB, XLEFB, XSTB
 		var oneAccMode2Word oneAccMode2WordT
@@ -519,7 +519,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		oneAccMode2Word.disp16, oneAccMode2Word.bitLow = decode16bitByteDisp(secondWord)
 		decodedInstr.variant = oneAccMode2Word
 		if disassemble {
-			decodedInstr.disassembly += fmt.Sprintf(" %d,%d.+%c%s [2-Word OpCode]",
+			decodedInstr.disassembly += fmt.Sprintf(" %d,%#o+%c%s [2-Word OpCode]",
 				oneAccMode2Word.acd, oneAccMode2Word.disp16*2, loHiToByte(oneAccMode2Word.bitLow), modeToString(oneAccMode2Word.mode))
 		}
 	case ONEACC_MODE_2_WORD_E_FMT: // eg. ELDB, ESTB
@@ -530,7 +530,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		oneAccMode2Word.disp16, oneAccMode2Word.bitLow = decode16bitByteDisp(secondWord)
 		decodedInstr.variant = oneAccMode2Word
 		if disassemble {
-			decodedInstr.disassembly += fmt.Sprintf(" %d,%d.+%c%s [2-Word OpCode]",
+			decodedInstr.disassembly += fmt.Sprintf(" %d,%#o+%c%s [2-Word OpCode]",
 				oneAccMode2Word.acd, oneAccMode2Word.disp16*2, loHiToByte(oneAccMode2Word.bitLow), modeToString(oneAccMode2Word.mode))
 		}
 	case ONEACC_MODE_3_WORD_FMT: // eg. LLDB, LLEFB
@@ -542,7 +542,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		oneAccMode3Word.disp31 = decode31bitDisp(secondWord, thirdWord, oneAccMode3Word.mode)
 		decodedInstr.variant = oneAccMode3Word
 		if disassemble {
-			decodedInstr.disassembly += fmt.Sprintf(" %d,%d.%s [3-Word OpCode]",
+			decodedInstr.disassembly += fmt.Sprintf(" %d,%#o%s [3-Word OpCode]",
 				oneAccMode3Word.acd, oneAccMode3Word.disp31, modeToString(oneAccMode3Word.mode))
 		}
 	case ONEACC_MODE_IND_2_WORD_E_FMT: // eg. DSPA, ELDA, ELDB, ELEF, ESTA
@@ -554,7 +554,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		oneAccModeInd2Word.disp15 = decode15bitDisp(secondWord, oneAccModeInd2Word.mode)
 		decodedInstr.variant = oneAccModeInd2Word
 		if disassemble {
-			decodedInstr.disassembly += fmt.Sprintf(" %d,%c%d.%s [2-Word OpCode]",
+			decodedInstr.disassembly += fmt.Sprintf(" %d,%c%#o%s [2-Word OpCode]",
 				oneAccModeInd2Word.acd, oneAccModeInd2Word.ind, oneAccModeInd2Word.disp15,
 				modeToString(oneAccModeInd2Word.mode))
 		}
@@ -567,7 +567,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		oneAccModeInd2Word.disp15 = decode15bitDisp(secondWord, oneAccModeInd2Word.mode)
 		decodedInstr.variant = oneAccModeInd2Word
 		if disassemble {
-			decodedInstr.disassembly += fmt.Sprintf(" %d,%c%d.%s [2-Word OpCode]",
+			decodedInstr.disassembly += fmt.Sprintf(" %d,%c%#o%s [2-Word OpCode]",
 				oneAccModeInd2Word.acd, oneAccModeInd2Word.ind, oneAccModeInd2Word.disp15, modeToString(oneAccModeInd2Word.mode))
 		}
 	case ONEACC_MODE_IND_3_WORD_FMT: // eg. LDSP, LLEF, LNADD/SUB LNDIV, LNLDA/STA, LNMUL, LWLDA/LWSTA,LNLDA
@@ -580,7 +580,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		oneAccModeInd3Word.disp31 = decode31bitDisp(secondWord, thirdWord, oneAccModeInd3Word.mode)
 		decodedInstr.variant = oneAccModeInd3Word
 		if disassemble {
-			decodedInstr.disassembly += fmt.Sprintf(" %d,%c%d.%s [3-Word OpCode]",
+			decodedInstr.disassembly += fmt.Sprintf(" %d,%c%#o%s [3-Word OpCode]",
 				oneAccModeInd3Word.acd, oneAccModeInd3Word.ind, oneAccModeInd3Word.disp31, modeToString(oneAccModeInd3Word.mode))
 		}
 	case TWOACC_1_WORD_FMT: // eg. ANC, BTO, WSUB and MANY others
@@ -599,7 +599,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		split8bitDisp.disp8 = int8(decode8bitDisp(tmp8bit, pcMode))
 		decodedInstr.variant = split8bitDisp
 		if disassemble {
-			decodedInstr.disassembly += fmt.Sprintf(" %d.", int32(split8bitDisp.disp8))
+			decodedInstr.disassembly += fmt.Sprintf(" %#o", int32(split8bitDisp.disp8))
 		}
 	case THREE_WORD_DO_FMT: // eg. XNDO
 		var threeWordDo threeWordDoT
@@ -612,7 +612,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		threeWordDo.offsetU16 = uint16(thirdWord)
 		decodedInstr.variant = threeWordDo
 		if disassemble {
-			decodedInstr.disassembly += fmt.Sprintf(" %d,%d. %c%d.%s [3-Word OpCode]",
+			decodedInstr.disassembly += fmt.Sprintf(" %d,%#o %c%#o%s [3-Word OpCode]",
 				threeWordDo.acd, threeWordDo.offsetU16, threeWordDo.ind, threeWordDo.disp15,
 				modeToString(threeWordDo.mode))
 		}
@@ -623,7 +623,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		twoAccImm2Word.immWord = memory.ReadWord(pc + 1)
 		decodedInstr.variant = twoAccImm2Word
 		if disassemble {
-			decodedInstr.disassembly += fmt.Sprintf(" %d.,%d,%d", twoAccImm2Word.immWord, twoAccImm2Word.acs,
+			decodedInstr.disassembly += fmt.Sprintf(" %#o,%d,%d", twoAccImm2Word.immWord, twoAccImm2Word.acs,
 				twoAccImm2Word.acd)
 		}
 	case UNIQUE_1_WORD_FMT:
@@ -634,7 +634,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		unique2Word.immU16 = uint16(memory.ReadWord(pc + 1))
 		decodedInstr.variant = unique2Word
 		if disassemble {
-			decodedInstr.disassembly += fmt.Sprintf(" %d. [2-Word OpCode]", unique2Word.immU16)
+			decodedInstr.disassembly += fmt.Sprintf(" %#o [2-Word OpCode]", unique2Word.immU16)
 		}
 	case WSKB_FMT: // eg. WSKBO/Z
 		var wskb wskbT
@@ -644,7 +644,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		wskb.bitNum = int(uint8(tmp8bit))
 		decodedInstr.variant = wskb
 		if disassemble {
-			decodedInstr.disassembly += fmt.Sprintf(" %d.", wskb.bitNum)
+			decodedInstr.disassembly += fmt.Sprintf(" %#o", wskb.bitNum)
 		}
 	default:
 		logging.DebugPrint(logging.DebugLog, "ERROR: Invalid instruction format (%d) for instruction %s",

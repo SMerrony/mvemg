@@ -860,7 +860,7 @@ RunLoop: // performance-critical section starts here
 		}
 
 		if debugLogging {
-			logging.DebugPrint(logging.DebugLog, "%s\t%s\n", cpuCompactPrintableStatus(), iPtr.disassembly)
+			logging.DebugPrint(logging.DebugLog, "%s  %s\n", cpuCompactPrintableStatus(), iPtr.disassembly)
 		}
 
 		// EXECUTE
