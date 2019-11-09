@@ -112,7 +112,7 @@ func cpuReset() {
 func cpuPrintableStatus() string {
 	cpu.cpuMu.RLock()
 	res := fmt.Sprintf("%c        AC0         AC1         AC2         AC3          PC CRY LEF ATU ION%c", asciiNL, asciiNL)
-	res += fmt.Sprintf("%#11o %#11o %#11o %#11o %#11o", cpu.ac[0], cpu.ac[1], cpu.ac[2], cpu.ac[3], cpu.pc)
+	res += fmt.Sprintf("%#12o %#12o %#12o %#12o %#12o", cpu.ac[0], cpu.ac[1], cpu.ac[2], cpu.ac[3], cpu.pc)
 	res += fmt.Sprintf("  %d   %d   %d   %d",
 		memory.BoolToInt(cpu.carry),
 		memory.BoolToInt(cpu.sbr[memory.GetSegment(cpu.pc)].lef),
@@ -124,7 +124,7 @@ func cpuPrintableStatus() string {
 
 func cpuCompactPrintableStatus() string {
 	cpu.cpuMu.RLock()
-	res := fmt.Sprintf("AC0: %#o AC1: %#o AC2: %#o AC3: %#o CRY: %d ION: %d PC: %#o",
+	res := fmt.Sprintf("AC0: %#12o AC1: %#12o AC2: %#12o AC3: %#12o CRY: %d ION: %d PC: %#12o",
 		cpu.ac[0], cpu.ac[1], cpu.ac[2], cpu.ac[3],
 		memory.BoolToInt(cpu.carry), memory.BoolToInt(cpu.ion), cpu.pc)
 	cpu.cpuMu.RUnlock()
