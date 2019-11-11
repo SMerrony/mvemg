@@ -30,7 +30,7 @@ import (
 func TestResolve16bitEclipseAddr(t *testing.T) {
 	cpuPtr := cpuInit(nil)
 	cpuPtr.pc = 11
-	memory.MemInit(10000, false)
+	memory.MemInit(1000, false)
 	memory.WriteWord(10, 9)
 	memory.WriteWord(11, 10)
 	memory.WriteWord(12, 12)
@@ -59,5 +59,25 @@ func TestResolve16bitEclipseAddr(t *testing.T) {
 	r = resolve16bitEffAddr(cpuPtr, '@', ac2Mode, -1, 0)
 	if r != 10 {
 		t.Error("Expected 10, got ", r)
+	}
+}
+
+func TestResolve32bitEffAddr(t *testing.T) {
+	cpuPtr := cpuInit(nil)
+	cpuPtr.pc = 2
+	memory.MemInit(1000, false)
+	memory.WriteDWord(2, 20)
+	memory.WriteDWord(4, 40)
+	memory.WriteDWord(6, 60)
+
+	cpuPtr.ac[3] = 4
+	r := resolve32bitEffAddr(cpuPtr, '@', ac3Mode, -2, 1)
+	if r != 20 {
+		t.Error("Expected 20, got ", r)
+	}
+
+	r = resolve32bitEffAddr(cpuPtr, '@', ac3Mode, 2, 1)
+	if r != 60 {
+		t.Error("Expected 60, got ", r)
 	}
 }

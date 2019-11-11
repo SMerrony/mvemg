@@ -54,8 +54,8 @@ func eclipseMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			dest++
 		}
 		cpuPtr.ac[1] = 0
-		cpuPtr.ac[2] = dg.DwordT(src + 1) // TODO confirm this is right, doc ambiguous
-		cpuPtr.ac[3] = dg.DwordT(dest + 1)
+		cpuPtr.ac[2] = dg.DwordT(src) // TODO confirm this is right, doc ambiguous
+		cpuPtr.ac[3] = dg.DwordT(dest)
 
 	case instrCMP:
 		cmp(cpuPtr)

@@ -1,6 +1,6 @@
 # MVEmg Status
 
-* Last updated: 8th Nov 2019
+* Last updated: 9th Nov 2019
 * Last significant progress: 3rd Oct 2018
 
 ## What Works?
@@ -35,5 +35,5 @@
 
 * File 1 - FIXUP - crash during startup
 
-  Crash at 330005...reading beyond physical memory in backwards WCMV
-  ACs look wrong for instruction as length is > start address.
+  Crash at 330020...reading beyond physical memory in XNLDA 0, @-11, AC3
+ 
