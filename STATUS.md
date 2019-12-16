@@ -1,6 +1,6 @@
 # MVEmg Status
 
-* Last updated: 9th Nov 2019
+* Last updated: 16th Dec 2019
 * Last significant progress: 3rd Oct 2018
 
 ## What Works?
@@ -36,4 +36,7 @@
 * File 1 - FIXUP - crash during startup
 
   Crash at 330020...reading beyond physical memory in XNLDA 0, @-11, AC3
+  AC3 contains 30556
+  30556 - 11 = 30545
+  Location 30545 contains 1432, location 30546 contains 100000
  
