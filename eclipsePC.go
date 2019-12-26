@@ -105,6 +105,9 @@ func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		addr := resolve16bitEffAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15, iPtr.dispOffset)
 		cpuPtr.pc = addr
 
+	case instrFNS:
+		cpuPtr.pc++
+
 	case instrSGT: //16-bit signed numbers
 		twoAcc1Word := iPtr.variant.(twoAcc1WordT)
 		acs := int16(memory.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs]))
