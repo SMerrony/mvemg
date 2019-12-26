@@ -29,21 +29,16 @@ import (
 )
 
 func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
-	var (
-		addr, inc          dg.PhysAddrT
-		acd, acs, h, l     int16
-		wd                 dg.WordT
-		bit                uint
-		noAccModeInd2Word  noAccModeInd2WordT
-		oneAccModeInt2Word oneAccModeInd2WordT
-		twoAcc1Word        twoAcc1WordT
-	)
 
 	switch iPtr.ix {
 
 	case instrCLM: // signed compare to limits
-		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
-		acs = int16(memory.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs]))
+		var (
+			l, h int16
+			inc  dg.PhysAddrT
+		)
+		twoAcc1Word := iPtr.variant.(twoAcc1WordT)
+		acs := int16(memory.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs]))
 		if twoAcc1Word.acs == twoAcc1Word.acd {
 			l = int16(memory.ReadWord(cpuPtr.pc + 1))
 			h = int16(memory.ReadWord(cpuPtr.pc + 2))
@@ -67,7 +62,7 @@ func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		cpuPtr.pc += inc
 
 	case instrDSPA:
-		oneAccModeInt2Word = iPtr.variant.(oneAccModeInd2WordT)
+		oneAccModeInt2Word := iPtr.variant.(oneAccModeInd2WordT)
 		tableStart := resolve16bitEffAddr(cpuPtr, oneAccModeInt2Word.ind, oneAccModeInt2Word.mode, oneAccModeInt2Word.disp15, iPtr.dispOffset)
 		offset := memory.DwordGetLowerWord(cpuPtr.ac[oneAccModeInt2Word.acd])
 		lowLimit := memory.ReadWord(tableStart - 2)
@@ -80,7 +75,7 @@ func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			log.Fatalf("ERROR: DPSA called with out of bounds offset %d", offset)
 		}
 		entry := tableStart - dg.PhysAddrT(lowLimit) + dg.PhysAddrT(offset)
-		addr = dg.PhysAddrT(memory.ReadWord(entry))
+		addr := dg.PhysAddrT(memory.ReadWord(entry))
 		if addr == 0xffffffff {
 			cpuPtr.pc += 2
 		} else {
@@ -88,9 +83,9 @@ func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		}
 
 	case instrEISZ:
-		noAccModeInd2Word = iPtr.variant.(noAccModeInd2WordT)
-		addr = resolve16bitEffAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15, iPtr.dispOffset)
-		wd = memory.ReadWord(addr)
+		noAccModeInd2Word := iPtr.variant.(noAccModeInd2WordT)
+		addr := resolve16bitEffAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15, iPtr.dispOffset)
+		wd := memory.ReadWord(addr)
 		wd++
 		memory.WriteWord(addr, wd)
 		if wd == 0 {
@@ -100,20 +95,20 @@ func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		}
 
 	case instrEJMP:
-		noAccModeInd2Word = iPtr.variant.(noAccModeInd2WordT)
-		addr = resolve16bitEffAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15, iPtr.dispOffset)
+		noAccModeInd2Word := iPtr.variant.(noAccModeInd2WordT)
+		addr := resolve16bitEffAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15, iPtr.dispOffset)
 		cpuPtr.pc = addr
 
 	case instrEJSR:
-		noAccModeInd2Word = iPtr.variant.(noAccModeInd2WordT)
+		noAccModeInd2Word := iPtr.variant.(noAccModeInd2WordT)
 		cpuPtr.ac[3] = dg.DwordT(cpuPtr.pc) + 2
-		addr = resolve16bitEffAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15, iPtr.dispOffset)
+		addr := resolve16bitEffAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15, iPtr.dispOffset)
 		cpuPtr.pc = addr
 
 	case instrSGT: //16-bit signed numbers
-		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
-		acs = int16(memory.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs]))
-		acd = int16(memory.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acd]))
+		twoAcc1Word := iPtr.variant.(twoAcc1WordT)
+		acs := int16(memory.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs]))
+		acd := int16(memory.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acd]))
 		if acs > acd {
 			cpuPtr.pc += 2
 		} else {
@@ -121,8 +116,8 @@ func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		}
 
 	case instrSNB:
-		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
-		addr, bit = resolveEclipseBitAddr(cpuPtr, &twoAcc1Word)
+		twoAcc1Word := iPtr.variant.(twoAcc1WordT)
+		addr, bit := resolveEclipseBitAddr(cpuPtr, &twoAcc1Word)
 		wd := memory.ReadWord(addr)
 		if memory.TestWbit(wd, int(bit)) {
 			cpuPtr.pc += 2
@@ -134,8 +129,8 @@ func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		}
 
 	case instrSZB:
-		twoAcc1Word = iPtr.variant.(twoAcc1WordT)
-		addr, bit = resolveEclipseBitAddr(cpuPtr, &twoAcc1Word)
+		twoAcc1Word := iPtr.variant.(twoAcc1WordT)
+		addr, bit := resolveEclipseBitAddr(cpuPtr, &twoAcc1Word)
 		wd := memory.ReadWord(addr)
 		if !memory.TestWbit(wd, int(bit)) {
 			cpuPtr.pc += 2
