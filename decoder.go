@@ -43,6 +43,9 @@ type decodedInstrT struct {
 }
 
 // here are the types for the variant portion of the decoded instruction...
+type derrT struct {
+	errCode uint32
+}
 type immMode2WordT struct {
 	immU16 uint16
 	mode   int
@@ -277,6 +280,13 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 
 	switch decodedInstr.instrFmt {
 
+	case DERR_FMT: // DERR has a unique format
+		var derr derrT
+		derr.errCode = uint32(memory.GetWbits(opcode, 1, 3)<<2) + uint32(memory.GetWbits(opcode, 10, 1))
+		decodedInstr.variant = derr
+		if disassemble {
+			decodedInstr.disassembly += fmt.Sprintf(" %#o", derr.errCode)
+		}
 	case IMM_MODE_2_WORD_FMT: // eg. XNADI, XNSBI, XNSUB, XWADI, XWSBI
 		var immMode2Word immMode2WordT
 		immMode2Word.immU16 = decode2bitImm(memory.GetWbits(opcode, 1, 2))
@@ -647,7 +657,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 			decodedInstr.disassembly += fmt.Sprintf(" %#o", wskb.bitNum)
 		}
 	default:
-		logging.DebugPrint(logging.DebugLog, "ERROR: Invalid instruction format (%d) for instruction %s",
+		logging.DebugPrint(logging.DebugLog, "ERROR: Invalid instruction BB format (%d) for instruction <%s>\n",
 			decodedInstr.instrFmt, decodedInstr.mnemonic)
 		return nil, false
 	}

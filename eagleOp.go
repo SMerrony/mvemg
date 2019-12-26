@@ -244,6 +244,12 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		cpuPtr.carry = (s64 > maxPosS32) || (s64 < minNegS32) // TODO handle overflow flag
 		cpuPtr.ac[twoAcc1Word.acd] = dg.DwordT(s64)
 
+	case instrWXCH:
+		twoAcc1Word := iPtr.variant.(twoAcc1WordT)
+		dwd := cpuPtr.ac[twoAcc1Word.acs]
+		cpuPtr.ac[twoAcc1Word.acs] = cpuPtr.ac[twoAcc1Word.acd]
+		cpuPtr.ac[twoAcc1Word.acd] = dwd
+
 	case instrZEX:
 		twoAcc1Word := iPtr.variant.(twoAcc1WordT)
 		cpuPtr.ac[twoAcc1Word.acd] = 0 | dg.DwordT(memory.DwordGetLowerWord(cpuPtr.ac[twoAcc1Word.acs]))

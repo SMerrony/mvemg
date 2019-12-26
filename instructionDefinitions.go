@@ -308,6 +308,7 @@ const (
 	instrWSUB
 	instrWSZB
 	instrWUGTI
+	instrWXCH
 	instrXCALL
 	instrXCH
 	instrXCT
@@ -370,7 +371,7 @@ func instructionsInit() {
 	instructionSet[instrCVWN] = instrChars{"CVWN", 0xe669, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_OP, 0}
 	instructionSet[instrDAD] = instrChars{"DAD", 0x8088, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP, 0}
 	instructionSet[instrDEQUE] = instrChars{"DEQUE", 0xe7c9, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP, 0}
-	instructionSet[instrDERR] = instrChars{"DERR", 0x8f09, 0x8fcf, 1, DERR_FMT, EAGLE_OP, 0}
+	instructionSet[instrDERR] = instrChars{"DERR", 0x8f09, 0x8fcf, 1, DERR_FMT, EAGLE_PC, 0}
 	instructionSet[instrDHXL] = instrChars{"DHXL", 0x8388, 0x87ff, 1, IMM_ONEACC_FMT, ECLIPSE_OP, 0}
 	instructionSet[instrDHXR] = instrChars{"DHXR", 0x83c8, 0x87ff, 1, IMM_ONEACC_FMT, ECLIPSE_OP, 0}
 	instructionSet[instrDIA] = instrChars{"DIA", 0x6100, 0xe700, 1, NOVA_DATA_IO_FMT, NOVA_IO, 0}
@@ -571,6 +572,7 @@ func instructionsInit() {
 	instructionSet[instrWSUB] = instrChars{"WSUB", 0x8159, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP, 0}
 	instructionSet[instrWSZB] = instrChars{"WSZB", 0x82b9, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_PC, 0}
 	instructionSet[instrWUGTI] = instrChars{"WUGTI", 0xc699, 0xe7ff, 3, ONEACC_IMM_3_WORD_FMT, EAGLE_PC, 0}
+	instructionSet[instrWXCH] = instrChars{"WXCH", 0x8369, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP, 0}
 	instructionSet[instrXCALL] = instrChars{"XCALL", 0x8609, 0xe7ff, 3, NOACC_MODE_IND_3_WORD_XCALL_FMT, EAGLE_PC, 1}
 	instructionSet[instrXCH] = instrChars{"XCH", 0x81c8, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP, 0}
 	instructionSet[instrXCT] = instrChars{"XCT", 0xa6f8, 0xe7ff, 1, ONEACC_1_WORD_FMT, ECLIPSE_OP, 0}
