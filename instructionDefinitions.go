@@ -301,6 +301,7 @@ const (
 	instrWSLE
 	instrWSLEI
 	instrWSLT
+	instrWSNB
 	instrWSNE
 	instrWSNEI
 	instrWSSVR
@@ -566,6 +567,7 @@ func instructionsInit() {
 	instructionSet[instrWSLE] = instrChars{"WSLE", 0x81a9, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_PC, 0}
 	instructionSet[instrWSLEI] = instrChars{"WSLEI", 0xe6a9, 0xe7ff, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_PC, 0}
 	instructionSet[instrWSLT] = instrChars{"WSLT", 0x8289, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_PC, 0}
+	instructionSet[instrWSNB] = instrChars{"WSNB", 0x8389, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_PC, 0}
 	instructionSet[instrWSNE] = instrChars{"WSNE", 0x8189, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_PC, 0}
 	instructionSet[instrWSNEI] = instrChars{"WSNEI", 0xe6e9, 0xe7ff, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_PC, 0}
 	instructionSet[instrWSSVR] = instrChars{"WSSVR", 0x8729, 0xffff, 2, UNIQUE_2_WORD_FMT, EAGLE_STACK, 0}

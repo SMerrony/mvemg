@@ -297,6 +297,19 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			cpuPtr.pc++
 		}
 
+	case instrWSNB:
+		twoAcc1Word := iPtr.variant.(twoAcc1WordT)
+		tmpAddr, bit := resolveEagleBitAddr(cpuPtr, &twoAcc1Word)
+		wd := memory.ReadWord(tmpAddr)
+		if memory.TestWbit(wd, int(bit)) {
+			cpuPtr.pc += 2
+		} else {
+			cpuPtr.pc++
+		}
+		if debugLogging {
+			logging.DebugPrint(logging.DebugLog, ".... Wd Addr: %d., word: %0X, bit #: %d\n", tmpAddr, wd, bit)
+		}
+
 	case instrWSNE:
 		twoAcc1Word := iPtr.variant.(twoAcc1WordT)
 		var dwd dg.DwordT
