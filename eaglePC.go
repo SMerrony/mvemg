@@ -155,8 +155,30 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		split8bitDisp := iPtr.variant.(split8bitDispT)
 		cpuPtr.pc += dg.PhysAddrT(int32(split8bitDisp.disp8))
 
-	// case WPOPB: // FIXME - not yet decoded!
-	// 	wpopb(cpuPtr)
+		// case WPOPB: // FIXME - not yet decoded!
+		// 	wpopb(cpuPtr)
+
+	case instrWCLM:
+		twoAcc1Word := iPtr.variant.(twoAcc1WordT)
+		var h, l int32
+		v := int32(cpuPtr.ac[twoAcc1Word.acs])
+		if twoAcc1Word.acs != twoAcc1Word.acd {
+			l = int32(memory.ReadDWord(dg.PhysAddrT(cpuPtr.ac[twoAcc1Word.acd])))
+			h = int32(memory.ReadDWord(dg.PhysAddrT(cpuPtr.ac[twoAcc1Word.acd+2])))
+			if v >= l && v <= h {
+				cpuPtr.pc += 2
+			} else {
+				cpuPtr.pc++
+			}
+		} else {
+			l = int32(memory.ReadDWord(cpuPtr.pc + 1))
+			h = int32(memory.ReadDWord(cpuPtr.pc + 3))
+			if v >= l && v <= h {
+				cpuPtr.pc += 6
+			} else {
+				cpuPtr.pc += 5
+			}
+		}
 
 	case instrWPOPJ:
 		dwd := memory.WsPop(0)

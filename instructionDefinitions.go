@@ -524,7 +524,7 @@ func instructionsInit() {
 	instructionSet[instrWBR] = instrChars{"WBR", 0x8038, 0x843f, 1, SPLIT_8BIT_DISP_FMT, EAGLE_PC, 0}
 	instructionSet[instrWBTO] = instrChars{"WBTO", 0x8299, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_MEMREF, 0}
 	instructionSet[instrWBTZ] = instrChars{"WBTZ", 0x82a9, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_MEMREF, 0}
-	instructionSet[instrWCLM] = instrChars{"WCLM", 0x8569, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP, 0}
+	instructionSet[instrWCLM] = instrChars{"WCLM", 0x8569, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_PC, 0}
 	instructionSet[instrWCMP] = instrChars{"WCMP", 0xa759, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_MEMREF, 0}
 	instructionSet[instrWCMV] = instrChars{"WCMV", 0x8779, 0xFFFF, 1, UNIQUE_1_WORD_FMT, EAGLE_MEMREF, 0}
 	instructionSet[instrWCOM] = instrChars{"WCOM", 0x8459, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP, 0}
