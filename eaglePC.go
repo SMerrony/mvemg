@@ -404,6 +404,18 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			cpuPtr.pc += 2
 		}
 
+	case instrXWISZ:
+		noAccModeInd2Word := iPtr.variant.(noAccModeInd2WordT)
+		tmpAddr := resolve32bitEffAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, int32(noAccModeInd2Word.disp15), iPtr.dispOffset)
+		dwd := memory.ReadDWord(tmpAddr)
+		dwd++
+		memory.WriteDWord(tmpAddr, dwd)
+		if dwd == 0 {
+			cpuPtr.pc += 3
+		} else {
+			cpuPtr.pc += 2
+		}
+
 	default:
 		log.Fatalf("ERROR: EAGLE_PC instruction <%s> not yet implemented\n", iPtr.mnemonic)
 		return false
