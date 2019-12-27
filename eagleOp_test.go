@@ -1,6 +1,6 @@
 // mvemg project eagleOp_test.go
 
-// Copyright (C) 2017  Steve Merrony
+// Copyright (C) 2017,2019  Steve Merrony
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -212,6 +212,43 @@ func TestWINC(t *testing.T) {
 	}
 	if !cpuPtr.carry {
 		t.Error("Expected CARRY")
+	}
+}
+
+func TestWLSH(t *testing.T) {
+	cpuPtr := cpuInit(nil)
+	var iPtr decodedInstrT
+	var twoAcc1Word twoAcc1WordT
+	iPtr.ix = instrWLSH
+	twoAcc1Word.acs = 1
+	twoAcc1Word.acd = 2
+	iPtr.variant = twoAcc1Word
+
+	cpuPtr.ac[2] = 8
+	cpuPtr.ac[1] = 0
+	if !eagleOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute WLSH")
+	}
+	if cpuPtr.ac[2] != 8 {
+		t.Errorf("Expected 8 got %d", cpuPtr.ac[2])
+	}
+
+	cpuPtr.ac[2] = 8
+	cpuPtr.ac[1] = 1
+	if !eagleOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute WLSH")
+	}
+	if cpuPtr.ac[2] != 16 {
+		t.Errorf("Expected 16 got %d", cpuPtr.ac[2])
+	}
+
+	cpuPtr.ac[2] = 8
+	cpuPtr.ac[1] = 0xff // -1
+	if !eagleOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute WLSH")
+	}
+	if cpuPtr.ac[2] != 4 {
+		t.Errorf("Expected 4 got %d", cpuPtr.ac[2])
 	}
 }
 

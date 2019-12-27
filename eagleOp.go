@@ -186,6 +186,17 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		oneAccImmDwd3Word := iPtr.variant.(oneAccImmDwd3WordT)
 		cpuPtr.ac[oneAccImmDwd3Word.acd] = oneAccImmDwd3Word.immDword
 
+	case instrWLSH:
+		twoAcc1Word := iPtr.variant.(twoAcc1WordT)
+		shiftAmt8 := int8(cpuPtr.ac[twoAcc1Word.acs] & 0x0ff)
+		switch { // do nothing if shift of zero was specified
+		case shiftAmt8 < 0: // shift right
+			shiftAmt8 *= -1
+			cpuPtr.ac[twoAcc1Word.acd] >>= uint(shiftAmt8)
+		case shiftAmt8 > 0: // shift left
+			cpuPtr.ac[twoAcc1Word.acd] <<= uint(shiftAmt8)
+		}
+
 	case instrWLSHI:
 		oneAccImm2Word := iPtr.variant.(oneAccImm2WordT)
 		shiftAmt8 := int8(oneAccImm2Word.immS16 & 0x0ff)
