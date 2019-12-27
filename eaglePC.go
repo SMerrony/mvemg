@@ -362,6 +362,22 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			cpuPtr.pc += 3
 		}
 
+	case instrWUSGT:
+		twoAcc1Word := iPtr.variant.(twoAcc1WordT)
+		if twoAcc1Word.acs == twoAcc1Word.acd {
+			if cpuPtr.ac[twoAcc1Word.acs] > 0 {
+				cpuPtr.pc += 2
+			} else {
+				cpuPtr.pc++
+			}
+		} else {
+			if cpuPtr.ac[twoAcc1Word.acs] > cpuPtr.ac[twoAcc1Word.acd] {
+				cpuPtr.pc += 2
+			} else {
+				cpuPtr.pc++
+			}
+		}
+
 	case instrXCALL:
 		noAccModeInd3WordXcall := iPtr.variant.(noAccModeInd3WordXcallT)
 		// FIXME - only handling the trivial case so far
@@ -399,6 +415,18 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			cpuPtr.pc = cpuPtr.pc + 1 + dg.PhysAddrT(threeWordDo.offsetU16)
 		} else {
 			cpuPtr.pc += dg.PhysAddrT(iPtr.instrLength)
+		}
+
+	case instrXNDSZ: // unsigned narrow increment and skip if zero
+		noAccModeInd2Word := iPtr.variant.(noAccModeInd2WordT)
+		tmpAddr := resolve32bitEffAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, int32(noAccModeInd2Word.disp15), iPtr.dispOffset)
+		wd := memory.ReadWord(tmpAddr)
+		wd-- // N.B. have checked that 0xffff + 1 == 0 in Go
+		memory.WriteWord(tmpAddr, wd)
+		if wd == 0 {
+			cpuPtr.pc += 3
+		} else {
+			cpuPtr.pc += 2
 		}
 
 	case instrXNISZ: // unsigned narrow increment and skip if zero
