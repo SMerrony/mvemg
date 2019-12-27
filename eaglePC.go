@@ -251,6 +251,14 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			cpuPtr.pc++
 		}
 
+	case instrWSGTI:
+		oneAccImm2Word := iPtr.variant.(oneAccImm2WordT)
+		if int32(cpuPtr.ac[oneAccImm2Word.acd]) > int32(oneAccImm2Word.immS16) {
+			cpuPtr.pc += 3
+		} else {
+			cpuPtr.pc += 2
+		}
+
 	case instrWSKBZ:
 		wskb := iPtr.variant.(wskbT)
 		if !memory.TestDwbit(cpuPtr.ac[0], wskb.bitNum) {
@@ -276,7 +284,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrWSLEI:
 		oneAccImm2Word := iPtr.variant.(oneAccImm2WordT)
-		if cpuPtr.ac[oneAccImm2Word.acd] <= dg.DwordT(int32(oneAccImm2Word.immS16)) {
+		if int32(cpuPtr.ac[oneAccImm2Word.acd]) <= int32(oneAccImm2Word.immS16) {
 			cpuPtr.pc += 3
 		} else {
 			cpuPtr.pc += 2
