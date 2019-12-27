@@ -129,9 +129,9 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrWADDI:
 		oneAccImm3Word := iPtr.variant.(oneAccImm3WordT)
-		acDs32 := int32(oneAccImm3Word.acd)
-		s32 := int32(oneAccImm3Word.immU32)
-		s64 := int64(s32) + int64(acDs32)
+		acDs32 := int32(cpuPtr.ac[oneAccImm3Word.acd])
+		s32i := int32(oneAccImm3Word.immU32)
+		s64 := int64(s32i) + int64(acDs32)
 		cpuPtr.carry = (s64 > maxPosS32) || (s64 < minNegS32) // TODO handle overflow flag
 		cpuPtr.ac[oneAccImm3Word.acd] = dg.DwordT(s64)
 
