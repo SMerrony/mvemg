@@ -246,7 +246,7 @@ func instructionMatch(opcode dg.WordT, lefMode bool, ioOn bool, atuOn bool) (int
 				// these instructions are not allowed to end in 1000(2) or 1001(2)
 				// as those patterns are used for Eagle instructions
 				tail = opcode & 0x000f
-				if tail < 8 || tail > 9 {
+				if tail != 0b1000 && tail != 0b1001 {
 					return mnem, true
 				}
 			default:

@@ -215,6 +215,11 @@ func eagleOp(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		// FIXME - handle overflow
 		cpuPtr.ac[twoAcc1Word.acd] = dg.DwordT(res)
 
+	case instrWMULS:
+		s64 := int64(cpuPtr.ac[1])*int64(cpuPtr.ac[2]) + int64(cpuPtr.ac[0])
+		cpuPtr.ac[0] = memory.QwordGetUpperDword(dg.QwordT(s64))
+		cpuPtr.ac[1] = memory.QwordGetLowerDword(dg.QwordT(s64))
+
 	case instrWNADI: //signed 16-bit
 		oneAccImm2Word := iPtr.variant.(oneAccImm2WordT)
 		acDs32 := int32(cpuPtr.ac[oneAccImm2Word.acd])

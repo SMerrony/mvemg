@@ -282,6 +282,7 @@ const (
 	instrWMOVR
 	instrWMSP
 	instrWMUL
+	instrWMULS
 	instrWNADI
 	instrWNEG
 	instrWPOP
@@ -548,7 +549,8 @@ func instructionsInit() {
 	instructionSet[instrWMOVR] = instrChars{"WMOVR", 0xe699, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_OP, 0}
 	instructionSet[instrWMSP] = instrChars{"WMSP", 0xe649, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_STACK, 0}
 	instructionSet[instrWMUL] = instrChars{"WMUL", 0x8169, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP, 0}
-	instructionSet[instrWNADI] = instrChars{"WNADI", 0xE6F9, 0xE7FF, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_OP, 0}
+	instructionSet[instrWMULS] = instrChars{"WMULS", 0xe759, 0xffff, 1, UNIQUE_1_WORD_FMT, EAGLE_OP, 0}
+	instructionSet[instrWNADI] = instrChars{"WNADI", 0xe6f9, 0xe7ff, 2, ONEACC_IMM_2_WORD_FMT, EAGLE_OP, 0}
 	instructionSet[instrWNEG] = instrChars{"WNEG", 0x8269, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_OP, 0}
 	instructionSet[instrWPOP] = instrChars{"WPOP", 0x8089, 0x87ff, 1, TWOACC_1_WORD_FMT, EAGLE_STACK, 0}
 	instructionSet[instrWPOPJ] = instrChars{"WPOPJ", 0x8789, 0xFFFF, 1, UNIQUE_1_WORD_FMT, EAGLE_PC, 0}
