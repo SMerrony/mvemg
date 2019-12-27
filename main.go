@@ -854,7 +854,7 @@ RunLoop: // performance-critical section starts here
 		// DECODE
 		iPtr, ok = instructionDecode(thisOp, cpu.pc, cpu.sbr[cpu.pc>>29].lef, cpu.sbr[cpu.pc>>29].io, cpu.atu, disassembly)
 		cpu.cpuMu.RUnlock()
-		if !ok {
+		if !ok || iPtr.ix == -1 {
 			errDetail = " *** Error: could not decode instruction ***"
 			break
 		}
