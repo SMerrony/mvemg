@@ -1,6 +1,6 @@
 # MVEmg Status
 
-* Last updated: 16th Dec 2019
+* Last updated: 28th Dec 2019
 * Last significant progress: 3rd Oct 2018
 
 ## What Works?
@@ -13,7 +13,9 @@
 
 ## What's Next?
 
-* Boot starter system from disk (!)
+I currently have three standalone binaries: SYSBOOT(!), FIXUP, and PCOPY...
+
+### Boot starter system from disk (!)
 
   Does a countdown then jumps to empty location zero from 77010 via 1001
 
@@ -33,10 +35,17 @@
 
   Page 0 looks to have been corrupted as it contains text fragments.
 
-* File 1 - FIXUP - crash during startup
+### Standalone FIXUP - Tape file 1 - crash during startup
 
   Crash at 330020...reading beyond physical memory in XNLDA 0, @-11, AC3
   AC3 contains 30556
   30556 - 11 = 30545
   Location 30545 contains 1432, location 30546 contains 100000
  
+### Standalone PCOPY - Tape file 1
+  "Fatal disk error, device 27 00, Status = 000000 000000
+   Abort!"
+   ...repeated forever.  Interestingly, no activity is recorded in dpf_debug.log.
+   PC is around 025462
+
+   Also, there are some 'funnies' in the PCOPY start-up prompts.  The REV number is displayed as "00070073◊◊◊.◊◊◊", "Specify source LDU" is missing the first character, "Disk unit name: " is also missing the first character.  Running a 'strings' command on the PCOPY binary shows that these strings are intact in the binary.  _?Could be a byte addressing issue? Check WCMV, WBLM,XLDB, WCLM, WSTB, WLDB._
