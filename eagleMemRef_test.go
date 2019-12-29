@@ -169,6 +169,36 @@ func TestWCMV(t *testing.T) {
 	}
 }
 
+func TestWLDB(t *testing.T) {
+	cpuPtr := cpuInit(nil)
+	var iPtr decodedInstrT
+	var twoAcc1Word twoAcc1WordT
+	iPtr.ix = instrWLDB
+	memory.MemInit(1000, false)
+	memory.WriteByte(100, false, 'A')
+	memory.WriteByte(100, true, 'B')
+	twoAcc1Word.acs = 1
+	twoAcc1Word.acd = 2
+	cpuPtr.ac[1] = 100 << 1
+	iPtr.variant = twoAcc1Word
+	if !eagleMemRef(cpuPtr, &iPtr) {
+		t.Error("Failed to execute WLDB")
+	}
+	if cpuPtr.ac[2] != 'A' {
+		t.Errorf("Expected %d, got %d", 'A', cpuPtr.ac[2])
+	}
+	twoAcc1Word.acs = 1
+	twoAcc1Word.acd = 2
+	cpuPtr.ac[1] = 100<<1 + 1
+	iPtr.variant = twoAcc1Word
+	if !eagleMemRef(cpuPtr, &iPtr) {
+		t.Error("Failed to execute WLDB")
+	}
+	if cpuPtr.ac[2] != 'B' {
+		t.Errorf("Expected %d, got %d", 'B', cpuPtr.ac[2])
+	}
+}
+
 func TestXSTB(t *testing.T) {
 	cpuPtr := cpuInit(nil)
 	var iPtr decodedInstrT
