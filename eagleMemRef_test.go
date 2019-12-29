@@ -1,6 +1,6 @@
 // mvemg project eagleMemRef_test.go
 
-// Copyright (C) 2017  Steve Merrony
+// Copyright (C) 2017,2019 Steve Merrony
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,6 @@ import (
 	"testing"
 
 	"github.com/SMerrony/dgemug/dg"
-
 	"github.com/SMerrony/dgemug/memory"
 )
 
@@ -87,6 +86,86 @@ func TestWBTZ(t *testing.T) {
 	w = memory.ReadWord(73)
 	if w != 0xefff {
 		t.Errorf("Expected %x, got %x", 0xefff, w)
+	}
+}
+
+func TestWCMV(t *testing.T) {
+	cpuPtr := cpuInit(nil)
+	var iPtr decodedInstrT
+	iPtr.ix = instrWCMV
+	memory.MemInit(1000, false)
+	memory.WriteByte(100, false, 'A')
+	memory.WriteByte(100, true, 'B')
+	memory.WriteByte(101, false, 'C')
+	memory.WriteByte(101, true, 'D')
+	memory.WriteByte(102, false, 'E')
+	memory.WriteByte(102, true, 'F')
+	memory.WriteByte(103, false, 'G')
+
+	// simple, word-aligned fwd move
+	destNoBytes := 7
+	srcNoBytes := 7
+	destBytePtr := 200 << 1
+	srcBytePtr := 100 << 1
+	cpuPtr.ac[0] = dg.DwordT(destNoBytes)
+	cpuPtr.ac[1] = dg.DwordT(srcNoBytes)
+	cpuPtr.ac[2] = dg.DwordT(destBytePtr)
+	cpuPtr.ac[3] = dg.DwordT(srcBytePtr)
+	if !eagleMemRef(cpuPtr, &iPtr) {
+		t.Error("Failed to execute WCMV")
+	}
+	r := memory.ReadByte(200, false)
+	if r != 'A' {
+		t.Errorf("Expected 'A', got '%c'", r)
+	}
+	r = memory.ReadByte(200, true)
+	if r != 'B' {
+		t.Errorf("Expected 'B', got '%c'", r)
+	}
+	r = memory.ReadByte(202, true)
+	if r != 'F' {
+		t.Errorf("Expected 'F', got '%c'", r)
+	}
+
+	// non-word-aligned fwd move
+	srcBytePtr++
+	cpuPtr.ac[0] = dg.DwordT(destNoBytes)
+	cpuPtr.ac[1] = dg.DwordT(srcNoBytes)
+	cpuPtr.ac[2] = dg.DwordT(destBytePtr)
+	cpuPtr.ac[3] = dg.DwordT(srcBytePtr)
+	if !eagleMemRef(cpuPtr, &iPtr) {
+		t.Error("Failed to execute WCMV")
+	}
+	r = memory.ReadByte(200, false)
+	if r != 'B' {
+		t.Errorf("Expected 'B', got '%c'", r)
+	}
+	r = memory.ReadByte(200, true)
+	if r != 'C' {
+		t.Errorf("Expected 'C', got '%c'", r)
+	}
+
+	// src backwards
+	srcBytePtr = 100 << 1
+	destNoBytes = -7
+	cpuPtr.ac[0] = dg.DwordT(destNoBytes)
+	cpuPtr.ac[1] = dg.DwordT(srcNoBytes)
+	cpuPtr.ac[2] = dg.DwordT(destBytePtr)
+	cpuPtr.ac[3] = dg.DwordT(srcBytePtr)
+	if !eagleMemRef(cpuPtr, &iPtr) {
+		t.Error("Failed to execute WCMV")
+	}
+	r = memory.ReadByte(200, false)
+	if r != 'A' {
+		t.Errorf("Expected 'A', got '%c'", r)
+	}
+	r = memory.ReadByte(199, true)
+	if r != 'B' {
+		t.Errorf("Expected 'B', got '%c'", r)
+	}
+	r = memory.ReadByte(199, false)
+	if r != 'C' {
+		t.Errorf("Expected 'C', got '%c'", r)
 	}
 }
 
