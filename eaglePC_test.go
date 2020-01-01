@@ -24,8 +24,43 @@ package main
 import (
 	"testing"
 
+	"github.com/SMerrony/dgemug/dg"
+
 	"github.com/SMerrony/dgemug/memory"
 )
+
+func TestISZTS(t *testing.T) {
+	cpuPtr := cpuInit(nil)
+	var iPtr decodedInstrT
+	iPtr.ix = instrISZTS
+	memory.MemInit(1000, false)
+	memory.WriteDWord(100, 0xfffffffe)
+	memory.WriteDWord(memory.WspLoc, 100)
+	cpuPtr.pc = 7000
+
+	if !eaglePC(cpuPtr, &iPtr) {
+		t.Error("Failed to execute ISZTS")
+	}
+	if cpuPtr.pc != 7001 {
+		t.Errorf("Expected PC to be 7001, got %d", cpuPtr.pc)
+	}
+	v := memory.ReadDWord(dg.PhysAddrT(memory.ReadDWord(memory.WspLoc)))
+	if v != 0xffffffff {
+		t.Errorf("Expected 0xffffffff at WSP, got: %#x", v)
+	}
+
+	cpuPtr.pc = 7000
+	if !eaglePC(cpuPtr, &iPtr) {
+		t.Error("Failed to execute ISZTS")
+	}
+	if cpuPtr.pc != 7002 {
+		t.Errorf("Expected PC to be 7002, got %d", cpuPtr.pc)
+	}
+	v = memory.ReadDWord(dg.PhysAddrT(memory.ReadDWord(memory.WspLoc)))
+	if v != 0 {
+		t.Errorf("Expected 0 at WSP, got: %#x", v)
+	}
+}
 
 func TestWSKBO(t *testing.T) {
 	cpuPtr := cpuInit(nil)

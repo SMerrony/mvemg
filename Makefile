@@ -21,7 +21,7 @@
 GOCMD = go
 GOBUILD = ${GOCMD}	build
 GOCLEAN = ${GOCMD}	clean -cache -testcache
-GOTEST = ${GOCMD}	test -v -race ./...
+GOTEST = ${GOCMD}	test -v -race -cover ./...
 GOGET = ${GOCMD}	get
 BINARY_NAME = mvemg
 
