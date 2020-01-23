@@ -103,3 +103,40 @@ func TestDecode15bitDisp(t *testing.T) {
 		t.Error("PC Mode: Expected -300, got ", res)
 	}
 }
+
+func TestDecode31bitDisp(t *testing.T) {
+	var lWord, hWord dg.WordT
+	var res, ex int32
+
+	res = decode31bitDisp(hWord, lWord, absoluteMode)
+	if res != 0 {
+		t.Error("Absolute mode: expected 0, got ", res)
+	}
+
+	hWord, lWord = 0, 10
+	res = decode31bitDisp(hWord, lWord, absoluteMode)
+	if res != 10 {
+		t.Error("Absolute mode: expected 10, got ", res)
+	}
+
+	hWord, lWord = 10, 11
+	res = decode31bitDisp(hWord, lWord, absoluteMode)
+	ex = 10<<16 + 11
+	if res != ex {
+		t.Errorf("Absolute mode: expected %d, got %d", ex, res)
+	}
+
+	hWord, lWord = 0, 0
+	res = decode31bitDisp(hWord, lWord, pcMode)
+	if res != 0 {
+		t.Error("PC mode: expected 0, got ", res)
+	}
+
+	hWord, lWord = 0x7fff, 0xffff
+	res = decode31bitDisp(hWord, lWord, pcMode)
+	ex = -1
+	if res != ex {
+		t.Errorf("PC mode: expected %d, got %d", ex, res)
+	}
+
+}

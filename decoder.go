@@ -1,6 +1,6 @@
 // decoder.go
 
-// Copyright (C) 2017,2019 Steve Merrony
+// Copyright (C) 2017,2019,2020 Steve Merrony
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,6 +18,8 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+
+// BEWARE: DO NOT FALL INTO THE TRAP OF TRYING TO RESOLVE ADDRESSES HERE - DECODE ONLY!
 
 package main
 
@@ -711,17 +713,12 @@ func decode16bitByteDisp(d16 dg.WordT) (disp16 int16, loHi bool) {
 
 func decode31bitDisp(d1, d2 dg.WordT, mode int) int32 {
 	// FIXME Test this!
-	var disp32 int32
-	if memory.TestWbit(d1, 1) {
-		disp32 = int32(int16(d1 | 0x8000)) // sign extend
-	} else {
-		disp32 = int32(int16(d1)) & 0x00007fff // zero extend
+	dwd := memory.DwordFromTwoWords(d1&0x7fff, d2)
+	// sign-extend if not absolute mode
+	if mode != absoluteMode && memory.TestDwbit(dwd, 1) {
+		memory.SetDwbit(&dwd, 0)
 	}
-	disp32 = (disp32 << 16) | (int32(d2) & 0x0000ffff)
-	if debugLogging {
-		logging.DebugPrint(logging.DebugLog, "... decode31bitDisp got: %#o %#o, returning: %#o\n", d1, d2, disp32)
-	}
-	return disp32
+	return int32(dwd)
 }
 
 func decodeCarry(cry dg.WordT) byte {
