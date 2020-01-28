@@ -1,6 +1,6 @@
 // eagleMemRef.go
 
-// Copyright (C) 2017,2019 Steve Merrony
+// Copyright (C) 2017,2019,2020 Steve Merrony
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -109,10 +109,15 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrXLDB:
 		oneAccMode2Word := iPtr.variant.(oneAccMode2WordT)
+		disp := int32(oneAccMode2Word.disp16)
+		if oneAccMode2Word.mode == absoluteMode {
+			disp &= 0x1fff_ffff
+			disp |= int32(cpuPtr.pc & 0x7000_0000)
+		}
 		cpuPtr.ac[oneAccMode2Word.acd] = dg.DwordT(memory.ReadByte(resolve32bitEffAddr(cpuPtr,
 			' ',
 			oneAccMode2Word.mode,
-			int32(oneAccMode2Word.disp16), iPtr.dispOffset),
+			disp, iPtr.dispOffset),
 			oneAccMode2Word.bitLow)) & 0x00ff
 
 	case instrXLEF:
@@ -121,13 +126,12 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrXLEFB:
 		oneAccMode2Word := iPtr.variant.(oneAccMode2WordT)
-		var extendedDisp int32
+		disp := int32(oneAccMode2Word.disp16)
 		if oneAccMode2Word.mode == absoluteMode {
-			extendedDisp = 0x1fff_ffff & int32(oneAccMode2Word.disp16)
-		} else {
-			extendedDisp = int32(oneAccMode2Word.disp16)
+			disp &= 0x1fff_ffff
+			disp |= int32(cpuPtr.pc & 0x7000_0000)
 		}
-		addr := resolve32bitEffAddr(cpuPtr, 0, oneAccMode2Word.mode, extendedDisp, iPtr.dispOffset)
+		addr := resolve32bitEffAddr(cpuPtr, 0, oneAccMode2Word.mode, disp, iPtr.dispOffset)
 		addr <<= 1
 		if !oneAccMode2Word.bitLow {
 			addr++
@@ -158,7 +162,12 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case instrXSTB:
 		oneAccMode2Word := iPtr.variant.(oneAccMode2WordT)
 		byt := dg.ByteT(cpuPtr.ac[oneAccMode2Word.acd])
-		memory.WriteByte(resolve32bitEffAddr(cpuPtr, ' ', oneAccMode2Word.mode, int32(oneAccMode2Word.disp16), iPtr.dispOffset), oneAccMode2Word.bitLow, byt)
+		disp := int32(oneAccMode2Word.disp16)
+		if oneAccMode2Word.mode == absoluteMode {
+			disp &= 0x1fff_ffff
+			disp |= int32(cpuPtr.pc & 0x7000_0000)
+		}
+		memory.WriteByte(resolve32bitEffAddr(cpuPtr, ' ', oneAccMode2Word.mode, disp, iPtr.dispOffset), oneAccMode2Word.bitLow, byt)
 
 	case instrXNSTA:
 		oneAccModeInd2Word := iPtr.variant.(oneAccModeInd2WordT)
@@ -193,8 +202,7 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 }
 
 func readByteBA(ba dg.DwordT) dg.ByteT {
-	wordAddr, lowByte := resolve32bitByteAddr(ba)
-	return memory.ReadByte(wordAddr, lowByte)
+	return memory.ReadByte(resolve32bitByteAddr(ba))
 }
 
 // memWriteByte writes the supplied byte to the address derived from the given byte addr

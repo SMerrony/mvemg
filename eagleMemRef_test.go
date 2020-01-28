@@ -205,6 +205,24 @@ func TestXSTB(t *testing.T) {
 	var oneAccMode2Word oneAccMode2WordT
 	iPtr.ix = instrXSTB
 	memory.MemInit(10000, false)
+
+	// test high (left) byte write
+	memory.WriteWord(7, 0) // write 0 into Word at normal addr 7
+	oneAccMode2Word.disp16 = 7
+	oneAccMode2Word.mode = absoluteMode
+	oneAccMode2Word.bitLow = false
+	oneAccMode2Word.acd = 1
+	iPtr.variant = oneAccMode2Word
+	cpuPtr.ac[1] = 0x11223344
+	if !eagleMemRef(cpuPtr, &iPtr) {
+		t.Error("Failed to execute XSTB")
+	}
+	w := memory.ReadWord(7)
+	if w != 0x4400 {
+		t.Errorf("Expected %d, got %d", 0x4400, w)
+	}
+
+	// test low (right) byte write
 	memory.WriteWord(7, 0) // write 0 into Word at normal addr 7
 	oneAccMode2Word.disp16 = 7
 	oneAccMode2Word.mode = absoluteMode
@@ -215,7 +233,7 @@ func TestXSTB(t *testing.T) {
 	if !eagleMemRef(cpuPtr, &iPtr) {
 		t.Error("Failed to execute XSTB")
 	}
-	w := memory.ReadWord(7)
+	w = memory.ReadWord(7)
 	if w != 0x0044 {
 		t.Errorf("Expected %d, got %d", 0x0044, w)
 	}

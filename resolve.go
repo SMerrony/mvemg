@@ -76,7 +76,7 @@ func resolve16bitEffAddr(cpuPtr *CPUT, ind byte, mode int, disp int16, dispOffse
 	return dg.PhysAddrT(intEff) & 0x7fff // mask off to Eclipse range
 }
 
-// Resolve32bitByteAddr returns the word address and low-byte flag for a given 32-bit byte address
+// resolve32bitByteAddr returns the word address and low-byte flag for a given 32-bit byte address
 func resolve32bitByteAddr(byteAddr dg.DwordT) (wordAddr dg.PhysAddrT, loByte bool) {
 	wordAddr = dg.PhysAddrT(byteAddr) >> 1
 	loByte = memory.TestDwbit(byteAddr, 31)
