@@ -36,9 +36,9 @@ func eclipseMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case instrBLM:
 		/* AC0 - unused, AC1 - no. wds to move, AC2 - src, AC3 - dest */
 		numWds := memory.DwordGetLowerWord(cpuPtr.ac[1])
-		if numWds == 0 {
+		if numWds == 0 || numWds > 32768 {
 			if debugLogging {
-				logging.DebugPrint(logging.DebugLog, "BLM called with AC1 == 0, not moving anything\n")
+				logging.DebugPrint(logging.DebugLog, "BLM called with AC1 out-of-bounds, not moving anything\n")
 			}
 			break
 		}
@@ -81,6 +81,10 @@ func cmp(cpuPtr *CPUT) {
 	var str1len, str2len int16
 	str2len = int16(memory.DwordGetLowerWord(cpuPtr.ac[0]))
 	str1len = int16(memory.DwordGetLowerWord(cpuPtr.ac[1]))
+	if str1len == 0 && str2len == 0 {
+		cpuPtr.ac[1] = 0
+		return
+	}
 	str1bp := memory.DwordGetLowerWord(cpuPtr.ac[3])
 	str2bp := memory.DwordGetLowerWord(cpuPtr.ac[2])
 	var byte1, byte2 dg.ByteT
@@ -133,13 +137,14 @@ func cmp(cpuPtr *CPUT) {
 func cmv(cpuPtr *CPUT) {
 	// ACO destCount, AC1 srcCount, AC2 dest byte ptr, AC3 src byte ptr
 	var destAscend, srcAscend bool
-	destCount := int16(cpuPtr.ac[0] & 0x0000ffff)
+	destCount := int16(memory.DwordGetLowerWord(cpuPtr.ac[0]))
 	if destCount == 0 {
 		log.Println("INFO: CMV called with AC0 == 0, not moving anything")
+		cpuPtr.carry = false
 		return
 	}
 	destAscend = (destCount > 0)
-	srcCount := int16(cpuPtr.ac[1] & 0x0000ffff)
+	srcCount := int16(memory.DwordGetLowerWord(cpuPtr.ac[3]))
 	srcAscend = (srcCount > 0)
 	if debugLogging {
 		logging.DebugPrint(logging.DebugLog, "DEBUG: CMV moving %d chars from %d to %d\n",

@@ -1,6 +1,6 @@
 // mvemg project eagleMemRef_test.go
 
-// Copyright (C) 2017,2019 Steve Merrony
+// Copyright (C) 2017,2019,2020 Steve Merrony
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -86,6 +86,43 @@ func TestWBTZ(t *testing.T) {
 	w = memory.ReadWord(73)
 	if w != 0xefff {
 		t.Errorf("Expected %x, got %x", 0xefff, w)
+	}
+}
+
+func TestWBLM(t *testing.T) {
+	cpuPtr := cpuInit(nil)
+	var iPtr decodedInstrT
+	iPtr.ix = instrWBLM
+	memory.MemInit(1000, false)
+	// put own location into each mem location
+	var wdaddr dg.PhysAddrT
+	for wdaddr = 0; wdaddr < 1000; wdaddr++ {
+		memory.WriteWord(wdaddr, dg.WordT(wdaddr))
+	}
+	cpuPtr.ac[0] = 77
+	cpuPtr.ac[1] = 5
+	cpuPtr.ac[2] = 50 // src
+	cpuPtr.ac[3] = 40 // dest
+	if !eagleMemRef(cpuPtr, &iPtr) {
+		t.Error("Failed to execute WBLM")
+	}
+
+	for wdaddr = 40; wdaddr < 45; wdaddr++ {
+		if memory.ReadWord(wdaddr) != dg.WordT(wdaddr)+10 {
+			t.Errorf("Expected %d, got %d", wdaddr+10, memory.ReadWord(wdaddr))
+		}
+	}
+	if cpuPtr.ac[0] != 77 {
+		t.Error("Expected AC0 == 77")
+	}
+	if cpuPtr.ac[1] != 0 {
+		t.Error("Expected AC1 = 0")
+	}
+	if cpuPtr.ac[2] != 55 {
+		t.Error("Expected AC2 = 55")
+	}
+	if cpuPtr.ac[3] != 45 {
+		t.Error("Expected AC3 = 45")
 	}
 }
 
