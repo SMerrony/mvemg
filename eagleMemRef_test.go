@@ -94,6 +94,9 @@ func TestWBLM(t *testing.T) {
 	var iPtr decodedInstrT
 	iPtr.ix = instrWBLM
 	memory.MemInit(1000, false)
+
+	// FORWARDS
+
 	// put own location into each mem location
 	var wdaddr dg.PhysAddrT
 	for wdaddr = 0; wdaddr < 1000; wdaddr++ {
@@ -104,9 +107,8 @@ func TestWBLM(t *testing.T) {
 	cpuPtr.ac[2] = 50 // src
 	cpuPtr.ac[3] = 40 // dest
 	if !eagleMemRef(cpuPtr, &iPtr) {
-		t.Error("Failed to execute WBLM")
+		t.Error("Failed to execute forwards WBLM")
 	}
-
 	for wdaddr = 40; wdaddr < 45; wdaddr++ {
 		if memory.ReadWord(wdaddr) != dg.WordT(wdaddr)+10 {
 			t.Errorf("Expected %d, got %d", wdaddr+10, memory.ReadWord(wdaddr))
@@ -123,6 +125,37 @@ func TestWBLM(t *testing.T) {
 	}
 	if cpuPtr.ac[3] != 45 {
 		t.Error("Expected AC3 = 45")
+	}
+
+	// BACKWARDS
+
+	// put own location into each mem location
+	for wdaddr = 0; wdaddr < 1000; wdaddr++ {
+		memory.WriteWord(wdaddr, dg.WordT(wdaddr))
+	}
+	cpuPtr.ac[0] = 77
+	cpuPtr.ac[1] = 0xffff_fffb // -5
+	cpuPtr.ac[2] = 50          // src
+	cpuPtr.ac[3] = 40          // dest
+	if !eagleMemRef(cpuPtr, &iPtr) {
+		t.Error("Failed to execute reverse WBLM")
+	}
+	for wdaddr = 40; wdaddr > 35; wdaddr-- {
+		if memory.ReadWord(wdaddr) != dg.WordT(wdaddr)+10 {
+			t.Errorf("Expected %d, got %d", wdaddr+10, memory.ReadWord(wdaddr))
+		}
+	}
+	if cpuPtr.ac[0] != 77 {
+		t.Error("Expected AC0 == 77")
+	}
+	if cpuPtr.ac[1] != 0 {
+		t.Error("Expected AC1 = 0")
+	}
+	if cpuPtr.ac[2] != 45 {
+		t.Errorf("Expected AC2 = 45, got %d", cpuPtr.ac[2])
+	}
+	if cpuPtr.ac[3] != 35 {
+		t.Error("Expected AC3 = 35")
 	}
 }
 

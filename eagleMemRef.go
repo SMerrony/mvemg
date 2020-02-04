@@ -229,34 +229,26 @@ func copyByte(srcBA, destBA dg.DwordT) {
 
 func wblm(cpuPtr *CPUT) {
 	/* AC0 - unused, AC1 - no. wds to move (if neg then descending order), AC2 - src, AC3 - dest */
-	numWds := int32(cpuPtr.ac[1])
-	var order int32 = 1
-	if numWds < 0 {
-		order = -1
-	}
-	if numWds == 0 {
+	if cpuPtr.ac[1] == 0 {
 		log.Println("INFO: WBLM called with AC1 == 0, not moving anything")
 		return
 	}
-	src := dg.PhysAddrT(cpuPtr.ac[2])
-	dest := dg.PhysAddrT(cpuPtr.ac[3])
 	if debugLogging {
-		logging.DebugPrint(logging.DebugLog, "DEBUG: WBLM moving %#o words from %#o to %#o\n", numWds, src, dest)
+		logging.DebugPrint(logging.DebugLog, "DEBUG: WBLM moving %#o words from %#o to %#o\n",
+			int32(cpuPtr.ac[1]), cpuPtr.ac[2], cpuPtr.ac[3])
 	}
-	for numWds != 0 {
-		memory.WriteWord(dest, memory.ReadWord(src))
-		numWds -= order
-		if order == 1 {
-			src++
-			dest++
+	for cpuPtr.ac[1] != 0 {
+		memory.WriteWord(dg.PhysAddrT(cpuPtr.ac[3]), memory.ReadWord(dg.PhysAddrT(cpuPtr.ac[2])))
+		if memory.TestDwbit(cpuPtr.ac[1], 0) {
+			cpuPtr.ac[1]++
+			cpuPtr.ac[2]--
+			cpuPtr.ac[3]--
 		} else {
-			src--
-			dest--
+			cpuPtr.ac[1]--
+			cpuPtr.ac[2]++
+			cpuPtr.ac[3]++
 		}
 	}
-	cpuPtr.ac[1] = 0
-	cpuPtr.ac[2] = dg.DwordT(src)
-	cpuPtr.ac[3] = dg.DwordT(dest)
 }
 
 func wcmv(cpuPtr *CPUT) {
