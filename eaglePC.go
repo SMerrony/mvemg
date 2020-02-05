@@ -1,6 +1,6 @@
 // eaglePC.go
 
-// Copyright (C) 2017,2019  Steve Merrony
+// Copyright (C) 2017,2019,2020 Steve Merrony
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -390,21 +390,21 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			dwd = dg.DwordT(noAccModeInd3WordXcall.argCount) & 0x00007fff
 		}
 		memory.WsPush(0, dwd)
-		cpuPtr.pc = resolve32bitEffAddr(cpuPtr, noAccModeInd3WordXcall.ind, noAccModeInd3WordXcall.mode,
-			int32(noAccModeInd3WordXcall.disp15), iPtr.dispOffset)
+		cpuPtr.pc = resolve15bitDisplacement(cpuPtr, noAccModeInd3WordXcall.ind, noAccModeInd3WordXcall.mode,
+			dg.WordT(noAccModeInd3WordXcall.disp15), iPtr.dispOffset)
 
 	case instrXJMP:
 		noAccModeInd2Word := iPtr.variant.(noAccModeInd2WordT)
-		cpuPtr.pc = resolve32bitEffAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, int32(noAccModeInd2Word.disp15), iPtr.dispOffset)
+		cpuPtr.pc = resolve15bitDisplacement(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, dg.WordT(noAccModeInd2Word.disp15), iPtr.dispOffset)
 
 	case instrXJSR:
 		noAccModeInd2Word := iPtr.variant.(noAccModeInd2WordT)
 		cpuPtr.ac[3] = dg.DwordT(cpuPtr.pc + 2) // TODO Check this, PoP is self-contradictory on p.11-642
-		cpuPtr.pc = resolve32bitEffAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, int32(noAccModeInd2Word.disp15), iPtr.dispOffset)
+		cpuPtr.pc = resolve15bitDisplacement(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, dg.WordT(noAccModeInd2Word.disp15), iPtr.dispOffset)
 
 	case instrXNDO: // Narrow Do Until Greater Than
 		threeWordDo := iPtr.variant.(threeWordDoT)
-		loopVarAddr := resolve32bitEffAddr(cpuPtr, threeWordDo.ind, threeWordDo.mode, int32(threeWordDo.disp15), iPtr.dispOffset)
+		loopVarAddr := resolve15bitDisplacement(cpuPtr, threeWordDo.ind, threeWordDo.mode, dg.WordT(threeWordDo.disp15), iPtr.dispOffset)
 		loopVar := int32(memory.SexWordToDword(memory.DwordGetLowerWord(memory.ReadDWord(loopVarAddr))))
 		loopVar++
 		memory.WriteDWord(loopVarAddr, dg.DwordT(loopVar))
@@ -419,7 +419,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrXNDSZ: // unsigned narrow increment and skip if zero
 		noAccModeInd2Word := iPtr.variant.(noAccModeInd2WordT)
-		tmpAddr := resolve32bitEffAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, int32(noAccModeInd2Word.disp15), iPtr.dispOffset)
+		tmpAddr := resolve15bitDisplacement(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, dg.WordT(noAccModeInd2Word.disp15), iPtr.dispOffset)
 		wd := memory.ReadWord(tmpAddr)
 		wd-- // N.B. have checked that 0xffff + 1 == 0 in Go
 		memory.WriteWord(tmpAddr, wd)
@@ -431,7 +431,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrXNISZ: // unsigned narrow increment and skip if zero
 		noAccModeInd2Word := iPtr.variant.(noAccModeInd2WordT)
-		tmpAddr := resolve32bitEffAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, int32(noAccModeInd2Word.disp15), iPtr.dispOffset)
+		tmpAddr := resolve15bitDisplacement(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, dg.WordT(noAccModeInd2Word.disp15), iPtr.dispOffset)
 		wd := memory.ReadWord(tmpAddr)
 		wd++ // N.B. have checked that 0xffff + 1 == 0 in Go
 		memory.WriteWord(tmpAddr, wd)
@@ -443,7 +443,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrXWDSZ:
 		noAccModeInd2Word := iPtr.variant.(noAccModeInd2WordT)
-		tmpAddr := resolve32bitEffAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, int32(noAccModeInd2Word.disp15), iPtr.dispOffset)
+		tmpAddr := resolve15bitDisplacement(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, dg.WordT(noAccModeInd2Word.disp15), iPtr.dispOffset)
 		dwd := memory.ReadDWord(tmpAddr)
 		dwd--
 		memory.WriteDWord(tmpAddr, dwd)
@@ -455,7 +455,7 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrXWISZ:
 		noAccModeInd2Word := iPtr.variant.(noAccModeInd2WordT)
-		tmpAddr := resolve32bitEffAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, int32(noAccModeInd2Word.disp15), iPtr.dispOffset)
+		tmpAddr := resolve15bitDisplacement(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, dg.WordT(noAccModeInd2Word.disp15), iPtr.dispOffset)
 		dwd := memory.ReadDWord(tmpAddr)
 		dwd++
 		memory.WriteDWord(tmpAddr, dwd)

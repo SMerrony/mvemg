@@ -48,4 +48,4 @@ I currently have three standalone binaries: SYSBOOT(!), FIXUP, and PCOPY...
    ...repeated forever.  Interestingly, no activity is recorded in dpf_debug.log.
    PC is around 025462
 
-   Also, there are some 'funnies' in the PCOPY start-up prompts.  The REV number is displayed as "00070073◊◊◊.◊◊◊", "Specify source LDU" is missing the first character, "Disk unit name: " is also missing the first character.  Running a 'strings' command on the PCOPY binary shows that these strings are intact in the binary.  _?Could be a byte addressing issue? Check ~~WCMV~~, WBLM, WCLM, WSTB, ~~WLDB~~. XLDB_
+   Also, there are some 'funnies' in the PCOPY start-up prompts.  The REV number is displayed as "00070073◊◊◊.◊◊◊", "Specify source LDU" is missing the first character, "Disk unit name: " is also missing the first character.  Running a 'strings' command on the PCOPY binary shows that these strings are intact in the binary.  _?Could be a byte addressing issue? Check ~~WCMV~~, ~~WBLM~~, WSTB, ~~WLDB~~. XLDB_

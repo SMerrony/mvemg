@@ -122,7 +122,7 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrXLEF:
 		oneAccModeInd2Word := iPtr.variant.(oneAccModeInd2WordT)
-		cpuPtr.ac[oneAccModeInd2Word.acd] = dg.DwordT(resolve32bitEffAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, int32(oneAccModeInd2Word.disp15), iPtr.dispOffset))
+		cpuPtr.ac[oneAccModeInd2Word.acd] = dg.DwordT(resolve15bitDisplacement(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, dg.WordT(oneAccModeInd2Word.disp15), iPtr.dispOffset))
 
 	case instrXLEFB:
 		oneAccMode2Word := iPtr.variant.(oneAccMode2WordT)
@@ -140,7 +140,7 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrXNADD, instrXNSUB:
 		oneAccModeInd2Word := iPtr.variant.(oneAccModeInd2WordT)
-		addr := resolve32bitEffAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, int32(oneAccModeInd2Word.disp15), iPtr.dispOffset)
+		addr := resolve15bitDisplacement(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, dg.WordT(oneAccModeInd2Word.disp15), iPtr.dispOffset)
 		i16mem := int16(memory.ReadWord(addr))
 		i16ac := int16(memory.DwordGetLowerWord(cpuPtr.ac[oneAccModeInd2Word.acd]))
 		var t32 int32
@@ -159,12 +159,17 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrXNLDA:
 		oneAccModeInd2Word := iPtr.variant.(oneAccModeInd2WordT)
-		addr := resolve32bitEffAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, int32(oneAccModeInd2Word.disp15), iPtr.dispOffset)
+		addr := resolve15bitDisplacement(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, dg.WordT(oneAccModeInd2Word.disp15), iPtr.dispOffset)
 		wd, ok := memory.ReadWordTrap(addr)
 		if !ok {
 			return false
 		}
 		cpuPtr.ac[oneAccModeInd2Word.acd] = memory.SexWordToDword(wd)
+
+	case instrXNSTA:
+		oneAccModeInd2Word := iPtr.variant.(oneAccModeInd2WordT)
+		addr := resolve15bitDisplacement(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, dg.WordT(oneAccModeInd2Word.disp15), iPtr.dispOffset)
+		memory.WriteWord(addr, memory.DwordGetLowerWord(cpuPtr.ac[oneAccModeInd2Word.acd]))
 
 	case instrXSTB:
 		oneAccMode2Word := iPtr.variant.(oneAccMode2WordT)
@@ -176,14 +181,9 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		}
 		memory.WriteByte(resolve32bitEffAddr(cpuPtr, ' ', oneAccMode2Word.mode, disp, iPtr.dispOffset), oneAccMode2Word.bitLow, byt)
 
-	case instrXNSTA:
-		oneAccModeInd2Word := iPtr.variant.(oneAccModeInd2WordT)
-		addr := resolve32bitEffAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, int32(oneAccModeInd2Word.disp15), iPtr.dispOffset)
-		memory.WriteWord(addr, memory.DwordGetLowerWord(cpuPtr.ac[oneAccModeInd2Word.acd]))
-
 	case instrXWADI:
 		immMode2Word := iPtr.variant.(immMode2WordT)
-		addr := resolve32bitEffAddr(cpuPtr, immMode2Word.ind, immMode2Word.mode, int32(immMode2Word.disp15), iPtr.dispOffset)
+		addr := resolve15bitDisplacement(cpuPtr, immMode2Word.ind, immMode2Word.mode, dg.WordT(immMode2Word.disp15), iPtr.dispOffset)
 		s64 := int64(memory.ReadDWord(addr)) + int64(immMode2Word.immU16)
 		if (s64 > maxPosS32) || (s64 < minNegS32) {
 			cpuPtr.carry = true
@@ -193,12 +193,12 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrXWLDA:
 		oneAccModeInd2Word := iPtr.variant.(oneAccModeInd2WordT)
-		addr := resolve32bitEffAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, int32(oneAccModeInd2Word.disp15), iPtr.dispOffset)
+		addr := resolve15bitDisplacement(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, dg.WordT(oneAccModeInd2Word.disp15), iPtr.dispOffset)
 		cpuPtr.ac[oneAccModeInd2Word.acd] = memory.ReadDWord(addr)
 
 	case instrXWSTA:
 		oneAccModeInd2Word := iPtr.variant.(oneAccModeInd2WordT)
-		addr := resolve32bitEffAddr(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, int32(oneAccModeInd2Word.disp15), iPtr.dispOffset)
+		addr := resolve15bitDisplacement(cpuPtr, oneAccModeInd2Word.ind, oneAccModeInd2Word.mode, dg.WordT(oneAccModeInd2Word.disp15), iPtr.dispOffset)
 		memory.WriteDWord(addr, cpuPtr.ac[oneAccModeInd2Word.acd])
 
 	default:
