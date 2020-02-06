@@ -84,7 +84,7 @@ type noAccMode3WordT struct {
 type noAccModeInd2WordT struct {
 	mode   int
 	ind    byte
-	disp15 int16
+	disp15 dg.WordT
 }
 type noAccModeInd3WordT struct {
 	mode   int
@@ -368,14 +368,14 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 		// 	logging.DebugPrint(logging.DebugLog, "X_FMT: Mnemonic is <%s>\n", decodedInstr.mnemonic)
 		// }
 		switch ix {
-		case instrXJMP, instrXJSR, instrXNDSZ, instrXNISZ, instrXPEF, instrXWDSZ:
+		case instrXJMP, instrXJSR, instrXNDSZ, instrXNISZ, instrXPEF, instrXPSHJ, instrXWDSZ:
 			noAccModeInd2Word.mode = int(memory.GetWbits(opcode, 3, 2))
 		case instrEDSZ, instrEISZ, instrEJMP, instrEJSR, instrPSHJ:
 			noAccModeInd2Word.mode = int(memory.GetWbits(opcode, 6, 2))
 		}
 		secondWord = memory.ReadWord(pc + 1)
 		noAccModeInd2Word.ind = decodeIndirect(memory.TestWbit(secondWord, 0))
-		noAccModeInd2Word.disp15 = decode15bitDisp(secondWord, noAccModeInd2Word.mode)
+		noAccModeInd2Word.disp15 = dg.WordT(decode15bitDisp(secondWord, noAccModeInd2Word.mode))
 		decodedInstr.variant = noAccModeInd2Word
 		if disassemble {
 			decodedInstr.disassembly += fmt.Sprintf(" %c0%o%s [2-Word OpCode]",

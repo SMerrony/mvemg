@@ -84,7 +84,7 @@ func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrEISZ:
 		noAccModeInd2Word := iPtr.variant.(noAccModeInd2WordT)
-		addr := resolve16bitEffAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15, iPtr.dispOffset)
+		addr := resolve15bitDisplacement(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15, iPtr.dispOffset) & 0x7fff
 		wd := memory.ReadWord(addr)
 		wd++
 		memory.WriteWord(addr, wd)
@@ -96,14 +96,14 @@ func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrEJMP:
 		noAccModeInd2Word := iPtr.variant.(noAccModeInd2WordT)
-		addr := resolve16bitEffAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15, iPtr.dispOffset)
-		cpuPtr.pc = addr
+		addr := resolve15bitDisplacement(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15, iPtr.dispOffset)
+		cpuPtr.pc = addr & 0x7fff
 
 	case instrEJSR:
 		noAccModeInd2Word := iPtr.variant.(noAccModeInd2WordT)
 		cpuPtr.ac[3] = dg.DwordT(cpuPtr.pc) + 2
-		addr := resolve16bitEffAddr(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15, iPtr.dispOffset)
-		cpuPtr.pc = addr
+		addr := resolve15bitDisplacement(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15, iPtr.dispOffset)
+		cpuPtr.pc = addr & 0x7fff
 
 	case instrFNS:
 		cpuPtr.pc++
