@@ -63,7 +63,7 @@ func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrDSPA:
 		oneAccModeInt2Word := iPtr.variant.(oneAccModeInd2WordT)
-		tableStart := resolve16bitEffAddr(cpuPtr, oneAccModeInt2Word.ind, oneAccModeInt2Word.mode, oneAccModeInt2Word.disp15, iPtr.dispOffset)
+		tableStart := resolve15bitDisplacement(cpuPtr, oneAccModeInt2Word.ind, oneAccModeInt2Word.mode, dg.WordT(oneAccModeInt2Word.disp15), iPtr.dispOffset) & 0x7fff
 		offset := memory.DwordGetLowerWord(cpuPtr.ac[oneAccModeInt2Word.acd])
 		lowLimit := memory.ReadWord(tableStart - 2)
 		hiLimit := memory.ReadWord(tableStart - 1)

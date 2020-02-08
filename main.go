@@ -891,7 +891,7 @@ RunLoop: // performance-critical section starts here
 			} else {
 				indIrq = ' '
 			}
-			cpu.pc = resolve16bitEffAddr(&cpu, indIrq, absoluteMode, int16(memory.ReadWord(1)), 0)
+			cpu.pc = resolve15bitDisplacement(&cpu, indIrq, absoluteMode, memory.ReadWord(1), 0)
 			// next time round RunLoop the interrupt service routine will be started...
 		}
 		cpu.cpuMu.Unlock()

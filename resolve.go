@@ -116,48 +116,6 @@ func resolve8bitDisplacement(cpuPtr *CPUT, ind byte, mode int, disp int16) (eff 
 	return eff
 }
 
-func resolve16bitEffAddr(cpuPtr *CPUT, ind byte, mode int, disp int16, dispOffset int) dg.PhysAddrT {
-
-	var (
-		intEff  int32
-		indAddr dg.WordT
-	)
-
-	// handle addressing mode...
-	switch mode {
-	case absoluteMode:
-		intEff = int32(disp)
-	case pcMode:
-		intEff = int32(cpuPtr.pc) + int32(disp) + int32(dispOffset)
-	case ac2Mode:
-		intEff = int32(cpuPtr.ac[2]) + int32(disp)
-	case ac3Mode:
-		intEff = int32(cpuPtr.ac[3]) + int32(disp)
-	}
-
-	// handle indirection
-	if ind == '@' { // || intEff < 0 { // down the rabbit hole...
-		indAddr = memory.ReadWord(dg.PhysAddrT(intEff))
-		for memory.TestWbit(indAddr, 0) {
-			indAddr = memory.ReadWord(dg.PhysAddrT(indAddr))
-		}
-		intEff = int32(indAddr)
-	}
-
-	// Handle wrap-around
-	if intEff < 0 {
-		intEff += 65536
-	}
-	if intEff > 65535 {
-		intEff -= 65536
-	}
-
-	// if debugLogging {
-	// 	logging.DebugPrint(logging.DebugLog, "... resolve16bitEclipseAddr got: %#o, returning %#o\n", disp, eff)
-	// }
-	return dg.PhysAddrT(intEff) & 0x7fff // mask off to Eclipse range
-}
-
 // resolve32bitByteAddr returns the word address and low-byte flag for a given 32-bit byte address
 func resolve32bitByteAddr(byteAddr dg.DwordT) (wordAddr dg.PhysAddrT, loByte bool) {
 	wordAddr = dg.PhysAddrT(byteAddr) >> 1

@@ -65,8 +65,8 @@ func eclipseMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrELDA:
 		oneAccModeInt2Word := iPtr.variant.(oneAccModeInd2WordT)
-		addr := resolve16bitEffAddr(cpuPtr, oneAccModeInt2Word.ind, oneAccModeInt2Word.mode, oneAccModeInt2Word.disp15, iPtr.dispOffset)
-		cpuPtr.ac[oneAccModeInt2Word.acd] = dg.DwordT(memory.ReadWord(addr)) & 0x0ffff
+		addr := resolve15bitDisplacement(cpuPtr, oneAccModeInt2Word.ind, oneAccModeInt2Word.mode, dg.WordT(oneAccModeInt2Word.disp15), iPtr.dispOffset) & 0x7fff
+		cpuPtr.ac[oneAccModeInt2Word.acd] = dg.DwordT(memory.ReadWord(addr))
 
 	default:
 		log.Printf("ERROR: ECLIPSE_MEMREF instruction <%s> not yet implemented\n", iPtr.mnemonic)
