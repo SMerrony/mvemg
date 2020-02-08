@@ -1,6 +1,6 @@
 // novaMemRef_test.go
 
-// Copyright (C) 2019 Steve Merrony
+// Copyright (C) 2019,2020 Steve Merrony
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -33,9 +33,9 @@ func TestDSZ(t *testing.T) {
 	var novaNoAccEffAddr novaNoAccEffAddrT
 	iPtr.ix = instrDSZ
 	memory.MemInit(10000, false)
-	memory.WriteWord(500, 2)
+	memory.WriteWord(100, 2)
 	cpuPtr.pc = 10
-	novaNoAccEffAddr.disp15 = 500
+	novaNoAccEffAddr.disp15 = 100
 	novaNoAccEffAddr.ind = ' '
 	novaNoAccEffAddr.mode = absoluteMode
 	iPtr.variant = novaNoAccEffAddr
@@ -46,9 +46,9 @@ func TestDSZ(t *testing.T) {
 	if cpuPtr.pc != 11 {
 		t.Errorf("Expected PC 11, got %d.", cpuPtr.pc)
 	}
-	w := memory.ReadWord(500)
+	w := memory.ReadWord(100)
 	if w != 1 {
-		t.Errorf("Expected loc 500 to contain 1, got: %x", w)
+		t.Errorf("Expected loc 100 to contain 1, got: %x", w)
 	}
 
 	if !novaMemRef(cpuPtr, &iPtr) {
@@ -57,9 +57,9 @@ func TestDSZ(t *testing.T) {
 	if cpuPtr.pc != 13 {
 		t.Errorf("Expected PC 13, got %d.", cpuPtr.pc)
 	}
-	w = memory.ReadWord(500)
+	w = memory.ReadWord(100)
 	if w != 0 {
-		t.Errorf("Expected loc 500 to contain 0, got: %x", w)
+		t.Errorf("Expected loc 100 to contain 0, got: %x", w)
 	}
 }
 
@@ -69,9 +69,9 @@ func TestISZ(t *testing.T) {
 	var novaNoAccEffAddr novaNoAccEffAddrT
 	iPtr.ix = instrISZ
 	memory.MemInit(10000, false)
-	memory.WriteWord(500, 0xfffe)
+	memory.WriteWord(100, 0xfffe)
 	cpuPtr.pc = 10
-	novaNoAccEffAddr.disp15 = 500
+	novaNoAccEffAddr.disp15 = 100
 	novaNoAccEffAddr.ind = ' '
 	novaNoAccEffAddr.mode = absoluteMode
 	iPtr.variant = novaNoAccEffAddr
@@ -82,9 +82,9 @@ func TestISZ(t *testing.T) {
 	if cpuPtr.pc != 11 {
 		t.Errorf("Expected PC 11, got %d.", cpuPtr.pc)
 	}
-	w := memory.ReadWord(500)
+	w := memory.ReadWord(100)
 	if w != 0xffff {
-		t.Errorf("Expected loc 500 to contain 0xffff, got: %x", w)
+		t.Errorf("Expected loc 100 to contain 0xffff, got: %x", w)
 	}
 
 	if !novaMemRef(cpuPtr, &iPtr) {
@@ -93,7 +93,7 @@ func TestISZ(t *testing.T) {
 	if cpuPtr.pc != 13 {
 		t.Errorf("Expected PC 13, got %d.", cpuPtr.pc)
 	}
-	w = memory.ReadWord(500)
+	w = memory.ReadWord(100)
 	if w != 0 {
 		t.Errorf("Expected loc 500 to contain 0, got: %x", w)
 	}
@@ -106,18 +106,18 @@ func TestSTA(t *testing.T) {
 	iPtr.ix = instrSTA
 	cpuPtr.ac[1] = 0x12345678
 	novaOneAccEffAddr.acd = 1
-	novaOneAccEffAddr.disp15 = 500
+	novaOneAccEffAddr.disp15 = 100
 	novaOneAccEffAddr.ind = ' '
 	novaOneAccEffAddr.mode = absoluteMode
 	memory.MemInit(10000, false)
-	memory.WriteWord(500, 0xfffe)
+	memory.WriteWord(100, 0xfffe)
 	iPtr.variant = novaOneAccEffAddr
 
 	if !novaMemRef(cpuPtr, &iPtr) {
 		t.Error("Failed to execute STA")
 	}
-	w := memory.ReadWord(500)
+	w := memory.ReadWord(100)
 	if w != 0x5678 {
-		t.Errorf("Expected loc 500 to contain 0x5678, got: %x", w)
+		t.Errorf("Expected loc 100 to contain 0x5678, got: %x", w)
 	}
 }

@@ -446,7 +446,7 @@ func instructionDecode(opcode dg.WordT, pc dg.PhysAddrT, lefMode bool, ioOn bool
 			decodedInstr.disassembly += fmt.Sprintf("%c %d,%s",
 				novaDataIo.f, novaDataIo.acd, deviceToString(novaDataIo.ioDev))
 		}
-	case NOVA_NOACC_EFF_ADDR_FMT: // eg. JMP, JSR
+	case NOVA_NOACC_EFF_ADDR_FMT: // eg. DSZ, ISZ, JMP, JSR
 		var novaNoAccEffAddr novaNoAccEffAddrT
 		novaNoAccEffAddr.ind = decodeIndirect(memory.TestWbit(opcode, 5))
 		novaNoAccEffAddr.mode = int(memory.GetWbits(opcode, 6, 2))

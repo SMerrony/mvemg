@@ -75,6 +75,47 @@ func resolve15bitDisplacement(cpuPtr *CPUT, ind byte, mode int, disp dg.WordT, d
 	return eff
 }
 
+func resolve8bitDisplacement(cpuPtr *CPUT, ind byte, mode int, disp int16) (eff dg.PhysAddrT) {
+	if mode == absoluteMode {
+		// zero-extend to 28 bits, force to current ring...
+		eff = dg.PhysAddrT(disp) | (cpuPtr.pc & 0x7000_0000)
+	} else {
+		// relative mode
+		// sign-extend to 31-bits
+		eff = dg.PhysAddrT(disp)
+		if disp < 0 {
+			eff |= 0xffff_f800
+		}
+	}
+	switch mode {
+	case pcMode:
+		eff += cpuPtr.pc
+	case ac2Mode:
+		eff += dg.PhysAddrT(cpuPtr.ac[2])
+	case ac3Mode:
+		eff += dg.PhysAddrT(cpuPtr.ac[3])
+	}
+	// handle indirection
+	if ind == '@' { // down the rabbit hole...
+		indAddr, ok := memory.ReadWordTrap(eff)
+		if !ok {
+			log.Fatalln("Terminating")
+		}
+		for memory.TestWbit(indAddr, 0) {
+			indAddr, ok = memory.ReadWordTrap(dg.PhysAddrT(indAddr & physMask16))
+			if !ok {
+				log.Fatalln("Terminating")
+			}
+		}
+		eff = dg.PhysAddrT(indAddr)
+	}
+
+	if debugLogging {
+		logging.DebugPrint(logging.DebugLog, "... resolve8bitDsiplacement got: %#o %s, returning %#o\n", disp, modeToString(mode), eff)
+	}
+	return eff
+}
+
 func resolve16bitEffAddr(cpuPtr *CPUT, ind byte, mode int, disp int16, dispOffset int) dg.PhysAddrT {
 
 	var (

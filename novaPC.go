@@ -1,6 +1,6 @@
 // novaPC.go
 
-// Copyright (C) 2017  Steve Merrony
+// Copyright (C) 2017,2020 Steve Merrony
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -35,13 +35,12 @@ func novaPC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrJMP:
 		novaNoAccEffAddr = iPtr.variant.(novaNoAccEffAddrT)
-		// disp is only 8-bit, but same resolution code
-		cpuPtr.pc = resolve16bitEffAddr(cpuPtr, novaNoAccEffAddr.ind, novaNoAccEffAddr.mode, novaNoAccEffAddr.disp15, iPtr.dispOffset)
+		cpuPtr.pc = resolve8bitDisplacement(cpuPtr, novaNoAccEffAddr.ind, novaNoAccEffAddr.mode, novaNoAccEffAddr.disp15) & 0x7fff
 
 	case instrJSR:
 		novaNoAccEffAddr = iPtr.variant.(novaNoAccEffAddrT)
 		tmpPC := dg.DwordT(cpuPtr.pc + 1)
-		cpuPtr.pc = resolve16bitEffAddr(cpuPtr, novaNoAccEffAddr.ind, novaNoAccEffAddr.mode, novaNoAccEffAddr.disp15, iPtr.dispOffset)
+		cpuPtr.pc = resolve8bitDisplacement(cpuPtr, novaNoAccEffAddr.ind, novaNoAccEffAddr.mode, novaNoAccEffAddr.disp15) & 0x7fff
 		cpuPtr.ac[3] = tmpPC
 
 	default:
