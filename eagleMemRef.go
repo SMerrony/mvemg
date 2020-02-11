@@ -109,16 +109,19 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrXLDB:
 		oneAccMode2Word := iPtr.variant.(oneAccMode2WordT)
-		disp := int32(oneAccMode2Word.disp16)
-		if oneAccMode2Word.mode == absoluteMode {
+		disp := int32(oneAccMode2Word.disp16 >> 1)
+		switch oneAccMode2Word.mode {
+		case absoluteMode:
 			disp &= 0x1fff_ffff
 			disp |= int32(cpuPtr.pc & 0x7000_0000)
+			// case ac2Mode:
+			// 	cpuPtr.ac[2] >>= 1
+			// case ac3Mode:
+			// 	cpuPtr.ac[3] >>= 1
+
 		}
-		cpuPtr.ac[oneAccMode2Word.acd] = dg.DwordT(memory.ReadByte(resolve32bitEffAddr(cpuPtr,
-			' ',
-			oneAccMode2Word.mode,
-			disp, iPtr.dispOffset),
-			oneAccMode2Word.bitLow)) & 0x00ff
+		addr := resolve32bitEffAddr(cpuPtr, ' ', oneAccMode2Word.mode, disp, iPtr.dispOffset)
+		cpuPtr.ac[oneAccMode2Word.acd] = dg.DwordT(memory.ReadByte(addr, oneAccMode2Word.bitLow)) & 0x00ff
 
 	case instrXLEF:
 		oneAccModeInd2Word := iPtr.variant.(oneAccModeInd2WordT)

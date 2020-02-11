@@ -269,6 +269,54 @@ func TestWLDB(t *testing.T) {
 	}
 }
 
+func TestXLDB(t *testing.T) {
+	cpuPtr := cpuInit(nil)
+	var iPtr decodedInstrT
+	var oneAccMode2Word oneAccMode2WordT
+	iPtr.ix = instrXLDB
+	memory.MemInit(1000, false)
+	memory.WriteByte(100, false, 'A')
+	memory.WriteByte(100, true, 'B')
+	oneAccMode2Word.acd = 2
+	oneAccMode2Word.mode = absoluteMode
+	cpuPtr.ac[2] = 400 << 1 // should not be used in absolute mode
+	oneAccMode2Word.disp16 = 100 << 1
+	oneAccMode2Word.bitLow = false // get high byte 'A'
+	iPtr.variant = oneAccMode2Word
+	if !eagleMemRef(cpuPtr, &iPtr) {
+		t.Error("Failed to execute XLDB [1]")
+	}
+	if cpuPtr.ac[2] != 'A' {
+		t.Errorf("[1] Expected %d, got %d", 'A', cpuPtr.ac[2])
+	}
+
+	oneAccMode2Word.acd = 2
+	oneAccMode2Word.mode = absoluteMode
+	cpuPtr.ac[2] = 400 << 1 // should not be used in absolute mode
+	oneAccMode2Word.disp16 = 100 << 1
+	oneAccMode2Word.bitLow = true // get low byte 'B'
+	iPtr.variant = oneAccMode2Word
+	if !eagleMemRef(cpuPtr, &iPtr) {
+		t.Error("Failed to execute XLDB [2]")
+	}
+	if cpuPtr.ac[2] != 'B' {
+		t.Errorf("[2] Expected %d, got %d", 'B', cpuPtr.ac[2])
+	}
+
+	oneAccMode2Word.acd = 3
+	oneAccMode2Word.mode = ac3Mode
+	cpuPtr.ac[3] = 100
+	oneAccMode2Word.disp16 = 0
+	oneAccMode2Word.bitLow = true // get low byte 'B'
+	iPtr.variant = oneAccMode2Word
+	if !eagleMemRef(cpuPtr, &iPtr) {
+		t.Error("Failed to execute XLDB [3]")
+	}
+	if cpuPtr.ac[3] != 'B' {
+		t.Errorf("[3] Expected %d, got %d", 'B', cpuPtr.ac[3])
+	}
+}
+
 func TestXSTB(t *testing.T) {
 	cpuPtr := cpuInit(nil)
 	var iPtr decodedInstrT
