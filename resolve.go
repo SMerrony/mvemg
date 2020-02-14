@@ -68,7 +68,11 @@ func resolve15bitDisplacement(cpuPtr *CPUT, ind byte, mode int, disp dg.WordT, d
 		}
 		eff = dg.PhysAddrT(indAddr)
 	}
-
+	// check ATU
+	if cpuPtr.atu == false {
+		// constrain result to 1st 32MB
+		eff &= 0x1ff_ffff
+	}
 	if debugLogging {
 		logging.DebugPrint(logging.DebugLog, "... resolve15bitDsiplacement got: %#o %s, returning %#o\n", disp, modeToString(mode), eff)
 	}
@@ -109,7 +113,11 @@ func resolve8bitDisplacement(cpuPtr *CPUT, ind byte, mode int, disp int16) (eff 
 		}
 		eff = dg.PhysAddrT(indAddr)
 	}
-
+	// check ATU
+	if cpuPtr.atu == false {
+		// constrain result to 1st 32MB
+		eff &= 0x1ff_ffff
+	}
 	if debugLogging {
 		logging.DebugPrint(logging.DebugLog, "... resolve8bitDsiplacement got: %#o %s, returning %#o\n", disp, modeToString(mode), eff)
 	}
@@ -154,17 +162,28 @@ func resolve32bitEffAddr(cpuPtr *CPUT, ind byte, mode int, disp int32, dispOffse
 		eff = dg.PhysAddrT(indAddr)
 	}
 
+	// check ATU
+	if cpuPtr.atu == false {
+		// constrain result to 1st 32MB
+		eff &= 0x1ff_ffff
+	}
+
 	if debugLogging {
 		logging.DebugPrint(logging.DebugLog, "... resolve32bitEffAddr got: %#o %s, returning %#o\n", disp, modeToString(mode), eff)
 	}
 	return eff
 }
 
-func resolve32bitIndirectableAddr(iAddr dg.DwordT) dg.PhysAddrT {
+func resolve32bitIndirectableAddr(cpuPtr *CPUT, iAddr dg.DwordT) dg.PhysAddrT {
 	eff := iAddr
 	// handle indirection
 	for memory.TestDwbit(eff, 0) {
 		eff = memory.ReadDWord(dg.PhysAddrT(eff & physMask32))
+	}
+	// check ATU
+	if cpuPtr.atu == false {
+		// constrain result to 1st 32MB
+		eff &= 0x1ff_ffff
 	}
 	return dg.PhysAddrT(eff)
 }

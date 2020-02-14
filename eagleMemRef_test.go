@@ -44,7 +44,7 @@ func TestWBTZ(t *testing.T) {
 	cpuPtr.ac[0] = wordOffset | bitNum
 	memory.WriteWord(73, 0xffff)
 	if !eagleMemRef(cpuPtr, &iPtr) {
-		t.Error("Failed to execute WBTZ")
+		t.Error("Failed to execute WBTZ 1")
 	}
 	w := memory.ReadWord(73)
 	if w != 0xefff {
@@ -61,7 +61,7 @@ func TestWBTZ(t *testing.T) {
 	cpuPtr.ac[1] = 40
 	memory.WriteWord(73, 0xffff)
 	if !eagleMemRef(cpuPtr, &iPtr) {
-		t.Error("Failed to execute WBTZ")
+		t.Error("Failed to execute WBTZ 2")
 	}
 	w = memory.ReadWord(73)
 	if w != 0xefff {
@@ -81,7 +81,7 @@ func TestWBTZ(t *testing.T) {
 	memory.WriteDWord(60, 40) // DWord!!!
 	memory.WriteWord(73, 0xffff)
 	if !eagleMemRef(cpuPtr, &iPtr) {
-		t.Error("Failed to execute WBTZ")
+		t.Error("Failed to execute WBTZ 3")
 	}
 	w = memory.ReadWord(73)
 	if w != 0xefff {

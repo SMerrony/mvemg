@@ -63,7 +63,7 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		if twoAcc1Word.acs == twoAcc1Word.acd {
 			addr = 0
 		} else {
-			addr = resolve32bitIndirectableAddr(cpuPtr.ac[twoAcc1Word.acs])
+			addr = resolve32bitIndirectableAddr(cpuPtr, cpuPtr.ac[twoAcc1Word.acs])
 		}
 		offset := dg.PhysAddrT(cpuPtr.ac[twoAcc1Word.acd]) >> 4
 		bitNum := uint(cpuPtr.ac[twoAcc1Word.acd] & 0x0f)
@@ -77,7 +77,7 @@ func eagleMemRef(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		if twoAcc1Word.acs == twoAcc1Word.acd {
 			addr = 0
 		} else {
-			addr = resolve32bitIndirectableAddr(cpuPtr.ac[twoAcc1Word.acs])
+			addr = resolve32bitIndirectableAddr(cpuPtr, cpuPtr.ac[twoAcc1Word.acs])
 		}
 		offset := dg.PhysAddrT(cpuPtr.ac[twoAcc1Word.acd]) >> 4
 		bitNum := uint(cpuPtr.ac[twoAcc1Word.acd] & 0x0f)
@@ -377,7 +377,7 @@ func wcst(cpuPtr *CPUT) {
 		}
 		return
 	}
-	delimTabAddr := resolve32bitIndirectableAddr(cpuPtr.ac[0])
+	delimTabAddr := resolve32bitIndirectableAddr(cpuPtr, cpuPtr.ac[0])
 	cpuPtr.ac[0] = dg.DwordT(delimTabAddr)
 	// load the table which is 256 bits stored as 16 words
 	var table [256]bool
@@ -420,7 +420,7 @@ func wctr(cpuPtr *CPUT) {
 		}
 		return
 	}
-	transTablePtr := dg.DwordT(resolve32bitIndirectableAddr(cpuPtr.ac[0]))
+	transTablePtr := dg.DwordT(resolve32bitIndirectableAddr(cpuPtr, cpuPtr.ac[0]))
 	// build an array representation of the table
 	var transTable [256]dg.ByteT
 	var c dg.DwordT
