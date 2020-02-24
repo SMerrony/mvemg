@@ -432,7 +432,7 @@ func instructionsInit() {
 	instructionSet[instrLDASB] = instrChars{"LDASB", 0xc649, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_STACK, 0}
 	instructionSet[instrLDASL] = instrChars{"LDASL", 0xa669, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_STACK, 0}
 	instructionSet[instrLDASP] = instrChars{"LDASP", 0xa649, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_STACK, 0}
-	instructionSet[instrLDATS] = instrChars{"LDATS", 0x8649, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_OP, 0}
+	instructionSet[instrLDATS] = instrChars{"LDATS", 0x8649, 0xe7ff, 1, ONEACC_1_WORD_FMT, EAGLE_STACK, 0}
 	instructionSet[instrLDB] = instrChars{"LDB", 0x85c8, 0x87ff, 1, TWOACC_1_WORD_FMT, ECLIPSE_OP, 0}
 	instructionSet[instrLDSP] = instrChars{"LDSP", 0x8519, 0x87ff, 3, ONEACC_MODE_IND_3_WORD_FMT, EAGLE_PC, 1}
 	instructionSet[instrLEF] = instrChars{"LEF", 0x6000, 0xe000, 1, NOVA_ONEACC_EFF_ADDR_FMT, ECLIPSE_MEMREF, 0}

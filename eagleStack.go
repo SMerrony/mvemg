@@ -1,4 +1,4 @@
-// Copyright (C) 2017,2019  Steve Merrony
+// Copyright ©2017-2020  Steve Merrony
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -31,6 +31,15 @@ import (
 	"github.com/SMerrony/dgemug/memory"
 )
 
+// Some Page Zero special locations for the Wide Stack...
+const (
+	WsfhLoc = 014 // 12.
+	WfpLoc  = 020 // WFP 16.
+	WspLoc  = 022 // WSP 18.
+	WslLoc  = 024 // WSL 20.
+	WsbLoc  = 026 // WSB 22.
+)
+
 func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	switch iPtr.ix {
@@ -39,23 +48,33 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrLDAFP:
 		oneAcc1Word := iPtr.variant.(oneAcc1WordT)
-		cpuPtr.ac[oneAcc1Word.acd] = memory.ReadDWord(memory.WfpLoc)
+		cpuPtr.ac[oneAcc1Word.acd] = dg.DwordT(cpuPtr.wfp)
+		cpuSetOVR(false)
 
 	case instrLDASB:
 		oneAcc1Word := iPtr.variant.(oneAcc1WordT)
-		cpuPtr.ac[oneAcc1Word.acd] = memory.ReadDWord(memory.WsbLoc)
+		cpuPtr.ac[oneAcc1Word.acd] = dg.DwordT(cpuPtr.wsb)
+		cpuSetOVR(false)
 
 	case instrLDASL:
 		oneAcc1Word := iPtr.variant.(oneAcc1WordT)
-		cpuPtr.ac[oneAcc1Word.acd] = memory.ReadDWord(memory.WslLoc)
+		cpuPtr.ac[oneAcc1Word.acd] = dg.DwordT(cpuPtr.wsl)
+		cpuSetOVR(false)
 
 	case instrLDASP:
 		oneAcc1Word := iPtr.variant.(oneAcc1WordT)
-		cpuPtr.ac[oneAcc1Word.acd] = memory.ReadDWord(memory.WspLoc)
+		cpuPtr.ac[oneAcc1Word.acd] = dg.DwordT(cpuPtr.wsp)
+		cpuSetOVR(false)
+
+	case instrLDATS:
+		oneAcc1Word := iPtr.variant.(oneAcc1WordT)
+		cpuPtr.ac[oneAcc1Word.acd] = memory.ReadDWord(cpuPtr.wsp)
+		cpuSetOVR(false)
 
 	case instrLPEF:
 		noAccModeInd3Word := iPtr.variant.(noAccModeInd3WordT)
-		memory.WsPush(0, dg.DwordT(resolve32bitEffAddr(cpuPtr, noAccModeInd3Word.ind, noAccModeInd3Word.mode, noAccModeInd3Word.disp31, iPtr.dispOffset)))
+		wsPush(cpuPtr, 0, dg.DwordT(resolve32bitEffAddr(cpuPtr, noAccModeInd3Word.ind, noAccModeInd3Word.mode, noAccModeInd3Word.disp31, iPtr.dispOffset)))
+		cpuSetOVR(false)
 
 	case instrLPEFB:
 		noAccMode3Word := iPtr.variant.(noAccMode3WordT)
@@ -69,42 +88,54 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		case ac3Mode:
 			eff += cpuPtr.ac[3]
 		}
-		memory.WsPush(0, eff)
+		wsPush(cpuPtr, 0, eff)
+		cpuSetOVR(false)
 
 	case instrSTAFP:
 		oneAcc1Word := iPtr.variant.(oneAcc1WordT)
 		// FIXME handle segments
-		memory.WriteDWord(memory.WfpLoc, cpuPtr.ac[oneAcc1Word.acd])
+		cpuPtr.wfp = dg.PhysAddrT(cpuPtr.ac[oneAcc1Word.acd])
+		// according the PoP does not write through to page zero...
+		//memory.WriteDWord(memory.WfpLoc, cpuPtr.ac[oneAcc1Word.acd])
+		cpuSetOVR(false)
 
 	case instrSTASB:
 		oneAcc1Word := iPtr.variant.(oneAcc1WordT)
 		// FIXME handle segments
-		memory.WriteDWord(memory.WsbLoc, cpuPtr.ac[oneAcc1Word.acd])
+		cpuPtr.wsb = dg.PhysAddrT(cpuPtr.ac[oneAcc1Word.acd])
+		memory.WriteDWord(WsbLoc, cpuPtr.ac[oneAcc1Word.acd]) // write-through to p.0
+		cpuSetOVR(false)
 
 	case instrSTASL:
 		oneAcc1Word := iPtr.variant.(oneAcc1WordT)
 		// FIXME handle segments
-		memory.WriteDWord(memory.WslLoc, cpuPtr.ac[oneAcc1Word.acd])
+		cpuPtr.wsl = dg.PhysAddrT(cpuPtr.ac[oneAcc1Word.acd])
+		memory.WriteDWord(WslLoc, cpuPtr.ac[oneAcc1Word.acd]) // write-through to p.0
+		cpuSetOVR(false)
 
 	case instrSTASP:
 		oneAcc1Word := iPtr.variant.(oneAcc1WordT)
 		// FIXME handle segments
-		memory.WriteDWord(memory.WspLoc, cpuPtr.ac[oneAcc1Word.acd])
+		cpuPtr.wsp = dg.PhysAddrT(cpuPtr.ac[oneAcc1Word.acd])
+		// according the PoP does not write through to page zero...
+		// memory.WriteDWord(memory.WspLoc, cpuPtr.ac[oneAcc1Word.acd])
+		cpuSetOVR(false)
 		if debugLogging {
-			logging.DebugPrint(logging.DebugLog, "... STASP set WSP to %d\n", cpuPtr.ac[oneAcc1Word.acd])
+			logging.DebugPrint(logging.DebugLog, "... STASP set WSP to %#o\n", cpuPtr.ac[oneAcc1Word.acd])
 		}
 
 	case instrSTATS:
 		oneAcc1Word := iPtr.variant.(oneAcc1WordT)
 		// FIXME handle segments
-		memory.WriteDWord(dg.PhysAddrT(memory.ReadDWord(memory.WslLoc)), cpuPtr.ac[oneAcc1Word.acd])
+		memory.WriteDWord(dg.PhysAddrT(memory.ReadDWord(cpuPtr.wsp)), cpuPtr.ac[oneAcc1Word.acd])
+		cpuSetOVR(false)
 
 	case instrWFPOP:
-		cpuPtr.fpac[3] = memory.WsPopQWord(0)
-		cpuPtr.fpac[2] = memory.WsPopQWord(0)
-		cpuPtr.fpac[1] = memory.WsPopQWord(0)
-		cpuPtr.fpac[0] = memory.WsPopQWord(0)
-		tmpQwd := memory.WsPopQWord(0)
+		cpuPtr.fpac[3] = wsPopQWord(cpuPtr, 0)
+		cpuPtr.fpac[2] = wsPopQWord(cpuPtr, 0)
+		cpuPtr.fpac[1] = wsPopQWord(cpuPtr, 0)
+		cpuPtr.fpac[0] = wsPopQWord(cpuPtr, 0)
+		tmpQwd := wsPopQWord(cpuPtr, 0)
 		cpuPtr.fpsr = 0
 		any := false
 		// set the ANY bit?
@@ -135,8 +166,10 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case instrWMSP:
 		oneAcc1Word := iPtr.variant.(oneAcc1WordT)
 		tmpDwd := cpuPtr.ac[oneAcc1Word.acd] << 1
-		tmpDwd += memory.ReadDWord(memory.WspLoc)
-		memory.WriteDWord(memory.WspLoc, tmpDwd)
+		tmpDwd += memory.ReadDWord(cpuPtr.wsp) // memory.WspLoc)
+		// FIXME - handle overflow
+		memory.WriteDWord(cpuPtr.wsp, tmpDwd)
+		cpuSetOVR(false)
 
 	case instrWPOP:
 		twoAcc1Word := iPtr.variant.(twoAcc1WordT)
@@ -150,8 +183,9 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			if debugLogging {
 				logging.DebugPrint(logging.DebugLog, "... wide popping AC%d\n", acsUp[thisAc])
 			}
-			cpuPtr.ac[acsUp[thisAc]] = memory.WsPop(0)
+			cpuPtr.ac[acsUp[thisAc]] = wsPop(cpuPtr, 0)
 		}
+		cpuSetOVR(false)
 
 	case instrWPSH:
 		twoAcc1Word := iPtr.variant.(twoAcc1WordT)
@@ -165,8 +199,9 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			if debugLogging {
 				logging.DebugPrint(logging.DebugLog, "... wide pushing AC%d\n", acsUp[thisAc])
 			}
-			memory.WsPush(0, cpuPtr.ac[acsUp[thisAc]])
+			wsPush(cpuPtr, 0, cpuPtr.ac[acsUp[thisAc]])
 		}
+		cpuSetOVR(false)
 
 	// N.B. WRTN is in eaglePC
 
@@ -188,7 +223,7 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrXPEF:
 		noAccModeInd2Word := iPtr.variant.(noAccModeInd2WordT)
-		memory.WsPush(0, dg.DwordT(resolve15bitDisplacement(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15, iPtr.dispOffset)))
+		wsPush(cpuPtr, 0, dg.DwordT(resolve15bitDisplacement(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15, iPtr.dispOffset)))
 
 	case instrXPEFB:
 		noAccMode2Word := iPtr.variant.(noAccMode2WordT)
@@ -203,12 +238,12 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		case ac3Mode:
 			eff += cpuPtr.ac[3]
 		}
-		memory.WsPush(0, eff)
+		wsPush(cpuPtr, 0, eff)
 
 	case instrXPSHJ:
 		// FIXME check for overflow
 		immMode2Word := iPtr.variant.(immMode2WordT)
-		memory.WsPush(0, dg.DwordT(cpuPtr.pc+2))
+		wsPush(cpuPtr, 0, dg.DwordT(cpuPtr.pc+2))
 		cpuPtr.pc = resolve32bitEffAddr(cpuPtr, immMode2Word.ind, immMode2Word.mode, int32(immMode2Word.disp15), iPtr.dispOffset)
 		return true
 
@@ -223,41 +258,105 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 // wsav is common to WSAVR and WSAVS
 func wsav(cpuPtr *CPUT, u2wd *unique2WordT) {
-	wfpSav := memory.ReadDWord(memory.WfpLoc)
-	memory.WsPush(0, cpuPtr.ac[0]) // 1
-	memory.WsPush(0, cpuPtr.ac[1]) // 2
-	memory.WsPush(0, cpuPtr.ac[2]) // 3
-	memory.WsPush(0, wfpSav)       // 4
+	wfpSav := memory.ReadDWord(cpuPtr.wfp)
+	wsPush(cpuPtr, 0, cpuPtr.ac[0]) // 1
+	wsPush(cpuPtr, 0, cpuPtr.ac[1]) // 2
+	wsPush(cpuPtr, 0, cpuPtr.ac[2]) // 3
+	wsPush(cpuPtr, 0, wfpSav)       // 4
 	dwd := cpuPtr.ac[3] & 0x7fffffff
 	if cpuPtr.carry {
 		dwd |= 0x80000000
 	}
-	memory.WsPush(0, dwd) // 5
-	memory.WriteDWord(memory.WfpLoc, memory.ReadDWord(memory.WspLoc))
-	cpuPtr.ac[3] = memory.ReadDWord(memory.WspLoc)
+	wsPush(cpuPtr, 0, dwd) // 5
+	cpuPtr.wfp = cpuPtr.wsp
+	cpuPtr.ac[3] = dg.DwordT(cpuPtr.wsp)
 	dwdCnt := uint(u2wd.immU16)
 	if dwdCnt > 0 {
-		memory.AdvanceWSP(dwdCnt)
+		advanceWSP(cpuPtr, dwdCnt)
 	}
 }
 
 // wssav is common to WSSVR and WSSVS
 func wssav(cpuPtr *CPUT, u2wd *unique2WordT) {
-	wfpSav := memory.ReadDWord(memory.WfpLoc)
-	memory.WsPush(0, memory.DwordFromTwoWords(cpuPtr.psr, 0)) // 1
-	memory.WsPush(0, cpuPtr.ac[0])                            // 2
-	memory.WsPush(0, cpuPtr.ac[1])                            // 3
-	memory.WsPush(0, cpuPtr.ac[2])                            // 4
-	memory.WsPush(0, wfpSav)                                  // 5
+	wfpSav := memory.ReadDWord(cpuPtr.wfp)
+	wsPush(cpuPtr, 0, memory.DwordFromTwoWords(cpuPtr.psr, 0)) // 1
+	wsPush(cpuPtr, 0, cpuPtr.ac[0])                            // 2
+	wsPush(cpuPtr, 0, cpuPtr.ac[1])                            // 3
+	wsPush(cpuPtr, 0, cpuPtr.ac[2])                            // 4
+	wsPush(cpuPtr, 0, wfpSav)                                  // 5
 	dwd := cpuPtr.ac[3] & 0x7fffffff
 	if cpuPtr.carry {
 		dwd |= 0x80000000
 	}
-	memory.WsPush(0, dwd) // 6
-	memory.WriteDWord(memory.WfpLoc, memory.ReadDWord(memory.WspLoc))
-	cpuPtr.ac[3] = memory.ReadDWord(memory.WspLoc)
+	wsPush(cpuPtr, 0, dwd) // 6
+	cpuPtr.wfp = cpuPtr.wsp
+	cpuPtr.ac[3] = dg.DwordT(cpuPtr.wsp)
 	dwdCnt := uint(u2wd.immU16)
 	if dwdCnt > 0 {
-		memory.AdvanceWSP(dwdCnt)
+		advanceWSP(cpuPtr, dwdCnt)
 	}
+}
+
+// wsPush - PUSH a doubleword onto the Wide Stack
+func wsPush(cpuPtr *CPUT, seg dg.PhysAddrT, data dg.DwordT) {
+	// TODO segment handling
+	// TODO overflow/underflow handling - either here or in instruction?
+	cpuPtr.wsp += 2
+	memory.WriteDWord(cpuPtr.wsp, data)
+
+	// wsp := memory.ReadDWord(cpuPtr.wsp) + 2
+	// memory.WriteDWord(cpuPtr.wsp, wsp)
+	// memory.WriteDWord(dg.PhysAddrT(wsp), data)
+	logging.DebugPrint(logging.DebugLog, "... wsPush pushed %#o onto the Wide Stack at location: %#o\n", data, cpuPtr.wsp)
+}
+
+// WsPop - POP a doubleword off the Wide Stack
+func wsPop(cpuPtr *CPUT, seg dg.PhysAddrT) (dword dg.DwordT) {
+	// TODO segment handling
+	dword = memory.ReadDWord(cpuPtr.wsp)
+	cpuPtr.wsp -= 2
+
+	// wsp := memory.ReadDWord(cpuPtr.wsp)
+	// dword := memory.ReadDWord(dg.PhysAddrT(wsp))
+	// memory.WriteDWord(cpuPtr.wsp, wsp-2)
+	logging.DebugPrint(logging.DebugLog, "... memory.WsPop  popped %#o off  the Wide Stack at location: %#o\n", dword, cpuPtr.wsp+2)
+	return dword
+}
+
+// used by WPOPB, WRTN
+func wpopb(cpuPtr *CPUT) {
+	wspSav := memory.ReadDWord(cpuPtr.wsp)
+	// pop off 6 double words
+	dwd := wsPop(cpuPtr, 0) // 1
+	cpuPtr.carry = memory.TestDwbit(dwd, 0)
+	cpuPtr.pc = dg.PhysAddrT(dwd & 0x7fffffff)
+	cpuPtr.ac[3] = wsPop(cpuPtr, 0) // 2
+	// replace WFP with popped value of AC3
+	memory.WriteDWord(cpuPtr.wfp, cpuPtr.ac[3])
+	cpuPtr.ac[2] = wsPop(cpuPtr, 0) // 3
+	cpuPtr.ac[1] = wsPop(cpuPtr, 0) // 4
+	cpuPtr.ac[0] = wsPop(cpuPtr, 0) // 5
+	dwd = wsPop(cpuPtr, 0)          // 6
+	cpuPtr.psr = memory.DwordGetUpperWord(dwd)
+	// TODO Set WFP is crossing rings
+	wsFramSz2 := (int(dwd&0x00007fff) * 2) + 12
+	memory.WriteDWord(cpuPtr.wsp, wspSav-dg.DwordT(wsFramSz2))
+}
+
+// wsPopQWord - POP a Quad-word off the Wide Stack
+func wsPopQWord(cpuPtr *CPUT, seg dg.PhysAddrT) dg.QwordT {
+	// TODO segment handling
+	var qw dg.QwordT
+	rhDWord := wsPop(cpuPtr, seg)
+	lhDWord := wsPop(cpuPtr, seg)
+	qw = dg.QwordT(lhDWord)<<32 | dg.QwordT(rhDWord)
+	return qw
+}
+
+// advanceWSP increases the WSP by the given amount of DWords
+func advanceWSP(cpuPtr *CPUT, dwdCnt uint) {
+	cpuPtr.wsp += dg.PhysAddrT(dwdCnt * 2)
+	// wsp := memory.ReadDWord(cpuPtr.wsp) + dg.DwordT(dwdCnt*2)
+	// memory.WriteDWord(cpuPtr.wsp, wsp)
+	logging.DebugPrint(logging.DebugLog, "... WSP advanced by %#o DWords to %#o\n", dwdCnt, cpuPtr.wsp)
 }

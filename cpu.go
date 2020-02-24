@@ -1,6 +1,6 @@
 // cpu.go
 
-// Copyright (C) 2017,2019  Steve Merrony
+// Copyright ©2017-2020 Steve Merrony
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -30,9 +30,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/SMerrony/dgemug/memory"
-
 	"github.com/SMerrony/dgemug/dg"
+	"github.com/SMerrony/dgemug/memory"
 )
 
 const (
@@ -62,6 +61,7 @@ type CPUT struct {
 	fpac                    [4]dg.QwordT // 4 x 64-bit Floating Point Accumulators
 	fpsr                    dg.QwordT    // 64-bit Floating-Point Status Register
 	sr                      dg.WordT     // Not sure about this... fake Switch Register
+	wfp, wsp, wsl, wsb      dg.PhysAddrT // current wide stack pointers
 
 	// emulator internals
 	instrCount uint64 // how many instructions executed during the current run, running at 2 MIPS this will loop round roughly every 100 million years!

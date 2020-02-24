@@ -1,6 +1,6 @@
 // mvemg project eaglePC_test.go
 
-// Copyright (C) 2017,2019  Steve Merrony
+// Copyright ©2017-2020  Steve Merrony
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,6 @@ import (
 	"testing"
 
 	"github.com/SMerrony/dgemug/dg"
-
 	"github.com/SMerrony/dgemug/memory"
 )
 
@@ -35,7 +34,7 @@ func TestISZTS(t *testing.T) {
 	iPtr.ix = instrISZTS
 	memory.MemInit(1000, false)
 	memory.WriteDWord(100, 0xfffffffe)
-	memory.WriteDWord(memory.WspLoc, 100)
+	memory.WriteDWord(cpuPtr.wsp, 100)
 	cpuPtr.pc = 7000
 
 	if !eaglePC(cpuPtr, &iPtr) {
@@ -44,7 +43,7 @@ func TestISZTS(t *testing.T) {
 	if cpuPtr.pc != 7001 {
 		t.Errorf("Expected PC to be 7001, got %d", cpuPtr.pc)
 	}
-	v := memory.ReadDWord(dg.PhysAddrT(memory.ReadDWord(memory.WspLoc)))
+	v := memory.ReadDWord(dg.PhysAddrT(memory.ReadDWord(cpuPtr.wsp)))
 	if v != 0xffffffff {
 		t.Errorf("Expected 0xffffffff at WSP, got: %#x", v)
 	}
@@ -56,7 +55,7 @@ func TestISZTS(t *testing.T) {
 	if cpuPtr.pc != 7002 {
 		t.Errorf("Expected PC to be 7002, got %d", cpuPtr.pc)
 	}
-	v = memory.ReadDWord(dg.PhysAddrT(memory.ReadDWord(memory.WspLoc)))
+	v = memory.ReadDWord(dg.PhysAddrT(memory.ReadDWord(cpuPtr.wsp)))
 	if v != 0 {
 		t.Errorf("Expected 0 at WSP, got: %#x", v)
 	}
