@@ -24,7 +24,6 @@ package main
 import (
 	"testing"
 
-	"github.com/SMerrony/dgemug/dg"
 	"github.com/SMerrony/dgemug/memory"
 )
 
@@ -33,8 +32,9 @@ func TestISZTS(t *testing.T) {
 	var iPtr decodedInstrT
 	iPtr.ix = instrISZTS
 	memory.MemInit(1000, false)
-	memory.WriteDWord(100, 0xfffffffe)
-	memory.WriteDWord(cpuPtr.wsp, 100)
+
+	cpuPtr.wsp = 100              // set the WSP
+	wsPush(cpuPtr, 0, 0xfffffffe) // push -2
 	cpuPtr.pc = 7000
 
 	if !eaglePC(cpuPtr, &iPtr) {
@@ -43,7 +43,7 @@ func TestISZTS(t *testing.T) {
 	if cpuPtr.pc != 7001 {
 		t.Errorf("Expected PC to be 7001, got %d", cpuPtr.pc)
 	}
-	v := memory.ReadDWord(dg.PhysAddrT(memory.ReadDWord(cpuPtr.wsp)))
+	v := memory.ReadDWord(cpuPtr.wsp)
 	if v != 0xffffffff {
 		t.Errorf("Expected 0xffffffff at WSP, got: %#x", v)
 	}
@@ -55,7 +55,7 @@ func TestISZTS(t *testing.T) {
 	if cpuPtr.pc != 7002 {
 		t.Errorf("Expected PC to be 7002, got %d", cpuPtr.pc)
 	}
-	v = memory.ReadDWord(dg.PhysAddrT(memory.ReadDWord(cpuPtr.wsp)))
+	v = memory.ReadDWord(cpuPtr.wsp)
 	if v != 0 {
 		t.Errorf("Expected 0 at WSP, got: %#x", v)
 	}

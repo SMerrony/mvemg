@@ -325,14 +325,15 @@ func wsPop(cpuPtr *CPUT, seg dg.PhysAddrT) (dword dg.DwordT) {
 
 // used by WPOPB, WRTN
 func wpopb(cpuPtr *CPUT) {
-	wspSav := memory.ReadDWord(cpuPtr.wsp)
+	//wspSav := memory.ReadDWord(cpuPtr.wsp)
+	wspSav := cpuPtr.wsp
 	// pop off 6 double words
 	dwd := wsPop(cpuPtr, 0) // 1
 	cpuPtr.carry = memory.TestDwbit(dwd, 0)
 	cpuPtr.pc = dg.PhysAddrT(dwd & 0x7fffffff)
 	cpuPtr.ac[3] = wsPop(cpuPtr, 0) // 2
 	// replace WFP with popped value of AC3
-	memory.WriteDWord(cpuPtr.wfp, cpuPtr.ac[3])
+	cpuPtr.wfp = dg.PhysAddrT(cpuPtr.ac[3])
 	cpuPtr.ac[2] = wsPop(cpuPtr, 0) // 3
 	cpuPtr.ac[1] = wsPop(cpuPtr, 0) // 4
 	cpuPtr.ac[0] = wsPop(cpuPtr, 0) // 5
@@ -340,7 +341,8 @@ func wpopb(cpuPtr *CPUT) {
 	cpuPtr.psr = memory.DwordGetUpperWord(dwd)
 	// TODO Set WFP is crossing rings
 	wsFramSz2 := (int(dwd&0x00007fff) * 2) + 12
-	memory.WriteDWord(cpuPtr.wsp, wspSav-dg.DwordT(wsFramSz2))
+	//memory.WriteDWord(cpuPtr.wsp, wspSav-dg.DwordT(wsFramSz2))
+	cpuPtr.wsp = wspSav - dg.PhysAddrT(wsFramSz2)
 }
 
 // wsPopQWord - POP a Quad-word off the Wide Stack

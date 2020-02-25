@@ -34,7 +34,8 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	switch iPtr.ix {
 
 	case instrDSZTS, instrISZTS:
-		tmpAddr := dg.PhysAddrT(memory.ReadDWord(cpuPtr.wsp))
+		// tmpAddr := dg.PhysAddrT(memory.ReadDWord(cpuPtr.wsp))
+		tmpAddr := dg.PhysAddrT(cpuPtr.wsp)
 		var dwd dg.DwordT
 		if iPtr.ix == instrDSZTS {
 			dwd = memory.ReadDWord(tmpAddr) - 1
@@ -182,13 +183,12 @@ func eaglePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrWPOPJ:
 		dwd := wsPop(cpuPtr, 0)
-		cpuPtr.pc = (cpuPtr.pc & 0x70000000) | (dg.PhysAddrT(dwd) & 0x0fffffff)
+		cpuPtr.pc = (cpuPtr.pc & 0xf000_0000) | (dg.PhysAddrT(dwd) & 0x0fff_ffff)
+		cpuSetOVR(false)
 
 	case instrWRTN: // FIXME incomplete: handle PSR and rings
-		//wspSav := memory.ReadDWord(memory.WspLoc)
-		wfpSav := memory.ReadDWord(cpuPtr.wfp) // memory.WfpLoc)
 		// set WSP equal to WFP
-		memory.WriteDWord(cpuPtr.wsp, wfpSav)
+		cpuPtr.wsp = cpuPtr.wfp
 		wpopb(cpuPtr)
 
 	case instrWSEQ: // Signedness doen't matter for equality testing
