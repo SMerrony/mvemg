@@ -166,9 +166,9 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 	case instrWMSP:
 		oneAcc1Word := iPtr.variant.(oneAcc1WordT)
 		tmpDwd := cpuPtr.ac[oneAcc1Word.acd] << 1
-		tmpDwd += memory.ReadDWord(cpuPtr.wsp) // memory.WspLoc)
+		tmpDwd += dg.DwordT(cpuPtr.wsp) // memory.WspLoc)
 		// FIXME - handle overflow
-		memory.WriteDWord(cpuPtr.wsp, tmpDwd)
+		cpuPtr.wsp = dg.PhysAddrT(tmpDwd)
 		cpuSetOVR(false)
 
 	case instrWPOP:
@@ -258,7 +258,7 @@ func eagleStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 // wsav is common to WSAVR and WSAVS
 func wsav(cpuPtr *CPUT, u2wd *unique2WordT) {
-	wfpSav := memory.ReadDWord(cpuPtr.wfp)
+	wfpSav := dg.DwordT(cpuPtr.wfp)
 	wsPush(cpuPtr, 0, cpuPtr.ac[0]) // 1
 	wsPush(cpuPtr, 0, cpuPtr.ac[1]) // 2
 	wsPush(cpuPtr, 0, cpuPtr.ac[2]) // 3
@@ -278,7 +278,7 @@ func wsav(cpuPtr *CPUT, u2wd *unique2WordT) {
 
 // wssav is common to WSSVR and WSSVS
 func wssav(cpuPtr *CPUT, u2wd *unique2WordT) {
-	wfpSav := memory.ReadDWord(cpuPtr.wfp)
+	wfpSav := dg.DwordT(cpuPtr.wfp)
 	wsPush(cpuPtr, 0, memory.DwordFromTwoWords(cpuPtr.psr, 0)) // 1
 	wsPush(cpuPtr, 0, cpuPtr.ac[0])                            // 2
 	wsPush(cpuPtr, 0, cpuPtr.ac[1])                            // 3
