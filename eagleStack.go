@@ -303,10 +303,6 @@ func wsPush(cpuPtr *CPUT, seg dg.PhysAddrT, data dg.DwordT) {
 	// TODO overflow/underflow handling - either here or in instruction?
 	cpuPtr.wsp += 2
 	memory.WriteDWord(cpuPtr.wsp, data)
-
-	// wsp := memory.ReadDWord(cpuPtr.wsp) + 2
-	// memory.WriteDWord(cpuPtr.wsp, wsp)
-	// memory.WriteDWord(dg.PhysAddrT(wsp), data)
 	logging.DebugPrint(logging.DebugLog, "... wsPush pushed %#o onto the Wide Stack at location: %#o\n", data, cpuPtr.wsp)
 }
 
@@ -315,17 +311,12 @@ func wsPop(cpuPtr *CPUT, seg dg.PhysAddrT) (dword dg.DwordT) {
 	// TODO segment handling
 	dword = memory.ReadDWord(cpuPtr.wsp)
 	cpuPtr.wsp -= 2
-
-	// wsp := memory.ReadDWord(cpuPtr.wsp)
-	// dword := memory.ReadDWord(dg.PhysAddrT(wsp))
-	// memory.WriteDWord(cpuPtr.wsp, wsp-2)
-	logging.DebugPrint(logging.DebugLog, "... memory.WsPop  popped %#o off  the Wide Stack at location: %#o\n", dword, cpuPtr.wsp+2)
+	logging.DebugPrint(logging.DebugLog, "... wsPop  popped %#o off  the Wide Stack at location: %#o\n", dword, cpuPtr.wsp+2)
 	return dword
 }
 
 // used by WPOPB, WRTN
 func wpopb(cpuPtr *CPUT) {
-	//wspSav := memory.ReadDWord(cpuPtr.wsp)
 	wspSav := cpuPtr.wsp
 	// pop off 6 double words
 	dwd := wsPop(cpuPtr, 0) // 1
@@ -341,7 +332,6 @@ func wpopb(cpuPtr *CPUT) {
 	cpuPtr.psr = memory.DwordGetUpperWord(dwd)
 	// TODO Set WFP is crossing rings
 	wsFramSz2 := (int(dwd&0x00007fff) * 2) + 12
-	//memory.WriteDWord(cpuPtr.wsp, wspSav-dg.DwordT(wsFramSz2))
 	cpuPtr.wsp = wspSav - dg.PhysAddrT(wsFramSz2)
 }
 
@@ -358,7 +348,5 @@ func wsPopQWord(cpuPtr *CPUT, seg dg.PhysAddrT) dg.QwordT {
 // advanceWSP increases the WSP by the given amount of DWords
 func advanceWSP(cpuPtr *CPUT, dwdCnt uint) {
 	cpuPtr.wsp += dg.PhysAddrT(dwdCnt * 2)
-	// wsp := memory.ReadDWord(cpuPtr.wsp) + dg.DwordT(dwdCnt*2)
-	// memory.WriteDWord(cpuPtr.wsp, wsp)
 	logging.DebugPrint(logging.DebugLog, "... WSP advanced by %#o DWords to %#o\n", dwdCnt, cpuPtr.wsp)
 }

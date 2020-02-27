@@ -60,6 +60,7 @@ func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 			logging.DebugPrint(logging.DebugLog, "CLM compared %d with limits %d and %d, moving PC by %d\n", acs, l, h, inc)
 		}
 		cpuPtr.pc += inc
+		cpuPtr.pc &= 0x7fff
 
 	case instrDSPA:
 		oneAccModeInt2Word := iPtr.variant.(oneAccModeInd2WordT)
@@ -79,7 +80,7 @@ func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		if addr == 0xffffffff {
 			cpuPtr.pc += 2
 		} else {
-			cpuPtr.pc = addr
+			cpuPtr.pc = addr & 0x7fff
 		}
 
 	case instrEISZ:
@@ -93,6 +94,7 @@ func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		} else {
 			cpuPtr.pc += 2
 		}
+		cpuPtr.pc &= 0x7fff
 
 	case instrEJMP:
 		noAccModeInd2Word := iPtr.variant.(noAccModeInd2WordT)
@@ -107,6 +109,7 @@ func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrFNS:
 		cpuPtr.pc++
+		cpuPtr.pc &= 0x7fff
 
 	case instrSGT: //16-bit signed numbers
 		twoAcc1Word := iPtr.variant.(twoAcc1WordT)
@@ -117,6 +120,7 @@ func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		} else {
 			cpuPtr.pc++
 		}
+		cpuPtr.pc &= 0x7fff
 
 	case instrSNB:
 		twoAcc1Word := iPtr.variant.(twoAcc1WordT)
@@ -127,6 +131,7 @@ func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		} else {
 			cpuPtr.pc++
 		}
+		cpuPtr.pc &= 0x7fff
 		if debugLogging {
 			logging.DebugPrint(logging.DebugLog, "SNB: Wd Addr: %d., word: %0X, bit #: %d\n", addr, wd, bit)
 		}
@@ -140,6 +145,7 @@ func eclipsePC(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		} else {
 			cpuPtr.pc++
 		}
+		cpuPtr.pc &= 0x7fff
 		if debugLogging {
 			logging.DebugPrint(logging.DebugLog, "SZB: Wd Addr: %d., word: %0X, bit #: %d\n", addr, wd, bit)
 		}

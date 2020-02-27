@@ -50,7 +50,7 @@ func eclipseStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 
 	case instrPOPJ:
 		addr := dg.PhysAddrT(memory.NsPop(0, debugLogging))
-		cpuPtr.pc = addr
+		cpuPtr.pc = addr & 0x7fff
 		return true // because PC set
 
 	case instrPSH:
@@ -72,7 +72,7 @@ func eclipseStack(cpuPtr *CPUT, iPtr *decodedInstrT) bool {
 		noAccModeInd2Word := iPtr.variant.(noAccModeInd2WordT)
 		memory.NsPush(0, dg.WordT(cpuPtr.pc)+2, debugLogging)
 		addr := resolve15bitDisplacement(cpuPtr, noAccModeInd2Word.ind, noAccModeInd2Word.mode, noAccModeInd2Word.disp15, iPtr.dispOffset) & 0X7FFF
-		cpuPtr.pc = addr
+		cpuPtr.pc = addr & 0x7fff
 		return true // because PC set
 
 	case instrRTN:
