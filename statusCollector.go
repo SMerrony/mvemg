@@ -30,6 +30,7 @@ import (
 
 	"github.com/SMerrony/dgemug/devices"
 	"github.com/SMerrony/dgemug/memory"
+	"github.com/SMerrony/dgemug/mvcpu"
 )
 
 const (
@@ -55,13 +56,13 @@ const (
 // status as often as it sees fit.
 func statusCollector(
 	statusAddr string,
-	cpuChan chan cpuStatT,
+	cpuChan chan mvcpu.MvCPUStatT,
 	dpfChan chan devices.Disk6061StatT,
 	dskpChan chan devices.Disk6239StatT,
 	mtbChan chan devices.MtStatT) {
 
 	var (
-		cpuStats                               cpuStatT
+		cpuStats                               mvcpu.MvCPUStatT
 		lastIcount, iCount                     uint64
 		ips, dpfIops, dskpIops                 float64
 		lastCPUtime, lastDpfTime, lastDskpTime time.Time
@@ -93,31 +94,31 @@ func statusCollector(
 			// blocking wait for a status update to arrive
 			select {
 			case cpuStats = <-cpuChan:
-				iCount = cpuStats.instrCount - lastIcount
-				lastIcount = cpuStats.instrCount
+				iCount = cpuStats.InstrCount - lastIcount
+				lastIcount = cpuStats.InstrCount
 				ips = float64(iCount) / (time.Since(lastCPUtime).Seconds() * 1000)
 				lastCPUtime = time.Now()
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statCPUrow, dasherERASEEOL))
 				statusSendString(conn, fmt.Sprintf("PC:  %011o   Interrupts: %s    ATU: %s     IPS: %.fk/sec",
-					cpuStats.pc,
-					memory.BoolToOnOff(cpuStats.ion),
-					memory.BoolToOnOff(cpuStats.atu),
+					cpuStats.Pc,
+					memory.BoolToOnOff(cpuStats.Ion),
+					memory.BoolToOnOff(cpuStats.Atu),
 					ips))
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statCPUrow2, dasherERASEEOL))
 				statusSendString(conn, fmt.Sprintf("AC0: %011o   AC1: %011o   AC2: %011o   AC3: %011o",
-					cpuStats.ac[0],
-					cpuStats.ac[1],
-					cpuStats.ac[2],
-					cpuStats.ac[3]))
+					cpuStats.Ac[0],
+					cpuStats.Ac[1],
+					cpuStats.Ac[2],
+					cpuStats.Ac[3]))
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statInternalsRow, dasherERASEEOL))
 				statusSendString(conn, fmt.Sprintf("        Version: %s (%s) built with %s",
 					appVersion, appReleaseType,
-					cpuStats.goVersion))
+					cpuStats.GoVersion))
 				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statInternalsRow2, dasherERASEEOL))
 				statusSendString(conn, fmt.Sprintf("        Host CPUs: %d  Goroutines: %d  Heap: %dMB",
-					cpuStats.hostCPUCount,
-					cpuStats.goroutineCount,
-					cpuStats.heapSizeMB))
+					cpuStats.HostCPUCount,
+					cpuStats.GoroutineCount,
+					cpuStats.HeapSizeMB))
 
 			case dpfStats = <-dpfChan:
 				thisDpfIOcnt = dpfStats.Writes + dpfStats.Reads

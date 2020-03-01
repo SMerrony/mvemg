@@ -39,6 +39,7 @@ import (
 	"github.com/SMerrony/dgemug/dg"
 	"github.com/SMerrony/dgemug/logging"
 	"github.com/SMerrony/dgemug/memory"
+	"github.com/SMerrony/dgemug/mvcpu"
 )
 
 // import "github.com/pkg/profile"
@@ -74,13 +75,13 @@ var (
 	// (and another 3x faster without disassembly, linked to this)
 	debugLogging  = true
 	breakpoints   []dg.PhysAddrT
-	cpuPtr        *CPUT
-	cpuStatsChan  chan cpuStatT
+	cpuStatsChan  chan mvcpu.MvCPUStatT
 	dpfStatsChan  chan devices.Disk6061StatT
 	dskpStatsChan chan devices.Disk6239StatT
 	mtbStatsChan  chan devices.MtStatT
 	ttiSCPchan    chan byte
 
+	cpu  mvcpu.MvCPUT
 	tti  devices.TtiT
 	tto  devices.TtoT
 	bus  devices.BusT
@@ -132,7 +133,7 @@ func main() {
 
 		// create the channels used for near-real-time status monitoring
 		// See statusCollector.go for details
-		cpuStatsChan = make(chan cpuStatT, 3)
+		cpuStatsChan = make(chan mvcpu.MvCPUStatT, 3)
 		dpfStatsChan = make(chan devices.Disk6061StatT, 3)
 		dskpStatsChan = make(chan devices.Disk6239StatT, 3)
 		mtbStatsChan = make(chan devices.MtStatT, 3)
@@ -159,9 +160,9 @@ func main() {
 		bus.SetResetFunc(devBMC, memory.BmcdchReset) // created by memory, needs bus!
 
 		bus.AddDevice(deviceMap, devSCP, true)
-		instructionsInit()
-		decoderGenAllPossOpcodes()
-		cpuPtr = cpuInit(cpuStatsChan)
+		bus.AddDevice(deviceMap, devCPU, true)
+		mvcpu.InstructionsInit()
+		cpu.CPUInit(devCPU, &bus, cpuStatsChan)
 
 		bus.AddDevice(deviceMap, devTTO, true)
 		tto.Init(devTTO, &bus, conn)
@@ -169,7 +170,7 @@ func main() {
 		bus.AddDevice(deviceMap, devTTI, true)
 		//ttiInit(conn, cpuPtr, ttiSCPchan)
 		tti.Init(devTTI, &bus)
-		go consoleListener(conn, cpuPtr, ttiSCPchan, &tti)
+		go consoleListener(conn, &cpu, ttiSCPchan, &tti)
 
 		bus.AddDevice(deviceMap, devMTB, false)
 		mtb.MtInit(devMTB, &bus, mtbStatsChan, logging.MtLog, debugLogging)
@@ -195,9 +196,7 @@ func main() {
 		}
 
 		// the main SCP/console interaction loop
-		cpuPtr.cpuMu.Lock()
-		cpuPtr.scpIO = true
-		cpuPtr.cpuMu.Unlock()
+		cpu.CPUSetSCPIO(true)
 		for {
 			tto.PutNLString("SCP-CLI> ")
 			command := scpGetLine()
@@ -223,7 +222,7 @@ func fmtRadixVerb() string {
 	}
 }
 
-func consoleListener(con net.Conn, cpuPtr *CPUT, scpChan chan<- byte, tti *devices.TtiT) {
+func consoleListener(con net.Conn, cpuPtr *mvcpu.MvCPUT, scpChan chan<- byte, tti *devices.TtiT) {
 	b := make([]byte, 80)
 	for {
 		n, err := con.Read(b)
@@ -236,14 +235,10 @@ func consoleListener(con net.Conn, cpuPtr *CPUT, scpChan chan<- byte, tti *devic
 			// console ESCape?
 			//if b[c] == asciiESC || b[c] == 0 {
 			if b[c] == asciiESC {
-				cpuPtr.cpuMu.Lock()
-				cpuPtr.scpIO = true
-				cpuPtr.cpuMu.Unlock()
+				cpuPtr.CPUSetSCPIO(true)
 				break // don't want to send the ESC itself to the SCP
 			}
-			cpuPtr.cpuMu.RLock()
-			scp := cpuPtr.scpIO
-			cpuPtr.cpuMu.RUnlock()
+			scp := cpuPtr.CPUGetSCPIO()
 			if scp {
 				// to the SCP
 				scpChan <- b[c]
@@ -315,7 +310,7 @@ func doCommand(cmd string) {
 	switch words[0] {
 	// SCP-like commands
 	case ".":
-		tto.PutString(cpuPrintableStatus())
+		tto.PutString(cpu.CPUPrintableStatus())
 	case "B":
 		boot(words)
 	case "CO":
@@ -425,25 +420,13 @@ func boot(cmd []string) {
 	switch devNum {
 	case devMTB:
 		mtb.MtLoadTBoot()
-		cpu.cpuMu.Lock()
-		cpu.sr = 0x8000 | devMTB
-		cpu.ac[0] = devMTB
-		cpu.pc = 10
-		cpu.cpuMu.Unlock()
+		cpu.Boot(devMTB, 012)
 	case devDPF:
 		dpf.Disk6061LoadDKBT()
-		cpu.cpuMu.Lock()
-		cpu.sr = 0x8000 | devDPF
-		cpu.ac[0] = devDPF
-		cpu.pc = 012
-		cpu.cpuMu.Unlock()
+		cpu.Boot(devDPF, 012)
 	case devDSKP:
 		dskp.Disk6239LoadDKBT()
-		cpu.cpuMu.Lock()
-		cpu.sr = 0x8000 | devDSKP
-		cpu.ac[0] = devDSKP
-		cpu.pc = 012
-		cpu.cpuMu.Unlock()
+		cpu.Boot(devDSKP, 012)
 	default:
 		tto.PutNLString(" *** Booting from that device not yet implemented ***")
 	}
@@ -548,7 +531,7 @@ func disassemble(cmd []string) {
 		return
 	}
 	if cmd1[0] == '+' {
-		lowAddr = cpu.pc
+		lowAddr = cpu.GetPC()
 		highAddr = lowAddr + dg.PhysAddrT(intVal1)
 	} else {
 		lowAddr = dg.PhysAddrT(intVal1)
@@ -584,11 +567,12 @@ func disassemble(cmd []string) {
 		}
 		display += "\" "
 		if skipDecode == 0 {
-			instrTmp, ok := instructionDecode(word, addr, cpu.sbr[cpu.pc>>29].lef, cpu.sbr[cpu.pc>>29].io, cpu.atu, true)
+			seg := int(cpu.GetPC()>>29) & 0x07
+			instrTmp, ok := mvcpu.InstructionDecode(word, addr, cpu.GetLef(seg), cpu.GetIO(seg), cpu.GetAtu(), true, deviceMap)
 			if ok {
-				display += instrTmp.disassembly
-				if instrTmp.instrLength > 1 {
-					skipDecode = instrTmp.instrLength - 1
+				display += instrTmp.GetDisassembly()
+				if instrTmp.GetLength() > 1 {
+					skipDecode = instrTmp.GetLength() - 1
 				}
 			} else {
 				display += " *** Could not decode ***"
@@ -643,7 +627,8 @@ func examine(cmd []string) {
 			tto.PutNLString(" *** Examine Accumulator - invalid AC number ***")
 			return
 		}
-		prompt := fmt.Sprintf("AC%d = "+fmtRadixVerb()+" - Enter new val or just ENTER> ", exAc, cpu.ac[exAc])
+		exAcI := int(exAc)
+		prompt := fmt.Sprintf("AC%d = "+fmtRadixVerb()+" - Enter new val or just ENTER> ", exAc, cpu.GetAc(exAcI))
 		tto.PutNLString(prompt)
 		resp := scpGetLine()
 		if len(resp) > 0 {
@@ -652,8 +637,8 @@ func examine(cmd []string) {
 				tto.PutNLString(" *** Could not parse new AC value ***")
 				return
 			}
-			cpu.ac[exAc] = dg.DwordT(newVal)
-			prompt = fmt.Sprintf("AC%d = "+fmtRadixVerb(), exAc, cpu.ac[exAc])
+			cpu.SetAc(exAcI, dg.DwordT(newVal))
+			prompt = fmt.Sprintf("AC%d = "+fmtRadixVerb(), exAc, cpu.GetAc(exAcI))
 			tto.PutNLString(prompt)
 		}
 	case "M":
@@ -680,7 +665,7 @@ func examine(cmd []string) {
 			tto.PutNLString(prompt)
 		}
 	case "P":
-		prompt := fmt.Sprintf("PC = "+fmtRadixVerb()+" - Enter new val or just ENTER> ", cpu.pc)
+		prompt := fmt.Sprintf("PC = "+fmtRadixVerb()+" - Enter new val or just ENTER> ", cpu.GetPC())
 		tto.PutNLString(prompt)
 		resp := scpGetLine()
 		if len(resp) > 0 {
@@ -689,8 +674,8 @@ func examine(cmd []string) {
 				tto.PutNLString(" *** Could not parse new PC value ***")
 				return
 			}
-			cpu.pc = dg.PhysAddrT(newVal)
-			prompt = fmt.Sprintf("PC = "+fmtRadixVerb(), cpu.pc)
+			cpu.SetPC(dg.PhysAddrT(newVal))
+			prompt = fmt.Sprintf("PC = "+fmtRadixVerb(), cpu.GetPC())
 			tto.PutNLString(prompt)
 		}
 	default:
@@ -714,7 +699,7 @@ func printableBreakpointList() string {
 func reset() {
 	memory.MemInit(MemSizeWords, debugLogging)
 	bus.ResetAllIODevices()
-	cpuReset()
+	cpu.CPUReset()
 	// mtbReset() // Not Init
 	// dpfReset()
 	// dskpReset()
@@ -791,15 +776,16 @@ func show(cmd []string) {
 
 // Attempt to execute the opcode at PC
 func singleStep() {
-	tto.PutString(cpuPrintableStatus())
+	tto.PutString(cpu.CPUPrintableStatus())
 	// FETCH
-	thisOp := memory.ReadWord(cpu.pc)
+	thisOp := memory.ReadWord(cpu.GetPC())
 	// DECODE
-	if iPtr, ok := instructionDecode(thisOp, cpu.pc, cpu.sbr[cpu.pc>>29].lef, cpu.sbr[cpu.pc>>29].io, cpu.atu, true); ok {
-		tto.PutNLString(iPtr.disassembly)
+	seg := int(cpu.GetPC()>>29) & 0x07
+	if iPtr, ok := mvcpu.InstructionDecode(thisOp, cpu.GetPC(), cpu.GetLef(seg), cpu.GetIO(seg), cpu.GetAtu(), true, deviceMap); ok {
+		tto.PutNLString(iPtr.GetDisassembly())
 		// EXECUTE
-		if cpuExecute(iPtr) {
-			tto.PutString(cpuPrintableStatus())
+		if cpu.CPUExecute(iPtr) {
+			tto.PutString(cpu.CPUPrintableStatus())
 		} else {
 			tto.PutNLString(" *** Error: could not execute instruction")
 		}
@@ -819,138 +805,41 @@ func start(cmd []string) {
 		tto.PutNLString(" *** Could not parse new PC value ***")
 		return
 	}
-	cpu.pc = dg.PhysAddrT(newPc)
+	cpu.SetPC(dg.PhysAddrT(newPc))
 	run()
 }
 
 // The main Emulator running loop...
 func run() {
-	var (
-		thisOp      dg.WordT
-		prevPC      dg.PhysAddrT
-		iPtr        *decodedInstrT
-		ok          bool
-		indIrq      byte
-		errDetail   string
-		instrCounts [maxInstrs]int
-	)
 
 	// instruction disassembly slows CPU down by about 3x, for the moment it seems to make sense
 	// for it to follow the debugLogging setting...
 	disassembly := debugLogging
 
-	cpu.cpuMu.Lock()
-
-	cpu.instrCount = 0 // reset instruction counter each run for MIPS calc.
-	cpu.scpIO = false  // direct console input to the VM
-	cpu.cpuMu.Unlock()
+	cpu.PrepToRun()
 
 	startTime := time.Now()
 
-	// initial read lock taken before loop starts to eliminate one lock/unlock per cycle
-	cpu.cpuMu.RLock()
+	errDetail, instrCounts := cpu.Run(disassembly, deviceMap, breakpoints, inputRadix, &tto)
 
-RunLoop: // performance-critical section starts here
-	for {
-		// FETCH
-		thisOp = memory.ReadWord(cpu.pc)
-
-		// DECODE
-		iPtr, ok = instructionDecode(thisOp, cpu.pc, cpu.sbr[cpu.pc>>29].lef, cpu.sbr[cpu.pc>>29].io, cpu.atu, disassembly)
-		cpu.cpuMu.RUnlock()
-		if !ok || iPtr.ix == -1 {
-			errDetail = " *** Error: could not decode instruction ***"
-			break
-		}
-
-		if debugLogging {
-			logging.DebugPrint(logging.DebugLog, "%s  %s\n", cpuCompactPrintableStatus(), iPtr.disassembly)
-		}
-
-		// EXECUTE
-		if !cpuExecute(iPtr) {
-			errDetail = " *** Error: could not execute instruction (or CPU HALT encountered) ***"
-			break
-		}
-
-		// INTERRUPT?
-		cpu.cpuMu.Lock()
-		if cpu.ion && bus.GetIRQ() {
-			if debugLogging {
-				logging.DebugPrint(logging.DebugLog, "<<< Interrupt >>>\n")
-			}
-			// disable further interrupts, reset the irq
-			cpu.ion = false
-			bus.SetIRQ(false)
-			// TODO - disable User MAP
-			// store PC in location zero
-			memory.WriteWord(0, dg.WordT(cpu.pc))
-			// fetch service routine address from location one
-			if memory.TestWbit(memory.ReadWord(1), 0) {
-				indIrq = '@'
-			} else {
-				indIrq = ' '
-			}
-			cpu.pc = resolve15bitDisplacement(&cpu, indIrq, absoluteMode, memory.ReadWord(1), 0)
-			// next time round RunLoop the interrupt service routine will be started...
-		}
-		cpu.cpuMu.Unlock()
-
-		// BREAKPOINT?
-		if len(breakpoints) > 0 {
-			cpu.cpuMu.Lock()
-			for _, bAddr := range breakpoints {
-				if bAddr == cpu.pc {
-					cpu.scpIO = true
-					cpu.cpuMu.Unlock()
-					msg := fmt.Sprintf(" *** BREAKpoint hit at physical address "+fmtRadixVerb()+" (previous PC "+fmtRadixVerb()+") ***", cpu.pc, prevPC)
-					tto.PutNLString(msg)
-					log.Println(msg)
-
-					break RunLoop
-				}
-			}
-			cpu.cpuMu.Unlock()
-		}
-
-		// Console interrupt?
-		cpu.cpuMu.RLock()
-		if cpu.scpIO {
-			cpu.cpuMu.RUnlock()
-			errDetail = " *** Console ESCape ***"
-			break
-		}
-
-		// instruction counting
-		instrCounts[iPtr.ix]++
-
-		prevPC = cpu.pc
-
-		// N.B. RLock still in effect as we loop around
-	}
-
-	// end of performance-critical section
-
-	cpu.cpuMu.Lock()
-	cpu.scpIO = true
-	cpu.cpuMu.Unlock()
+	cpu.CPUSetSCPIO(true)
 
 	runTime := time.Since(startTime).Seconds()
-	avgMips := float64(cpu.instrCount/1000000) / runTime
+	avgMips := float64(cpu.GetInstrCount()/1000000) / runTime
 
 	// run halted due to either error or console escape
 	log.Println(errDetail)
 	tto.PutNLString(errDetail)
 	if debugLogging {
-		logging.DebugPrint(logging.DebugLog, "%s\n", cpuPrintableStatus())
+		logging.DebugPrint(logging.DebugLog, "%s\n", cpu.CPUPrintableStatus())
 	}
-	tto.PutString(cpuPrintableStatus())
+	tto.PutString(cpu.CPUPrintableStatus())
 
 	errDetail = " *** CPU halting ***"
 	log.Println(errDetail)
 	tto.PutNLString(errDetail)
 
-	errDetail = fmt.Sprintf(" *** MV/Em executed %d instructions, average MIPS: %.1f ***", cpu.instrCount, avgMips)
+	errDetail = fmt.Sprintf(" *** MV/Em executed %d instructions, average MIPS: %.1f ***", cpu.GetInstrCount(), avgMips)
 	log.Println(errDetail)
 	tto.PutNLString(errDetail)
 
@@ -961,12 +850,12 @@ RunLoop: // performance-critical section starts here
 	log.Println("Instruction Execution Count by Mnemonic")
 	for i, c := range instrCounts {
 		if instrCounts[i] > 0 {
-			log.Printf("%s\t%d\n", instructionSet[i].mnemonic, c)
+			log.Printf("%s\t%d\n", mvcpu.GetMnemonic(i), c)
 			if m[c] == "" {
-				m[c] = instructionSet[i].mnemonic
+				m[c] = mvcpu.GetMnemonic(i)
 				keys = append(keys, c)
 			} else {
-				m[c] += ", " + instructionSet[i].mnemonic
+				m[c] += ", " + mvcpu.GetMnemonic(i)
 			}
 		}
 	}

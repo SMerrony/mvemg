@@ -27,7 +27,7 @@ BINARY_NAME = mvemg
 
 INSTRGEN = dginstr
 INSTRSRC = ${HOME}/go/src/github.com/SMerrony/dgemug/cmd/dginstr/dginstrs.csv
-INSTRGO = instructionDefinitions.go
+INSTRGO = ../dgemug/mvcpu/instructionDefinitions.go
 
 CLEANLOGS = rm -f logs/*.log *.pprof
 
