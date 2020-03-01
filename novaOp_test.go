@@ -310,6 +310,38 @@ func TestMOV(t *testing.T) {
 	if !cpuPtr.carry {
 		t.Error("Expected CARRY to be set")
 	}
+
+	// specific test for possibly-failing instruction...
+	// MOV# 0,0,SZR # skip if AC0 == 0
+	cpuPtr.pc = 100
+	cpuPtr.ac[0] = 1
+	novaTwoAccMultOp.acs = 0
+	novaTwoAccMultOp.acd = 0
+	novaTwoAccMultOp.nl = '#'
+	novaTwoAccMultOp.sh = ' '
+	novaTwoAccMultOp.skip = szrSkip
+	iPtr.variant = novaTwoAccMultOp
+	if !novaOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute MOV")
+	}
+	if cpuPtr.pc != 101 {
+		t.Errorf("Expected PC = 101. got PC = %d", cpuPtr.pc)
+	}
+	if cpuPtr.ac[0] != 1 {
+		t.Error("AC0 changed!")
+	}
+
+	cpuPtr.ac[0] = 0
+	cpuPtr.pc = 100
+	if !novaOp(cpuPtr, &iPtr) {
+		t.Error("Failed to execute MOV")
+	}
+	if cpuPtr.pc != 102 {
+		t.Errorf("Expected PC = 102. got PC = %d", cpuPtr.pc)
+	}
+	if cpuPtr.ac[0] != 0 {
+		t.Error("AC0 changed!")
+	}
 }
 
 func TestNEG(t *testing.T) {
