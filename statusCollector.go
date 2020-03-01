@@ -56,13 +56,13 @@ const (
 // status as often as it sees fit.
 func statusCollector(
 	statusAddr string,
-	cpuChan chan mvcpu.MvCPUStatT,
+	cpuChan chan mvcpu.CPUStatT,
 	dpfChan chan devices.Disk6061StatT,
 	dskpChan chan devices.Disk6239StatT,
 	mtbChan chan devices.MtStatT) {
 
 	var (
-		cpuStats                               mvcpu.MvCPUStatT
+		cpuStats                               mvcpu.CPUStatT
 		lastIcount, iCount                     uint64
 		ips, dpfIops, dskpIops                 float64
 		lastCPUtime, lastDpfTime, lastDskpTime time.Time

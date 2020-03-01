@@ -75,13 +75,13 @@ var (
 	// (and another 3x faster without disassembly, linked to this)
 	debugLogging  = true
 	breakpoints   []dg.PhysAddrT
-	cpuStatsChan  chan mvcpu.MvCPUStatT
+	cpuStatsChan  chan mvcpu.CPUStatT
 	dpfStatsChan  chan devices.Disk6061StatT
 	dskpStatsChan chan devices.Disk6239StatT
 	mtbStatsChan  chan devices.MtStatT
 	ttiSCPchan    chan byte
 
-	cpu  mvcpu.MvCPUT
+	cpu  mvcpu.CPUT
 	tti  devices.TtiT
 	tto  devices.TtoT
 	bus  devices.BusT
@@ -133,7 +133,7 @@ func main() {
 
 		// create the channels used for near-real-time status monitoring
 		// See statusCollector.go for details
-		cpuStatsChan = make(chan mvcpu.MvCPUStatT, 3)
+		cpuStatsChan = make(chan mvcpu.CPUStatT, 3)
 		dpfStatsChan = make(chan devices.Disk6061StatT, 3)
 		dskpStatsChan = make(chan devices.Disk6239StatT, 3)
 		mtbStatsChan = make(chan devices.MtStatT, 3)
@@ -222,7 +222,7 @@ func fmtRadixVerb() string {
 	}
 }
 
-func consoleListener(con net.Conn, cpuPtr *mvcpu.MvCPUT, scpChan chan<- byte, tti *devices.TtiT) {
+func consoleListener(con net.Conn, cpuPtr *mvcpu.CPUT, scpChan chan<- byte, tti *devices.TtiT) {
 	b := make([]byte, 80)
 	for {
 		n, err := con.Read(b)
