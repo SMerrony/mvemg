@@ -196,7 +196,7 @@ func main() {
 		}
 
 		// the main SCP/console interaction loop
-		cpu.CPUSetSCPIO(true)
+		cpu.SetSCPIO(true)
 		for {
 			tto.PutNLString("SCP-CLI> ")
 			command := scpGetLine()
@@ -235,10 +235,10 @@ func consoleListener(con net.Conn, cpuPtr *mvcpu.CPUT, scpChan chan<- byte, tti 
 			// console ESCape?
 			//if b[c] == asciiESC || b[c] == 0 {
 			if b[c] == asciiESC {
-				cpuPtr.CPUSetSCPIO(true)
+				cpuPtr.SetSCPIO(true)
 				break // don't want to send the ESC itself to the SCP
 			}
-			scp := cpuPtr.CPUGetSCPIO()
+			scp := cpuPtr.GetSCPIO()
 			if scp {
 				// to the SCP
 				scpChan <- b[c]
@@ -310,7 +310,7 @@ func doCommand(cmd string) {
 	switch words[0] {
 	// SCP-like commands
 	case ".":
-		tto.PutString(cpu.CPUPrintableStatus())
+		tto.PutString(cpu.PrintableStatus())
 	case "B":
 		boot(words)
 	case "CO":
@@ -699,7 +699,7 @@ func printableBreakpointList() string {
 func reset() {
 	memory.MemInit(MemSizeWords, debugLogging)
 	bus.ResetAllIODevices()
-	cpu.CPUReset()
+	cpu.Reset()
 	// mtbReset() // Not Init
 	// dpfReset()
 	// dskpReset()
@@ -776,7 +776,7 @@ func show(cmd []string) {
 
 // Attempt to execute the opcode at PC
 func singleStep() {
-	tto.PutString(cpu.CPUPrintableStatus())
+	tto.PutString(cpu.PrintableStatus())
 	// FETCH
 	thisOp := memory.ReadWord(cpu.GetPC())
 	// DECODE
@@ -784,8 +784,8 @@ func singleStep() {
 	if iPtr, ok := mvcpu.InstructionDecode(thisOp, cpu.GetPC(), cpu.GetLef(seg), cpu.GetIO(seg), cpu.GetAtu(), true, deviceMap); ok {
 		tto.PutNLString(iPtr.GetDisassembly())
 		// EXECUTE
-		if cpu.CPUExecute(iPtr) {
-			tto.PutString(cpu.CPUPrintableStatus())
+		if cpu.Execute(iPtr) {
+			tto.PutString(cpu.PrintableStatus())
 		} else {
 			tto.PutNLString(" *** Error: could not execute instruction")
 		}
@@ -822,7 +822,7 @@ func run() {
 
 	errDetail, instrCounts := cpu.Run(disassembly, deviceMap, breakpoints, inputRadix, &tto)
 
-	cpu.CPUSetSCPIO(true)
+	cpu.SetSCPIO(true)
 
 	runTime := time.Since(startTime).Seconds()
 	avgMips := float64(cpu.GetInstrCount()/1000000) / runTime
@@ -831,9 +831,9 @@ func run() {
 	log.Println(errDetail)
 	tto.PutNLString(errDetail)
 	if debugLogging {
-		logging.DebugPrint(logging.DebugLog, "%s\n", cpu.CPUPrintableStatus())
+		logging.DebugPrint(logging.DebugLog, "%s\n", cpu.PrintableStatus())
 	}
-	tto.PutString(cpu.CPUPrintableStatus())
+	tto.PutString(cpu.PrintableStatus())
 
 	errDetail = " *** CPU halting ***"
 	log.Println(errDetail)
