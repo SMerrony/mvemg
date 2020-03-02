@@ -715,10 +715,12 @@ func set(cmd []string) {
 		switch cmd[2] {
 		case "ON":
 			debugLogging = true
+			cpu.SetDebugLogging(true)
 			dpf.Disk6061SetLogging(true)
 			dskp.Disk6239SetLogging(true)
 		case "OFF":
 			debugLogging = false
+			cpu.SetDebugLogging(false)
 			dpf.Disk6061SetLogging(false)
 			dskp.Disk6239SetLogging(false)
 		}
