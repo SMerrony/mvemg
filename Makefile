@@ -1,4 +1,4 @@
-# Copyright (C) 2017,2019  Steve Merrony
+# Copyright ©2017-2020 Steve Merrony
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -21,7 +21,7 @@
 GOCMD = go
 GOBUILD = ${GOCMD}	build
 GOCLEAN = ${GOCMD}	clean -cache -testcache
-GOTEST = ${GOCMD}	test -v -race -cover ./...
+GOTEST = ${GOCMD}	test -v -race -cover ./... github.com/SMerrony/dgemug/...
 GOGET = ${GOCMD}	get
 BINARY_NAME = mvemg
 
