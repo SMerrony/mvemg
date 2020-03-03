@@ -182,7 +182,7 @@ func main() {
 		dskp.Disk6239Init(devDSKP, &bus, dskpStatsChan, logging.DskpLog, debugLogging)
 
 		// say hello...
-		tto.PutChar(asciiFF)
+		tto.PutChar(dg.ASCIIFF)
 		tto.PutStringNL(" *** Welcome to the MV/Emulator - Type HE for help ***")
 
 		// kick off the status monitor routine
@@ -233,8 +233,8 @@ func consoleListener(con net.Conn, cpuPtr *mvcpu.CPUT, scpChan chan<- byte, tti 
 		//log.Printf("DEBUG: ttiListener() got <%c>\n", b[0])
 		for c := 0; c < n; c++ {
 			// console ESCape?
-			//if b[c] == asciiESC || b[c] == 0 {
-			if b[c] == asciiESC {
+			//if b[c] == dg.ASCIIESC || b[c] == 0 {
+			if b[c] == dg.ASCIIESC {
 				cpuPtr.SetSCPIO(true)
 				break // don't want to send the ESC itself to the SCP
 			}
@@ -262,12 +262,12 @@ func consoleListener(con net.Conn, cpuPtr *mvcpu.CPUT, scpChan chan<- byte, tti 
 func scpGetLine() string {
 	line := []byte{}
 	var cc byte
-	for cc != asciiCR {
+	for cc != dg.ASCIICR {
 		cc = <-ttiSCPchan
 		//cc = ttiGetChar()
 		// handle the DASHER Delete key
-		if cc == dasherDELETE && len(line) > 0 {
-			tto.PutChar(dasherCURSORLEFT)
+		if cc == dg.DasherDELETE && len(line) > 0 {
+			tto.PutChar(dg.DasherCURSORLEFT)
 			line = line[:len(line)-1]
 		} else {
 			tto.PutChar(cc)

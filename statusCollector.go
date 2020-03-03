@@ -29,6 +29,7 @@ import (
 	"time"
 
 	"github.com/SMerrony/dgemug/devices"
+	"github.com/SMerrony/dgemug/dg"
 	"github.com/SMerrony/dgemug/memory"
 	"github.com/SMerrony/dgemug/mvcpu"
 )
@@ -88,7 +89,7 @@ func statusCollector(
 			os.Exit(1)
 		}
 
-		statusSendString(conn, fmt.Sprintf("%c                             %c%s Status%c\012", dasherERASEPAGE, dasherUNDERLINE, appName, dasherNORMAL))
+		statusSendString(conn, fmt.Sprintf("%c                             %c%s Status%c\012", dg.DasherERASEPAGE, dg.DasherUNDERLINE, appName, dg.DasherNORMAL))
 
 		for {
 			// blocking wait for a status update to arrive
@@ -98,23 +99,23 @@ func statusCollector(
 				lastIcount = cpuStats.InstrCount
 				ips = float64(iCount) / (time.Since(lastCPUtime).Seconds() * 1000)
 				lastCPUtime = time.Now()
-				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statCPUrow, dasherERASEEOL))
+				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dg.DasherWRITEWINDOWADDR, 0, statCPUrow, dg.DasherERASEEOL))
 				statusSendString(conn, fmt.Sprintf("PC:  %011o   Interrupts: %s    ATU: %s     IPS: %.fk/sec",
 					cpuStats.Pc,
 					memory.BoolToOnOff(cpuStats.Ion),
 					memory.BoolToOnOff(cpuStats.Atu),
 					ips))
-				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statCPUrow2, dasherERASEEOL))
+				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dg.DasherWRITEWINDOWADDR, 0, statCPUrow2, dg.DasherERASEEOL))
 				statusSendString(conn, fmt.Sprintf("AC0: %011o   AC1: %011o   AC2: %011o   AC3: %011o",
 					cpuStats.Ac[0],
 					cpuStats.Ac[1],
 					cpuStats.Ac[2],
 					cpuStats.Ac[3]))
-				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statInternalsRow, dasherERASEEOL))
+				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dg.DasherWRITEWINDOWADDR, 0, statInternalsRow, dg.DasherERASEEOL))
 				statusSendString(conn, fmt.Sprintf("        Version: %s (%s) built with %s",
 					appVersion, appReleaseType,
 					cpuStats.GoVersion))
-				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statInternalsRow2, dasherERASEEOL))
+				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dg.DasherWRITEWINDOWADDR, 0, statInternalsRow2, dg.DasherERASEEOL))
 				statusSendString(conn, fmt.Sprintf("        Host CPUs: %d  Goroutines: %d  Heap: %dMB",
 					cpuStats.HostCPUCount,
 					cpuStats.GoroutineCount,
@@ -125,7 +126,7 @@ func statusCollector(
 				dpfIops = float64(thisDpfIOcnt-lastDpfIOcnt) / time.Since(lastDpfTime).Seconds()
 				lastDpfIOcnt = thisDpfIOcnt
 				lastDpfTime = time.Now()
-				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statDPFrow, dasherERASEEOL))
+				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dg.DasherWRITEWINDOWADDR, 0, statDPFrow, dg.DasherERASEEOL))
 				statusSendString(conn, fmt.Sprintf("DPF  (DPF0) - Attached: %c  IOPS: %.f CYL: %04d.  HD: %02d.  SECT: %03d.",
 					memory.BoolToYN(dpfStats.ImageAttached),
 					dpfIops,
@@ -138,7 +139,7 @@ func statusCollector(
 				dskpIops = float64(thisDskpIOcnt-lastDskpIOcnt) / time.Since(lastDskpTime).Seconds()
 				lastDskpIOcnt = thisDskpIOcnt
 				lastDskpTime = time.Now()
-				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statDSKProw, dasherERASEEOL))
+				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dg.DasherWRITEWINDOWADDR, 0, statDSKProw, dg.DasherERASEEOL))
 				statusSendString(conn, fmt.Sprintf("DSKP (DPJ0) - Attached: %c  IOPS: %.f  SECNUM: %08d.",
 					memory.BoolToYN(dskpStats.ImageAttached),
 					dskpIops,
@@ -148,12 +149,12 @@ func statusCollector(
 					dskpStats.SectorNo))
 
 			case mtStats = <-mtbChan:
-				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statMTrow, dasherERASEEOL))
+				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dg.DasherWRITEWINDOWADDR, 0, statMTrow, dg.DasherERASEEOL))
 				statusSendString(conn, fmt.Sprintf("MTA  (MTC0) - Attached: %c  Mem Addr: %06o  Curr Cmd: %d",
 					memory.BoolToYN(mtStats.ImageAttached[0]),
 					mtStats.MemAddrReg,
 					mtStats.CurrentCmd))
-				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dasherWRITEWINDOWADDR, 0, statMTrow2, dasherERASEEOL))
+				statusSendString(conn, fmt.Sprintf("%c%c%c%c", dg.DasherWRITEWINDOWADDR, 0, statMTrow2, dg.DasherERASEEOL))
 				statusSendString(conn, fmt.Sprintf("              Image file: %s", mtStats.FileName[0]))
 			}
 		}
