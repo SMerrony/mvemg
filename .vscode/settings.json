@@ -1,2 +1,5 @@
 {
+    "go.buildTags": "physical",
+    "go.testFlags": ["-tags", "physical"],
+    "go.formatTool": "goimports"
 }

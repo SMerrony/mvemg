@@ -17,11 +17,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+# Go build constraint used to choose between physical (hardware) and logical(sofware) emulation
+# routines in some packages
+TAGS = -tags physical
+
 # Go parameters
 GOCMD = go
-GOBUILD = ${GOCMD}	build
+GOBUILD = ${GOCMD}	build ${TAGS}
 GOCLEAN = ${GOCMD}	clean -cache -testcache
-GOTEST = ${GOCMD}	test -v -race -cover ./... github.com/SMerrony/dgemug/...
+GOTEST = ${GOCMD}	test ${TAGS} -v -race -cover ./... github.com/SMerrony/dgemug/...
 GOGET = ${GOCMD}	get
 BINARY_NAME = mvemg
 
