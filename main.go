@@ -515,10 +515,10 @@ func detach(cmd []string) {
 func disassemble(cmd []string) {
 	var (
 		lowAddr, highAddr dg.PhysAddrT
-		word              dg.WordT
-		byte1, byte2      dg.ByteT
-		display           string
-		skipDecode        int
+	// 	word              dg.WordT
+	// 	byte1, byte2      dg.ByteT
+	// 	display           string
+	// 	skipDecode        int
 	)
 	if len(cmd) == 1 {
 		tto.PutNLString(" *** DIS command requires an address ***")
@@ -546,42 +546,7 @@ func disassemble(cmd []string) {
 			highAddr = dg.PhysAddrT(intVal2)
 		}
 	}
-	if highAddr < lowAddr {
-		tto.PutNLString(" *** Invalid address range ***")
-		return
-	}
-	for addr := lowAddr; addr <= highAddr; addr++ {
-		word = memory.ReadWord(addr)
-		byte1 = dg.ByteT(word >> 8)
-		byte2 = dg.ByteT(word & 0x00ff)
-		display = fmt.Sprintf(fmtRadixVerb()+": %02X %02X %06o %s \"", addr, byte1, byte2, word, memory.WordToBinStr(word))
-		if byte1 >= ' ' && byte1 <= '~' {
-			display += string(byte1)
-		} else {
-			display += " "
-		}
-		if byte2 >= ' ' && byte2 <= '~' {
-			display += string(byte2)
-		} else {
-			display += " "
-		}
-		display += "\" "
-		if skipDecode == 0 {
-			seg := int(cpu.GetPC()>>29) & 0x07
-			instrTmp, ok := mvcpu.InstructionDecode(word, addr, cpu.GetLef(seg), cpu.GetIO(seg), cpu.GetAtu(), true, deviceMap)
-			if ok {
-				display += instrTmp.GetDisassembly()
-				if instrTmp.GetLength() > 1 {
-					skipDecode = instrTmp.GetLength() - 1
-				}
-			} else {
-				display += " *** Could not decode ***"
-			}
-		} else {
-			skipDecode--
-		}
-		tto.PutNLString(display)
-	}
+	tto.PutString(cpu.DisassembleRange(lowAddr, highAddr))
 }
 
 func doScript(cmd []string) {
