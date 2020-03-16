@@ -1,5 +1,11 @@
 {
+    "go.buildFlags": ["physical"],
     "go.buildTags": "physical",
     "go.testFlags": ["-tags", "physical"],
+    "go.toolsEnvVars": {"GOFLAGS": "-tags=physical"},
+    "go.useLanguageServer": true,
+    "gopls": {
+        "buildFlags": ["-tags=physical"]
+    },
     "go.formatTool": "goimports"
 }

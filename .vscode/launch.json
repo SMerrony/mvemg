@@ -5,6 +5,7 @@
             "name": "Launch",
             "type": "go",
             "request": "launch",
+            "buildFlags": "-tags=physical",
             "mode": "debug",
             "remotePath": "",
             "port": 2345,
