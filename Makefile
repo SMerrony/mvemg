@@ -25,7 +25,7 @@ TAGS = -tags physical
 GOCMD = go
 GOBUILD = ${GOCMD}	build ${TAGS}
 GOCLEAN = ${GOCMD}	clean -cache -testcache
-GOTEST = ${GOCMD}	test ${TAGS} -v -race -cover ./... github.com/SMerrony/dgemug/...
+GOTEST = ${GOCMD}	test ${TAGS} -v -race -cover # ./... github.com/SMerrony/dgemug/...
 GOGET = ${GOCMD}	get
 BINARY_NAME = mvemg
 
@@ -50,7 +50,10 @@ build:
 buildrace: 
 	${GOBUILD} -race ${LDFLAGS} -o ${BINARY_NAME} -v	
 test: 
-	${GOTEST} 
+	${GOTEST} ./...
+	${GOTEST} ../dgemug/devices/...
+	${GOTEST} ../dgemug/memory/...
+	${GOTEST} ../dgemug/mvcpu/...
 clean: 
 	${GOCLEAN}
 	${CLEANLOGS}
