@@ -1,6 +1,6 @@
 # MVEmg Status
 
-* Last updated: 19th Mar 2020
+* Last updated: 4th Apr 2020
 * Last significant progress: 3rd Oct 2018
 
 ## What Works?
@@ -37,10 +37,7 @@ I currently have three standalone binaries: SYSBOOT(!), FIXUP, and PCOPY...
 
 ### Standalone FIXUP - Tape file 1 - crash during startup
 
-  Crash at 330020...reading beyond physical memory in XNLDA 0, @-11, AC3
-  AC3 contains 30556
-  30556 - 11 = 30545
-  Location 30545 contains 1432, location 30546 contains 100000
+  Crash at 0360303 - instruction not yet implemented - 0x8719 WDINC/DEC/CMP
  
 ### Standalone PCOPY - Tape file 1
   "Fatal disk error, device 27 00, Status = 000000 000000
