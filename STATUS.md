@@ -1,6 +1,6 @@
 # MVEmg Status
 
-* Last updated: 4th Apr 2020
+* Last updated: 1st May 2020
 * Last significant progress: 3rd Oct 2018
 
 ## What Works?
@@ -37,7 +37,7 @@ I currently have three standalone binaries: SYSBOOT(!), FIXUP, and PCOPY...
 
 ### Standalone FIXUP - Tape file 1 - crash during startup
 
-  Crash at 0360303 - instruction not yet implemented - 0x8719 WDINC/DEC/CMP
+  WRTNs to location 0
  
 ### Standalone PCOPY - Tape file 1
   "Fatal disk error, device 27 00, Status = 000000 000000
@@ -45,4 +45,4 @@ I currently have three standalone binaries: SYSBOOT(!), FIXUP, and PCOPY...
    ...repeated forever.  Interestingly, no activity is recorded in dpf_debug.log.
    PC is around 025462
 
-   Also, there are some 'funnies' in the PCOPY start-up prompts.  The REV number is displayed as "00070073◊◊◊.◊◊◊".
+   Also, there is a funny in the PCOPY start-up prompts.  The REV number is displayed as "07◊.73◊".
