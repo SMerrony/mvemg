@@ -298,6 +298,7 @@ func cleanExit() {
 		f.Close()
 	}
 	logging.DebugLogsDump("logs/")
+	memory.DumpToFile("mvemug.dmp")
 	os.Exit(0)
 }
 

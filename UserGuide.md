@@ -3,7 +3,7 @@
 The current version of MV/Em emulates a minimally-configured Data General MV/10000 minicomputer from c.1983.
 
 To use the emulator you will need a DASHER compatible terminal emulator with telnet support, 
-both [DasherQ](https://github.com/SMerrony/DasherQ) and [DasherJ](https://github.com/SMerrony/DasherJ) are 
+both [DasherG](https://github.com/SMerrony/DasherG) and [DasherQ](https://github.com/SMerrony/DasherQ) are 
 known to work well.
 The terminal emulator will operate as the master console of the minicomputer and the emulator will not begin 
 operation until it is connected.
