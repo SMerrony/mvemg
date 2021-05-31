@@ -1,5 +1,5 @@
 # MVEmg Status
-
+_Work has stopped on this project. It continues in https://github.com/SMerrony/dgemua_
 * Last updated: 1st May 2020
 * Last significant progress: 3rd Oct 2018
 
